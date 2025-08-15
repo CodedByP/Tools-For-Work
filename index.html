@@ -9,8 +9,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         body {
             font-family: 'Alexandria', sans-serif;
-            background-color: #1f2937; /* Dark charcoal background */
-            color: #e5e7eb; /* Light gray text */
+            background-color: #1f2937;
+            color: #e5e7eb;
         }
         .message-box {
             position: fixed;
@@ -41,7 +41,7 @@
             z-index: 1001;
         }
         .modal-content {
-            background-color: #374151; /* Slightly lighter dark gray for contrast */
+            background-color: #374151;
             color: #e5e7eb;
             padding: 2rem;
             border-radius: 0.5rem;
@@ -59,7 +59,7 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: -256px; /* Hidden by default */
+            left: -256px;
             width: 256px;
             height: 100%;
             background-color: #1f2937;
@@ -70,6 +70,9 @@
         }
         .sidebar.open {
             left: 0;
+        }
+        .pb-extra {
+            padding-bottom: 2rem;
         }
     </style>
 </head>
@@ -82,6 +85,10 @@
             <button id="nav-canned-responses" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">Canned Responses</button>
             <button id="nav-fedex-tracker" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">FedEx Tracker</button>
         </nav>
+        <div class="mt-auto pt-6 flex flex-col items-center space-y-2">
+            <button id="sign-in-btn" class="w-full text-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hidden">Sign In with Google</button>
+            <button id="sign-out-btn" class="w-full text-center px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hidden">Sign Out</button>
+        </div>
         <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -91,32 +98,46 @@
 
     <!-- Main Content -->
     <div id="main-content" class="flex-1 p-4 sm:p-8 flex flex-col items-center">
-        <header class="w-full max-w-2xl flex items-center justify-between mb-6">
-            <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Open Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <div class="flex items-center space-x-2">
-                <h1 id="main-title" class="text-3xl sm:text-4xl font-bold text-gray-200">Canned Responses</h1>
-                <div class="relative">
-                    <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Category Menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                        </svg>
-                    </button>
-                    <div id="category-menu" class="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50 hidden">
-                        <button id="rename-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-t-lg">Rename Category</button>
-                        <button id="delete-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 text-red-400">Delete Category</button>
-                        <button id="change-color-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg">Change Color</button>
+        <header class="w-full max-w-5xl mb-6">
+            <div class="flex items-center justify-between">
+                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Open Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <h1 id="main-title" class="text-3xl sm:text-4xl font-bold text-gray-200">Canned Responses</h1>
+                    <div class="relative">
+                        <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Category Menu">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                        <div id="category-menu" class="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50 hidden">
+                            <button id="rename-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-t-lg">Rename Category</button>
+                            <button id="delete-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 text-red-400">Delete Category</button>
+                            <button id="change-color-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg">Change Color</button>
+                        </div>
                     </div>
                 </div>
+                <div class="flex items-center space-x-2">
+                    <button id="import-export-btn" class="text-gray-400 hover:text-blue-400 transition" aria-label="Import/Export Data">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <button id="import-export-btn" class="text-gray-400 hover:text-blue-400 transition" aria-label="Import/Export Data">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
+            
+            <!-- Floating Category Bar at the top -->
+            <div id="category-bar" class="mt-4 p-2 sm:p-4 bg-gray-800 shadow-xl flex items-center justify-between rounded-xl">
+                <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
+                    <div id="category-list" class="flex gap-4">
+                        <!-- Category buttons will be dynamically added here -->
+                    </div>
+                </div>
+                <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition">
+                    +
                 </button>
             </div>
         </header>
@@ -125,9 +146,9 @@
         <div id="message-box" class="message-box"></div>
 
         <!-- Canned Responses App Content -->
-        <div id="canned-responses-app" class="w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
+        <div id="canned-responses-app" class="w-full max-w-5xl">
             <!-- Search Bar -->
-            <div id="search-bar-container" class="mb-6 relative hidden">
+            <div id="search-bar-container" class="mb-6 relative bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -142,7 +163,7 @@
             </div>
             
             <!-- Add Response Section -->
-            <div id="add-response-section" class="mb-8">
+            <div id="add-response-section" class="mb-8 bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
                 <label for="response-input" class="block text-gray-400 font-semibold mb-2">Add New Response</label>
                 <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <textarea
@@ -160,7 +181,7 @@
             </div>
 
             <!-- Responses List -->
-            <div id="responses-container">
+            <div id="responses-container" class="w-full max-w-5xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
                 <h2 id="responses-heading" class="text-2xl font-bold text-gray-200 mb-4 hidden"></h2>
                 
                 <div id="responses-list" class="space-y-6">
@@ -173,7 +194,7 @@
         </div>
 
         <!-- FedEx Tracker Content -->
-        <div id="fedex-tracker-app" class="w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 hidden">
+        <div id="fedex-tracker-app" class="w-full max-w-5xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 hidden">
             <h1 class="text-3xl font-bold text-gray-200 mb-6 text-center">FedEx Tracking Number Separator</h1>
             <p class="text-gray-400 mb-6 text-center">
                 Paste your text below and the program will extract the tracking numbers.
@@ -205,18 +226,6 @@ Please disregard all the other information on this page."></textarea>
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- Floating Category Bar at the bottom -->
-    <div id="category-bar" class="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gray-800 shadow-xl flex items-center justify-between z-40">
-        <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <div id="category-list" class="flex gap-4">
-                <!-- Category buttons will be dynamically added here -->
-            </div>
-        </div>
-        <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition">
-            +
-        </button>
     </div>
 
     <!-- Import/Export Modal -->
@@ -363,10 +372,187 @@ Please disregard all the other information on this page."></textarea>
         </div>
     </div>
 
-    <script>
-        const saveToLocalStorage = () => {
-            localStorage.setItem('categories', JSON.stringify(categories));
-            localStorage.setItem('activeCategory', activeCategory);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, linkWithCredential, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+            authDomain: "tools-a180f.firebaseapp.com",
+            projectId: "tools-a180f",
+            storageBucket: "tools-a180f.firebasestorage.app",
+            messagingSenderId: "195275159442",
+            appId: "1:195275159442:web:20031fd5ccf0428162334b",
+            measurementId: "G-TP0VKGV0EE"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let categories = {};
+        let activeCategory = 'Uncategorized';
+        let userId = null;
+        let newResponseId = null;
+        let responseToDeleteId = null;
+        let categoryToEdit = null;
+        let currentPage = 'canned-responses';
+
+        const defaultCannedResponses = {
+            'BRONCO': {
+                color: '#0284c7',
+                responses: [
+                    {
+                        id: 'bronco-1',
+                        label: 'NON ACTIONABLE ORDER',
+                        text: 'Hello ,\n\nI am writing to inform you that the item you ordered, 6.5FT MINI DP TO HDMI ADAPTER, is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-2',
+                        label: 'ACTIONABLE ITEM RESPONSE',
+                        text: 'Hello ,\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-3',
+                        label: 'OUT FOR DELIVERY RESPONSE',
+                        text: 'Hello ,\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking 883423643293.\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-4',
+                        label: 'ITEM DELIVERED',
+                        text: 'Hello ,\n\nI have delivered the AP MACBOOK PRO ENG 16 I 2024 to your desk US-LAX-BIN1-2-27C this morning August 14th 2025\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-5',
+                        label: 'SECURITY KEY DELIVERED',
+                        text: 'Hello ,\n\nYour security key order has been delivered to US-LAX-BIN5-1-190E. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-6',
+                        label: 'PIKTIME',
+                        text: 'Hello ,\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-7',
+                        label: 'PIKTIME DELIVERED',
+                        text: 'Hello ,\n\nYour order for a Titan USB-C Portable Security Key was successfully picked up on July 9th 2025. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'bronco-8',
+                        label: 'PIKTIME CANCELLED',
+                        text: 'Hello ,\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    }
+                ]
+            },
+            'PAR': {
+                color: '#ef4444',
+                responses: [
+                    {
+                        id: 'par-1',
+                        label: 'PAR REMOTE ORDER',
+                        text: 'Hello ,\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: 883469321443\nReturn Tracking: 791888444600\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'par-2',
+                        label: 'PAR SHIPPING MATERIALS DELIVERED',
+                        text: 'Hello ,\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on Monday, August 4th.\n\nhttps://screenshot.googleplex.com/6gpXawDYo3w5Liv\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'par-3',
+                        label: 'PAR STUFF LOCKER',
+                        text: 'Hello ,\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'par-4',
+                        label: 'CANCEL RETURN LOCKER ORDER',
+                        text: 'Please be advised that this return order will be canceled. This is due to the item exceeding our 10-business day return policy and not being located in the designated return lockers.',
+                        createdAt: new Date().toISOString()
+                    }
+                ]
+            },
+            'GUTS': {
+                color: '#059669',
+                responses: [
+                    {
+                        id: 'guts-1',
+                        label: 'GNG LOCKERS PROACTIVE TICKET',
+                        text: 'Hello ,\n\nThe GNG lockers contain 11 loaners and 8 empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-2',
+                        label: 'GUTS STUFF STATION VENDING',
+                        text: 'Hello ,\n\nThe stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-3',
+                        label: 'Remote Return Shipment Information',
+                        text: 'Hello ,\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:\nReturn Tracking:\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-4',
+                        label: 'Resolution For Lost Device',
+                        text: 'Hello ,\n\nAfter conducting a search for Asset Number <#######> - <Device Model>, I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-5',
+                        label: 'Exit Onsite Collection Information',
+                        text: 'Hello ,\n\nThank you for confirming that your <Device Model> Asset Number <#######> is ready for pickup on MM/DD/YYYY>.\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-6',
+                        label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up',
+                        text: 'Hello ,\n\nI just want to follow up because we visited <Desk Location> and your <Device Model> Asset Number <#######> was <not found/not ready for collection>.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have <#> business days remaining to complete your return.\n\nIf you do not complete your return in <#> business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-7',
+                        label: 'Remote Return Shipment That Has Not Been Received',
+                        text: 'Hello ,\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'guts-8',
+                        label: 'Successful Return',
+                        text: 'Hello ,\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number <#######> - <Device Model>\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]',
+                        createdAt: new Date().toISOString()
+                    }
+                ]
+            }
+        };
+
+        const getUserDocRef = (uid) => doc(db, 'users', uid);
+        
+        const saveToFirestore = async () => {
+            if (!userId) {
+                console.error("User not authenticated.");
+                return;
+            }
+            try {
+                await setDoc(getUserDocRef(userId), { categories: categories });
+            } catch (error) {
+                console.error("Error saving to Firestore:", error);
+                showMessage("Error saving data.", 'error');
+            }
         };
 
         const renderContent = () => {
@@ -374,7 +560,9 @@ Please disregard all the other information on this page."></textarea>
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const categoryBar = document.getElementById('category-bar');
             const importExportBtn = document.getElementById('import-export-btn');
-
+            
+            const mainTitle = document.getElementById('main-title');
+            
             if (currentPage === 'canned-responses') {
                 cannedResponsesApp.classList.remove('hidden');
                 categoryBar.classList.remove('hidden');
@@ -386,23 +574,9 @@ Please disregard all the other information on this page."></textarea>
                 categoryBar.classList.add('hidden');
                 fedexTrackerApp.classList.remove('hidden');
                 importExportBtn.classList.add('hidden');
-                document.title = 'FedEx Tracker';
                 mainTitle.textContent = 'FedEx Tracker';
             }
         };
-
-        let categories = JSON.parse(localStorage.getItem('categories')) || {};
-        let activeCategory = localStorage.getItem('activeCategory') || 'Uncategorized';
-        let newResponseId = null;
-        let responseToDeleteId = null;
-        let categoryToEdit = null;
-        let newCategoryName = null;
-        let currentPage = localStorage.getItem('currentPage') || 'canned-responses';
-
-        if (!categories['Uncategorized']) {
-            categories['Uncategorized'] = { color: '#60a5fa', responses: [] }; // Initialized with a default color
-            saveToLocalStorage();
-        }
 
         const responseInput = document.getElementById('response-input');
         const addBtn = document.getElementById('add-btn');
@@ -422,7 +596,6 @@ Please disregard all the other information on this page."></textarea>
         const addCategoryInput = document.getElementById('add-category-input');
         const confirmAddCategoryBtn = document.getElementById('confirm-add-category-btn');
         const cancelAddCategoryBtn = document.getElementById('cancel-add-category-btn');
-        const noCategoriesMessage = document.getElementById('no-categories-message');
         const addResponseSection = document.getElementById('add-response-section');
         const responsesHeading = document.getElementById('responses-heading');
         const mainTitle = document.getElementById('main-title');
@@ -460,6 +633,8 @@ Please disregard all the other information on this page."></textarea>
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
         const navCannedResponses = document.getElementById('nav-canned-responses');
         const navFedexTracker = document.getElementById('nav-fedex-tracker');
+        const signInBtn = document.getElementById('sign-in-btn');
+        const signOutBtn = document.getElementById('sign-out-btn');
 
         const fedexInputText = document.getElementById('fedex-input-text');
         const fedexExtractBtn = document.getElementById('fedex-extract-btn');
@@ -485,7 +660,7 @@ Please disregard all the other information on this page."></textarea>
             if (categoryNames.length === 0) {
                 if (!categories['Uncategorized']) {
                     categories['Uncategorized'] = { color: '#60a5fa', responses: [] };
-                    saveToLocalStorage();
+                    saveToFirestore();
                 }
                 activeCategory = 'Uncategorized';
                 renderCategories();
@@ -645,7 +820,7 @@ Please disregard all the other information on this page."></textarea>
             const newId = Date.now().toString();
             const newResponse = { id: newId, text: text, label: '', createdAt: new Date().toISOString() };
             categories[activeCategory].responses.push(newResponse);
-            saveToLocalStorage();
+            saveToFirestore();
             responseInput.value = '';
             newResponseId = newId;
             labelModal.classList.remove('hidden');
@@ -672,7 +847,7 @@ Please disregard all the other information on this page."></textarea>
                     renderCategories();
                 }
 
-                saveToLocalStorage();
+                saveToFirestore();
                 showMessage("Response updated successfully!");
                 renderResponses();
             }
@@ -682,7 +857,7 @@ Please disregard all the other information on this page."></textarea>
             if (!activeCategory) return;
 
             categories[activeCategory].responses = categories[activeCategory].responses.filter(r => r.id !== id);
-            saveToLocalStorage();
+            saveToFirestore();
             renderResponses();
             showMessage("Response deleted successfully!");
         };
@@ -725,7 +900,7 @@ Please disregard all the other information on this page."></textarea>
                             activeCategory = 'Uncategorized';
                             categories['Uncategorized'] = { color: '#60a5fa', responses: [] };
                         }
-                        saveToLocalStorage();
+                        saveToFirestore();
                         renderCategories();
                         showMessage("Data imported successfully!");
                         importExportModal.classList.add('hidden');
@@ -760,16 +935,43 @@ Please disregard all the other information on this page."></textarea>
 
         navCannedResponses.addEventListener('click', () => {
             currentPage = 'canned-responses';
-            localStorage.setItem('currentPage', currentPage);
             renderContent();
             sidebar.classList.remove('open');
         });
 
         navFedexTracker.addEventListener('click', () => {
             currentPage = 'fedex-tracker';
-            localStorage.setItem('currentPage', currentPage);
             renderContent();
             sidebar.classList.remove('open');
+        });
+
+        signInBtn.addEventListener('click', async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                const credential = await signInWithPopup(auth, provider);
+
+                if (auth.currentUser.isAnonymous) {
+                    const anonUser = auth.currentUser;
+                    await linkWithCredential(anonUser, credential.credential);
+                    showMessage("Account linked successfully!");
+                } else {
+                    showMessage("Signed in with Google!");
+                }
+            } catch (error) {
+                console.error("Google sign-in failed", error);
+                showMessage("Google sign-in failed. Please try again.", 'error');
+            }
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                await signInAnonymously(auth);
+                showMessage("Signed out successfully!");
+            } catch (error) {
+                console.error("Sign out failed", error);
+                showMessage("Sign out failed. Please try again.", 'error');
+            }
         });
 
         fedexExtractBtn.addEventListener('click', () => {
@@ -818,7 +1020,7 @@ Please disregard all the other information on this page."></textarea>
             categories[categoryName] = { color: '#60a5fa', responses: [] };
             activeCategory = categoryName;
             addCategoryModal.classList.add('hidden');
-            saveToLocalStorage();
+            saveToFirestore();
             renderCategories();
             showMessage(`Category '${categoryName}' created successfully!`);
         });
@@ -875,7 +1077,7 @@ Please disregard all the other information on this page."></textarea>
             const newColor = colorInput.value;
             if (activeCategory) {
                 categories[activeCategory].color = newColor;
-                saveToLocalStorage();
+                saveToFirestore();
                 renderCategories();
                 showMessage(`Color for '${activeCategory}' changed successfully!`);
             }
@@ -915,7 +1117,7 @@ Please disregard all the other information on this page."></textarea>
                 activeCategory = newName;
             }
             categoryToEdit = null;
-            saveToLocalStorage();
+            saveToFirestore();
             editCategoryModal.classList.add('hidden');
             renderCategories();
         });
@@ -933,7 +1135,7 @@ Please disregard all the other information on this page."></textarea>
                     activeCategory = categoryNames.length > 0 ? categoryNames[0] : 'Uncategorized';
                 }
                 categoryToEdit = null;
-                saveToLocalStorage();
+                saveToFirestore();
                 deleteCategoryModal.classList.add('hidden');
                 renderCategories();
                 showMessage("Category deleted successfully!");
@@ -999,7 +1201,7 @@ Please disregard all the other information on this page."></textarea>
                 const responseIndex = responses.findIndex(r => r.id === newResponseId);
                 if (responseIndex > -1) {
                     responses[responseIndex].label = modalLabelInput.value || '';
-                    saveToLocalStorage();
+                    saveToFirestore();
                 }
                 newResponseId = null;
                 modalLabelInput.value = '';
@@ -1031,7 +1233,34 @@ Please disregard all the other information on this page."></textarea>
         });
 
         // Initial render
-        window.onload = renderContent;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                signOutBtn.classList.remove('hidden');
+                if (user.isAnonymous) {
+                    signInBtn.classList.remove('hidden');
+                } else {
+                    signInBtn.classList.add('hidden');
+                }
+
+                onSnapshot(getUserDocRef(userId), (doc) => {
+                    if (doc.exists()) {
+                        categories = doc.data().categories || {};
+                    } else {
+                        categories = defaultCannedResponses;
+                        saveToFirestore();
+                    }
+                    renderContent();
+                });
+            } else {
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Anonymous sign-in failed", error);
+                });
+                signInBtn.classList.add('hidden');
+                signOutBtn.classList.add('hidden');
+            }
+        });
+
     </script>
 </body>
 </html>
