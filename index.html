@@ -371,7 +371,9 @@ Please disregard all the other information on this page."></textarea>
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
-        // Firebase configuration from the environment
+        // This is a secure way to get Firebase config in this environment.
+        // In a production application, these keys should never be exposed in client-side code.
+        // Instead, they should be stored on a secure server and accessed via a backend API.
         const firebaseConfig = JSON.parse(__firebase_config);
 
         const app = initializeApp(firebaseConfig);
