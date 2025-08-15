@@ -149,7 +149,7 @@
         <div id="canned-responses-app" class="w-full max-w-5xl">
             <!-- Search Bar -->
             <div id="search-bar-container" class="mb-6 relative bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -157,7 +157,7 @@
                 <input
                     type="text"
                     id="search-input"
-                    class="w-full border border-gray-600 rounded-lg p-3 pl-10 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    class="w-full border border-gray-600 rounded-lg p-3 pl-12 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     placeholder="Search responses..."
                 />
             </div>
@@ -195,7 +195,6 @@
 
         <!-- FedEx Tracker Content -->
         <div id="fedex-tracker-app" class="w-full max-w-5xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 hidden">
-            <h1 class="text-3xl font-bold text-gray-200 mb-6 text-center">FedEx Tracking Number Separator</h1>
             <p class="text-gray-400 mb-6 text-center">
                 Paste your text below and the program will extract the tracking numbers.
             </p>
@@ -211,19 +210,13 @@ Please disregard all the other information on this page."></textarea>
         
             <button id="fedex-extract-btn"
                         class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4">
-                Extract Tracking Numbers
+                Track Tracking Numbers
             </button>
         
             <div class="mt-8">
-                <label class="block text-sm font-medium text-gray-400 mb-2">
-                    Extracted Numbers (with tabs)
-                </label>
-                <textarea id="fedex-output-area" rows="5" readonly
-                            class="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-200 font-mono"></textarea>
-                <button id="fedex-copy-btn"
-                            class="mt-2 w-full bg-green-500 text-white font-semibold py-2 rounded-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                    Copy to Clipboard
-                </button>
+                <div id="tracking-results-container" class="space-y-4">
+                    <!-- Tracking results will be displayed here -->
+                </div>
             </div>
         </div>
     </div>
@@ -377,6 +370,7 @@ Please disregard all the other information on this page."></textarea>
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, linkWithCredential, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -393,6 +387,7 @@ Please disregard all the other information on this page."></textarea>
         const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app, 'us-central1');
         
         let categories = {};
         let activeCategory = 'Uncategorized';
@@ -640,6 +635,7 @@ Please disregard all the other information on this page."></textarea>
         const fedexExtractBtn = document.getElementById('fedex-extract-btn');
         const fedexOutputArea = document.getElementById('fedex-output-area');
         const fedexCopyBtn = document.getElementById('fedex-copy-btn');
+        const trackingResultsContainer = document.getElementById('tracking-results-container');
         
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
@@ -698,43 +694,50 @@ Please disregard all the other information on this page."></textarea>
         const renderResponses = (searchQuery = '') => {
             responsesList.innerHTML = '';
             
-            if (activeCategory === 'Uncategorized') {
-                document.title = 'Canned Responses';
-                mainTitle.textContent = 'Canned Responses';
-                responsesHeading.classList.remove('hidden');
-                responsesHeading.textContent = `Responses in: Uncategorized`;
-                categoryMenuBtn.classList.add('hidden');
-            } else if (activeCategory) {
-                document.title = `${activeCategory} - Canned Responses`;
-                mainTitle.textContent = activeCategory;
-                responsesHeading.classList.remove('hidden');
-                responsesHeading.textContent = `Responses in: ${activeCategory}`;
-                categoryMenuBtn.classList.remove('hidden');
-            } else {
-                document.title = 'Canned Responses';
-                mainTitle.textContent = 'Canned Responses';
-                responsesHeading.classList.add('hidden');
-                categoryMenuBtn.classList.add('hidden');
-                return;
-            }
+            let responsesToRender = [];
+            let headingText = '';
+            let isGlobalSearch = !!searchQuery;
 
-            let responses = categories[activeCategory] ? categories[activeCategory].responses : [];
-            if (responses) {
-                if (searchQuery) {
-                    const query = searchQuery.toLowerCase();
-                    responses = responses.filter(r => 
+            if (isGlobalSearch) {
+                // If there's a search query, search all categories
+                const query = searchQuery.toLowerCase();
+                for (const categoryName in categories) {
+                    const categoryResponses = categories[categoryName].responses;
+                    const matchingResponses = categoryResponses.filter(r => 
                         (r.text && r.text.toLowerCase().includes(query)) ||
                         (r.label && r.label.toLowerCase().includes(query))
                     );
+                    responsesToRender.push(...matchingResponses);
                 }
+                headingText = 'Search Results';
+                categoryMenuBtn.classList.add('hidden');
             } else {
-                responses = [];
+                // If no search query, show responses from the active category
+                responsesToRender = categories[activeCategory] ? categories[activeCategory].responses : [];
+                if (activeCategory === 'Uncategorized') {
+                    headingText = 'Responses in: Uncategorized';
+                    categoryMenuBtn.classList.add('hidden');
+                } else if (activeCategory) {
+                    headingText = `Responses in: ${activeCategory}`;
+                    categoryMenuBtn.classList.remove('hidden');
+                }
             }
 
+            // Update main title and heading
+            if (isGlobalSearch) {
+                document.title = 'Search Results';
+                mainTitle.textContent = 'Search Results';
+            } else {
+                document.title = activeCategory === 'Uncategorized' ? 'Canned Responses' : `${activeCategory} - Canned Responses`;
+                mainTitle.textContent = activeCategory === 'Uncategorized' ? 'Canned Responses' : activeCategory;
+            }
 
-            if (responses.length > 0) {
+            responsesHeading.textContent = headingText;
+            responsesHeading.classList.remove('hidden');
+            
+            if (responsesToRender.length > 0) {
                 emptyState.classList.add('hidden');
-                const groupedResponses = responses.reduce((acc, response) => {
+                const groupedResponses = responsesToRender.reduce((acc, response) => {
                     const label = response.label || 'Unlabeled';
                     if (!acc[label]) {
                         acc[label] = [];
@@ -919,9 +922,9 @@ Please disregard all the other information on this page."></textarea>
         function extractAndFormat(inputText) {
             const matches = inputText.match(trackingNumberRegex);
             if (!matches) {
-                return "";
+                return [];
             }
-            return matches.join("\t");
+            return matches;
         }
 
         // --- Event Listeners ---
@@ -974,16 +977,44 @@ Please disregard all the other information on this page."></textarea>
             }
         });
 
-        fedexExtractBtn.addEventListener('click', () => {
+        const trackPackage = httpsCallable(functions, 'trackPackage');
+        fedexExtractBtn.addEventListener('click', async () => {
             const inputText = fedexInputText.value;
-            const outputText = extractAndFormat(inputText);
-            fedexOutputArea.value = outputText;
-        });
+            const trackingNumbers = extractAndFormat(inputText);
 
-        fedexCopyBtn.addEventListener('click', () => {
-            fedexOutputArea.select();
-            document.execCommand('copy');
-            showMessage("Copied to clipboard!");
+            if (trackingNumbers.length === 0) {
+                trackingResultsContainer.innerHTML = `<p class="text-gray-400">No tracking numbers found.</p>`;
+                return;
+            }
+
+            trackingResultsContainer.innerHTML = '';
+
+            for (const trackingNumber of trackingNumbers) {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'bg-gray-700 p-4 rounded-lg border border-gray-600';
+                resultDiv.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2">${trackingNumber}</h4>
+                    <p class="text-gray-400">Tracking package...</p>
+                `;
+                trackingResultsContainer.appendChild(resultDiv);
+
+                try {
+                    const result = await trackPackage({ trackingNumber });
+                    const trackingData = result.data.data;
+                    resultDiv.innerHTML = `
+                        <h4 class="font-bold text-lg mb-2">${trackingNumber}</h4>
+                        <pre class="whitespace-pre-wrap text-sm">${JSON.stringify(trackingData, null, 2)}</pre>
+                    `;
+                    showMessage("Tracking successful!");
+                } catch (error) {
+                    console.error("FedEx tracking failed", error);
+                    resultDiv.innerHTML = `
+                        <h4 class="font-bold text-lg mb-2">${trackingNumber}</h4>
+                        <p class="text-red-400">Error: ${error.message}</p>
+                    `;
+                    showMessage("Tracking failed. Please check the tracking numbers.", 'error');
+                }
+            }
         });
 
 
