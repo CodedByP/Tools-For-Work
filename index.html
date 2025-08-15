@@ -92,12 +92,12 @@
     <!-- Main Content -->
     <div id="main-content" class="flex-1 p-4 sm:p-8 flex flex-col items-center">
         <header class="w-full max-w-2xl flex items-center justify-between mb-6">
+            <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Open Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
             <div class="flex items-center space-x-2">
-                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Open Menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
                 <h1 id="main-title" class="text-3xl sm:text-4xl font-bold text-gray-200">Canned Responses</h1>
                 <div class="relative">
                     <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Category Menu">
@@ -373,16 +373,19 @@ Please disregard all the other information on this page."></textarea>
             const cannedResponsesApp = document.getElementById('canned-responses-app');
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const categoryBar = document.getElementById('category-bar');
+            const importExportBtn = document.getElementById('import-export-btn');
 
             if (currentPage === 'canned-responses') {
                 cannedResponsesApp.classList.remove('hidden');
                 categoryBar.classList.remove('hidden');
                 fedexTrackerApp.classList.add('hidden');
+                importExportBtn.classList.remove('hidden');
                 renderCategories();
             } else if (currentPage === 'fedex-tracker') {
                 cannedResponsesApp.classList.add('hidden');
                 categoryBar.classList.add('hidden');
                 fedexTrackerApp.classList.remove('hidden');
+                importExportBtn.classList.add('hidden');
                 document.title = 'FedEx Tracker';
                 mainTitle.textContent = 'FedEx Tracker';
             }
