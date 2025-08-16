@@ -16,7 +16,8 @@
         .message-box {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
             padding: 1rem;
             border-radius: 0.5rem;
@@ -102,7 +103,7 @@
             color: #a0aec0;
         }
         /* Message box animation */
-        .message-box {
+        .message-box.show {
             animation: slideInFadeIn 0.5s ease-out forwards;
         }
         @keyframes slideInFadeIn {
@@ -112,7 +113,7 @@
             }
             to {
                 opacity: 1;
-                transform: translate(-50%, 0);
+                transform: translateX(-50%);
             }
         }
     </style>
