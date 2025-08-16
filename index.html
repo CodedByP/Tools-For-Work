@@ -1997,8 +1997,12 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
-                userName = user.displayName || user.email || 'User';
-                document.getElementById('auth-status').textContent = `Signed in as: ${userName}`;
+                // Use first name for placeholder but full name for status display
+                const displayName = user.displayName || user.email || 'User';
+                const firstName = displayName.split(' ')[0].split('@')[0];
+                userName = firstName;
+                document.getElementById('auth-status').textContent = `Signed in as: ${displayName}`;
+                document.getElementById('auth-status').title = user.email;
                 if (user.isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
