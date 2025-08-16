@@ -453,7 +453,7 @@
         const db = getFirestore(app);
 
         let categories = {};
-        let activeCategory = 'Uncategorized';
+        let activeCategory = '';
         let userId = null;
         let newResponseId = null;
         let responseToDeleteId = null;
@@ -595,10 +595,6 @@
                         createdAt: new Date().toISOString()
                     }
                 ]
-            },
-            'Uncategorized': {
-                color: '#6b7280',
-                responses: []
             }
         };
 
@@ -727,12 +723,12 @@
             categoryList.innerHTML = '';
             const categoryNames = Object.keys(categories);
             if (categoryNames.length === 0) {
-                if (!categories['Uncategorized']) {
-                    categories['Uncategorized'] = { color: '#60a5fa', responses: [] };
-                    saveToFirestore();
-                }
-                activeCategory = 'Uncategorized';
-                renderCategories();
+                activeCategory = '';
+                addResponseSection.classList.add('hidden');
+                searchBarContainer.classList.add('hidden');
+                responsesHeading.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                responsesList.innerHTML = '';
                 return;
             }
 
@@ -769,41 +765,39 @@
             
             let responsesToRender = [];
             let headingText = '';
-            let isGlobalSearch = !!searchQuery;
+            const query = searchQuery.toLowerCase();
 
-            if (isGlobalSearch) {
-                // If there's a search query, search all categories
-                const query = searchQuery.toLowerCase();
+            if (query) {
+                let labelMatches = [];
+                let textMatches = [];
+
                 for (const categoryName in categories) {
                     const categoryResponses = categories[categoryName].responses;
-                    const matchingResponses = categoryResponses.filter(r => 
-                        (r.text && r.text.toLowerCase().includes(query)) ||
-                        (r.label && r.label.toLowerCase().includes(query))
-                    );
-                    responsesToRender.push(...matchingResponses);
+                    categoryResponses.forEach(r => {
+                        const labelMatch = r.label && r.label.toLowerCase().includes(query);
+                        const textMatch = r.text && r.text.toLowerCase().includes(query);
+                        
+                        if (labelMatch) {
+                            labelMatches.push(r);
+                        } else if (textMatch) {
+                            textMatches.push(r);
+                        }
+                    });
                 }
+                // Prioritize label matches
+                responsesToRender = [...labelMatches, ...textMatches];
                 headingText = 'Search Results';
                 categoryMenuBtn.classList.add('hidden');
             } else {
                 // If no search query, show responses from the active category
                 responsesToRender = categories[activeCategory] ? categories[activeCategory].responses : [];
-                if (activeCategory === 'Uncategorized') {
-                    headingText = 'Responses in: Uncategorized';
-                    categoryMenuBtn.classList.add('hidden');
-                } else if (activeCategory) {
-                    headingText = `Responses in: ${activeCategory}`;
-                    categoryMenuBtn.classList.remove('hidden');
-                }
+                headingText = `Responses in: ${activeCategory}`;
+                categoryMenuBtn.classList.remove('hidden');
             }
-
+            
             // Update main title and heading
-            if (isGlobalSearch) {
-                document.title = 'Search Results';
-                mainTitle.textContent = 'Search Results';
-            } else {
-                document.title = activeCategory === 'Uncategorized' ? 'Canned Responses' : `${activeCategory} - Canned Responses`;
-                mainTitle.textContent = activeCategory === 'Uncategorized' ? 'Canned Responses' : activeCategory;
-            }
+            document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
+            mainTitle.textContent = (query ? 'Search Results' : activeCategory);
 
             responsesHeading.textContent = headingText;
             responsesHeading.classList.remove('hidden');
@@ -833,6 +827,8 @@
                         responseEl.className = 'response-item flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-4 rounded-lg border border-gray-600';
                         responseEl.dataset.id = response.id;
 
+                        const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
+
                         const displayHTML = `
                             <div class="flex-grow display-mode">
                                 <p class="response-text text-gray-200 mb-2 sm:mb-0 sm:mr-4 whitespace-pre-wrap">${response.text}</p>
@@ -849,9 +845,7 @@
                                 </div>
                             </div>
                         `;
-
-                        const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
-
+                        
                         const editHTML = `
                             <div class="flex-grow edit-mode hidden">
                                 <div class="flex flex-col space-y-2">
@@ -973,8 +967,7 @@
                         if (categoryNames.length > 0) {
                             activeCategory = categoryNames[0];
                         } else {
-                            activeCategory = 'Uncategorized';
-                            categories['Uncategorized'] = { color: '#60a5fa', responses: [] };
+                            activeCategory = '';
                         }
                         saveToFirestore();
                         renderCategories();
@@ -1107,13 +1100,13 @@
         });
 
         changeColorBtn.addEventListener('click', () => {
-            if (activeCategory && activeCategory !== 'Uncategorized') {
+            if (activeCategory) {
                 const currentColor = categories[activeCategory].color || '#60a5fa';
                 colorInput.value = currentColor;
                 colorPickerModal.classList.remove('hidden');
                 categoryMenu.classList.add('hidden');
             } else {
-                showMessage("You can't change the color of the 'Uncategorized' category.", 'error');
+                showMessage("Please select a category first.", 'error');
             }
         });
         
@@ -1177,7 +1170,7 @@
                 delete categories[categoryToEdit];
                 if (activeCategory === categoryToEdit) {
                     const categoryNames = Object.keys(categories);
-                    activeCategory = categoryNames.length > 0 ? categoryNames[0] : 'Uncategorized';
+                    activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
                 }
                 categoryToEdit = null;
                 saveToFirestore();
@@ -1401,6 +1394,9 @@
                         categories = defaultCannedResponses;
                         // Initial data save for new users
                         saveToFirestore();
+                    }
+                    if (Object.keys(categories).length > 0) {
+                        activeCategory = Object.keys(categories)[0];
                     }
                     renderContent();
                 });
