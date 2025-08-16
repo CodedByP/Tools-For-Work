@@ -9,10 +9,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;600&display=swap');
+        
+        /* Base Dark Mode Styles */
         body {
             font-family: 'Alexandria', sans-serif;
             background-color: #111827;
             color: #e5e7eb;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         h1, h2 {
             font-family: 'Poppins', sans-serif;
@@ -22,10 +25,9 @@
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
                                  radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
-        /* Adjusted these classes to use a semi-transparent background so the gradient can show through */
-        .link-card, .card-style, .form-container, .floating-card, .main-card {
-            background-color: rgba(22, 27, 34, 0.8); /* Semi-transparent background */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
+            background-color: rgba(22, 27, 34, 0.8);
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
         .link-card:hover {
             transform: translateY(-5px);
@@ -146,7 +148,7 @@
             color: #a0aec0;
         }
         .main-card {
-            background-color: rgba(22, 27, 34, 0.8); /* Semi-transparent */
+            background-color: rgba(22, 27, 34, 0.8);
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             padding: 2rem;
@@ -156,17 +158,59 @@
             transform: translateY(-5px);
         }
         .floating-card {
-            background-color: rgba(22, 27, 34, 0.8); /* Semi-transparent */
+            background-color: rgba(22, 27, 34, 0.8);
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
-        /* New highlight class for search results */
         .highlight {
-            background-color: rgba(255, 255, 0, 0.3); /* Semi-transparent yellow highlight */
-            color: #000; /* Dark text for contrast */
+            background-color: rgba(255, 255, 0, 0.3);
+            color: #000;
             padding: 2px 4px;
             border-radius: 4px;
         }
+
+        /* Light Mode Styles */
+        body.light-mode {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .light-mode .container-bg {
+            background-color: #f9fafb;
+            background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+        }
+        .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .light-mode .link-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .light-mode h1, .light-mode h2, .light-mode h3 {
+            color: #1f2937;
+        }
+        .light-mode .link-title {
+            background-image: none;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: inherit;
+            color: #1f2937;
+        }
+        .light-mode .text-placeholder::placeholder {
+            color: #6b7280;
+        }
+        .light-mode #auth-status, .light-mode .text-gray-400 {
+            color: #4b5563;
+        }
+        .light-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .light-mode .bg-gray-700 { background-color: #d1d5db; }
+        .light-mode .bg-gray-600 { background-color: #9ca3af; }
+        .light-mode .text-gray-100 { color: #1f2937; }
+        .light-mode .text-gray-200 { color: #374151; }
+        .light-mode .border-gray-600 { border-color: #9ca3af; }
+        .light-mode .hover\\:bg-gray-700:hover { background-color: #d1d5db; }
+        .light-mode .hover\\:text-white:hover { color: #1f2937; }
+        .light-mode .tracking-numbers-container { background-color: #f3f4f6; }
+        .light-mode .tracking-tab { background-color: #e5e7eb; }
     </style>
     
     <!-- Favicon links for all browsers and devices -->
@@ -205,6 +249,11 @@
             <div id="auth-status" class="text-center text-gray-400 font-medium">Not signed in.</div>
             <button id="sign-in-btn" class="w-full text-center px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg hidden">Sign In with Google</button>
             <button id="sign-out-btn" class="w-full text-center px-5 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition duration-300 shadow-lg hidden">Sign Out</button>
+            
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle-btn" class="w-full text-center px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
+                <i id="theme-icon" class="fas fa-moon mr-2"></i> Toggle Theme
+            </button>
         </div>
         <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -400,7 +449,7 @@
                             </div>
                             <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
                                 <a href="https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes</h3>
+                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes </h3>
                                     <p class="text-sm text-gray-400">A spreadsheet containing plant codes.</p>
                                 </a>
                             </div>
@@ -887,6 +936,32 @@
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
         
+        // Theme toggle variables and logic
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('light-mode')) {
+                document.body.classList.remove('light-mode');
+                themeIcon.className = 'fas fa-moon mr-2';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.add('light-mode');
+                themeIcon.className = 'fas fa-sun mr-2';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Apply saved theme on page load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.className = 'fas fa-sun mr-2';
+        } else {
+            document.body.classList.remove('light-mode');
+            themeIcon.className = 'fas fa-moon mr-2';
+        }
+
         // FedEx Tracker variables
         const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
         const inputTextareaFedex = document.getElementById('input-text-fedex');
