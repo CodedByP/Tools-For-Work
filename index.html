@@ -85,7 +85,7 @@
             color: #e5e7eb;
             padding: 2.5rem;
             border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 25px -5-px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
             width: 90%;
             max-width: 450px;
             transform: scale(0.95);
@@ -160,6 +160,13 @@
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
+        /* New highlight class for search results */
+        .highlight {
+            background-color: rgba(255, 255, 0, 0.3); /* Semi-transparent yellow highlight */
+            color: #000; /* Dark text for contrast */
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
     </style>
     
     <!-- Favicon links for all browsers and devices -->
@@ -182,7 +189,7 @@
 
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar flex flex-col">
-        <h2 class="text-3xl font-extrabold text-gray-100 mb-8">Tools </h2>
+        <h2 class="text-3xl font-extrabold text-gray-100 mb-8">Tools </h2>
         <nav class="flex flex-col space-y-3">
             <button id="nav-canned-responses" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-comment-dots mr-3"></i> Canned Responses
@@ -964,24 +971,27 @@
             const query = searchQuery.toLowerCase();
 
             if (query) {
+                let allResponses = [];
+                for (const categoryName in categories) {
+                    allResponses = allResponses.concat(categories[categoryName].responses);
+                }
+                
                 let labelMatches = [];
                 let textMatches = [];
 
-                for (const categoryName in categories) {
-                    const categoryResponses = categories[categoryName].responses;
-                    categoryResponses.forEach(r => {
-                        const labelMatch = r.label && r.label.toLowerCase().includes(query);
-                        const textMatch = r.text && r.text.toLowerCase().includes(query);
-                        
-                        if (labelMatch) {
-                            labelMatches.push(r);
-                        } else if (textMatch) {
-                            textMatches.push(r);
-                        }
-                    });
-                }
+                allResponses.forEach(r => {
+                    const labelMatch = r.label && r.label.toLowerCase().includes(query);
+                    const textMatch = r.text && r.text.toLowerCase().includes(query);
+                    
+                    if (labelMatch) {
+                        labelMatches.push(r);
+                    } else if (textMatch) {
+                        textMatches.push(r);
+                    }
+                });
+                
                 // Prioritize label matches
-                responsesToRender = [...labelMatches, ...textMatches];
+                responsesToRender = [...new Set([...labelMatches, ...textMatches])];
                 headingText = 'Search Results';
             } else {
                 // If no search query, show responses from the active category
@@ -1010,13 +1020,25 @@
                 for (const label in groupedResponses) {
                     const labelSection = document.createElement('div');
                     labelSection.className = 'mb-6';
+                    let highlightedLabel = label;
+                    if(query) {
+                        const regex = new RegExp(query, 'gi');
+                        highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+                    }
+
                     labelSection.innerHTML = `
-                        <h3 class="text-xl font-bold text-gray-400 mb-2">${label}</h3>
+                        <h3 class="text-xl font-bold text-gray-400 mb-2">${highlightedLabel}</h3>
                         <div class="space-y-4"></div>
                     `;
                     const responsesInSection = labelSection.querySelector('div');
 
                     groupedResponses[label].forEach(response => {
+                        let displayText = response.text;
+                        if (query) {
+                            const regex = new RegExp(query, 'gi');
+                            displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
+                        }
+                        
                         const responseEl = document.createElement('div');
                         responseEl.className = 'response-item flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-4 rounded-lg border border-gray-600';
                         responseEl.dataset.id = response.id;
@@ -1025,7 +1047,7 @@
 
                         const displayHTML = `
                             <div class="flex-grow display-mode">
-                                <p class="response-text text-gray-200 mb-2 sm:mb-0 sm:mr-4 whitespace-pre-wrap">${response.text}</p>
+                                <p class="response-text text-gray-200 mb-2 sm:mb-0 sm:mr-4 whitespace-pre-wrap">${displayText}</p>
                                 <div class="flex-shrink-0 flex space-x-2 mt-2 sm:mt-0">
                                     <button class="copy-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition">
                                         Copy
@@ -1337,10 +1359,6 @@
             const newName = editCategoryInput.value.trim();
             if (!newName) {
                 showMessage("Category name cannot be empty.", 'error');
-                return;
-            }
-            if (newName === categoryToEdit) {
-                editCategoryModal.classList.add('hidden');
                 return;
             }
             if (categories[newName]) {
