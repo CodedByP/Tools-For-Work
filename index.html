@@ -117,6 +117,22 @@
             }
         }
     </style>
+    
+    <!-- Favicon links for all browsers and devices -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+    <!-- Legacy favicon link for older browsers -->
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <!-- Apple touch icon for iOS devices -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!-- Manifest for Progressive Web Apps (PWAs) -->
+    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
 
@@ -443,7 +459,7 @@
             projectId: "tools-a180f",
             storageBucket: "tools-a180f.firebasestorage.app",
             messagingSenderId: "195275159442",
-            appId: "1:195275159442:web:20031fd5ccf0428162334b"
+            appId: "1:195275159442:web:20031fd5ccf0428162334b",
         };
         const appId = firebaseConfig.appId;
 
@@ -599,7 +615,7 @@
         };
 
         const getUserDocRef = (uid) => {
-            const docPath = `artifacts/${appId}/users/${uid}`;
+            const docPath = `artifacts/${appId}/users/${uid}/data/canned-responses`;
             console.log("Listening to Firestore document at path:", docPath);
             return doc(db, docPath);
         };
@@ -705,7 +721,7 @@
         const clearButtonFedex = document.getElementById('clear-button-fedex');
         const noNumbersMessage = document.getElementById('no-numbers-message');
         const loadingIndicator = document.getElementById('loading-indicator');
-        
+
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
             messageBox.className = 'message-box show';
@@ -1270,7 +1286,8 @@
             deleteModal.classList.add('hidden');
         });
 
-        // FedEx Tracker Functions
+      
+
         const extractAndDisplayNumbers = () => {
             loadingIndicator.classList.remove('hidden');
             noNumbersMessage.classList.add('hidden');
@@ -1304,12 +1321,6 @@
                             'ml-4', 'p-2', 'rounded-full', 'hover:bg-gray-700', 'transition-colors',
                             'duration-200', 'text-gray-400'
                         );
-                        copyBtn.innerHTML = `
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
-                            </svg>
-                        `;
                         copyBtn.title = "Copy to clipboard";
                         copyBtn.addEventListener('click', (e) => {
                             e.preventDefault(); // Prevents the link from being followed
