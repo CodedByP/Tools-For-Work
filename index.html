@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         body {
             font-family: 'Alexandria', sans-serif;
-            background-color: #1f2937;
+            background-color: #111827; /* Deeper background for a more modern feel */
             color: #e5e7eb;
         }
         .message-box {
@@ -20,15 +20,16 @@
             transform: translateX(-50%);
             z-index: 1000;
             padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem; /* More rounded corners */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             color: white;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
             opacity: 0;
             pointer-events: none;
         }
         .message-box.show {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
         .modal {
             position: fixed;
@@ -36,20 +37,25 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.75); /* Darker overlay */
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1001;
         }
         .modal-content {
-            background-color: #374151;
+            background-color: #1f2937; /* Consistent dark gray */
             color: #e5e7eb;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            padding: 2.5rem;
+            border-radius: 1rem; /* More rounded corners for modern look */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
             width: 90%;
-            max-width: 400px;
+            max-width: 450px; /* Slightly larger modal */
+            transform: scale(0.95);
+            transition: transform 0.3s ease-out;
+        }
+        .modal.show .modal-content {
+            transform: scale(1);
         }
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
@@ -61,13 +67,13 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: -256px;
-            width: 256px;
+            left: -300px; /* Wider sidebar */
+            width: 300px;
             height: 100%;
             background-color: #1f2937;
-            padding: 2rem 1rem;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            transition: left 0.3s ease-in-out;
+            padding: 2.5rem 1.5rem;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
         }
         .sidebar.open {
@@ -77,7 +83,7 @@
             padding-bottom: 2rem;
         }
         .scrollable-box {
-            max-height: 200px;
+            max-height: 250px; /* Slightly larger scroll box */
             overflow-y: auto;
         }
         .animate-fade-in {
@@ -88,11 +94,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .card {
-            background-color: #2d3748;
+            background-color: #1f2937;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
         }
         .tracking-numbers-container {
-            background-color: #1f2937;
+            background-color: #111827;
             border-color: #4a5568;
         }
         .tracking-tab {
@@ -138,17 +144,21 @@
 
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar flex flex-col">
-        <h2 class="text-2xl font-bold text-gray-200 mb-6">Tools</h2>
-        <nav class="flex flex-col space-y-2">
-            <button id="nav-canned-responses" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">Canned Responses</button>
-            <button id="nav-fedex-tracker" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">FedEx Tracker</button>
+        <h2 class="text-3xl font-extrabold text-gray-100 mb-8">Tools</h2>
+        <nav class="flex flex-col space-y-3">
+            <button id="nav-canned-responses" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+                <i class="fas fa-comment-dots mr-3"></i> Canned Responses
+            </button>
+            <button id="nav-fedex-tracker" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+                <i class="fas fa-box-open mr-3"></i> FedEx Tracker
+            </button>
         </nav>
-        <div class="mt-auto pt-6 flex flex-col items-center space-y-2">
-            <div id="auth-status" class="text-center text-gray-400">Not signed in.</div>
-            <button id="sign-in-btn" class="w-full text-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hidden">Sign In with Google</button>
-            <button id="sign-out-btn" class="w-full text-center px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hidden">Sign Out</button>
+        <div class="mt-auto pt-8 flex flex-col items-center space-y-3">
+            <div id="auth-status" class="text-center text-gray-400 font-medium">Not signed in.</div>
+            <button id="sign-in-btn" class="w-full text-center px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg hidden">Sign In with Google</button>
+            <button id="sign-out-btn" class="w-full text-center px-5 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition duration-300 shadow-lg hidden">Sign Out</button>
         </div>
-        <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition">
+        <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -156,31 +166,31 @@
     </div>
 
     <!-- Main Content -->
-    <div id="main-content" class="flex-1 p-4 sm:p-8 flex flex-col items-center">
-        <header class="w-full max-w-5xl mb-6">
+    <div id="main-content" class="flex-1 p-6 sm:p-10 flex flex-col items-center transition-all duration-300 ease-in-out">
+        <header class="w-full max-w-5xl mb-8">
             <div class="flex items-center justify-between">
-                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Open Menu">
+                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Open Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <div class="flex items-center space-x-2">
-                    <h1 id="main-title" class="text-3xl sm:text-4xl font-bold text-gray-200">Canned Responses</h1>
+                <div class="flex items-center space-x-4">
+                    <h1 id="main-title" class="text-3xl sm:text-5xl font-extrabold text-gray-100 transition-colors duration-300">Canned Responses</h1>
                     <div class="relative">
-                        <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition" aria-label="Category Menu">
+                        <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Category Menu">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
                         </button>
-                        <div id="category-menu" class="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50 hidden">
-                            <button id="rename-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-t-lg">Rename Category</button>
-                            <button id="delete-category-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 text-red-400">Delete Category</button>
-                            <button id="change-color-btn" class="w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg">Change Color</button>
+                        <div id="category-menu" class="absolute top-full left-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-50 transform scale-95 opacity-0 hidden transition-all duration-300 origin-top-left">
+                            <button id="rename-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-t-xl transition duration-200">Rename Category</button>
+                            <button id="delete-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 text-red-400 transition duration-200">Delete Category</button>
+                            <button id="change-color-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-b-xl transition duration-200">Change Color</button>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button id="import-export-btn" class="text-gray-400 hover:text-blue-400 transition" aria-label="Import/Export Data">
+                <div class="flex items-center space-x-4">
+                    <button id="import-export-btn" class="p-2 text-gray-400 hover:text-blue-400 transition duration-300" aria-label="Import/Export Data">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
@@ -189,14 +199,14 @@
             </div>
             
             <!-- Floating Category Bar at the top -->
-            <div id="category-bar" class="mt-4 p-2 sm:p-4 bg-gray-800 shadow-xl flex items-center justify-between rounded-xl">
+            <div id="category-bar" class="mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl">
                 <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
                     <div id="category-list" class="flex gap-4">
                         <!-- Category buttons will be dynamically added here -->
                     </div>
                 </div>
-                <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition">
-                    +
+                <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+                    <i class="fas fa-plus"></i>
                 </button>
             </div>
         </header>
@@ -207,8 +217,8 @@
         <!-- Canned Responses App Content -->
         <div id="canned-responses-app" class="w-full max-w-5xl">
             <!-- Search Bar -->
-            <div id="search-bar-container" class="mb-6 relative bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-                <div class="absolute inset-y-0 left-0 pl-10 flex items-center pointer-events-none">
+            <div id="search-bar-container" class="mb-8 relative bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+                <div class="absolute inset-y-0 left-0 pl-11 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -216,76 +226,76 @@
                 <input
                     type="text"
                     id="search-input"
-                    class="w-full border border-gray-600 rounded-lg p-3 pl-12 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    class="w-full border-2 border-gray-600 rounded-xl p-4 pl-12 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg text-placeholder"
                     placeholder="Search responses..."
                 />
             </div>
             
             <!-- Add Response Section -->
-            <div id="add-response-section" class="mb-8 bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-                <label for="response-input" class="block text-gray-400 font-semibold mb-2">Add New Response</label>
-                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <div id="add-response-section" class="mb-8 bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+                <label for="response-input" class="block text-gray-400 font-semibold text-lg mb-4">Add New Response</label>
+                <div class="flex flex-col sm:flex-row gap-6 mb-6">
                     <textarea
                         id="response-input"
-                        class="flex-grow w-full border border-gray-600 rounded-lg p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        class="flex-grow w-full border-2 border-gray-600 rounded-xl p-4 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg text-placeholder"
                         rows="5"
                         placeholder="Type your new canned response here..."
                     ></textarea>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 items-center">
-                    <button id="add-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition">
-                        Add Response
+                    <button id="add-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 text-lg">
+                        <i class="fas fa-plus mr-2"></i> Add Response
                     </button>
                 </div>
             </div>
 
             <!-- Responses List -->
-            <div id="responses-container" class="w-full max-w-5xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-                <h2 id="responses-heading" class="text-2xl font-bold text-gray-200 mb-4 hidden"></h2>
+            <div id="responses-container" class="w-full max-w-5xl bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+                <h2 id="responses-heading" class="text-3xl font-bold text-gray-200 mb-6 hidden"></h2>
                 
                 <div id="responses-list" class="space-y-6">
                     <!-- Responses will be dynamically added here, grouped by label -->
                 </div>
                 <div id="empty-state" class="text-center text-gray-400 mt-8 hidden">
-                    <p>No canned responses in this category. Add one above!</p>
+                    <p class="text-lg">No canned responses in this category. Add one above!</p>
                 </div>
             </div>
         </div>
 
         <!-- FedEx Tracker Content -->
         <div id="fedex-tracker-app" class="w-full max-w-5xl hidden">
-            <div class="card p-8 rounded-lg w-full max-w-2xl mx-auto">
-                <h1 class="text-3xl font-bold text-center text-gray-200 mb-2">FedEx Tracking</h1>
-                <p class="text-center text-gray-400 mb-8">Extract and manage your FedEx tracking numbers easily.</p>
+            <div class="card p-8 rounded-2xl w-full max-w-2xl mx-auto">
+                <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
+                <p class="text-center text-gray-400 mb-8 text-lg">Extract and manage your FedEx tracking numbers easily.</p>
         
                 <!-- Input Section -->
                 <div class="mb-6">
                     <label for="input-text" class="block text-sm font-medium text-gray-300 mb-2">Paste or type your text here:</label>
-                    <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-200" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
+                    <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-300 text-lg" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
                 </div>
         
                 <!-- Extracted Numbers Section -->
                 <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-200 mb-2">Extracted Tracking Numbers</h2>
-                    <div id="tracking-numbers-container" class="tracking-numbers-container border-2 border-dashed border-gray-700 rounded-lg p-4 scrollable-box">
-                        <p id="no-numbers-message" class="text-center text-gray-500">No tracking numbers found yet.</p>
+                    <h2 class="text-2xl font-semibold text-gray-200 mb-4">Extracted Tracking Numbers</h2>
+                    <div id="tracking-numbers-container" class="tracking-numbers-container border-2 border-dashed border-gray-700 rounded-xl p-4 scrollable-box shadow-inner">
+                        <p id="no-numbers-message" class="text-center text-gray-500 text-base">No tracking numbers found yet.</p>
                         <!-- Loading indicator -->
                         <div id="loading-indicator" class="hidden flex justify-center items-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span class="text-sm text-gray-400">Processing...</span>
+                            <span class="text-base text-gray-400">Processing...</span>
                         </div>
                     </div>
                 </div>
         
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50" disabled>
+                    <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50">
                         Clear
                     </button>
-                    <button id="copy-button-fedex" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300" disabled>
+                    <button id="copy-button-fedex" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300">
                         <svg class="h-5 w-5 inline-block -mt-1 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
                             <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
@@ -300,23 +310,23 @@
     <!-- Import/Export Modal -->
     <div id="import-export-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Import or Export Data</h3>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Import or Export Data</h3>
             <div class="flex flex-col space-y-4">
                 <div>
-                    <h4 class="font-semibold text-gray-400">Export All Data</h4>
-                    <p class="text-gray-400 text-sm mb-2">Download a JSON file containing all your categories and responses.</p>
-                    <button id="export-btn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                    <h4 class="font-semibold text-gray-400 text-lg">Export All Data</h4>
+                    <p class="text-gray-400 text-base mb-2">Download a JSON file containing all your categories and responses.</p>
+                    <button id="export-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
                         Export to File
                     </button>
                 </div>
                 <div>
-                    <h4 class="font-semibold text-gray-400">Import Data</h4>
-                    <p class="text-gray-400 text-sm mb-2">Upload a JSON file to restore your categories and responses. This will overwrite your current data.</p>
-                    <input type="file" id="import-file-input" accept="application/json" class="w-full border border-gray-600 rounded-lg p-2 bg-gray-700 text-gray-200 transition">
+                    <h4 class="font-semibold text-gray-400 text-lg">Import Data</h4>
+                    <p class="text-gray-400 text-base mb-2">Upload a JSON file to restore your categories and responses. This will overwrite your current data.</p>
+                    <input type="file" id="import-file-input" accept="application/json" class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 transition duration-300">
                 </div>
             </div>
             <div class="flex justify-end mt-6">
-                <button id="close-import-export-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="close-import-export-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Close
                 </button>
             </div>
@@ -326,19 +336,19 @@
     <!-- Add Category Modal -->
     <div id="add-category-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Add a New Category</h3>
-            <p class="text-gray-400 mb-4">Give your new category a name.</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Add a New Category</h3>
+            <p class="text-gray-400 text-base mb-4">Give your new category a name.</p>
             <input
                 type="text"
                 id="add-category-input"
-                class="w-full border border-gray-600 rounded-lg p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-4"
+                class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 mb-4 text-lg"
                 placeholder="Enter category name (e.g., 'Customer Support')"
             />
             <div class="flex justify-end space-x-4">
-                <button id="cancel-add-category-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="cancel-add-category-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Cancel
                 </button>
-                <button id="confirm-add-category-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                <button id="confirm-add-category-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
                     Create Category
                 </button>
             </div>
@@ -348,19 +358,19 @@
     <!-- Edit Category Modal -->
     <div id="edit-category-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Edit Category</h3>
-            <p class="text-gray-400 mb-4">Enter a new name for the category.</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Edit Category</h3>
+            <p class="text-gray-400 text-base mb-4">Enter a new name for the category.</p>
             <input
                 type="text"
                 id="edit-category-input"
-                class="w-full border border-gray-600 rounded-lg p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-4"
+                class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 mb-4 text-lg"
                 placeholder="Enter new name"
             />
             <div class="flex justify-end space-x-4">
-                <button id="cancel-edit-category-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="cancel-edit-category-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Cancel
                 </button>
-                <button id="confirm-edit-category-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                <button id="confirm-edit-category-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
                     Save Name
                 </button>
             </div>
@@ -370,13 +380,13 @@
     <!-- Delete Category Modal -->
     <div id="delete-category-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Confirm Category Deletion</h3>
-            <p class="text-gray-400 mb-4">Are you sure you want to delete this category? All responses inside it will be permanently deleted.</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Confirm Category Deletion</h3>
+            <p class="text-gray-400 text-base mb-4">Are you sure you want to delete this category? All responses inside it will be permanently deleted.</p>
             <div class="flex justify-end space-x-4">
-                <button id="cancel-delete-category-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="cancel-delete-category-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Cancel
                 </button>
-                <button id="confirm-delete-category-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">
+                <button id="confirm-delete-category-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-red-700 transition duration-300 shadow-md">
                     Yes, Delete
                 </button>
             </div>
@@ -386,16 +396,16 @@
     <!-- Color Picker Modal -->
     <div id="color-picker-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Change Category Color</h3>
-            <p class="text-gray-400 mb-4">Select a new color for the active category.</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Change Category Color</h3>
+            <p class="text-gray-400 text-base mb-4">Select a new color for the active category.</p>
             <div class="flex justify-center mb-4">
-                <input type="color" id="color-input" class="w-16 h-16 cursor-pointer">
+                <input type="color" id="color-input" class="w-16 h-16 rounded-lg cursor-pointer border-2 border-gray-600">
             </div>
-            <div class="flex justify-end mt-6">
-                <button id="close-color-picker-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+            <div class="flex justify-end mt-6 space-x-4">
+                <button id="close-color-picker-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Close
                 </button>
-                <button id="save-color-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                <button id="save-color-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
                     Save
                 </button>
             </div>
@@ -406,19 +416,19 @@
     <!-- Label Modal -->
     <div id="label-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Add a Label</h3>
-            <p class="text-gray-400 mb-4">Give your new response a label to help keep things organized.</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Add a Label</h3>
+            <p class="text-gray-400 text-base mb-4">Give your new response a label to help keep things organized.</p>
             <input
                 type="text"
                 id="modal-label-input"
-                class="w-full border border-gray-600 rounded-lg p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition mb-4"
+                class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 mb-4 text-lg"
                 placeholder="Enter a label (e.g., 'Customer Support')"
             />
             <div class="flex justify-end space-x-4">
-                <button id="cancel-label-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="cancel-label-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Cancel
                 </button>
-                <button id="save-label-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                <button id="save-label-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
                     Save Label
                 </button>
             </div>
@@ -428,13 +438,13 @@
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="modal hidden">
         <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-200 mb-4">Confirm Deletion</h3>
-            <p class="text-gray-400 mb-4">Are you sure you want to delete this response?</p>
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Confirm Deletion</h3>
+            <p class="text-gray-400 text-base mb-4">Are you sure you want to delete this response?</p>
             <div class="flex justify-end space-x-4">
-                <button id="delete-cancel-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition">
+                <button id="delete-cancel-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                     Cancel
                 </button>
-                <button id="delete-confirm-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">
+                <button id="delete-confirm-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-red-700 transition duration-300 shadow-md">
                     Yes, Delete
                 </button>
             </div>
@@ -865,17 +875,17 @@
                         const editHTML = `
                             <div class="flex-grow edit-mode hidden">
                                 <div class="flex flex-col space-y-2">
-                                    <textarea class="edit-response-input w-full border border-gray-600 rounded-lg p-2 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" rows="3">${response.text}</textarea>
-                                    <input type="text" class="edit-label-input w-full border border-gray-600 rounded-lg p-2 bg-gray-700 text-gray-200" value="${response.label || ''}">
-                                    <select class="edit-category-select w-full border border-gray-600 rounded-lg p-2 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    <textarea class="edit-response-input w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg" rows="3">${response.text}</textarea>
+                                    <input type="text" class="edit-label-input w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 text-lg" value="${response.label || ''}">
+                                    <select class="edit-category-select w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg">
                                         ${categoryOptions}
                                     </select>
                                 </div>
-                                <div class="flex-shrink-0 flex space-x-2 mt-2 sm:mt-0">
-                                    <button class="save-btn bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition">
+                                <div class="flex-shrink-0 flex space-x-2 mt-4 sm:mt-2">
+                                    <button class="save-btn bg-blue-600 text-white font-bold py-2 px-6 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                                         Save
                                     </button>
-                                    <button class="cancel-btn bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-gray-600 transition">
+                                    <button class="cancel-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-xl shadow-md hover:bg-gray-600 transition duration-300">
                                         Cancel
                                     </button>
                                 </div>
