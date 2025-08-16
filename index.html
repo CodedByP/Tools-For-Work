@@ -84,7 +84,6 @@
         <h2 class="text-2xl font-bold text-gray-200 mb-6">Tools</h2>
         <nav class="flex flex-col space-y-2">
             <button id="nav-canned-responses" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">Canned Responses</button>
-            <button id="nav-fedex-tracker" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">FedEx Tracker</button>
         </nav>
         <div class="mt-auto pt-6 flex flex-col items-center space-y-2">
             <div id="auth-status" class="text-center text-gray-400">Not signed in.</div>
@@ -191,33 +190,6 @@
                 </div>
                 <div id="empty-state" class="text-center text-gray-400 mt-8 hidden">
                     <p>No canned responses in this category. Add one above!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FedEx Tracker Content -->
-        <div id="fedex-tracker-app" class="w-full max-w-5xl bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 hidden">
-            <p class="text-gray-400 mb-6 text-center">
-                Paste your text below and the program will extract the tracking numbers.
-            </p>
-            
-            <textarea id="fedex-input-text" rows="10"
-                            class="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-700 text-gray-200"
-                            placeholder="e.g.,
-Hello, this is a message about some packages.
-The tracking numbers are 784381023758 and 784381023759.
-Another number is here: 123-456-789-012 but that's not a valid length.
-Here is a third tracking number: 784381023760. And another: 784381023761
-Please disregard all the other information on this page."></textarea>
-            
-            <button id="fedex-extract-btn"
-                            class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4">
-                Track Tracking Numbers
-            </button>
-            
-            <div class="mt-8">
-                <div id="tracking-results-container" class="space-y-4">
-                    <!-- Tracking results will be displayed here -->
                 </div>
             </div>
         </div>
@@ -366,22 +338,22 @@ Please disregard all the other information on this page."></textarea>
             </div>
         </div>
     </div>
-
+    
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, linkWithCredential, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Initialization and Auth ---
         // Use the global __firebase_config and __app_id variables provided by the environment
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
+        // Initialize Firebase app
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const functions = getFunctions(app, 'us-central1');
 
         let categories = {};
         let activeCategory = 'Uncategorized';
@@ -389,8 +361,7 @@ Please disregard all the other information on this page."></textarea>
         let newResponseId = null;
         let responseToDeleteId = null;
         let categoryToEdit = null;
-        let currentPage = 'canned-responses';
-
+        
         const defaultCannedResponses = {
             'BRONCO': {
                 color: '#0284c7',
@@ -550,25 +521,13 @@ Please disregard all the other information on this page."></textarea>
 
         const renderContent = () => {
             const cannedResponsesApp = document.getElementById('canned-responses-app');
-            const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const categoryBar = document.getElementById('category-bar');
-            const importExportBtn = document.getElementById('import-export-btn');
             
             const mainTitle = document.getElementById('main-title');
             
-            if (currentPage === 'canned-responses') {
-                cannedResponsesApp.classList.remove('hidden');
-                categoryBar.classList.remove('hidden');
-                fedexTrackerApp.classList.add('hidden');
-                importExportBtn.classList.remove('hidden');
-                renderCategories();
-            } else if (currentPage === 'fedex-tracker') {
-                cannedResponsesApp.classList.add('hidden');
-                categoryBar.classList.add('hidden');
-                fedexTrackerApp.classList.remove('hidden');
-                importExportBtn.classList.add('hidden');
-                mainTitle.textContent = 'FedEx Tracker';
-            }
+            cannedResponsesApp.classList.remove('hidden');
+            categoryBar.classList.remove('hidden');
+            renderCategories();
         };
 
         const responseInput = document.getElementById('response-input');
@@ -625,13 +584,8 @@ Please disregard all the other information on this page."></textarea>
         const sidebar = document.getElementById('sidebar');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
         const navCannedResponses = document.getElementById('nav-canned-responses');
-        const navFedexTracker = document.getElementById('nav-fedex-tracker');
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
-
-        const fedexInputText = document.getElementById('fedex-input-text');
-        const fedexExtractBtn = document.getElementById('fedex-extract-btn');
-        const trackingResultsContainer = document.getElementById('tracking-results-container');
         
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
@@ -912,17 +866,6 @@ Please disregard all the other information on this page."></textarea>
             };
             reader.readAsText(file);
         };
-
-        const trackingNumberRegex = /[a-zA-Z0-9]{12,22}/g;
-        
-        function extractAndFormat(inputText) {
-            const matches = inputText.match(trackingNumberRegex);
-            if (!matches) {
-                return [];
-            }
-            return matches;
-        }
-
         // --- Event Listeners ---
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
@@ -933,13 +876,6 @@ Please disregard all the other information on this page."></textarea>
         });
 
         navCannedResponses.addEventListener('click', () => {
-            currentPage = 'canned-responses';
-            renderContent();
-            sidebar.classList.remove('open');
-        });
-
-        navFedexTracker.addEventListener('click', () => {
-            currentPage = 'fedex-tracker';
             renderContent();
             sidebar.classList.remove('open');
         });
@@ -964,63 +900,6 @@ Please disregard all the other information on this page."></textarea>
                 showMessage("Sign out failed. Please try again.", 'error');
             }
         });
-
-        const trackPackage = httpsCallable(functions, 'trackPackage');
-        fedexExtractBtn.addEventListener('click', async () => {
-            const inputText = fedexInputText.value;
-            const trackingNumbers = extractAndFormat(inputText);
-
-            if (trackingNumbers.length === 0) {
-                trackingResultsContainer.innerHTML = `<p class="text-gray-400">No tracking numbers found.</p>`;
-                return;
-            }
-
-            trackingResultsContainer.innerHTML = '';
-            
-            // Show a loading spinner
-            trackingResultsContainer.innerHTML = `<div class="flex justify-center items-center py-4">
-                <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>`;
-
-
-            try {
-                const result = await trackPackage({ trackingNumbers });
-                const trackingData = result.data;
-                trackingResultsContainer.innerHTML = '';
-                
-                trackingData.forEach(packageStatus => {
-                    const statusText = packageStatus.status ? packageStatus.status.description : 'Unknown Status';
-                    const deliveredText = packageStatus.isDelivered ? 'Delivered' : 'In Transit';
-                    
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'bg-gray-700 p-4 rounded-lg border border-gray-600 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0';
-                    
-                    resultDiv.innerHTML = `
-                        <div class="flex-1">
-                            <h4 class="font-bold text-lg text-white">${packageStatus.trackingNumber}</h4>
-                            <p class="text-sm text-gray-400">${statusText}</p>
-                            <p class="text-sm text-white">${deliveredText}</p>
-                        </div>
-                        <div class="flex-shrink-0 mt-2 sm:mt-0">
-                            <button class="copy-btn bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition" data-clipboard-text="${packageStatus.trackingNumber}">
-                                Copy
-                            </button>
-                        </div>
-                    `;
-                    trackingResultsContainer.appendChild(resultDiv);
-                });
-                
-                showMessage("Tracking successful!");
-            } catch (error) {
-                console.error("FedEx tracking failed", error);
-                trackingResultsContainer.innerHTML = `<p class="text-red-400 text-center">Error tracking packages. Please check your tracking numbers and try again.</p>`;
-                showMessage("Tracking failed.", 'error');
-            }
-        });
-
 
         importExportBtn.addEventListener('click', () => {
             importExportModal.classList.remove('hidden');
@@ -1273,9 +1152,11 @@ Please disregard all the other information on this page."></textarea>
             if (user) {
                 userId = user.uid;
                 if (user.isAnonymous) {
+                    // Hide sign-out and show sign-in for anonymous users
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
                 } else {
+                    // Hide sign-in and show sign-out for authenticated users
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
                 }
@@ -1285,6 +1166,7 @@ Please disregard all the other information on this page."></textarea>
                         categories = doc.data().categories || {};
                     } else {
                         categories = defaultCannedResponses;
+                        // Initial data save for new users
                         saveToFirestore();
                     }
                     renderContent();
@@ -1295,6 +1177,7 @@ Please disregard all the other information on this page."></textarea>
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
+                // Hide both buttons until auth state is determined
                 signInBtn.classList.add('hidden');
                 signOutBtn.classList.add('hidden');
             }
