@@ -671,32 +671,37 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
         // Enable Firebase debug logging
         setLogLevel('debug');
 
         // --- Firebase Initialization and Auth ---
-        // Your web app's Firebase configuration
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
 
-        // Initialize Firebase app
-        let app, auth, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } catch (e) {
-            console.error("Firebase initialization failed:", e);
-            // Fallback for when firebase config is not available.
-            app = {};
-            auth = {};
-            db = {};
-        }
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+            authDomain: "tools-a180f.firebaseapp.com",
+            projectId: "tools-a180f",
+            storageBucket: "tools-a180f.firebasestorage.app",
+            messagingSenderId: "195275159442",
+            appId: "1:195275159442:web:20031fd5ccf0428162334b",
+            measurementId: "G-TP0VKGV0EE"
+        };
+        const appId = firebaseConfig.appId;
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         
         let categories = {};
         let activeCategory = '';
@@ -1949,19 +1954,12 @@
                 listenForUserLinks();
             } else {
                 try {
-                    console.log("User not authenticated. Attempting custom token sign-in...");
-                    const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                    if (authToken) {
-                        await signInWithCustomToken(auth, authToken);
-                        console.log("Signed in with custom token.");
-                    } else {
-                        await signInAnonymously(auth);
-                        console.log("Signed in anonymously.");
-                    }
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
                 } catch (error) {
-                    console.error("Authentication failed", error);
+                    console.error("Anonymous sign-in failed", error);
                 }
-                signInBtn.classList.add('hidden');
+                signInBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
             }
         });
