@@ -516,9 +516,9 @@
         };
 
         const getUserDocRef = (uid) => {
-            const docPath = `artifacts/${appId}/users/${uid}/cannedResponses`;
-            console.log("Firestore Document Path:", docPath);
-            return doc(db, `artifacts/${appId}/users/${uid}`);
+            const docPath = `artifacts/${appId}/users/${uid}`;
+            console.log("Listening to Firestore document at path:", docPath);
+            return doc(db, docPath);
         };
         
         const saveToFirestore = async () => {
@@ -526,8 +526,9 @@
                 console.error("User not authenticated.");
                 return;
             }
+            const userDocRef = getUserDocRef(userId);
             try {
-                await setDoc(getUserDocRef(userId), { categories: categories });
+                await setDoc(userDocRef, { categories: categories });
             } catch (error) {
                 console.error("Error saving to Firestore:", error);
                 showMessage("Error saving data.", 'error');
@@ -1167,16 +1168,16 @@
             if (user) {
                 userId = user.uid;
                 if (user.isAnonymous) {
-                    // Hide sign-out and show sign-in for anonymous users
+                    // Show sign-in for anonymous users
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
                 } else {
-                    // Hide sign-in and show sign-out for authenticated users
+                    // Show sign-out for authenticated users
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
                 }
                 const userDocRef = getUserDocRef(userId);
-                console.log("Listening to document:", userDocRef.path);
+                console.log("Listening to Firestore document at path:", userDocRef.path);
                 
                 onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
