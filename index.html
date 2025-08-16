@@ -75,6 +75,46 @@
         .pb-extra {
             padding-bottom: 2rem;
         }
+        .scrollable-box {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background-color: #2d3748;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+        }
+        .tracking-numbers-container {
+            background-color: #1f2937;
+            border-color: #4a5568;
+        }
+        .tracking-tab {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+        .text-placeholder::placeholder {
+            color: #a0aec0;
+        }
+        /* Message box animation */
+        .message-box {
+            animation: slideInFadeIn 0.5s ease-out forwards;
+        }
+        @keyframes slideInFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
@@ -84,6 +124,7 @@
         <h2 class="text-2xl font-bold text-gray-200 mb-6">Tools</h2>
         <nav class="flex flex-col space-y-2">
             <button id="nav-canned-responses" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">Canned Responses</button>
+            <button id="nav-fedex-tracker" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 transition text-gray-200 font-semibold">FedEx Tracker</button>
         </nav>
         <div class="mt-auto pt-6 flex flex-col items-center space-y-2">
             <div id="auth-status" class="text-center text-gray-400">Not signed in.</div>
@@ -190,6 +231,50 @@
                 </div>
                 <div id="empty-state" class="text-center text-gray-400 mt-8 hidden">
                     <p>No canned responses in this category. Add one above!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FedEx Tracker Content -->
+        <div id="fedex-tracker-app" class="w-full max-w-5xl hidden">
+            <div class="card p-8 rounded-lg w-full max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold text-center text-gray-200 mb-2">FedEx Tracking</h1>
+                <p class="text-center text-gray-400 mb-8">Extract and manage your FedEx tracking numbers easily.</p>
+        
+                <!-- Input Section -->
+                <div class="mb-6">
+                    <label for="input-text" class="block text-sm font-medium text-gray-300 mb-2">Paste or type your text here:</label>
+                    <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-200" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
+                </div>
+        
+                <!-- Extracted Numbers Section -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-2">Extracted Tracking Numbers</h2>
+                    <div id="tracking-numbers-container" class="tracking-numbers-container border-2 border-dashed border-gray-700 rounded-lg p-4 scrollable-box">
+                        <p id="no-numbers-message" class="text-center text-gray-500">No tracking numbers found yet.</p>
+                        <!-- Loading indicator -->
+                        <div id="loading-indicator" class="hidden flex justify-center items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-sm text-gray-400">Processing...</span>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50" disabled>
+                        Clear
+                    </button>
+                    <button id="copy-button-fedex" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300" disabled>
+                        <svg class="h-5 w-5 inline-block -mt-1 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
+                        </svg>
+                        Copy All & Open FedEx
+                    </button>
                 </div>
             </div>
         </div>
@@ -372,6 +457,7 @@
         let newResponseId = null;
         let responseToDeleteId = null;
         let categoryToEdit = null;
+        let currentPage = 'canned-responses';
         
         const defaultCannedResponses = {
             'BRONCO': {
@@ -537,13 +623,23 @@
 
         const renderContent = () => {
             const cannedResponsesApp = document.getElementById('canned-responses-app');
+            const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const categoryBar = document.getElementById('category-bar');
             
             const mainTitle = document.getElementById('main-title');
             
-            cannedResponsesApp.classList.remove('hidden');
-            categoryBar.classList.remove('hidden');
-            renderCategories();
+            if (currentPage === 'canned-responses') {
+                cannedResponsesApp.classList.remove('hidden');
+                categoryBar.classList.remove('hidden');
+                fedexTrackerApp.classList.add('hidden');
+                renderCategories();
+            } else if (currentPage === 'fedex-tracker') {
+                cannedResponsesApp.classList.add('hidden');
+                categoryBar.classList.add('hidden');
+                fedexTrackerApp.classList.remove('hidden');
+                mainTitle.textContent = 'FedEx Tracker';
+                extractAndDisplayNumbers();
+            }
         };
 
         const responseInput = document.getElementById('response-input');
@@ -600,8 +696,18 @@
         const sidebar = document.getElementById('sidebar');
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
         const navCannedResponses = document.getElementById('nav-canned-responses');
+        const navFedexTracker = document.getElementById('nav-fedex-tracker');
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
+        
+        // FedEx Tracker variables
+        const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
+        const inputTextareaFedex = document.getElementById('input-text-fedex');
+        const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
+        const copyButtonFedex = document.getElementById('copy-button-fedex');
+        const clearButtonFedex = document.getElementById('clear-button-fedex');
+        const noNumbersMessage = document.getElementById('no-numbers-message');
+        const loadingIndicator = document.getElementById('loading-indicator');
         
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
@@ -892,6 +998,13 @@
         });
 
         navCannedResponses.addEventListener('click', () => {
+            currentPage = 'canned-responses';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navFedexTracker.addEventListener('click', () => {
+            currentPage = 'fedex-tracker';
             renderContent();
             sidebar.classList.remove('open');
         });
@@ -1161,6 +1274,107 @@
         deleteCancelBtn.addEventListener('click', () => {
             responseToDeleteId = null;
             deleteModal.classList.add('hidden');
+        });
+
+        // FedEx Tracker Functions
+        const extractAndDisplayNumbers = () => {
+            loadingIndicator.classList.remove('hidden');
+            noNumbersMessage.classList.add('hidden');
+            trackingNumbersContainer.innerHTML = '';
+            
+            setTimeout(() => {
+                const text = inputTextareaFedex.value;
+                const matches = text.match(fedexRegex);
+
+                loadingIndicator.classList.add('hidden');
+
+                if (matches && matches.length > 0) {
+                    const uniqueNumbers = [...new Set(matches)];
+
+                    uniqueNumbers.forEach(number => {
+                        const trackingNumberLink = document.createElement('a');
+                        trackingNumberLink.href = `https://www.fedex.com/fedextrack/?tracknumbers=${number}`;
+                        trackingNumberLink.target = "_blank";
+                        trackingNumberLink.classList.add(
+                            'tracking-tab', 'flex', 'items-center', 'justify-between', 'p-3', 'rounded-lg',
+                            'border', 'border-gray-600', 'shadow-sm', 'mb-2',
+                            'hover:scale-105', 'hover:shadow-md', 'transition-all', 'duration-300', 'animate-fade-in'
+                        );
+
+                        const numberText = document.createElement('span');
+                        numberText.textContent = number;
+                        numberText.classList.add('font-mono', 'text-sm', 'md:text-base', 'text-gray-200');
+
+                        const copyBtn = document.createElement('button');
+                        copyBtn.classList.add(
+                            'ml-4', 'p-2', 'rounded-full', 'hover:bg-gray-700', 'transition-colors',
+                            'duration-200', 'text-gray-400'
+                        );
+                        copyBtn.innerHTML = `
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
+                            </svg>
+                        `;
+                        copyBtn.title = "Copy to clipboard";
+                        copyBtn.addEventListener('click', (e) => {
+                            e.preventDefault(); // Prevents the link from being followed
+                            const tempInput = document.createElement('input');
+                            tempInput.value = number;
+                            document.body.appendChild(tempInput);
+                            tempInput.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(tempInput);
+                            showMessage('Tracking number copied!');
+                        });
+
+                        trackingNumberLink.appendChild(numberText);
+                        trackingNumberLink.appendChild(copyBtn);
+                        trackingNumbersContainer.appendChild(trackingNumberLink);
+                    });
+
+                    copyButtonFedex.disabled = false;
+                } else {
+                    noNumbersMessage.classList.remove('hidden');
+                    trackingNumbersContainer.appendChild(noNumbersMessage);
+                    copyButtonFedex.disabled = true;
+                }
+
+                if (text.length > 0) {
+                    clearButtonFedex.disabled = false;
+                } else {
+                    clearButtonFedex.disabled = true;
+                }
+            }, 300); // Simulate processing time
+        };
+
+        inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
+        clearButtonFedex.addEventListener('click', () => {
+            inputTextareaFedex.value = '';
+            extractAndDisplayNumbers();
+            showMessage('Text area cleared!');
+        });
+
+        copyButtonFedex.addEventListener('click', () => {
+            const trackingNumberElements = trackingNumbersContainer.querySelectorAll('span');
+            let allNumbersText = '';
+            trackingNumberElements.forEach(el => {
+                allNumbersText += el.textContent + '\n'; // Use newline to separate numbers
+            });
+
+            if (allNumbersText.trim().length > 0) {
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = allNumbersText.trim();
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+
+                // Open FedEx tracking page and prompt user to paste
+                window.open('https://www.fedex.com/en-us/tracking.html', '_blank');
+
+                showMessage('Tracking numbers copied to clipboard. Paste them on the FedEx page to track.');
+            }
         });
 
         // Initial render
