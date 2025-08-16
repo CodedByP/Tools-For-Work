@@ -8,10 +8,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;600&display=swap');
         body {
             font-family: 'Alexandria', sans-serif;
             background-color: #111827; /* Deeper background for a more modern feel */
             color: #e5e7eb;
+        }
+        h1, h2 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .container-bg {
+            background-color: #0d1117;
+            background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+        }
+        .link-card {
+            background-color: #161b22;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .link-title {
+            background-image: linear-gradient(to right, #80e8ff, #62b3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .pulse-effect:hover {
+            animation: pulse-border 1s infinite;
+        }
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(100, 160, 255, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(100, 160, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(100, 160, 255, 0);
+            }
         }
         .message-box {
             position: fixed;
@@ -108,20 +144,6 @@
         .text-placeholder::placeholder {
             color: #a0aec0;
         }
-        /* Message box animation */
-        .message-box.show {
-            animation: slideInFadeIn 0.5s ease-out forwards;
-        }
-        @keyframes slideInFadeIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%);
-            }
-        }
     </style>
     
     <!-- Favicon links for all browsers and devices -->
@@ -151,6 +173,9 @@
             </button>
             <button id="nav-fedex-tracker" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-box-open mr-3"></i> FedEx Tracker
+            </button>
+            <button id="nav-helpful-links" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+                <i class="fas fa-link mr-3"></i> Helpful Links
             </button>
         </nav>
         <div class="mt-auto pt-8 flex flex-col items-center space-y-3">
@@ -305,6 +330,99 @@
                 </div>
             </div>
         </div>
+
+        <!-- Helpful Links Content -->
+        <div id="helpful-links-app" class="w-full max-w-5xl hidden">
+            <div class="container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
+                <div class="container mx-auto px-4 max-w-6xl">
+                    <header class="text-center mb-16 animate-fade-in">
+                        <p class="mt-4 text-xl text-gray-300 max-w-2xl mx-auto">
+                            A carefully curated selection of resources, tools, and documentation.
+                        </p>
+                        <div id="links-user-info" class="mt-4 text-sm text-gray-500"></div>
+                    </header>
+
+                    <!-- Main links container -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        
+                        <!-- Category: Static Resources (Your pre-defined links) -->
+                        <section class="col-span-1 md:col-span-2 lg:col-span-3">
+                            <h2 class="text-3xl font-bold text-center mb-8 link-title">
+                                Static Resources
+                            </h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                    <a href="https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch" target="_blank" rel="noopener noreferrer" class="block">
+                                        <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya KB</h3>
+                                        <p class="text-sm text-gray-400">A knowledge base for support and resources.</p>
+                                    </a>
+                                </div>
+                                <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                    <a href="https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/" target="_blank" rel="noopener noreferrer" class="block">
+                                        <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya Audits</h3>
+                                        <p class="text-sm text-gray-400">An internal tool for audits.</p>
+                                    </a>
+                                </div>
+                                <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                    <a href="https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=US&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP" target="_blank" rel="noopener noreferrer" class="block">
+                                        <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Find Net blocks</h3>
+                                        <p class="text-sm text-gray-400">A tool for searching corporate network information.</p>
+                                    </a>
+                                </div>
+                                <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                    <a href="https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="block">
+                                        <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes</h3>
+                                        <p class="text-sm text-gray-400">A spreadsheet containing plant codes.</p>
+                                    </a>
+                                </div>
+                                <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                    <a href="https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237" target="_blank" rel="noopener noreferrer" class="block">
+                                        <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">GUTS CTI</h3>
+                                        <p class="text-sm text-gray-400">A spreadsheet for CTI tracking.</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Category: User-Added Links -->
+                        <section class="col-span-1 md:col-span-2 lg:col-span-3 mt-12">
+                            <h2 class="text-3xl font-bold text-center mb-8 link-title">
+                                Your Links
+                            </h2>
+                            <div id="user-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <p class="text-center text-gray-400 col-span-full">Loading your links...</p>
+                            </div>
+                        </section>
+
+                        <!-- Form to add new links -->
+                        <section class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center">
+                            <div class="bg-gray-800 rounded-2xl p-8 shadow-2xl max-w-lg w-full">
+                                <h2 id="form-title" class="text-2xl font-bold text-blue-400 mb-4">Add a New Link</h2>
+                                <form id="add-link-form" class="space-y-4">
+                                    <div>
+                                        <label for="link-title" class="block text-sm font-medium text-gray-400">Title</label>
+                                        <input type="text" id="link-title" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                    </div>
+                                    <div>
+                                        <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
+                                        <input type="url" id="link-url" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                    </div>
+                                    <div class="flex space-x-4">
+                                        <button type="submit" id="submit-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
+                                            Add Link
+                                        </button>
+                                        <button type="button" id="cancel-button" class="w-full inline-flex justify-center py-3 px-6 border border-gray-600 shadow-md text-lg font-bold rounded-xl text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 hidden">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div id="status-message" class="text-center mt-2 text-sm text-gray-400"></div>
+                                </form>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Import/Export Modal -->
@@ -455,7 +573,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 
         // Enable Firebase debug logging
@@ -630,6 +748,12 @@
             return doc(db, docPath);
         };
         
+        const getLinksCollectionRef = (uid) => {
+            const collectionPath = `artifacts/${appId}/users/${uid}/user_links`;
+            console.log("Listening to Firestore collection at path:", collectionPath);
+            return collection(db, collectionPath);
+        }
+
         const saveToFirestore = async () => {
             if (!userId) {
                 console.error("User not authenticated.");
@@ -647,21 +771,29 @@
         const renderContent = () => {
             const cannedResponsesApp = document.getElementById('canned-responses-app');
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
+            const helpfulLinksApp = document.getElementById('helpful-links-app');
             const categoryBar = document.getElementById('category-bar');
             
             const mainTitle = document.getElementById('main-title');
             
+            cannedResponsesApp.classList.add('hidden');
+            fedexTrackerApp.classList.add('hidden');
+            helpfulLinksApp.classList.add('hidden');
+            categoryBar.classList.add('hidden');
+            
             if (currentPage === 'canned-responses') {
                 cannedResponsesApp.classList.remove('hidden');
                 categoryBar.classList.remove('hidden');
-                fedexTrackerApp.classList.add('hidden');
+                mainTitle.textContent = 'Canned Responses';
                 renderCategories();
             } else if (currentPage === 'fedex-tracker') {
-                cannedResponsesApp.classList.add('hidden');
-                categoryBar.classList.add('hidden');
                 fedexTrackerApp.classList.remove('hidden');
                 mainTitle.textContent = 'FedEx Tracker';
                 extractAndDisplayNumbers();
+            } else if (currentPage === 'helpful-links') {
+                helpfulLinksApp.classList.remove('hidden');
+                mainTitle.textContent = 'Helpful Links';
+                // The onSnapshot listener handles rendering the links
             }
         };
 
@@ -720,6 +852,7 @@
         const closeSidebarBtn = document.getElementById('close-sidebar-btn');
         const navCannedResponses = document.getElementById('nav-canned-responses');
         const navFedexTracker = document.getElementById('nav-fedex-tracker');
+        const navHelpfulLinks = document.getElementById('nav-helpful-links');
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
         
@@ -731,6 +864,19 @@
         const clearButtonFedex = document.getElementById('clear-button-fedex');
         const noNumbersMessage = document.getElementById('no-numbers-message');
         const loadingIndicator = document.getElementById('loading-indicator');
+
+        // Helpful Links variables
+        const linksForm = document.getElementById('add-link-form');
+        const linkTitleInput = document.getElementById('link-title');
+        const linkUrlInput = document.getElementById('link-url');
+        const linksSubmitButton = document.getElementById('submit-button');
+        const linksCancelButton = document.getElementById('cancel-button');
+        const linksFormTitle = document.getElementById('form-title');
+        const linksStatusMessage = document.getElementById('status-message');
+        const userLinksList = document.getElementById('user-links-list');
+        const linksUserInfo = document.getElementById('user-info');
+        let editingDocId = null;
+        let openMenuId = null;
 
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
@@ -1025,6 +1171,12 @@
 
         navFedexTracker.addEventListener('click', () => {
             currentPage = 'fedex-tracker';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+        
+        navHelpfulLinks.addEventListener('click', () => {
+            currentPage = 'helpful-links';
             renderContent();
             sidebar.classList.remove('open');
         });
@@ -1332,6 +1484,7 @@
                             'duration-200', 'text-gray-400'
                         );
                         copyBtn.title = "Copy to clipboard";
+                        copyBtn.innerHTML = `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" /></svg>`;
                         copyBtn.addEventListener('click', (e) => {
                             e.preventDefault(); // Prevents the link from being followed
                             const tempInput = document.createElement('input');
@@ -1392,16 +1545,195 @@
             }
         });
 
+        // Helpful Links Functions
+        function showLinksStatus(message, color = 'text-gray-400') {
+            linksStatusMessage.textContent = message;
+            linksStatusMessage.className = `text-center mt-2 text-sm ${color}`;
+        }
+        
+        async function deleteLink(docId) {
+            if (!db || !userId) {
+                showLinksStatus('Authentication in progress, please wait.', 'text-yellow-400');
+                return;
+            }
+            try {
+                showLinksStatus('Removing link...', 'text-yellow-400');
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'user_links', docId);
+                await deleteDoc(docRef);
+                showLinksStatus('Link removed successfully!', 'text-green-400');
+            } catch (error) {
+                console.error("Error removing document:", error);
+                showLinksStatus(`Failed to remove link: ${error.message}`, 'text-red-400');
+            }
+        }
+
+        function editLink(docId, title, url) {
+            editingDocId = docId;
+            linkTitleInput.value = title;
+            linkUrlInput.value = url;
+            linksSubmitButton.textContent = 'Update Link';
+            linksFormTitle.textContent = 'Edit Link';
+            linksCancelButton.classList.remove('hidden');
+        }
+
+        function resetLinksForm() {
+            editingDocId = null;
+            linkTitleInput.value = '';
+            linkUrlInput.value = '';
+            linksSubmitButton.textContent = 'Add Link';
+            linksFormTitle.textContent = 'Add a New Link';
+            linksCancelButton.classList.add('hidden');
+            showLinksStatus('');
+        }
+        
+        function listenForUserLinks() {
+            if (!db || !userId) {
+                console.error("Firestore or User ID not available.");
+                return;
+            }
+
+            const linksCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'user_links');
+            const q = query(linksCollectionRef);
+
+            onSnapshot(q, (querySnapshot) => {
+                userLinksList.innerHTML = '';
+                if (querySnapshot.empty) {
+                    userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const linkData = doc.data();
+                        const card = document.createElement('div');
+                        card.className = 'link-card rounded-xl p-6 shadow-2xl flex items-center justify-between';
+                        
+                        const titleForHtml = linkData.title.replace(/'/g, "\\'");
+                        const urlForHtml = linkData.url.replace(/'/g, "\\'");
+                        
+                        card.innerHTML = `
+                            <a href="${linkData.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
+                                <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
+                            </a>
+                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}">
+                                <button type="button" class="kebab-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
+                                      <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                    </svg>
+                                </button>
+                                <div class="kebab-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                                    <div class="py-1">
+                                        <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
+                                        <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        userLinksList.appendChild(card);
+                    });
+                }
+            }, (error) => {
+                console.error("Error listening for documents:", error);
+                showLinksStatus('Failed to load links. Please try again.', 'text-red-400');
+            });
+        }
+        
+        linksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!db || !userId) {
+                showLinksStatus('Authentication in progress, please wait.', 'text-yellow-400');
+                return;
+            }
+
+            const title = linkTitleInput.value;
+            const url = linkUrlInput.value;
+
+            if (!title || !url) {
+                showLinksStatus('Please fill out both fields.', 'text-red-400');
+                return;
+            }
+
+            try {
+                if (editingDocId) {
+                    showLinksStatus('Updating link...', 'text-yellow-400');
+                    const docRef = doc(db, 'artifacts', appId, 'users', userId, 'user_links', editingDocId);
+                    await updateDoc(docRef, {
+                        title: title,
+                        url: url,
+                    });
+                    showLinksStatus('Link updated successfully!', 'text-green-400');
+                } else {
+                    showLinksStatus('Adding link...', 'text-yellow-400');
+                    const linksCollectionRef = getLinksCollectionRef(userId);
+                    await addDoc(linksCollectionRef, {
+                        title: title,
+                        url: url,
+                        createdAt: new Date()
+                    });
+                    showLinksStatus('Link added successfully!', 'text-green-400');
+                }
+                resetLinksForm();
+
+            } catch (error) {
+                console.error("Error during link operation:", error);
+                showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            }
+        });
+
+        linksCancelButton.addEventListener('click', () => {
+            resetLinksForm();
+        });
+
+        userLinksList.addEventListener('click', (event) => {
+            const button = event.target.closest('.kebab-button');
+            const editBtn = event.target.closest('.edit-link-btn');
+            const deleteBtn = event.target.closest('.delete-link-btn');
+
+            if (button) {
+                const parentDiv = button.closest('[data-doc-id]');
+                const menu = parentDiv.querySelector('.kebab-menu');
+                if (menu) {
+                    if (openMenuId && openMenuId !== parentDiv.dataset.docId) {
+                        const openMenu = document.querySelector(`.kebab-menu[data-doc-id="${openMenuId}"]`);
+                        if (openMenu) openMenu.classList.add('hidden');
+                    }
+                    menu.classList.toggle('hidden');
+                    openMenuId = menu.classList.contains('hidden') ? null : parentDiv.dataset.docId;
+                }
+            } else if (editBtn) {
+                const parentDiv = editBtn.closest('[data-doc-id]');
+                if (parentDiv) {
+                    const docId = parentDiv.dataset.docId;
+                    const title = parentDiv.dataset.title;
+                    const url = parentDiv.dataset.url;
+                    editLink(docId, title, url);
+                    const menu = parentDiv.querySelector('.kebab-menu');
+                    if (menu) menu.classList.add('hidden');
+                    openMenuId = null;
+                }
+            } else if (deleteBtn) {
+                const parentDiv = deleteBtn.closest('[data-doc-id]');
+                if (parentDiv) {
+                    const docId = parentDiv.dataset.docId;
+                    deleteLink(docId);
+                    const menu = parentDiv.querySelector('.kebab-menu');
+                    if (menu) menu.classList.add('hidden');
+                    openMenuId = null;
+                }
+            } else {
+                 if (openMenuId) {
+                    const openMenu = document.querySelector(`.kebab-menu[data-doc-id="${openMenuId}"]`);
+                    if (openMenu) openMenu.classList.add('hidden');
+                    openMenuId = null;
+                }
+            }
+        });
+        
         // Initial render
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
                 if (user.isAnonymous) {
-                    // Show sign-in for anonymous users
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
                 } else {
-                    // Show sign-out for authenticated users
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
                 }
@@ -1413,7 +1745,6 @@
                         categories = doc.data().categories || {};
                     } else {
                         categories = defaultCannedResponses;
-                        // Initial data save for new users
                         saveToFirestore();
                     }
                     if (Object.keys(categories).length > 0) {
@@ -1421,6 +1752,8 @@
                     }
                     renderContent();
                 });
+                
+                listenForUserLinks();
             } else {
                 try {
                     console.log("User not authenticated, signing in anonymously...");
@@ -1428,7 +1761,6 @@
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
-                // Hide both buttons until auth state is determined
                 signInBtn.classList.add('hidden');
                 signOutBtn.classList.add('hidden');
             }
