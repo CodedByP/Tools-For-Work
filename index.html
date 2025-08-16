@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canned Responses</title>
+    <title>Tools For Work</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -207,8 +207,8 @@
         .light-mode .text-gray-100 { color: #1f2937; }
         .light-mode .text-gray-200 { color: #374151; }
         .light-mode .border-gray-600 { border-color: #9ca3af; }
-        .light-mode .hover\\:bg-gray-700:hover { background-color: #d1d5db; }
-        .light-mode .hover\\:text-white:hover { color: #1f2937; }
+        .light-mode .hover\:bg-gray-700:hover { background-color: #d1d5db; }
+        .light-mode .hover\:text-white:hover { color: #1f2937; }
         .light-mode .tracking-numbers-container { background-color: #f3f4f6; }
         .light-mode .tracking-tab { background-color: #e5e7eb; }
     </style>
@@ -449,7 +449,7 @@
                             </div>
                             <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
                                 <a href="https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes </h3>
+                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes </h3>
                                     <p class="text-sm text-gray-400">A spreadsheet containing plant codes.</p>
                                 </a>
                             </div>
@@ -607,6 +607,28 @@
         </div>
     </div>
 
+    <!-- Customer Name Modal -->
+    <div id="customer-name-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Enter Customer Name</h3>
+            <p class="text-gray-400 text-base mb-4">Please enter the customer's name to personalize the response.</p>
+            <input
+                type="text"
+                id="customer-name-input"
+                class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 mb-4 text-lg"
+                placeholder="e.g., Jane Doe"
+            />
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-customer-name-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                    Cancel
+                </button>
+                <button id="confirm-customer-name-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
+                    Copy Response
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Label Modal -->
     <div id="label-modal" class="modal hidden">
@@ -649,7 +671,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 
@@ -658,21 +680,24 @@
 
         // --- Firebase Initialization and Auth ---
         // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
-            authDomain: "tools-a180f.firebaseapp.com",
-            projectId: "tools-a180f",
-            storageBucket: "tools-a180f.firebasestorage.app",
-            messagingSenderId: "195275159442",
-            appId: "1:195275159442:web:20031fd5ccf0428162334b",
-        };
-        const appId = firebaseConfig.appId;
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // Initialize Firebase app
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+            // Fallback for when firebase config is not available.
+            app = {};
+            auth = {};
+            db = {};
+        }
+        
         let categories = {};
         let activeCategory = '';
         let userId = null;
@@ -680,6 +705,8 @@
         let responseToDeleteId = null;
         let categoryToEdit = null;
         let currentPage = 'canned-responses';
+        let userName = '';
+        let currentTextToCopy = '';
         
         const defaultCannedResponses = {
             'BRONCO': {
@@ -688,49 +715,49 @@
                     {
                         id: 'bronco-1',
                         label: 'NON ACTIONABLE ORDER',
-                        text: 'Hello ,\n\nI am writing to inform you that the item you ordered, 6.5FT MINI DP TO HDMI ADAPTER, is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, 6.5FT MINI DP TO HDMI ADAPTER, is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-2',
                         label: 'ACTIONABLE ITEM RESPONSE',
-                        text: 'Hello ,\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-3',
                         label: 'OUT FOR DELIVERY RESPONSE',
-                        text: 'Hello ,\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking 883423643293.\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking 883423643293.\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-4',
                         label: 'ITEM DELIVERED',
-                        text: 'Hello ,\n\nI have delivered the AP MACBOOK PRO ENG 16 I 2024 to your desk US-LAX-BIN1-2-27C this morning August 14th 2025\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nI have delivered the AP MACBOOK PRO ENG 16 I 2024 to your desk US-LAX-BIN1-2-27C this morning August 14th 2025\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-5',
                         label: 'SECURITY KEY DELIVERED',
-                        text: 'Hello ,\n\nYour security key order has been delivered to US-LAX-BIN5-1-190E. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to US-LAX-BIN5-1-190E. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-6',
                         label: 'PIKTIME',
-                        text: 'Hello ,\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-7',
                         label: 'PIKTIME DELIVERED',
-                        text: 'Hello ,\n\nYour order for a Titan USB-C Portable Security Key was successfully picked up on July 9th 2025. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nYour order for a Titan USB-C Portable Security Key was successfully picked up on July 9th 2025. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'bronco-8',
                         label: 'PIKTIME CANCELLED',
-                        text: 'Hello ,\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     }
                 ]
@@ -741,25 +768,25 @@
                     {
                         id: 'par-1',
                         label: 'PAR REMOTE ORDER',
-                        text: 'Hello ,\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: 883469321443\nReturn Tracking: 791888444600\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'par-2',
                         label: 'PAR SHIPPING MATERIALS DELIVERED',
-                        text: 'Hello ,\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on Monday, August 4th.\n\nhttps://screenshot.googleplex.com/6gpXawDYo3w5Liv\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Delivery Date].\n\nhttps://screenshot.googleplex.com/6gpXawDYo3w5Liv\n\nAs a reminder, per Google’s device return policy, you have [Number] days ([Number] business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'par-3',
                         label: 'PAR STUFF LOCKER',
-                        text: 'Hello ,\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'par-4',
                         label: 'CANCEL RETURN LOCKER ORDER',
-                        text: 'Please be advised that this return order will be canceled. This is due to the item exceeding our 10-business day return policy and not being located in the designated return lockers.',
+                        text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the item exceeding our 10-business day return policy and not being located in the designated return lockers.',
                         createdAt: new Date().toISOString()
                     }
                 ]
@@ -770,49 +797,49 @@
                     {
                         id: 'guts-1',
                         label: 'GNG LOCKERS PROACTIVE TICKET',
-                        text: 'Hello ,\n\nThe GNG lockers contain 11 loaners and 8 empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThe GNG lockers contain [Number] loaners and [Number] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-2',
                         label: 'GUTS STUFF STATION VENDING',
-                        text: 'Hello ,\n\nThe stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThe stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-3',
                         label: 'Remote Return Shipment Information',
-                        text: 'Hello ,\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:\nReturn Tracking:\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-4',
                         label: 'Resolution For Lost Device',
-                        text: 'Hello ,\n\nAfter conducting a search for Asset Number <#######> - <Device Model>, I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nAfter conducting a search for Asset Number [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-5',
                         label: 'Exit Onsite Collection Information',
-                        text: 'Hello ,\n\nThank you for confirming that your <Device Model> Asset Number <#######> is ready for pickup on MM/DD/YYYY>.\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThank you for confirming that your [Device Model] Asset Number [Asset Number] is ready for pickup on [Collection Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-6',
                         label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up',
-                        text: 'Hello ,\n\nI just want to follow up because we visited <Desk Location> and your <Device Model> Asset Number <#######> was <not found/not ready for collection>.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have <#> business days remaining to complete your return.\n\nIf you do not complete your return in <#> business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was [not found/not ready for collection].\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return.\n\nIf you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-7',
                         label: 'Remote Return Shipment That Has Not Been Received',
-                        text: 'Hello ,\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     },
                     {
                         id: 'guts-8',
                         label: 'Successful Return',
-                        text: 'Hello ,\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number <#######> - <Device Model>\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]',
+                        text: 'Hello [Customer\'s Name],\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]',
                         createdAt: new Date().toISOString()
                     }
                 ]
@@ -935,6 +962,11 @@
         const navHelpfulLinks = document.getElementById('nav-helpful-links');
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
+
+        const customerNameModal = document.getElementById('customer-name-modal');
+        const customerNameInput = document.getElementById('customer-name-input');
+        const confirmCustomerNameBtn = document.getElementById('confirm-customer-name-btn');
+        const cancelCustomerNameBtn = document.getElementById('cancel-customer-name-btn');
         
         // Theme toggle variables and logic
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -1273,6 +1305,33 @@
             };
             reader.readAsText(file);
         };
+
+        // Function to handle placeholders and copy
+        const processAndCopy = (text) => {
+            currentTextToCopy = text;
+
+            // Check for dynamic placeholders
+            const placeholderRegex = /\[Customer's Name\]/i;
+            if (placeholderRegex.test(currentTextToCopy)) {
+                customerNameModal.classList.remove('hidden');
+                customerNameInput.focus();
+            } else {
+                // If no dynamic placeholders, just replace [Name] and copy
+                const finalContent = replacePlaceholders(currentTextToCopy);
+                copyToClipboard(finalContent);
+            }
+        };
+
+        // Helper function to replace all standard placeholders
+        const replacePlaceholders = (text, customerName = 'customer') => {
+            let result = text;
+            // Replace [Customer's Name]
+            result = result.replace(/\[Customer's Name\]/g, customerName);
+            // Replace [Name]
+            result = result.replace(/\[Name\]/g, userName);
+            return result;
+        };
+
         // --- Event Listeners ---
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
@@ -1494,7 +1553,7 @@
             if (target.classList.contains('copy-btn')) {
                 const responses = categories[activeCategory].responses;
                 const text = responses.find(r => r.id === id).text;
-                copyToClipboard(text);
+                processAndCopy(text);
             } else if (target.classList.contains('edit-btn')) {
                 displayMode.classList.add('hidden');
                 editMode.classList.remove('hidden');
@@ -1519,6 +1578,22 @@
                 deleteModal.classList.remove('hidden');
             }
         });
+
+        // Modal event listeners for customer name
+        confirmCustomerNameBtn.addEventListener('click', () => {
+            const customerName = customerNameInput.value.trim() || 'customer';
+            const finalContent = replacePlaceholders(currentTextToCopy, customerName);
+            copyToClipboard(finalContent);
+            customerNameInput.value = '';
+            customerNameModal.classList.add('hidden');
+        });
+
+        cancelCustomerNameBtn.addEventListener('click', () => {
+            customerNameInput.value = '';
+            customerNameModal.classList.add('hidden');
+            showMessage("Copy cancelled.", 'error');
+        });
+
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
@@ -1846,6 +1921,8 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
+                userName = user.displayName || user.email || 'User';
+                document.getElementById('auth-status').textContent = `Signed in as: ${userName}`;
                 if (user.isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
@@ -1872,10 +1949,17 @@
                 listenForUserLinks();
             } else {
                 try {
-                    console.log("User not authenticated, signing in anonymously...");
-                    await signInAnonymously(auth);
+                    console.log("User not authenticated. Attempting custom token sign-in...");
+                    const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (authToken) {
+                        await signInWithCustomToken(auth, authToken);
+                        console.log("Signed in with custom token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Signed in anonymously.");
+                    }
                 } catch (error) {
-                    console.error("Anonymous sign-in failed", error);
+                    console.error("Authentication failed", error);
                 }
                 signInBtn.classList.add('hidden');
                 signOutBtn.classList.add('hidden');
