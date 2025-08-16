@@ -502,6 +502,25 @@
         </div>
     </div>
 
+    <!-- Universal Placeholder Modal -->
+    <div id="placeholder-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Customize Response</h3>
+            <p class="text-gray-400 text-base mb-4">Please fill in the details for the placeholders below.</p>
+            <div id="placeholder-inputs" class="space-y-4">
+                <!-- Dynamic input fields will be added here -->
+            </div>
+            <div class="flex justify-end mt-6 space-x-4">
+                <button id="cancel-placeholder-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                    Cancel
+                </button>
+                <button id="confirm-placeholder-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
+                    Copy Response
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import/Export Modal -->
     <div id="import-export-modal" class="modal hidden">
         <div class="modal-content">
@@ -607,29 +626,6 @@
         </div>
     </div>
 
-    <!-- Customer Name Modal -->
-    <div id="customer-name-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 class="text-2xl font-bold text-gray-200 mb-4">Enter Customer Name</h3>
-            <p class="text-gray-400 text-base mb-4">Please enter the customer's name to personalize the response.</p>
-            <input
-                type="text"
-                id="customer-name-input"
-                class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 mb-4 text-lg"
-                placeholder="e.g., Jane Doe"
-            />
-            <div class="flex justify-end space-x-4">
-                <button id="cancel-customer-name-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
-                    Cancel
-                </button>
-                <button id="confirm-customer-name-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
-                    Copy Response
-                </button>
-            </div>
-        </div>
-    </div>
-
-
     <!-- Label Modal -->
     <div id="label-modal" class="modal hidden">
         <div class="modal-content">
@@ -685,14 +681,14 @@
 
         // Your web app's Firebase configuration
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      const firebaseConfig = {
-          apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
-          authDomain: "tools-a180f.firebaseapp.com",
-          projectId: "tools-a180f",
-          storageBucket: "tools-a180f.firebasestorage.app",
-          messagingSenderId: "195275159442",
-          appId: "1:195275159442:web:20031fd5ccf0428162334b",
-          measurementId: "G-TP0VKGV0EE"
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+            authDomain: "tools-a180f.firebaseapp.com",
+            projectId: "tools-a180f",
+            storageBucket: "tools-a180f.firebasestorage.app",
+            messagingSenderId: "195275159442",
+            appId: "1:195275159442:web:20031fd5ccf0428162334b",
+            measurementId: "G-TP0VKGV0EE"
         };
         const appId = firebaseConfig.appId;
 
@@ -850,6 +846,34 @@
                 ]
             }
         };
+        
+        // A placeholder for the user's saved data
+        let savedCategories = {};
+        
+        const mergeData = (defaultData, userData) => {
+            const merged = { ...defaultData };
+            for (const category in userData) {
+                if (merged[category]) {
+                    // If category exists in both, merge responses
+                    const defaultResponses = merged[category].responses;
+                    const userResponses = userData[category].responses;
+                    
+                    const userResponseMap = new Map(userResponses.map(r => [r.id, r]));
+                    
+                    // Add new user responses and update existing ones
+                    for (const defaultResponse of defaultResponses) {
+                        if (!userResponseMap.has(defaultResponse.id)) {
+                            userResponseMap.set(defaultResponse.id, defaultResponse);
+                        }
+                    }
+                    merged[category].responses = Array.from(userResponseMap.values());
+                } else {
+                    // If category only exists in user data, add it
+                    merged[category] = userData[category];
+                }
+            }
+            return merged;
+        };
 
         const getUserDocRef = (uid) => {
             const docPath = `artifacts/${appId}/users/${uid}/data/canned-responses`;
@@ -870,7 +894,8 @@
             }
             const userDocRef = getUserDocRef(userId);
             try {
-                await setDoc(userDocRef, { categories: categories });
+                // Save the data, but only the parts the user has added or changed.
+                await setDoc(userDocRef, { categories: savedCategories });
             } catch (error) {
                 console.error("Error saving to Firestore:", error);
                 showMessage("Error saving data.", 'error');
@@ -968,10 +993,10 @@
         const signInBtn = document.getElementById('sign-in-btn');
         const signOutBtn = document.getElementById('sign-out-btn');
 
-        const customerNameModal = document.getElementById('customer-name-modal');
-        const customerNameInput = document.getElementById('customer-name-input');
-        const confirmCustomerNameBtn = document.getElementById('confirm-customer-name-btn');
-        const cancelCustomerNameBtn = document.getElementById('cancel-customer-name-btn');
+        const placeholderModal = document.getElementById('placeholder-modal');
+        const placeholderInputsContainer = document.getElementById('placeholder-inputs');
+        const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
+        const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
         
         // Theme toggle variables and logic
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -1218,6 +1243,7 @@
             const newId = Date.now().toString();
             const newResponse = { id: newId, text: text, label: '', createdAt: new Date().toISOString() };
             categories[activeCategory].responses.push(newResponse);
+            savedCategories[activeCategory].responses.push(newResponse); // Add to saved too
             saveToFirestore();
             responseInput.value = '';
             newResponseId = newId;
@@ -1236,11 +1262,25 @@
                 responseToUpdate.label = newLabel || '';
                 
                 if (newCategory && newCategory !== oldCategory) {
-                    responsesInOldCategory.splice(responseIndex, 1);
+                    // Remove from old category in both lists
+                    const oldResponsesList = categories[oldCategory].responses;
+                    oldResponsesList.splice(responseIndex, 1);
+                    const oldSavedResponsesList = savedCategories[oldCategory].responses;
+                    const savedResponseIndex = oldSavedResponsesList.findIndex(r => r.id === id);
+                    if (savedResponseIndex > -1) {
+                        oldSavedResponsesList.splice(savedResponseIndex, 1);
+                    }
+                    
+                    // Add to new category in both lists
                     if (!categories[newCategory]) {
                          categories[newCategory] = { color: '#60a5fa', responses: [] };
                     }
+                    if (!savedCategories[newCategory]) {
+                         savedCategories[newCategory] = { color: '#60a5fa', responses: [] };
+                    }
                     categories[newCategory].responses.push(responseToUpdate);
+                    savedCategories[newCategory].responses.push(responseToUpdate);
+
                     activeCategory = newCategory;
                     renderCategories();
                 }
@@ -1255,6 +1295,7 @@
             if (!activeCategory) return;
 
             categories[activeCategory].responses = categories[activeCategory].responses.filter(r => r.id !== id);
+            savedCategories[activeCategory].responses = savedCategories[activeCategory].responses.filter(r => r.id !== id);
             saveToFirestore();
             renderResponses();
             showMessage("Response deleted successfully!");
@@ -1291,6 +1332,7 @@
                     const importedData = JSON.parse(e.target.result);
                     if (typeof importedData === 'object' && importedData !== null) {
                         categories = importedData;
+                        savedCategories = importedData;
                         const categoryNames = Object.keys(categories);
                         if (categoryNames.length > 0) {
                             activeCategory = categoryNames[0];
@@ -1310,33 +1352,54 @@
             };
             reader.readAsText(file);
         };
-
-        // Function to handle placeholders and copy
+        
+        // Universal placeholder handling
+        const placeholderRegex = /\[([^\]]+)\]/g;
+        
         const processAndCopy = (text) => {
             currentTextToCopy = text;
-
-            // Check for dynamic placeholders
-            const placeholderRegex = /\[Customer's Name\]/i;
-            if (placeholderRegex.test(currentTextToCopy)) {
-                customerNameModal.classList.remove('hidden');
-                customerNameInput.focus();
+            const matches = text.match(placeholderRegex);
+            const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
+            
+            if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
+                // Show modal for all placeholders except [Name]
+                placeholderInputsContainer.innerHTML = '';
+                placeholders.forEach(placeholder => {
+                    if (placeholder !== 'Name') {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.className = 'flex flex-col';
+                        const label = document.createElement('label');
+                        label.className = 'block text-sm font-medium text-gray-400 mb-1';
+                        label.textContent = placeholder;
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.id = `placeholder-${placeholder.replace(/\s/g, '-')}`;
+                        input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
+                        inputGroup.appendChild(label);
+                        inputGroup.appendChild(input);
+                        placeholderInputsContainer.appendChild(inputGroup);
+                    }
+                });
+                placeholderModal.classList.remove('hidden');
+                document.querySelector('#placeholder-inputs input')?.focus();
             } else {
-                // If no dynamic placeholders, just replace [Name] and copy
-                const finalContent = replacePlaceholders(currentTextToCopy);
+                const finalContent = replacePlaceholders(currentTextToCopy, {});
                 copyToClipboard(finalContent);
             }
         };
 
-        // Helper function to replace all standard placeholders
-        const replacePlaceholders = (text, customerName = 'customer') => {
+        const replacePlaceholders = (text, userValues) => {
             let result = text;
-            // Replace [Customer's Name]
-            result = result.replace(/\[Customer's Name\]/g, customerName);
-            // Replace [Name]
+            // First, replace [Name] with the authenticated user's name
             result = result.replace(/\[Name\]/g, userName);
+            // Then, replace other placeholders with user-provided values
+            for (const key in userValues) {
+                const regex = new RegExp(`\\[${key}\\]`, 'g');
+                result = result.replace(regex, userValues[key]);
+            }
             return result;
         };
-
+        
         // --- Event Listeners ---
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
@@ -1416,6 +1479,7 @@
             }
             
             categories[categoryName] = { color: '#60a5fa', responses: [] };
+            savedCategories[categoryName] = { color: '#60a5fa', responses: [] }; // Keep saved in sync
             activeCategory = categoryName;
             addCategoryModal.classList.add('hidden');
             saveToFirestore();
@@ -1475,6 +1539,7 @@
             const newColor = colorInput.value;
             if (activeCategory) {
                 categories[activeCategory].color = newColor;
+                savedCategories[activeCategory].color = newColor; // Keep saved in sync
                 saveToFirestore();
                 renderCategories();
                 showMessage(`Color for '${activeCategory}' changed successfully!`);
@@ -1506,7 +1571,9 @@
             }
             
             categories[newName] = categories[categoryToEdit];
+            savedCategories[newName] = savedCategories[categoryToEdit];
             delete categories[categoryToEdit];
+            delete savedCategories[categoryToEdit];
             if (activeCategory === categoryToEdit) {
                 activeCategory = newName;
             }
@@ -1525,6 +1592,7 @@
         confirmDeleteCategoryBtn.addEventListener('click', () => {
             if (categoryToEdit) {
                 delete categories[categoryToEdit];
+                delete savedCategories[categoryToEdit];
                 if (activeCategory === categoryToEdit) {
                     const categoryNames = Object.keys(categories);
                     activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
@@ -1584,21 +1652,23 @@
             }
         });
 
-        // Modal event listeners for customer name
-        confirmCustomerNameBtn.addEventListener('click', () => {
-            const customerName = customerNameInput.value.trim() || 'customer';
-            const finalContent = replacePlaceholders(currentTextToCopy, customerName);
+        // Universal placeholder modal logic
+        confirmPlaceholderBtn.addEventListener('click', () => {
+            const inputs = placeholderInputsContainer.querySelectorAll('input');
+            const userValues = {};
+            inputs.forEach(input => {
+                const placeholder = input.id.replace('placeholder-', '').replace(/-/g, ' ');
+                userValues[placeholder] = input.value.trim() || `[${placeholder}]`;
+            });
+            const finalContent = replacePlaceholders(currentTextToCopy, userValues);
             copyToClipboard(finalContent);
-            customerNameInput.value = '';
-            customerNameModal.classList.add('hidden');
+            placeholderModal.classList.add('hidden');
         });
 
-        cancelCustomerNameBtn.addEventListener('click', () => {
-            customerNameInput.value = '';
-            customerNameModal.classList.add('hidden');
+        cancelPlaceholderBtn.addEventListener('click', () => {
+            placeholderModal.classList.add('hidden');
             showMessage("Copy cancelled.", 'error');
         });
-
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
@@ -1612,6 +1682,7 @@
                 const responseIndex = responses.findIndex(r => r.id === newResponseId);
                 if (responseIndex > -1) {
                     responses[responseIndex].label = modalLabelInput.value || '';
+                    savedCategories[activeCategory].responses[responseIndex].label = modalLabelInput.value || '';
                     saveToFirestore();
                 }
                 newResponseId = null;
@@ -1940,8 +2011,10 @@
                 
                 onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
-                        categories = doc.data().categories || {};
+                        savedCategories = doc.data().categories || {};
+                        categories = mergeData(defaultCannedResponses, savedCategories);
                     } else {
+                        savedCategories = {};
                         categories = defaultCannedResponses;
                         saveToFirestore();
                     }
