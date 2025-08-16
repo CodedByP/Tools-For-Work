@@ -344,11 +344,22 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+        // Enable Firebase debug logging
+        setLogLevel('debug');
 
         // --- Firebase Initialization and Auth ---
-        // Use the global __firebase_config and __app_id variables provided by the environment
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+            authDomain: "tools-a180f.firebaseapp.com",
+            projectId: "tools-a180f",
+            storageBucket: "tools-a180f.firebasestorage.app",
+            messagingSenderId: "195275159442",
+            appId: "1:195275159442:web:20031fd5ccf0428162334b"
+        };
+        const appId = firebaseConfig.appId;
 
         // Initialize Firebase app
         const app = initializeApp(firebaseConfig);
@@ -504,7 +515,11 @@
             }
         };
 
-        const getUserDocRef = (uid) => doc(db, 'artifacts', appId, 'users', uid);
+        const getUserDocRef = (uid) => {
+            const docPath = `artifacts/${appId}/users/${uid}/cannedResponses`;
+            console.log("Firestore Document Path:", docPath);
+            return doc(db, `artifacts/${appId}/users/${uid}`);
+        };
         
         const saveToFirestore = async () => {
             if (!userId) {
@@ -1160,8 +1175,10 @@
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
                 }
-
-                onSnapshot(getUserDocRef(userId), (doc) => {
+                const userDocRef = getUserDocRef(userId);
+                console.log("Listening to document:", userDocRef.path);
+                
+                onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
                         categories = doc.data().categories || {};
                     } else {
@@ -1173,6 +1190,7 @@
                 });
             } else {
                 try {
+                    console.log("User not authenticated, signing in anonymously...");
                     await signInAnonymously(auth);
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
