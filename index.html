@@ -719,7 +719,6 @@
         import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
-        // Your web app's Firebase configuration for a public environment
         const firebaseConfig = {
             apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
             authDomain: "tools-a180f.firebaseapp.com",
@@ -1838,16 +1837,30 @@
                     querySnapshot.forEach((doc) => {
                         const linkData = doc.data();
                         const card = document.createElement('div');
-                        card.className = 'link-card rounded-xl p-6 shadow-2xl flex items-center justify-between';
                         
+                        // Sanitize data for HTML attributes to prevent XSS
                         const titleForHtml = linkData.title.replace(/'/g, "\\'");
                         const urlForHtml = linkData.url.replace(/'/g, "\\'");
                         
+                        card.className = 'link-card rounded-xl p-6 shadow-2xl flex items-center justify-between relative';
                         card.innerHTML = `
                             <a href="${linkData.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
                                 <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
                                 <p class="text-sm text-gray-400">${linkData.url}</p>
                             </a>
+                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}">
+                                <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
+                                      <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                    </svg>
+                                </button>
+                                <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                                    <div class="py-1">
+                                        <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
+                                        <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
                         `;
                         userLinksList.appendChild(card);
                     });
@@ -1905,18 +1918,18 @@
         });
 
         userLinksList.addEventListener('click', (event) => {
-            const button = event.target.closest('.kebab-button');
+            const button = event.target.closest('.meatballs-button');
             const editBtn = event.target.closest('.edit-link-btn');
             const deleteBtn = event.target.closest('.delete-link-btn');
 
             if (button) {
                 event.stopPropagation();
                 const parentDiv = button.closest('[data-doc-id]');
-                const menu = parentDiv.querySelector('.kebab-menu');
+                const menu = parentDiv.querySelector('.meatballs-menu');
                 if (menu) {
                     const isHidden = menu.classList.contains('hidden');
                     // Close all other menus before opening the clicked one
-                    const allMenus = document.querySelectorAll('.kebab-menu');
+                    const allMenus = document.querySelectorAll('.meatballs-menu');
                     allMenus.forEach(m => m.classList.add('hidden'));
 
                     if (isHidden) {
@@ -1934,7 +1947,7 @@
                     const title = parentDiv.dataset.title;
                     const url = parentDiv.dataset.url;
                     editLink(docId, title, url);
-                    const menu = parentDiv.querySelector('.kebab-menu');
+                    const menu = parentDiv.querySelector('.meatballs-menu');
                     if (menu) menu.classList.add('hidden');
                     openMenuId = null;
                 }
@@ -1944,14 +1957,14 @@
                 if (parentDiv) {
                     const docId = parentDiv.dataset.docId;
                     deleteLink(docId);
-                    const menu = parentDiv.querySelector('.kebab-menu');
+                    const menu = parentDiv.querySelector('.meatballs-menu');
                     if (menu) menu.classList.add('hidden');
                     openMenuId = null;
                 }
             }
         });
 
-        // Click handler to close menus when clicking outside
+        // Universal click handler to close menus when clicking outside
         document.addEventListener('click', (event) => {
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
             if (!isClickInsideCategoryActions) {
@@ -1959,9 +1972,9 @@
                 categoryActionsBtn.classList.remove('active');
             }
             
-            const isClickInsideLinkMenu = event.target.closest('.kebab-menu') || event.target.closest('.kebab-button');
+            const isClickInsideLinkMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
             if (!isClickInsideLinkMenu) {
-                const allLinkMenus = document.querySelectorAll('.kebab-menu');
+                const allLinkMenus = document.querySelectorAll('.meatballs-menu');
                 allLinkMenus.forEach(m => m.classList.add('hidden'));
             }
         });
