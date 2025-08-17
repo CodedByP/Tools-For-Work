@@ -739,7 +739,7 @@
         let currentPage = 'canned-responses';
         let userName = '';
         let currentTextToCopy = '';
-        let currentEditingId = null; // Re-added the missing variable declaration
+        let currentEditingId = null;
         let openCategoryMenu = null;
         let editingLinkDocId = null;
         let openMenuId = null;
@@ -836,6 +836,7 @@
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const helpfulLinksApp = document.getElementById('helpful-links-app');
             const categoryBar = document.getElementById('category-bar');
+            const categoryActionsBtn = document.getElementById('category-actions-btn');
             
             const mainTitle = document.getElementById('main-title');
             
@@ -843,11 +844,15 @@
             if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
             if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
             if (categoryBar) categoryBar.classList.add('hidden');
+            if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
             
             if (currentPage === 'canned-responses') {
                 if (cannedResponsesApp) cannedResponsesApp.classList.remove('hidden');
                 if (categoryBar) categoryBar.classList.remove('hidden');
                 if (mainTitle) mainTitle.textContent = 'Canned Responses';
+                if (Object.keys(categories).length > 0) {
+                    categoryActionsBtn.classList.remove('hidden');
+                }
                 renderCategories();
             } else if (currentPage === 'fedex-tracker') {
                 if (fedexTrackerApp) fedexTrackerApp.classList.remove('hidden');
@@ -856,6 +861,7 @@
             } else if (currentPage === 'helpful-links') {
                 if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
                 if (mainTitle) mainTitle.textContent = 'Helpful Links';
+                listenForUserLinks(); // Also moved this here to ensure it's only active on the links page
             }
         };
 
@@ -1822,19 +1828,6 @@
                                 <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
                                 <p class="text-sm text-gray-400">${linkData.url}</p>
                             </a>
-                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}">
-                                <button type="button" class="kebab-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
-                                        <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-                                    </svg>
-                                </button>
-                                <div class="kebab-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                                    <div class="py-1">
-                                        <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
-                                        <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
-                                    </div>
-                                </div>
-                            </div>
                         `;
                         userLinksList.appendChild(card);
                     });
