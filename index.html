@@ -342,7 +342,7 @@
                                 placeholder="Type your new canned response here..."
                             ></textarea>
                         </div>
-                        <div class="flex flex-col sm:flex-row gap-4 items-center">
+                        <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
                             <button id="add-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
                                 <i class="fas fa-plus mr-2"></i> Add Response
                             </button>
@@ -520,6 +520,37 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Response Modal -->
+    <div id="edit-response-modal" class="modal hidden">
+        <div class="modal-content w-full max-w-3xl">
+            <h3 class="text-2xl font-bold text-gray-200 mb-4">Edit Response</h3>
+            <p class="text-gray-400 text-base mb-4">Modify the response, its label, or category below.</p>
+            <div id="edit-form" class="space-y-4">
+                <div>
+                    <label for="edit-response-label" class="block text-sm font-medium text-gray-400">Label</label>
+                    <input type="text" id="edit-response-label" class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg" />
+                </div>
+                <div>
+                    <label for="edit-response-text" class="block text-sm font-medium text-gray-400">Response Text</label>
+                    <textarea id="edit-response-text" rows="15" class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg"></textarea>
+                </div>
+                <div>
+                    <label for="edit-category-select" class="block text-sm font-medium text-gray-400">Category</label>
+                    <select id="edit-category-select" class="w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg"></select>
+                </div>
+            </div>
+            <div class="flex justify-end mt-6 space-x-4">
+                <button id="cancel-edit-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                    Cancel
+                </button>
+                <button id="save-edit-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Import/Export Modal -->
     <div id="import-export-modal" class="modal hidden">
@@ -849,7 +880,8 @@
         
         // A placeholder for the user's saved data
         let savedCategories = {};
-        
+        let currentEditingId = null;
+
         const mergeData = (defaultData, userData) => {
             const merged = { ...defaultData };
             for (const category in userData) {
@@ -997,6 +1029,14 @@
         const placeholderInputsContainer = document.getElementById('placeholder-inputs');
         const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
         const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
+
+        // New edit modal elements
+        const editResponseModal = document.getElementById('edit-response-modal');
+        const editResponseLabelInput = document.getElementById('edit-response-label');
+        const editResponseTextInput = document.getElementById('edit-response-text');
+        const editCategorySelect = document.getElementById('edit-category-select');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
         
         // Theme toggle variables and logic
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -1179,17 +1219,15 @@
                         const responseEl = document.createElement('div');
                         responseEl.className = 'response-item flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-4 rounded-lg border border-gray-600';
                         responseEl.dataset.id = response.id;
-
-                        const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
-
-                        const displayHTML = `
-                            <div class="flex-grow display-mode">
-                                <p class="response-text text-gray-200 mb-2 sm:mb-0 sm:mr-4 whitespace-pre-wrap">${displayText}</p>
+                        responseEl.innerHTML = `
+                            <div class="flex-grow display-mode space-y-2 w-full">
+                                <h4 class="response-label-display text-sm font-semibold text-gray-400">${response.label || 'Unlabeled'}</h4>
+                                <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
                                 <div class="flex-shrink-0 flex space-x-2 mt-2 sm:mt-0">
                                     <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
                                         <i class="fas fa-copy"></i>
                                     </button>
-                                    <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+                                    <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
                                     <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
@@ -1198,34 +1236,12 @@
                                 </div>
                             </div>
                         `;
-                        
-                        const editHTML = `
-                            <div class="flex-grow edit-mode hidden">
-                                <div class="flex flex-col space-y-2">
-                                    <textarea class="edit-response-input w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg" rows="3">${response.text}</textarea>
-                                    <input type="text" class="edit-label-input w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 text-lg" value="${response.label || ''}">
-                                    <select class="edit-category-select w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg">
-                                        ${categoryOptions}
-                                    </select>
-                                </div>
-                                <div class="flex-shrink-0 flex space-x-2 mt-4 sm:mt-2">
-                                    <button class="save-btn bg-blue-600 text-white font-bold py-2 px-6 rounded-xl shadow-md hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-300">
-                                        Save
-                                    </button>
-                                    <button class="cancel-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-xl shadow-md hover:bg-gray-600 hover:scale-105 active:scale-95 transition-all duration-300">
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-
-                        responseEl.innerHTML = displayHTML + editHTML;
                         responsesInSection.appendChild(responseEl);
                     });
                     responsesList.appendChild(labelSection);
                 }
             } else {
-                emptyState.classList.remove('hidden');
+                emptyState.classList.add('hidden');
             }
         };
 
@@ -1253,42 +1269,58 @@
 
         const updateResponse = (id, newText, newLabel, newCategory) => {
             const oldCategory = activeCategory;
-            const responsesInOldCategory = categories[oldCategory].responses;
-            const responseIndex = responsesInOldCategory.findIndex(r => r.id === id);
-            
-            if (responseIndex > -1) {
-                const responseToUpdate = responsesInOldCategory[responseIndex];
-                responseToUpdate.text = newText;
-                responseToUpdate.label = newLabel || '';
+
+            if (newCategory && newCategory !== oldCategory) {
+                // Handle moving to a new category
+                const oldResponsesList = categories[oldCategory]?.responses || [];
+                const oldSavedResponsesList = savedCategories[oldCategory]?.responses || [];
+                const responseIndex = oldResponsesList.findIndex(r => r.id === id);
                 
-                if (newCategory && newCategory !== oldCategory) {
-                    // Remove from old category in both lists
-                    const oldResponsesList = categories[oldCategory].responses;
-                    oldResponsesList.splice(responseIndex, 1);
-                    const oldSavedResponsesList = savedCategories[oldCategory].responses;
+                if (responseIndex > -1) {
+                    const [responseToMove] = oldResponsesList.splice(responseIndex, 1);
+                    
                     const savedResponseIndex = oldSavedResponsesList.findIndex(r => r.id === id);
                     if (savedResponseIndex > -1) {
                         oldSavedResponsesList.splice(savedResponseIndex, 1);
                     }
                     
-                    // Add to new category in both lists
+                    responseToMove.text = newText;
+                    responseToMove.label = newLabel || '';
+
                     if (!categories[newCategory]) {
-                         categories[newCategory] = { color: '#60a5fa', responses: [] };
+                        categories[newCategory] = { color: '#60a5fa', responses: [] };
                     }
                     if (!savedCategories[newCategory]) {
-                         savedCategories[newCategory] = { color: '#60a5fa', responses: [] };
+                        savedCategories[newCategory] = { color: '#60a5fa', responses: [] };
                     }
-                    categories[newCategory].responses.push(responseToUpdate);
-                    savedCategories[newCategory].responses.push(responseToUpdate);
 
+                    categories[newCategory].responses.push(responseToMove);
+                    savedCategories[newCategory].responses.push(responseToMove);
+                    
                     activeCategory = newCategory;
-                    renderCategories();
                 }
+            } else {
+                // Handle update within the same category
+                const responsesInActiveCategory = categories[activeCategory]?.responses || [];
+                const savedResponsesInActiveCategory = savedCategories[activeCategory]?.responses || [];
 
-                saveToFirestore();
-                showMessage("Response updated successfully!");
-                renderResponses();
+                const responseIndex = responsesInActiveCategory.findIndex(r => r.id === id);
+                const savedResponseIndex = savedResponsesInActiveCategory.findIndex(r => r.id === id);
+                
+                if (responseIndex > -1) {
+                    responsesInActiveCategory[responseIndex].text = newText;
+                    responsesInActiveCategory[responseIndex].label = newLabel || '';
+                    if (savedResponseIndex > -1) {
+                        savedResponsesInActiveCategory[savedResponseIndex].text = newText;
+                        savedResponsesInActiveCategory[savedResponseIndex].label = newLabel || '';
+                    }
+                }
             }
+            
+            saveToFirestore();
+            showMessage("Response updated successfully!");
+            renderCategories();
+            renderResponses();
         };
 
         const deleteResponse = (id) => {
@@ -1620,36 +1652,42 @@
             if (!parentEl) return;
             const id = parentEl.dataset.id;
             
-            const displayMode = parentEl.querySelector('.display-mode');
-            const editMode = parentEl.querySelector('.edit-mode');
-            
             if (target.closest('.copy-btn')) {
                 const responses = categories[activeCategory].responses;
                 const text = responses.find(r => r.id === id).text;
                 processAndCopy(text);
             } else if (target.closest('.edit-btn')) {
-                displayMode.classList.add('hidden');
-                editMode.classList.remove('hidden');
-            } else if (target.closest('.save-btn')) {
-                const newText = parentEl.querySelector('.edit-response-input').value;
-                const newLabel = parentEl.querySelector('.edit-label-input').value;
-                const newCategory = parentEl.querySelector('.edit-category-select').value;
-                
-                updateResponse(id, newText, newLabel, newCategory);
+                // Find the response to edit
+                const responseToEdit = categories[activeCategory].responses.find(r => r.id === id);
+                if (responseToEdit) {
+                    currentEditingId = id; // Store the ID of the response being edited
+                    editResponseLabelInput.value = responseToEdit.label || '';
+                    editResponseTextInput.value = responseToEdit.text;
 
-            } else if (target.closest('.cancel-btn')) {
-                const responses = categories[activeCategory].responses;
-                const response = responses.find(r => r.id === id);
-                if (response) {
-                    parentEl.querySelector('.edit-response-input').value = response.text;
-                    parentEl.querySelector('.edit-label-input').value = response.label || '';
+                    // Populate category dropdown
+                    const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
+                    editCategorySelect.innerHTML = categoryOptions;
+
+                    editResponseModal.classList.remove('hidden');
                 }
-                displayMode.classList.remove('hidden');
-                editMode.classList.add('hidden');
             } else if (target.closest('.delete-btn')) {
                 responseToDeleteId = id;
                 deleteModal.classList.remove('hidden');
             }
+        });
+
+        // Edit Response Modal event listeners
+        saveEditBtn.addEventListener('click', () => {
+            const newText = editResponseTextInput.value;
+            const newLabel = editResponseLabelInput.value;
+            const newCategory = editCategorySelect.value;
+            updateResponse(currentEditingId, newText, newLabel, newCategory);
+            editResponseModal.classList.add('hidden');
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            editResponseModal.classList.add('hidden');
+            currentEditingId = null;
         });
 
         // Universal placeholder modal logic
