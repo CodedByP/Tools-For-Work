@@ -134,7 +134,7 @@
         }
         .card {
             background-color: #1f2937;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 15px -3-px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
         }
         .tracking-numbers-container {
             background-color: #111827;
@@ -780,7 +780,7 @@
                     { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Hello [Customer\'s Name],\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
                     { id: 'guts-4', label: 'Resolution For Lost Device', text: 'Hello [Customer\'s Name],\n\nAfter conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
                     { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Hello [Customer\'s Name],\n\nThank you for confirming that your [Device Model] - [Asset Number] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
-                    { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return.\n\nIf you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
                     { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
                     { id: 'guts-8', label: 'Successful Return', text: 'Hello [Customer\'s Name],\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() }
                 ]
@@ -829,7 +829,14 @@
             }
             const userDocRef = getUserDocRef(userId);
             try {
-                await setDoc(userDocRef, { categories: savedCategories });
+                // Perform a deep copy and cleanup to prevent undefined values
+                const cleanedSavedCategories = JSON.parse(JSON.stringify(savedCategories));
+                for (const key in cleanedSavedCategories) {
+                    if (!cleanedSavedCategories[key].responses) {
+                        cleanedSavedCategories[key].responses = [];
+                    }
+                }
+                await setDoc(userDocRef, { categories: cleanedSavedCategories });
             } catch (error) {
                 console.error("Error saving to Firestore:", error);
                 showMessage("Error saving data.", 'error');
@@ -999,7 +1006,6 @@
             categoryList.innerHTML = '';
             const categoryNames = Object.keys(categories);
             
-            // Hide or show the main category actions button
             if (categoryNames.length > 0) {
                 categoryActionsBtn.classList.remove('hidden');
             } else {
@@ -1049,7 +1055,7 @@
             if (query) {
                 let allResponses = [];
                 for (const categoryName in categories) {
-                    allResponses = allResponses.concat(categories[categoryName].responses);
+                    allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
                 }
                 
                 let labelMatches = [];
@@ -1069,8 +1075,13 @@
                 responsesToRender = [...new Set([...labelMatches, ...textMatches])];
                 headingText = 'Search Results';
             } else {
-                responsesToRender = categories[activeCategory] ? categories[activeCategory].responses : [];
-                headingText = `Responses in: ${activeCategory}`;
+                if (categories[activeCategory]) {
+                    responsesToRender = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
+                    headingText = `Responses in: ${activeCategory}`;
+                } else {
+                    responsesToRender = [];
+                    headingText = 'No Active Category';
+                }
             }
             
             document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
@@ -1115,6 +1126,7 @@
                         const responseEl = document.createElement('div');
                         responseEl.className = 'response-item flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-4 rounded-lg border border-gray-600';
                         responseEl.dataset.id = response.id;
+                        responseEl.dataset.category = response.category;
                         responseEl.innerHTML = `
                             <div class="flex-grow display-mode space-y-2 w-full">
                                 <h4 class="response-label-display text-sm font-semibold text-gray-400">${response.label || 'Unlabeled'}</h4>
@@ -1147,15 +1159,27 @@
                 return;
             }
 
-            if (!activeCategory) {
+            if (!activeCategory || !categories[activeCategory]) {
                 showMessage("Please create or select a category first.", 'error');
                 return;
+            }
+
+            // A more robust check to ensure the responses array exists before pushing.
+            if (!categories[activeCategory].responses) {
+                categories[activeCategory].responses = [];
+            }
+            if (!savedCategories[activeCategory]) {
+                savedCategories[activeCategory] = { color: categories[activeCategory].color, responses: [] };
+            }
+            if (!savedCategories[activeCategory].responses) {
+                savedCategories[activeCategory].responses = [];
             }
 
             const newId = Date.now().toString();
             const newResponse = { id: newId, text: text, label: '', createdAt: new Date().toISOString() };
             categories[activeCategory].responses.push(newResponse);
             savedCategories[activeCategory].responses.push(newResponse);
+            
             saveToFirestore();
             responseInput.value = '';
             newResponseId = newId;
@@ -1217,11 +1241,13 @@
             renderResponses();
         };
 
-        const deleteResponse = (id) => {
-            if (!activeCategory) return;
+        const deleteResponse = (id, categoryName) => {
+            if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) return;
 
-            categories[activeCategory].responses = categories[activeCategory].responses.filter(r => r.id !== id);
-            savedCategories[activeCategory].responses = savedCategories[activeCategory].responses.filter(r => r.id !== id);
+            categories[categoryName].responses = categories[categoryName].responses.filter(r => r.id !== id);
+            if (savedCategories[categoryName]) {
+                savedCategories[categoryName].responses = savedCategories[categoryName].responses.filter(r => r.id !== id);
+            }
             saveToFirestore();
             renderResponses();
             showMessage("Response deleted successfully!");
@@ -1409,7 +1435,7 @@
             }
             
             categories[categoryName] = { color: '#60a5fa', responses: [] };
-            savedCategories[categoryName] = { color: '#60a5fa', responses: [] }; // Keep saved in sync
+            savedCategories[categoryName] = { color: '#60a5fa', responses: [] };
             activeCategory = categoryName;
             addCategoryModal.classList.add('hidden');
             saveToFirestore();
@@ -1430,8 +1456,8 @@
                 const categoryName = itemBtn.dataset.category;
                 if (categoryName !== activeCategory) {
                     activeCategory = categoryName;
-                    categoryActionsBtn.classList.remove('hidden'); // Show the actions button
-                    categoryActionsMenu.classList.add('hidden'); // Hide the menu
+                    categoryActionsBtn.classList.remove('hidden');
+                    categoryActionsMenu.classList.add('hidden');
                     renderCategories();
                     renderResponses();
                 }
@@ -1457,6 +1483,12 @@
         renameCategoryBtn.addEventListener('click', (event) => {
             event.stopPropagation();
             categoryToEdit = activeCategory;
+            if (!activeCategory || !categories[activeCategory]) {
+                showMessage("Please select a valid category to rename.", 'error');
+                categoryActionsMenu.classList.add('hidden');
+                categoryActionsBtn.classList.remove('active');
+                return;
+            }
             editCategoryInput.value = categoryToEdit;
             editCategoryModal.classList.remove('hidden');
             categoryActionsMenu.classList.add('hidden');
@@ -1466,6 +1498,12 @@
         deleteCategoryBtn.addEventListener('click', (event) => {
             event.stopPropagation();
             categoryToEdit = activeCategory;
+            if (!activeCategory || !categories[activeCategory]) {
+                showMessage("Please select a valid category to delete.", 'error');
+                categoryActionsMenu.classList.add('hidden');
+                categoryActionsBtn.classList.remove('active');
+                return;
+            }
             deleteCategoryModal.classList.remove('hidden');
             categoryActionsMenu.classList.add('hidden');
             categoryActionsBtn.classList.remove('active');
@@ -1474,8 +1512,16 @@
         changeColorBtn.addEventListener('click', (event) => {
             event.stopPropagation();
             categoryToEdit = activeCategory;
-            const currentColor = categories[categoryToEdit].color || '#60a5fa';
-            colorInput.value = currentColor;
+            if (!activeCategory || !categories[activeCategory]) {
+              showMessage("Please select a valid category to change color.", 'error');
+              categoryActionsMenu.classList.add('hidden');
+              categoryActionsBtn.classList.remove('active');
+              return;
+            }
+            if (categories[categoryToEdit]) {
+              const currentColor = categories[categoryToEdit].color || '#60a5fa';
+              colorInput.value = currentColor;
+            }
             colorPickerModal.classList.remove('hidden');
             categoryActionsMenu.classList.add('hidden');
             categoryActionsBtn.classList.remove('active');
@@ -1490,9 +1536,9 @@
                 categoryActionsBtn.classList.remove('active');
             }
             
-            const isClickInsideLinkMenu = event.target.closest('.kebab-menu') || event.target.closest('.kebab-button');
+            const isClickInsideLinkMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
             if (!isClickInsideLinkMenu) {
-                const allLinkMenus = document.querySelectorAll('.kebab-menu');
+                const allLinkMenus = document.querySelectorAll('.meatballs-menu');
                 allLinkMenus.forEach(m => m.classList.add('hidden'));
             }
         });
@@ -1510,12 +1556,14 @@
             }
             
             if (newName !== categoryToEdit) {
-                categories[newName] = categories[categoryToEdit];
-                savedCategories[newName] = savedCategories[categoryToEdit];
-                delete categories[categoryToEdit];
-                delete savedCategories[categoryToEdit];
-                if (activeCategory === categoryToEdit) {
-                    activeCategory = newName;
+                if (categories[categoryToEdit]) { // Check if old category still exists
+                    categories[newName] = categories[categoryToEdit];
+                    savedCategories[newName] = savedCategories[categoryToEdit];
+                    delete categories[categoryToEdit];
+                    delete savedCategories[categoryToEdit];
+                    if (activeCategory === categoryToEdit) {
+                        activeCategory = newName;
+                    }
                 }
             }
 
@@ -1532,7 +1580,7 @@
         });
 
         confirmDeleteCategoryBtn.addEventListener('click', () => {
-            if (categoryToEdit) {
+            if (categoryToEdit && categories[categoryToEdit]) {
                 delete categories[categoryToEdit];
                 delete savedCategories[categoryToEdit];
                 if (activeCategory === categoryToEdit) {
@@ -1544,6 +1592,9 @@
                 deleteCategoryModal.classList.add('hidden');
                 renderCategories();
                 showMessage("Category deleted successfully!");
+            } else {
+                 showMessage("Error: The category no longer exists.", 'error');
+                 deleteCategoryModal.classList.add('hidden');
             }
         });
 
@@ -1554,12 +1605,16 @@
 
         saveColorBtn.addEventListener('click', () => {
             const newColor = colorInput.value;
-            if (categoryToEdit) {
+            if (categoryToEdit && categories[categoryToEdit]) {
                 categories[categoryToEdit].color = newColor;
-                savedCategories[categoryToEdit].color = newColor;
+                if (savedCategories[categoryToEdit]) {
+                    savedCategories[categoryToEdit].color = newColor;
+                }
                 saveToFirestore();
                 renderCategories();
                 showMessage(`Color for '${categoryToEdit}' changed successfully!`);
+            } else {
+                showMessage("Error: No valid category selected to change color.", 'error');
             }
             colorPickerModal.classList.add('hidden');
             categoryToEdit = null;
@@ -1579,19 +1634,28 @@
             const parentEl = target.closest('.response-item');
             if (!parentEl) return;
             const id = parentEl.dataset.id;
+            const categoryName = parentEl.dataset.category;
             
             if (target.closest('.copy-btn')) {
-                const responses = categories[activeCategory].responses;
+                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
+                    showMessage("Error: No active category found.", 'error');
+                    return;
+                }
+                const responses = categories[categoryName].responses;
                 const text = responses.find(r => r.id === id).text;
                 processAndCopy(text);
             } else if (target.closest('.edit-btn')) {
-                const responseToEdit = categories[activeCategory].responses.find(r => r.id === id);
+                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
+                    showMessage("Error: No active category found.", 'error');
+                    return;
+                }
+                const responseToEdit = categories[categoryName].responses.find(r => r.id === id);
                 if (responseToEdit) {
                     currentEditingId = id;
                     editResponseLabelInput.value = responseToEdit.label || '';
                     editResponseTextInput.value = responseToEdit.text;
 
-                    const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
+                    const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === categoryName ? 'selected' : ''}>${cat}</option>`).join('');
                     editCategorySelect.innerHTML = categoryOptions;
 
                     editResponseModal.classList.remove('hidden');
@@ -1606,8 +1670,59 @@
             const newText = editResponseTextInput.value;
             const newLabel = editResponseLabelInput.value;
             const newCategory = editCategorySelect.value;
-            updateResponse(currentEditingId, newText, newLabel, newCategory);
+            const oldCategory = activeCategory;
+            
+            // Re-fetch the response since activeCategory might have changed
+            let responseToUpdate = null;
+            if (categories[oldCategory] && categories[oldCategory].responses) {
+                responseToUpdate = categories[oldCategory].responses.find(r => r.id === currentEditingId);
+            }
+            if (!responseToUpdate) {
+                showMessage("Error: The response no longer exists in its original category.", 'error');
+                editResponseModal.classList.add('hidden');
+                currentEditingId = null;
+                return;
+            }
+
+            if (newCategory && newCategory !== oldCategory) {
+                // Move the response to a new category
+                const oldResponsesList = categories[oldCategory].responses;
+                const index = oldResponsesList.indexOf(responseToUpdate);
+                if (index > -1) {
+                    oldResponsesList.splice(index, 1);
+                }
+                
+                if (!categories[newCategory]) {
+                    categories[newCategory] = { color: '#60a5fa', responses: [] };
+                }
+                responseToUpdate.text = newText;
+                responseToUpdate.label = newLabel || '';
+                categories[newCategory].responses.push(responseToUpdate);
+
+                // Update saved categories
+                const oldSavedResponsesList = savedCategories[oldCategory]?.responses || [];
+                const savedIndex = oldSavedResponsesList.indexOf(responseToUpdate);
+                if (savedIndex > -1) {
+                    oldSavedResponsesList.splice(savedIndex, 1);
+                }
+                if (!savedCategories[newCategory]) {
+                    savedCategories[newCategory] = { color: '#60a5fa', responses: [] };
+                }
+                savedCategories[newCategory].responses.push(responseToUpdate);
+                activeCategory = newCategory;
+
+            } else {
+                // Update the response within the same category
+                responseToUpdate.text = newText;
+                responseToUpdate.label = newLabel || '';
+            }
+
+            saveToFirestore();
+            showMessage("Response updated successfully!");
             editResponseModal.classList.add('hidden');
+            currentEditingId = null;
+            renderCategories();
+            renderResponses();
         });
 
         cancelEditBtn.addEventListener('click', () => {
@@ -1644,6 +1759,11 @@
 
         saveLabelBtn.addEventListener('click', () => {
             if (newResponseId) {
+                if (!categories[activeCategory] || !categories[activeCategory].responses) {
+                    showMessage("Error: No active category found.", 'error');
+                    labelModal.classList.add('hidden');
+                    return;
+                }
                 const responses = categories[activeCategory].responses;
                 const responseIndex = responses.findIndex(r => r.id === newResponseId);
                 if (responseIndex > -1) {
@@ -1665,7 +1785,7 @@
 
         cancelLabelBtn.addEventListener('click', () => {
             if (newResponseId) {
-                deleteResponse(newResponseId);
+                deleteResponse(newResponseId, activeCategory);
                 newResponseId = null;
             }
             modalLabelInput.value = '';
@@ -1674,7 +1794,9 @@
 
         deleteConfirmBtn.addEventListener('click', () => {
             if (responseToDeleteId) {
-                deleteResponse(responseToDeleteId);
+                const parentEl = document.querySelector(`.response-item[data-id="${responseToDeleteId}"]`);
+                const categoryName = parentEl ? parentEl.dataset.category : null;
+                deleteResponse(responseToDeleteId, categoryName);
                 responseToDeleteId = null;
                 deleteModal.classList.add('hidden');
             }
@@ -2027,3 +2149,4 @@
     </script>
 </body>
 </html>
+```
