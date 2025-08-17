@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -211,6 +211,15 @@
         .light-mode .hover\:text-white:hover { color: #1f2937; }
         .light-mode .tracking-numbers-container { background-color: #f3f4f6; }
         .light-mode .tracking-tab { background-color: #e5e7eb; }
+        
+        .kebab-button.active svg {
+            transform: rotate(90deg);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .kebab-button svg {
+            transition: transform 0.2s ease-in-out;
+        }
     </style>
     
     <!-- Favicon links for all browsers and devices -->
@@ -273,16 +282,18 @@
                 </button>
                 <div class="flex items-center space-x-4">
                     <h1 id="main-title" class="text-3xl sm:text-5xl font-extrabold text-gray-100 transition-colors duration-300">Canned Responses</h1>
-                    <div class="relative">
-                        <button id="category-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Category Menu">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <div id="category-menu-container" class="relative">
+                        <!-- New Category Actions Button -->
+                        <button id="category-actions-btn" class="kebab-button p-2 rounded-full hover:bg-gray-700 transition duration-300 relative hidden" aria-expanded="true" aria-haspopup="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
                         </button>
-                        <div id="category-menu" class="absolute top-full left-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-50 transform scale-95 opacity-0 hidden transition-all duration-300 origin-top-left">
-                            <button id="rename-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-t-xl transition duration-200">Rename Category</button>
-                            <button id="delete-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 text-red-400 transition duration-200">Delete Category</button>
-                            <button id="change-color-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-b-xl transition duration-200">Change Color</button>
+                        <!-- New centralized Category Actions menu -->
+                        <div id="category-actions-menu" class="hidden absolute top-full right-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-50 transform scale-95 opacity-0 transition-all duration-300 origin-top-right">
+                            <button id="rename-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-t-xl transition duration-200"><i class="fas fa-pencil-alt mr-2"></i>Rename Category</button>
+                            <button id="delete-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 text-red-400 transition duration-200"><i class="fas fa-trash-alt mr-2"></i>Delete Category</button>
+                            <button id="change-color-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-b-xl transition duration-200"><i class="fas fa-palette mr-2"></i>Change Color</button>
                         </div>
                     </div>
                 </div>
@@ -700,18 +711,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-
-        // Enable Firebase debug logging
-        setLogLevel('debug');
-
+        
         // --- Firebase Initialization and Auth ---
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-
-        // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        // Your web app's Firebase configuration for a public environment
         const firebaseConfig = {
             apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
             authDomain: "tools-a180f.firebaseapp.com",
@@ -723,10 +725,8 @@
         };
         const appId = firebaseConfig.appId;
 
-
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
@@ -739,160 +739,61 @@
         let currentPage = 'canned-responses';
         let userName = '';
         let currentTextToCopy = '';
+        let currentEditingId = null; // Re-added the missing variable declaration
+        let openCategoryMenu = null;
+        let editingLinkDocId = null;
+        let openMenuId = null;
         
         const defaultCannedResponses = {
             'BRONCO': {
                 color: '#0284c7',
                 responses: [
-                    {
-                        id: 'bronco-1',
-                        label: 'NON ACTIONABLE ORDER',
-                        text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-2',
-                        label: 'ACTIONABLE ITEM RESPONSE',
-                        text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-3',
-                        label: 'OUT FOR DELIVERY RESPONSE',
-                        text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-4',
-                        label: 'ITEM DELIVERED',
-                        text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk [Desk Location] this morning August 14th 2025\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-5',
-                        label: 'SECURITY KEY DELIVERED',
-                        text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to [Desk Location]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-6',
-                        label: 'PIKTIME',
-                        text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-7',
-                        label: 'PIKTIME DELIVERED',
-                        text: 'Hello [Customer\'s Name],\n\nYour order for a Titan USB-C Portable Security Key was successfully picked up on July 9th 2025. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'bronco-8',
-                        label: 'PIKTIME CANCELLED',
-                        text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    }
+                    { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk [Desk Location] this morning August 14th 2025\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to [Desk Location]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a Titan USB-C Portable Security Key was successfully picked up on July 9th 2025. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() }
                 ]
             },
             'PAR': {
                 color: '#ef4444',
                 responses: [
-                    {
-                        id: 'par-1',
-                        label: 'PAR REMOTE ORDER',
-                        text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'par-2',
-                        label: 'PAR SHIPPING MATERIALS DELIVERED',
-                        text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Delivery Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have [Number] days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'par-3',
-                        label: 'PAR STUFF LOCKER',
-                        text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'par-4',
-                        label: 'CANCEL RETURN LOCKER ORDER',
-                        text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the item exceeding our 10-business day return policy and not being located in the designated return lockers.',
-                        createdAt: new Date().toISOString()
-                    }
+                    { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Delivery Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have [Number] days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', createdAt: new Date().toISOString() }
                 ]
             },
             'GUTS': {
                 color: '#059669',
                 responses: [
-                    {
-                        id: 'guts-1',
-                        label: 'GNG LOCKERS PROACTIVE TICKET',
-                        text: 'Hello [Customer\'s Name],\n\nThe GNG lockers contain [Number] loaners and [Number] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-2',
-                        label: 'GUTS STUFF STATION VENDING',
-                        text: 'Hello [Customer\'s Name],\n\nThe stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-3',
-                        label: 'Remote Return Shipment Information',
-                        text: 'Hello [Customer\'s Name],\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-4',
-                        label: 'Resolution For Lost Device',
-                        text: 'Hello [Customer\'s Name],\n\nAfter conducting a search for Asset Number [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-5',
-                        label: 'Exit Onsite Collection Information',
-                        text: 'Hello [Customer\'s Name],\n\nThank you for confirming that your [Device Model] - [Asset Number] is ready for pickup on [Collection Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-6',
-                        label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up',
-                        text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was [not found/not ready for collection].\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return.\n\nIf you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-7',
-                        label: 'Remote Return Shipment That Has Not Been Received',
-                        text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 'guts-8',
-                        label: 'Successful Return',
-                        text: 'Hello [Customer\'s Name],\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]',
-                        createdAt: new Date().toISOString()
-                    }
+                    { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'Hello [Customer\'s Name],\n\nThe GNG lockers contain [Number] loaners and [Number] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'Hello [Customer\'s Name],\n\nThe stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Hello [Customer\'s Name],\n\nYour request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-4', label: 'Resolution For Lost Device', text: 'Hello [Customer\'s Name],\n\nAfter conducting a search for Asset Number [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Hello [Customer\'s Name],\n\nThank you for confirming that your [Device Model] - [Asset Number] is ready for pickup on [Collection Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was [not found/not ready for collection].\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return.\n\nIf you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'Hello [Customer\'s Name],\n\nI just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() },
+                    { id: 'guts-8', label: 'Successful Return', text: 'Hello [Customer\'s Name],\n\nThe following devices have been returned to inventory, so I’ll resolve this ticket now:\n\nAsset Number [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', createdAt: new Date().toISOString() }
                 ]
             }
         };
         
         // A placeholder for the user's saved data
         let savedCategories = {};
-        let currentEditingId = null;
-
+        
         const mergeData = (defaultData, userData) => {
             const merged = { ...defaultData };
             for (const category in userData) {
                 if (merged[category]) {
-                    // If category exists in both, merge responses
                     const defaultResponses = merged[category].responses;
                     const userResponses = userData[category].responses;
                     
                     const userResponseMap = new Map(userResponses.map(r => [r.id, r]));
                     
-                    // Add new user responses and update existing ones
                     for (const defaultResponse of defaultResponses) {
                         if (!userResponseMap.has(defaultResponse.id)) {
                             userResponseMap.set(defaultResponse.id, defaultResponse);
@@ -900,7 +801,6 @@
                     }
                     merged[category].responses = Array.from(userResponseMap.values());
                 } else {
-                    // If category only exists in user data, add it
                     merged[category] = userData[category];
                 }
             }
@@ -909,13 +809,11 @@
 
         const getUserDocRef = (uid) => {
             const docPath = `artifacts/${appId}/users/${uid}/data/canned-responses`;
-            console.log("Listening to Firestore document at path:", docPath);
             return doc(db, docPath);
         };
         
         const getLinksCollectionRef = (uid) => {
             const collectionPath = `artifacts/${appId}/users/${uid}/user_links`;
-            console.log("Listening to Firestore collection at path:", collectionPath);
             return collection(db, collectionPath);
         }
 
@@ -926,7 +824,6 @@
             }
             const userDocRef = getUserDocRef(userId);
             try {
-                // Save the data, but only the parts the user has added or changed.
                 await setDoc(userDocRef, { categories: savedCategories });
             } catch (error) {
                 console.error("Error saving to Firestore:", error);
@@ -939,31 +836,26 @@
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const helpfulLinksApp = document.getElementById('helpful-links-app');
             const categoryBar = document.getElementById('category-bar');
-            const categoryMenuBtn = document.getElementById('category-menu-btn');
             
             const mainTitle = document.getElementById('main-title');
             
-            cannedResponsesApp.classList.add('hidden');
-            fedexTrackerApp.classList.add('hidden');
-            helpfulLinksApp.classList.add('hidden');
-            categoryBar.classList.add('hidden');
+            if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
+            if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
+            if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
+            if (categoryBar) categoryBar.classList.add('hidden');
             
             if (currentPage === 'canned-responses') {
-                cannedResponsesApp.classList.remove('hidden');
-                categoryBar.classList.remove('hidden');
-                mainTitle.textContent = 'Canned Responses';
-                categoryMenuBtn.classList.remove('hidden');
+                if (cannedResponsesApp) cannedResponsesApp.classList.remove('hidden');
+                if (categoryBar) categoryBar.classList.remove('hidden');
+                if (mainTitle) mainTitle.textContent = 'Canned Responses';
                 renderCategories();
             } else if (currentPage === 'fedex-tracker') {
-                fedexTrackerApp.classList.remove('hidden');
-                mainTitle.textContent = 'FedEx Tracker';
-                categoryMenuBtn.classList.add('hidden');
+                if (fedexTrackerApp) fedexTrackerApp.classList.remove('hidden');
+                if (mainTitle) mainTitle.textContent = 'FedEx Tracker';
                 extractAndDisplayNumbers();
             } else if (currentPage === 'helpful-links') {
-                helpfulLinksApp.classList.remove('hidden');
-                mainTitle.textContent = 'Helpful Links';
-                categoryMenuBtn.classList.add('hidden');
-                // The onSnapshot listener handles rendering the links
+                if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
+                if (mainTitle) mainTitle.textContent = 'Helpful Links';
             }
         };
 
@@ -1005,16 +897,16 @@
         const confirmDeleteCategoryBtn = document.getElementById('confirm-delete-category-btn');
         const cancelDeleteCategoryBtn = document.getElementById('cancel-delete-category-btn');
 
-        const categoryMenuBtn = document.getElementById('category-menu-btn');
-        const categoryMenu = document.getElementById('category-menu');
-        const renameCategoryBtn = document.getElementById('rename-category-btn');
-        const deleteCategoryBtn = document.getElementById('delete-category-btn');
-        const changeColorBtn = document.getElementById('change-color-btn');
-
         const colorPickerModal = document.getElementById('color-picker-modal');
         const colorInput = document.getElementById('color-input');
         const closeColorPickerBtn = document.getElementById('close-color-picker-btn');
         const saveColorBtn = document.getElementById('save-color-btn');
+        
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
+        const categoryActionsMenu = document.getElementById('category-actions-menu');
+        const renameCategoryBtn = document.getElementById('rename-category-btn');
+        const deleteCategoryBtn = document.getElementById('delete-category-btn');
+        const changeColorBtn = document.getElementById('change-color-btn');
 
         const hamburgerMenuBtn = document.getElementById('hamburger-menu-btn');
         const sidebar = document.getElementById('sidebar');
@@ -1030,7 +922,6 @@
         const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
         const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
 
-        // New edit modal elements
         const editResponseModal = document.getElementById('edit-response-modal');
         const editResponseLabelInput = document.getElementById('edit-response-label');
         const editResponseTextInput = document.getElementById('edit-response-text');
@@ -1038,7 +929,6 @@
         const saveEditBtn = document.getElementById('save-edit-btn');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         
-        // Theme toggle variables and logic
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const themeIcon = document.getElementById('theme-icon');
 
@@ -1054,7 +944,6 @@
             }
         });
 
-        // Apply saved theme on page load
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
             document.body.classList.add('light-mode');
@@ -1064,7 +953,6 @@
             themeIcon.className = 'fas fa-moon mr-2';
         }
 
-        // FedEx Tracker variables
         const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
         const inputTextareaFedex = document.getElementById('input-text-fedex');
         const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
@@ -1073,7 +961,6 @@
         const noNumbersMessage = document.getElementById('no-numbers-message');
         const loadingIndicator = document.getElementById('loading-indicator');
 
-        // Helpful Links variables
         const linksForm = document.getElementById('add-link-form');
         const linkTitleInput = document.getElementById('link-title');
         const linkUrlInput = document.getElementById('link-url');
@@ -1083,9 +970,7 @@
         const linksStatusMessage = document.getElementById('status-message');
         const userLinksList = document.getElementById('user-links-list');
         const linksUserInfo = document.getElementById('links-user-info');
-        let editingLinkDocId = null;
-        let openMenuId = null;
-
+        
         const showMessage = (text, type = 'success') => {
             messageBox.textContent = text;
             messageBox.className = 'message-box show';
@@ -1102,6 +987,15 @@
         const renderCategories = () => {
             categoryList.innerHTML = '';
             const categoryNames = Object.keys(categories);
+            
+            // Hide or show the main category actions button
+            if (categoryNames.length > 0) {
+                categoryActionsBtn.classList.remove('hidden');
+            } else {
+                categoryActionsBtn.classList.add('hidden');
+                categoryActionsMenu.classList.add('hidden');
+            }
+
             if (categoryNames.length === 0) {
                 activeCategory = '';
                 addResponseSection.classList.add('hidden');
@@ -1116,21 +1010,15 @@
             searchBarContainer.classList.remove('hidden');
             
             categoryNames.forEach(name => {
-                const button = document.createElement('div');
-                button.className = `category-item-container flex items-center relative`;
-                const isSelected = name === activeCategory;
-                const categoryData = categories[name];
+                const button = document.createElement('button');
+                button.className = `category-item font-bold py-2 px-4 rounded-lg shadow-md text-white transition-colors
+                    ${name === activeCategory ? 'border-2 border-white' : ''}
+                    hover:scale-105 active:scale-95 transition-all duration-300`;
+                const categoryColor = categories[name].color || '#60a5fa';
+                button.style.backgroundColor = categoryColor;
+                button.textContent = name;
+                button.dataset.category = name;
                 
-                const buttonColor = categoryData.color || '#60a5fa';
-
-                button.innerHTML = `
-                    <button class="category-item font-bold py-2 px-4 rounded-lg shadow-md text-white transition-colors
-                        ${isSelected ? 'border-2 border-white' : ''}"
-                        style="background-color: ${buttonColor};"
-                        data-category="${name}">
-                        ${name}
-                    </button>
-                `;
                 categoryList.appendChild(button);
             });
             
@@ -1167,16 +1055,13 @@
                     }
                 });
                 
-                // Prioritize label matches
                 responsesToRender = [...new Set([...labelMatches, ...textMatches])];
                 headingText = 'Search Results';
             } else {
-                // If no search query, show responses from the active category
                 responsesToRender = categories[activeCategory] ? categories[activeCategory].responses : [];
                 headingText = `Responses in: ${activeCategory}`;
             }
             
-            // Update main title and heading
             document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
             document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
 
@@ -1259,7 +1144,7 @@
             const newId = Date.now().toString();
             const newResponse = { id: newId, text: text, label: '', createdAt: new Date().toISOString() };
             categories[activeCategory].responses.push(newResponse);
-            savedCategories[activeCategory].responses.push(newResponse); // Add to saved too
+            savedCategories[activeCategory].responses.push(newResponse);
             saveToFirestore();
             responseInput.value = '';
             newResponseId = newId;
@@ -1271,7 +1156,6 @@
             const oldCategory = activeCategory;
 
             if (newCategory && newCategory !== oldCategory) {
-                // Handle moving to a new category
                 const oldResponsesList = categories[oldCategory]?.responses || [];
                 const oldSavedResponsesList = savedCategories[oldCategory]?.responses || [];
                 const responseIndex = oldResponsesList.findIndex(r => r.id === id);
@@ -1300,7 +1184,6 @@
                     activeCategory = newCategory;
                 }
             } else {
-                // Handle update within the same category
                 const responsesInActiveCategory = categories[activeCategory]?.responses || [];
                 const savedResponsesInActiveCategory = savedCategories[activeCategory]?.responses || [];
 
@@ -1385,7 +1268,6 @@
             reader.readAsText(file);
         };
         
-        // Universal placeholder handling
         const placeholderRegex = /\[([^\]]+)\]/g;
         
         const processAndCopy = (text) => {
@@ -1394,7 +1276,6 @@
             const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
             
             if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
-                // Show modal for all placeholders except [Name]
                 placeholderInputsContainer.innerHTML = '';
                 placeholders.forEach(placeholder => {
                     if (placeholder !== 'Name') {
@@ -1422,9 +1303,7 @@
 
         const replacePlaceholders = (text, userValues) => {
             let result = text;
-            // First, replace [Name] with the authenticated user's name
             result = result.replace(/\[Name\]/g, userName);
-            // Then, replace other placeholders with user-provided values
             for (const key in userValues) {
                 const regex = new RegExp(`\\[${key}\\]`, 'g');
                 result = result.replace(regex, userValues[key]);
@@ -1524,69 +1403,78 @@
             addCategoryModal.classList.add('hidden');
         });
         
+        // Handle clicking on category buttons to set the active category
         categoryList.addEventListener('click', (event) => {
             const target = event.target;
             const itemBtn = target.closest('.category-item');
-            
             if (itemBtn) {
                 const categoryName = itemBtn.dataset.category;
                 if (categoryName !== activeCategory) {
                     activeCategory = categoryName;
+                    categoryActionsBtn.classList.remove('hidden'); // Show the actions button
+                    categoryActionsMenu.classList.add('hidden'); // Hide the menu
                     renderCategories();
                     renderResponses();
                 }
             }
         });
-
-        // Event listeners for the new header menu
-        categoryMenuBtn.addEventListener('click', () => {
-            categoryMenu.classList.toggle('hidden');
+        
+        // Handle the new single "Category Actions" button
+        categoryActionsBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            categoryActionsMenu.classList.toggle('hidden');
+            categoryActionsBtn.classList.toggle('active');
+            
+            if (!categoryActionsMenu.classList.contains('hidden')) {
+                categoryActionsMenu.classList.remove('scale-95', 'opacity-0');
+                categoryActionsMenu.classList.add('scale-100', 'opacity-100');
+            } else {
+                categoryActionsMenu.classList.add('scale-95', 'opacity-0');
+                categoryActionsMenu.classList.remove('scale-100', 'opacity-100');
+            }
         });
 
-        renameCategoryBtn.addEventListener('click', () => {
+        // Handle the actions from the new central menu
+        renameCategoryBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
             categoryToEdit = activeCategory;
             editCategoryInput.value = categoryToEdit;
             editCategoryModal.classList.remove('hidden');
-            categoryMenu.classList.add('hidden');
-        });
-
-        deleteCategoryBtn.addEventListener('click', () => {
-            categoryToEdit = activeCategory;
-            deleteCategoryModal.classList.remove('hidden');
-            categoryMenu.classList.add('hidden');
-        });
-
-        changeColorBtn.addEventListener('click', () => {
-            if (activeCategory) {
-                const currentColor = categories[activeCategory].color || '#60a5fa';
-                colorInput.value = currentColor;
-                colorPickerModal.classList.remove('hidden');
-                categoryMenu.classList.add('hidden');
-            } else {
-                showMessage("Please select a category first.", 'error');
-            }
+            categoryActionsMenu.classList.add('hidden');
+            categoryActionsBtn.classList.remove('active');
         });
         
-        saveColorBtn.addEventListener('click', () => {
-            const newColor = colorInput.value;
-            if (activeCategory) {
-                categories[activeCategory].color = newColor;
-                savedCategories[activeCategory].color = newColor; // Keep saved in sync
-                saveToFirestore();
-                renderCategories();
-                showMessage(`Color for '${activeCategory}' changed successfully!`);
-            }
-            colorPickerModal.classList.add('hidden');
+        deleteCategoryBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            categoryToEdit = activeCategory;
+            deleteCategoryModal.classList.remove('hidden');
+            categoryActionsMenu.classList.add('hidden');
+            categoryActionsBtn.classList.remove('active');
         });
-
-
-        closeColorPickerBtn.addEventListener('click', () => {
-            colorPickerModal.classList.add('hidden');
+        
+        changeColorBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            categoryToEdit = activeCategory;
+            const currentColor = categories[categoryToEdit].color || '#60a5fa';
+            colorInput.value = currentColor;
+            colorPickerModal.classList.remove('hidden');
+            categoryActionsMenu.classList.add('hidden');
+            categoryActionsBtn.classList.remove('active');
         });
+        
 
+        // Universal click handler to close menus when clicking outside
         document.addEventListener('click', (event) => {
-            if (!event.target.closest('#category-menu-btn') && !event.target.closest('#category-menu')) {
-                categoryMenu.classList.add('hidden');
+            const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+            if (!isClickInsideCategoryActions) {
+                categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
+                categoryActionsBtn.classList.remove('active');
+            }
+            
+            const isClickInsideLinkMenu = event.target.closest('.kebab-menu') || event.target.closest('.kebab-button');
+            if (!isClickInsideLinkMenu) {
+                const allLinkMenus = document.querySelectorAll('.kebab-menu');
+                allLinkMenus.forEach(m => m.classList.add('hidden'));
             }
         });
 
@@ -1597,18 +1485,21 @@
                 showMessage("Category name cannot be empty.", 'error');
                 return;
             }
-            if (categories[newName]) {
+            if (categories[newName] && newName !== categoryToEdit) {
                 showMessage("A category with this name already exists.", 'error');
                 return;
             }
             
-            categories[newName] = categories[categoryToEdit];
-            savedCategories[newName] = savedCategories[categoryToEdit];
-            delete categories[categoryToEdit];
-            delete savedCategories[categoryToEdit];
-            if (activeCategory === categoryToEdit) {
-                activeCategory = newName;
+            if (newName !== categoryToEdit) {
+                categories[newName] = categories[categoryToEdit];
+                savedCategories[newName] = savedCategories[categoryToEdit];
+                delete categories[categoryToEdit];
+                delete savedCategories[categoryToEdit];
+                if (activeCategory === categoryToEdit) {
+                    activeCategory = newName;
+                }
             }
+
             categoryToEdit = null;
             saveToFirestore();
             editCategoryModal.classList.add('hidden');
@@ -1642,6 +1533,24 @@
             deleteCategoryModal.classList.add('hidden');
         });
 
+        saveColorBtn.addEventListener('click', () => {
+            const newColor = colorInput.value;
+            if (categoryToEdit) {
+                categories[categoryToEdit].color = newColor;
+                savedCategories[categoryToEdit].color = newColor;
+                saveToFirestore();
+                renderCategories();
+                showMessage(`Color for '${categoryToEdit}' changed successfully!`);
+            }
+            colorPickerModal.classList.add('hidden');
+            categoryToEdit = null;
+        });
+
+        closeColorPickerBtn.addEventListener('click', () => {
+            colorPickerModal.classList.add('hidden');
+            categoryToEdit = null;
+        });
+
         addBtn.addEventListener('click', () => {
             addResponse(responseInput.value);
         });
@@ -1657,14 +1566,12 @@
                 const text = responses.find(r => r.id === id).text;
                 processAndCopy(text);
             } else if (target.closest('.edit-btn')) {
-                // Find the response to edit
                 const responseToEdit = categories[activeCategory].responses.find(r => r.id === id);
                 if (responseToEdit) {
-                    currentEditingId = id; // Store the ID of the response being edited
+                    currentEditingId = id;
                     editResponseLabelInput.value = responseToEdit.label || '';
                     editResponseTextInput.value = responseToEdit.text;
 
-                    // Populate category dropdown
                     const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === activeCategory ? 'selected' : ''}>${cat}</option>`).join('');
                     editCategorySelect.innerHTML = categoryOptions;
 
@@ -1676,7 +1583,6 @@
             }
         });
 
-        // Edit Response Modal event listeners
         saveEditBtn.addEventListener('click', () => {
             const newText = editResponseTextInput.value;
             const newLabel = editResponseLabelInput.value;
@@ -1690,7 +1596,6 @@
             currentEditingId = null;
         });
 
-        // Universal placeholder modal logic
         confirmPlaceholderBtn.addEventListener('click', () => {
             const inputs = placeholderInputsContainer.querySelectorAll('input');
             const userValues = {};
@@ -1708,19 +1613,22 @@
             showMessage("Copy cancelled.", 'error');
         });
 
-        // Search functionality
         searchInput.addEventListener('input', (e) => {
             renderResponses(e.target.value);
         });
 
-        // Modal Event Listeners
         saveLabelBtn.addEventListener('click', () => {
             if (newResponseId) {
                 const responses = categories[activeCategory].responses;
                 const responseIndex = responses.findIndex(r => r.id === newResponseId);
                 if (responseIndex > -1) {
                     responses[responseIndex].label = modalLabelInput.value || '';
-                    savedCategories[activeCategory].responses[responseIndex].label = modalLabelInput.value || '';
+                    if (savedCategories[activeCategory]) {
+                        const savedResponseIndex = savedCategories[activeCategory].responses.findIndex(r => r.id === newResponseId);
+                        if (savedResponseIndex > -1) {
+                            savedCategories[activeCategory].responses[savedResponseIndex].label = modalLabelInput.value || '';
+                        }
+                    }
                     saveToFirestore();
                 }
                 newResponseId = null;
@@ -1751,8 +1659,6 @@
             responseToDeleteId = null;
             deleteModal.classList.add('hidden');
         });
-
-    
 
         const extractAndDisplayNumbers = () => {
             loadingIndicator.classList.remove('hidden');
@@ -1790,7 +1696,7 @@
                         copyBtn.title = "Copy to clipboard";
                         copyBtn.innerHTML = `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" /></svg>`;
                         copyBtn.addEventListener('click', (e) => {
-                            e.preventDefault(); // Prevents the link from being followed
+                            e.preventDefault();
                             const tempInput = document.createElement('input');
                             tempInput.value = number;
                             document.body.appendChild(tempInput);
@@ -1817,7 +1723,7 @@
                 } else {
                     clearButtonFedex.disabled = true;
                 }
-            }, 300); // Simulate processing time
+            }, 300);
         };
 
         inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
@@ -1831,7 +1737,7 @@
             const trackingNumberElements = trackingNumbersContainer.querySelectorAll('span');
             let allNumbersText = '';
             trackingNumberElements.forEach(el => {
-                allNumbersText += el.textContent + '\n'; // Use newline to separate numbers
+                allNumbersText += el.textContent + '\n';
             });
 
             if (allNumbersText.trim().length > 0) {
@@ -1842,7 +1748,6 @@
                 document.execCommand('copy');
                 document.body.removeChild(tempTextarea);
 
-                // Open FedEx tracking page and prompt user to paste
                 window.open('https://www.fedex.com/en-us/tracking.html', '_blank');
 
                 showMessage('Tracking numbers copied to clipboard. Paste them on the FedEx page to track.');
@@ -1920,7 +1825,7 @@
                             <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}">
                                 <button type="button" class="kebab-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
-                                      <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                        <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
                                     </svg>
                                 </button>
                                 <div class="kebab-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
@@ -1992,17 +1897,24 @@
             const deleteBtn = event.target.closest('.delete-link-btn');
 
             if (button) {
+                event.stopPropagation();
                 const parentDiv = button.closest('[data-doc-id]');
                 const menu = parentDiv.querySelector('.kebab-menu');
                 if (menu) {
-                    if (openMenuId && openMenuId !== parentDiv.dataset.docId) {
-                        const openMenu = document.querySelector(`.kebab-menu[data-doc-id="${openMenuId}"]`);
-                        if (openMenu) openMenu.classList.add('hidden');
+                    const isHidden = menu.classList.contains('hidden');
+                    // Close all other menus before opening the clicked one
+                    const allMenus = document.querySelectorAll('.kebab-menu');
+                    allMenus.forEach(m => m.classList.add('hidden'));
+
+                    if (isHidden) {
+                        menu.classList.remove('hidden');
+                        openMenuId = parentDiv.dataset.docId;
+                    } else {
+                        openMenuId = null;
                     }
-                    menu.classList.toggle('hidden');
-                    openMenuId = menu.classList.contains('hidden') ? null : parentDiv.dataset.docId;
                 }
             } else if (editBtn) {
+                event.stopPropagation();
                 const parentDiv = editBtn.closest('[data-doc-id]');
                 if (parentDiv) {
                     const docId = parentDiv.dataset.docId;
@@ -2014,6 +1926,7 @@
                     openMenuId = null;
                 }
             } else if (deleteBtn) {
+                event.stopPropagation();
                 const parentDiv = deleteBtn.closest('[data-doc-id]');
                 if (parentDiv) {
                     const docId = parentDiv.dataset.docId;
@@ -2022,12 +1935,21 @@
                     if (menu) menu.classList.add('hidden');
                     openMenuId = null;
                 }
-            } else {
-                 if (openMenuId) {
-                    const openMenu = document.querySelector(`.kebab-menu[data-doc-id="${openMenuId}"]`);
-                    if (openMenu) openMenu.classList.add('hidden');
-                    openMenuId = null;
-                }
+            }
+        });
+
+        // Click handler to close menus when clicking outside
+        document.addEventListener('click', (event) => {
+            const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+            if (!isClickInsideCategoryActions) {
+                categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
+                categoryActionsBtn.classList.remove('active');
+            }
+            
+            const isClickInsideLinkMenu = event.target.closest('.kebab-menu') || event.target.closest('.kebab-button');
+            if (!isClickInsideLinkMenu) {
+                const allLinkMenus = document.querySelectorAll('.kebab-menu');
+                allLinkMenus.forEach(m => m.classList.add('hidden'));
             }
         });
         
@@ -2035,7 +1957,6 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userId = user.uid;
-                // Use first name for placeholder but full name for status display
                 const displayName = user.displayName || user.email || 'User';
                 const firstName = displayName.split(' ')[0].split('@')[0];
                 userName = firstName;
@@ -2049,7 +1970,6 @@
                     signOutBtn.classList.remove('hidden');
                 }
                 const userDocRef = getUserDocRef(userId);
-                console.log("Listening to Firestore document at path:", userDocRef.path);
                 
                 onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
@@ -2069,10 +1989,9 @@
                 listenForUserLinks();
             } else {
                 try {
-                    await signInAnonymously(auth);
-                    console.log("Signed in anonymously.");
+                     await signInAnonymously(auth);
                 } catch (error) {
-                    console.error("Anonymous sign-in failed", error);
+                    console.error("Authentication failed", error);
                 }
                 signInBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
