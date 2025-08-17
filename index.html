@@ -470,6 +470,12 @@
                                     <p class="text-sm text-gray-400">A spreadsheet for CTI tracking.</p>
                                 </a>
                             </div>
+                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
+                                <a href="https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd" target="_blank" rel="noopener noreferrer" class="block">
+                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Technician Workload Management</h3>
+                                    <p class="text-sm text-gray-400">A tool for monitoring and managing technician workload.</p>
+                                </a>
+                            </div>
                         </div>
                     </section>
                     
@@ -861,7 +867,7 @@
             } else if (currentPage === 'helpful-links') {
                 if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
                 if (mainTitle) mainTitle.textContent = 'Helpful Links';
-                listenForUserLinks(); // Also moved this here to ensure it's only active on the links page
+                listenForUserLinks();
             }
         };
 
