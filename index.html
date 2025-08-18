@@ -263,6 +263,10 @@
             <button id="theme-toggle-btn" class="w-full text-center px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
                 <i id="theme-icon" class="fas fa-moon mr-2"></i> Toggle Theme
             </button>
+            <!-- New check for updates button -->
+            <button id="check-updates-btn" class="w-full text-center px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                <i class="fas fa-sync-alt mr-2"></i> Check for Updates
+            </button>
         </div>
         <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -708,6 +712,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Update Confirmation Modal -->
+    <div id="update-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="update-modal-title" class="text-2xl font-bold text-gray-200 mb-4">Checking for Updates...</h3>
+            <p id="update-modal-message" class="text-gray-400 text-base mb-4">Please wait while we check for new content.</p>
+            <div id="update-modal-buttons" class="flex justify-end space-x-4 hidden">
+                <button id="close-update-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
     
     <!-- Firebase SDKs -->
     <script type="module">
@@ -886,6 +903,13 @@
         const colorInput = document.getElementById('color-input');
         const closeColorPickerBtn = document.getElementById('close-color-picker-btn');
         const saveColorBtn = document.getElementById('save-color-btn');
+
+        const updateModal = document.getElementById('update-modal');
+        const updateModalTitle = document.getElementById('update-modal-title');
+        const updateModalMessage = document.getElementById('update-modal-message');
+        const updateModalButtons = document.getElementById('update-modal-buttons');
+        const closeUpdateBtn = document.getElementById('close-update-btn');
+        const checkUpdatesBtn = document.getElementById('check-updates-btn');
         
         const categoryActionsBtn = document.getElementById('category-actions-btn');
         const categoryActionsMenu = document.getElementById('category-actions-menu');
@@ -1325,6 +1349,66 @@
             return result;
         };
         
+        const checkForUpdates = async () => {
+            updateModal.classList.remove('hidden');
+            updateModalTitle.textContent = "Checking for Updates...";
+            updateModalMessage.textContent = "Comparing your data with the latest version. Please wait.";
+            updateModalButtons.classList.add('hidden');
+
+            if (!userId) {
+                updateModalTitle.textContent = "Authentication Error";
+                updateModalMessage.textContent = "Please sign in to check for updates.";
+                updateModalButtons.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const userDocRef = getUserDocRef(userId);
+                const userDoc = await getDoc(userDocRef);
+                const userCategories = userDoc.exists() ? userDoc.data().categories : {};
+                
+                const updatedCategories = JSON.parse(JSON.stringify(userCategories));
+                let updatesFound = false;
+
+                for (const defaultCategoryName in defaultCannedResponses) {
+                    const defaultCategory = defaultCannedResponses[defaultCategoryName];
+                    const userCategory = updatedCategories[defaultCategoryName];
+
+                    if (!userCategory) {
+                        // Add the entire new category if it doesn't exist
+                        updatedCategories[defaultCategoryName] = defaultCategory;
+                        updatesFound = true;
+                    } else {
+                        // Check for new responses within an existing category
+                        const existingResponseIds = new Set(userCategory.responses.map(r => r.id));
+                        for (const defaultResponse of defaultCategory.responses) {
+                            if (!existingResponseIds.has(defaultResponse.id)) {
+                                // Add the new response to the existing category
+                                userCategory.responses.push(defaultResponse);
+                                updatesFound = true;
+                            }
+                        }
+                    }
+                }
+
+                if (updatesFound) {
+                    await saveToFirestore(updatedCategories);
+                    updateModalTitle.textContent = "Updates Found & Applied!";
+                    updateModalMessage.textContent = "New categories and/or responses have been added to your collection.";
+                } else {
+                    updateModalTitle.textContent = "No Updates Found";
+                    updateModalMessage.textContent = "Your canned responses are already up to date!";
+                }
+
+            } catch (error) {
+                console.error("Error during update check:", error);
+                updateModalTitle.textContent = "Update Failed";
+                updateModalMessage.textContent = `An error occurred: ${error.message}`;
+            }
+
+            updateModalButtons.classList.remove('hidden');
+        };
+        
         // --- Event Listeners ---
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
@@ -1744,6 +1828,11 @@
         deleteCancelBtn.addEventListener('click', () => {
             responseToDeleteId = null;
             deleteModal.classList.add('hidden');
+        });
+
+        checkUpdatesBtn.addEventListener('click', checkForUpdates);
+        closeUpdateBtn.addEventListener('click', () => {
+            updateModal.classList.add('hidden');
         });
 
         const extractAndDisplayNumbers = () => {
