@@ -253,21 +253,10 @@
             <button id="nav-helpful-links" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-link mr-3"></i> Helpful Links
             </button>
+            <button id="nav-settings" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+                <i class="fas fa-cog mr-3"></i> Settings
+            </button>
         </nav>
-        <div class="mt-auto pt-8 flex flex-col items-center space-y-3">
-            <div id="auth-status" class="text-center text-gray-400 font-medium">Not signed in.</div>
-            <button id="sign-in-btn" class="w-full text-center px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg hidden">Sign In with Google</button>
-            <button id="sign-out-btn" class="w-full text-center px-5 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition duration-300 shadow-lg hidden">Sign Out</button>
-            
-            <!-- Theme Toggle Button -->
-            <button id="theme-toggle-btn" class="w-full text-center px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
-                <i id="theme-icon" class="fas fa-moon mr-2"></i> Toggle Theme
-            </button>
-            <!-- New check for updates button -->
-            <button id="check-updates-btn" class="w-full text-center px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
-                <i class="fas fa-sync-alt mr-2"></i> Check for Updates
-            </button>
-        </div>
         <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -302,7 +291,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="import-export-btn" class="p-2 text-gray-400 hover:text-blue-400 transition duration-300" aria-label="Import/Export Data">
+                    <button id="import-export-btn-placeholder" class="p-2 text-gray-400 hover:text-blue-400 transition duration-300 hidden" aria-label="Import/Export Data">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
@@ -510,6 +499,59 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Settings App Content -->
+        <div id="settings-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
+            <div class="w-full max-w-7xl mx-auto space-y-8 md:grid md:grid-cols-2 md:gap-8">
+                
+                <!-- Account Section -->
+                <div class="floating-card p-6 sm:p-8 flex flex-col items-center col-span-1">
+                    <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                        <i class="fas fa-user-circle mr-3 text-3xl text-blue-400"></i> Account
+                    </h2>
+                    <div id="auth-status-settings" class="text-center text-gray-400 font-medium mb-4">Not signed in.</div>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center">
+                        <button id="sign-in-btn-settings" class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg hidden">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Sign In with Google
+                        </button>
+                        <button id="sign-out-btn-settings" class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition duration-300 shadow-lg hidden">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Theme & Updates Section -->
+                <div class="floating-card p-6 sm:p-8 space-y-6 col-span-1">
+                    <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                        <i class="fas fa-paint-brush mr-3 text-3xl text-purple-400"></i> Appearance
+                    </h2>
+                    <div class="flex items-center justify-between border-t border-gray-600 pt-6">
+                        <span class="text-lg text-gray-300">Dark / Light Mode</span>
+                        <button id="theme-toggle-btn-settings" class="px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
+                            <i id="theme-icon-settings" class="fas fa-moon mr-2"></i> Toggle Theme
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-gray-600 pt-6">
+                        <span class="text-lg text-gray-300">Check for New Content</span>
+                        <button id="check-updates-btn-settings" class="px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                            <i class="fas fa-sync-alt mr-2"></i> Check for Updates
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="floating-card p-6 sm:p-8 flex flex-col items-center col-span-2">
+                    <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                        <i class="fas fa-database mr-3 text-3xl text-green-400"></i> Data Management
+                    </h2>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center">
+                        <button id="import-export-btn-settings" class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
+                            <i class="fas fa-exchange-alt mr-2"></i> Import / Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Universal Placeholder Modal -->
@@ -571,7 +613,7 @@
                     <h4 class="font-semibold text-gray-400 text-lg">Export All Data</h4>
                     <p class="text-gray-400 text-base mb-2">Download a JSON file containing all your categories and responses.</p>
                     <button id="export-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
-                        Export to File
+                        <i class="fas fa-download mr-2"></i> Export to File
                     </button>
                 </div>
                 <div>
@@ -837,6 +879,7 @@
             const cannedResponsesApp = document.getElementById('canned-responses-app');
             const fedexTrackerApp = document.getElementById('fedex-tracker-app');
             const helpfulLinksApp = document.getElementById('helpful-links-app');
+            const settingsPage = document.getElementById('settings-page');
             const categoryBar = document.getElementById('category-bar');
             const categoryActionsBtn = document.getElementById('category-actions-btn');
             
@@ -845,6 +888,7 @@
             if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
             if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
             if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
+            if (settingsPage) settingsPage.classList.add('hidden');
             if (categoryBar) categoryBar.classList.add('hidden');
             if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
             
@@ -864,6 +908,10 @@
                 if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
                 if (mainTitle) mainTitle.textContent = 'Helpful Links';
                 listenForUserLinks();
+            } else if (currentPage === 'settings') {
+                if (settingsPage) settingsPage.classList.remove('hidden');
+                if (mainTitle) mainTitle.textContent = 'Settings';
+                renderSettingsPage();
             }
         };
 
@@ -882,7 +930,7 @@
         const addResponseSection = document.getElementById('add-response-section');
         const responsesHeading = document.getElementById('responses-heading');
         
-        const importExportBtn = document.getElementById('import-export-btn');
+        const importExportBtn = document.getElementById('import-export-modal-btn');
         const importExportModal = document.getElementById('import-export-modal');
         const exportBtn = document.getElementById('export-btn');
         const importFileInput = document.getElementById('import-file-input');
@@ -909,7 +957,7 @@
         const updateModalMessage = document.getElementById('update-modal-message');
         const updateModalButtons = document.getElementById('update-modal-buttons');
         const closeUpdateBtn = document.getElementById('close-update-btn');
-        const checkUpdatesBtn = document.getElementById('check-updates-btn');
+        const checkUpdatesBtn = document.getElementById('check-updates-btn-settings');
         
         const categoryActionsBtn = document.getElementById('category-actions-btn');
         const categoryActionsMenu = document.getElementById('category-actions-menu');
@@ -923,8 +971,14 @@
         const navCannedResponses = document.getElementById('nav-canned-responses');
         const navFedexTracker = document.getElementById('nav-fedex-tracker');
         const navHelpfulLinks = document.getElementById('nav-helpful-links');
-        const signInBtn = document.getElementById('sign-in-btn');
-        const signOutBtn = document.getElementById('sign-out-btn');
+        const navSettings = document.getElementById('nav-settings');
+
+        const signInBtn = document.getElementById('sign-in-btn-settings');
+        const signOutBtn = document.getElementById('sign-out-btn-settings');
+        const authStatusSettings = document.getElementById('auth-status-settings');
+        const themeToggleBtnSettings = document.getElementById('theme-toggle-btn-settings');
+        const themeIconSettings = document.getElementById('theme-icon-settings');
+        const importExportBtnSettings = document.getElementById('import-export-btn-settings');
 
         const placeholderModal = document.getElementById('placeholder-modal');
         const placeholderInputsContainer = document.getElementById('placeholder-inputs');
@@ -948,8 +1002,34 @@
         const saveEditBtn = document.getElementById('save-edit-btn');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        const themeIcon = document.getElementById('theme-icon');
+        const renderSettingsPage = () => {
+            if (document.body.classList.contains('light-mode')) {
+                themeIconSettings.className = 'fas fa-sun mr-2';
+            } else {
+                themeIconSettings.className = 'fas fa-moon mr-2';
+            }
+
+            if (auth.currentUser) {
+                const displayName = auth.currentUser.displayName || auth.currentUser.email || 'User';
+                authStatusSettings.textContent = `Signed in as: ${displayName}`;
+                authStatusSettings.title = auth.currentUser.email;
+
+                if (auth.currentUser.isAnonymous) {
+                    signInBtn.classList.remove('hidden');
+                    signOutBtn.classList.add('hidden');
+                } else {
+                    signInBtn.classList.add('hidden');
+                    signOutBtn.classList.remove('hidden');
+                }
+            } else {
+                authStatusSettings.textContent = 'Not signed in.';
+                signInBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+            }
+        };
+
+        const themeToggleBtn = document.getElementById('theme-toggle-btn-settings');
+        const themeIcon = document.getElementById('theme-icon-settings');
 
         themeToggleBtn.addEventListener('click', () => {
             if (document.body.classList.contains('light-mode')) {
@@ -1436,6 +1516,12 @@
             sidebar.classList.remove('open');
         });
 
+        navSettings.addEventListener('click', () => {
+            currentPage = 'settings';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
         signInBtn.addEventListener('click', async () => {
             try {
                 const provider = new GoogleAuthProvider();
@@ -1457,7 +1543,7 @@
             }
         });
 
-        importExportBtn.addEventListener('click', () => {
+        importExportBtnSettings.addEventListener('click', () => {
             importExportModal.classList.remove('hidden');
         });
         closeImportExportModalBtn.addEventListener('click', () => {
@@ -2129,17 +2215,6 @@
                 userId = user.uid;
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
-                document.getElementById('auth-status').textContent = `Signed in as: ${displayName}`;
-                document.getElementById('auth-status').title = user.email;
-                
-                // Correctly handle button visibility based on user type
-                if (user.isAnonymous) {
-                    signInBtn.classList.remove('hidden');
-                    signOutBtn.classList.add('hidden');
-                } else {
-                    signInBtn.classList.add('hidden');
-                    signOutBtn.classList.remove('hidden');
-                }
                 
                 const userDocRef = getUserDocRef(userId);
                 
