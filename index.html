@@ -306,6 +306,7 @@
                         <!-- Category buttons will be dynamically added here -->
                     </div>
                 </div>
+                <!-- This button is now conditionally rendered for non-anonymous users -->
                 <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -336,6 +337,7 @@
                     </div>
                     
                     <!-- Add Response Section -->
+                    <!-- This section is now conditionally rendered for non-anonymous users -->
                     <div id="add-response-section" class="floating-card mb-8 p-6 sm:p-8 flex justify-center items-start">
                         <button id="open-add-response-modal-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
                             <i class="fas fa-plus mr-2"></i> Add New Response
@@ -428,7 +430,8 @@
                     </section>
                     
                     <!-- Category: User-Added Links -->
-                    <section class="col-span-1 md:col-span-2 lg:col-span-3 mt-12">
+                    <!-- This section is now conditionally rendered for non-anonymous users -->
+                    <section id="user-links-section" class="col-span-1 md:col-span-2 lg:col-span-3 mt-12">
                         <h2 class="text-3xl font-bold text-center mb-8 link-title">
                             Your Links
                         </h2>
@@ -438,7 +441,8 @@
                     </section>
 
                     <!-- Form to add new links -->
-                    <section class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center">
+                    <!-- This section is now conditionally rendered for non-anonymous users -->
+                    <section id="add-link-section" class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center">
                         <div class="floating-card rounded-2xl p-8 max-w-lg w-full">
                             <h2 id="form-title" class="text-2xl font-bold text-blue-400 mb-4">Add a New Link</h2>
                             <form id="add-link-form" class="space-y-4">
@@ -738,7 +742,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
@@ -750,18 +754,20 @@
           appId: "1:195275159442:web:20031fd5ccf0428162334b",
           measurementId: "G-TP0VKGV0EE"
         };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-tools-app';
         const safeAppId = appId.replace(/[:\/]/g, '-');
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        setLogLevel('debug');
         
         // The one true source of data, updated only by the onSnapshot listener.
         let categories = {};
         let activeCategory = '';
         let userId = null;
+        let isAnonymous = true; // Track if the user is anonymous
         let responseToDeleteId = null;
         let categoryToEdit = null;
         let currentPage = 'canned-responses';
@@ -772,10 +778,10 @@
         let editingLinkDocId = null;
         let openMenuId = null;
         let defaultLinks = [];
+        let cannedResponsesUnsubscribe = null;
+        let helpfulLinksUnsubscribe = null;
 
         // --- Master Blueprint Data for Initialization ---
-        // This data will be uploaded to Firestore once. After that, we only
-        // reference the data in Firestore.
         const defaultCannedResponsesBlueprint = {
             'BRONCO': {
                 color: '#32789C',
@@ -824,69 +830,29 @@
             { id: 'default-7', title: 'GUTS Ticket Checklist', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
         ];
 
-        const createSiteUpdateDocuments = async () => {
-            console.log("Checking for master update documents...");
-            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
-            const defaultCannedResponsesDocRef = doc(publicCollection, 'master_data_canned_responses');
-            const defaultLinksDocRef = doc(publicCollection, 'master_data_helpful_links');
-
-            try {
-                const cannedResponsesDoc = await getDoc(defaultCannedResponsesDocRef);
-                if (!cannedResponsesDoc.exists()) {
-                    await setDoc(defaultCannedResponsesDocRef, { categories: defaultCannedResponsesBlueprint });
-                    console.log("Default canned responses blueprint created.");
-                }
-
-                const linksDoc = await getDoc(defaultLinksDocRef);
-                if (!linksDoc.exists()) {
-                    await setDoc(defaultLinksDocRef, { links: defaultHelpfulLinksBlueprint });
-                    console.log("Default helpful links blueprint created.");
-                }
-            } catch (error) {
-                console.error("Error creating default site update documents:", error);
-            }
-        };
-
         const getCannedResponsesBlueprint = async () => {
-            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
-            const defaultDocRef = doc(publicCollection, 'master_data_canned_responses');
-            try {
-                const docSnap = await getDoc(defaultDocRef);
-                return docSnap.exists() ? docSnap.data().categories : {};
-            } catch (error) {
-                console.error("Error fetching canned responses blueprint:", error);
-                return {};
-            }
+            return defaultCannedResponsesBlueprint;
         };
 
         const getHelpfulLinksBlueprint = async () => {
-            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
-            const defaultDocRef = doc(publicCollection, 'master_data_helpful_links');
-            try {
-                const docSnap = await getDoc(defaultDocRef);
-                return docSnap.exists() ? docSnap.data().links : [];
-            } catch (error) {
-                console.error("Error fetching helpful links blueprint:", error);
-                return [];
-            }
+            return defaultHelpfulLinksBlueprint;
         };
         
-        // Corrected function to return a valid document path with an even number of segments
-        const getUserDocRef = (uid) => {
-            return doc(db, 'artifacts', safeAppId, 'users', uid, 'private_data', 'app_data');
+        const getUserCannedResponsesDocRef = (uid) => {
+            return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data');
         };
-        
-        const getLinksCollectionRef = (uid) => {
-            return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_links');
-        }
+
+        const getUserHelpfulLinksCollectionRef = (uid) => {
+            return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data');
+        };
 
         const saveToFirestore = async (dataToSave) => {
-            if (!userId) {
-                console.error("User not authenticated.");
+            if (!userId || isAnonymous) {
+                console.error("User not authenticated or is anonymous. Cannot save data.");
+                showMessage("Please sign in to save your data.", 'error');
                 return;
             }
-            // Use the corrected function to get the document reference
-            const userDocRef = getUserDocRef(userId);
+            const userDocRef = getUserCannedResponsesDocRef(userId);
             try {
                 const cleanedData = JSON.parse(JSON.stringify(dataToSave));
                 for (const key in cleanedData) {
@@ -897,7 +863,7 @@
                 await setDoc(userDocRef, { categories: cleanedData });
             } catch (error) {
                 console.error("Error saving to Firestore:", error);
-                showMessage("Error saving data.", 'error');
+                showMessage("Error saving data. Check your permissions.", 'error');
             }
         };
 
@@ -907,38 +873,69 @@
             const helpfulLinksApp = document.getElementById('helpful-links-app');
             const settingsPage = document.getElementById('settings-page');
             const categoryBar = document.getElementById('category-bar');
-            const categoryActionsBtn = document.getElementById('category-actions-btn');
             
             const mainTitle = document.getElementById('main-title');
+            const categoryActionsBtn = document.getElementById('category-actions-btn');
+            const addCategoryBtn = document.getElementById('add-category-btn');
+            const addResponseSection = document.getElementById('add-response-section');
+            const userLinksSection = document.getElementById('user-links-section');
+            const addLinkSection = document.getElementById('add-link-section');
+            const importExportBtnSettings = document.getElementById('import-export-btn-settings');
+            const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
             
             if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
             if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
             if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
             if (settingsPage) settingsPage.classList.add('hidden');
             if (categoryBar) categoryBar.classList.add('hidden');
-            if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
             
             if (currentPage === 'canned-responses') {
-                if (cannedResponsesApp) cannedResponsesApp.classList.remove('hidden');
-                if (categoryBar) categoryBar.classList.remove('hidden');
-                if (mainTitle) mainTitle.textContent = 'Canned Responses';
-                if (Object.keys(categories).length > 0) {
-                    categoryActionsBtn.classList.remove('hidden');
-                }
+                cannedResponsesApp.classList.remove('hidden');
+                categoryBar.classList.remove('hidden');
+                mainTitle.textContent = 'Canned Responses';
                 renderCategories();
+                
+                // Hide interactive elements for anonymous users
+                if (isAnonymous) {
+                    addCategoryBtn.classList.add('hidden');
+                    addResponseSection.classList.add('hidden');
+                    if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
+                } else {
+                    addCategoryBtn.classList.remove('hidden');
+                    addResponseSection.classList.remove('hidden');
+                    if (Object.keys(categories).length > 0) {
+                        categoryActionsBtn.classList.remove('hidden');
+                    }
+                }
             } else if (currentPage === 'fedex-tracker') {
-                if (fedexTrackerApp) fedexTrackerApp.classList.remove('hidden');
-                if (mainTitle) mainTitle.textContent = 'FedEx Tracker';
+                fedexTrackerApp.classList.remove('hidden');
+                mainTitle.textContent = 'FedEx Tracker';
                 extractAndDisplayNumbers();
             } else if (currentPage === 'helpful-links') {
-                if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
-                if (mainTitle) mainTitle.textContent = 'Helpful Links';
+                helpfulLinksApp.classList.remove('hidden');
+                mainTitle.textContent = 'Helpful Links';
                 renderHelpfulLinks();
-                listenForUserLinks();
+                // Hide interactive elements for anonymous users
+                if (isAnonymous) {
+                    userLinksSection.classList.add('hidden');
+                    addLinkSection.classList.add('hidden');
+                } else {
+                    userLinksSection.classList.remove('hidden');
+                    addLinkSection.classList.remove('hidden');
+                    listenForUserLinks();
+                }
             } else if (currentPage === 'settings') {
-                if (settingsPage) settingsPage.classList.remove('hidden');
-                if (mainTitle) mainTitle.textContent = 'Settings';
+                settingsPage.classList.remove('hidden');
+                mainTitle.textContent = 'Settings';
                 renderSettingsPage();
+                // Hide interactive elements for anonymous users
+                if (isAnonymous) {
+                    importExportBtnSettings.classList.add('hidden');
+                    checkUpdatesBtnSettings.classList.add('hidden');
+                } else {
+                    importExportBtnSettings.classList.remove('hidden');
+                    checkUpdatesBtnSettings.classList.remove('hidden');
+                }
             }
         };
 
@@ -957,7 +954,6 @@
         const addResponseSection = document.getElementById('add-response-section');
         const responsesHeading = document.getElementById('responses-heading');
         
-        const importExportBtn = document.getElementById('import-export-modal-btn');
         const importExportModal = document.getElementById('import-export-modal');
         const exportBtn = document.getElementById('export-btn');
         const importFileInput = document.getElementById('import-file-input');
@@ -984,10 +980,9 @@
         const updateModalMessage = document.getElementById('update-modal-message');
         const updateModalButtons = document.getElementById('update-modal-buttons');
         const closeUpdateBtn = document.getElementById('close-update-btn');
-        const checkUpdatesBtn = document.getElementById('check-updates-btn-settings');
+        const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
         
-        // This was declared twice, so I'm removing the second one to avoid conflicts
-        // const categoryActionsBtn = document.getElementById('category-actions-btn');
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
         const categoryActionsMenu = document.getElementById('category-actions-menu');
         const renameCategoryBtn = document.getElementById('rename-category-btn');
         const deleteCategoryBtn = document.getElementById('delete-category-btn');
@@ -1013,7 +1008,6 @@
         const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
         const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
         
-        // New modal and elements
         const newResponseModal = document.getElementById('new-response-modal');
         const openAddResponseModalBtn = document.getElementById('open-add-response-modal-btn');
         const newResponseLabelInput = document.getElementById('new-response-label');
@@ -1031,6 +1025,8 @@
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
 
         const staticLinksList = document.getElementById('static-links-list');
+        const userLinksSection = document.getElementById('user-links-section');
+        const addLinkSection = document.getElementById('add-link-section');
         
         const renderSettingsPage = () => {
             if (document.body.classList.contains('light-mode')) {
@@ -1044,7 +1040,7 @@
                 authStatusSettings.textContent = `Signed in as: ${displayName}`;
                 authStatusSettings.title = auth.currentUser.email;
 
-                if (auth.currentUser.isAnonymous) {
+                if (isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
                 } else {
@@ -1138,8 +1134,11 @@
                 return;
             }
 
-            addResponseSection.classList.remove('hidden');
-            searchBarContainer.classList.remove('hidden');
+            // Only show interactive elements for non-anonymous users
+            if (!isAnonymous) {
+                addResponseSection.classList.remove('hidden');
+                searchBarContainer.classList.remove('hidden');
+            }
             
             categoryNames.forEach(name => {
                 const button = document.createElement('button');
@@ -1255,7 +1254,7 @@
                         responseEl.dataset.category = response.category;
                         responseEl.innerHTML = `
                             <!-- Pin button in the top right -->
-                            <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin">
+                            <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
                                 <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
                             </button>
 
@@ -1269,7 +1268,7 @@
                                 <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
                                     <i class="fas fa-copy"></i> Copy
                                 </button>
-                                <div class="flex space-x-2">
+                                <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
                                     <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
                                         <i class="fas fa-pencil-alt"></i> Edit
                                     </button>
@@ -1289,10 +1288,13 @@
         };
 
         const addResponse = (text, label, category) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to add responses.", 'error');
+                return;
+            }
             const newId = Date.now().toString();
             const newResponse = { id: newId, text: text, label: label || '', isPinned: false, createdAt: new Date().toISOString() };
             
-            // Create a new object to represent the updated state
             const updatedCategories = JSON.parse(JSON.stringify(categories));
             if (!updatedCategories[category]) {
                 updatedCategories[category] = { color: categories[category]?.color || '#60a5fa', responses: [] };
@@ -1302,16 +1304,16 @@
             }
             updatedCategories[category].responses.push(newResponse);
             
-            // Save the new state to Firestore. The onSnapshot listener will update the local 'categories' variable.
             saveToFirestore(updatedCategories);
             showMessage("Response added successfully!");
         };
 
         const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
-            // Create a new object to represent the updated state
+            if (isAnonymous) {
+                showMessage("Please sign in to edit responses.", 'error');
+                return;
+            }
             const updatedCategories = JSON.parse(JSON.stringify(categories));
-
-            // Find the response to update in the old category
             const oldResponsesList = updatedCategories[oldCategory]?.responses || [];
             const responseToUpdate = oldResponsesList.find(r => r.id === id);
 
@@ -1320,7 +1322,6 @@
                 return;
             }
             
-            // Handle moving to a new category
             if (newCategory && newCategory !== oldCategory) {
                 const index = oldResponsesList.findIndex(r => r.id === id);
                 if (index > -1) {
@@ -1339,7 +1340,6 @@
                 activeCategory = newCategory;
 
             } else {
-                // Update the response within the same category
                 responseToUpdate.text = newText;
                 responseToUpdate.label = newLabel || '';
             }
@@ -1348,15 +1348,15 @@
         };
 
         const deleteResponse = (id, categoryName) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to delete responses.", 'error');
+                return;
+            }
             if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) return;
 
-            // Create a new object to represent the updated state
             const updatedCategories = JSON.parse(JSON.stringify(categories));
-            
-            // Remove the response from the new object
             updatedCategories[categoryName].responses = updatedCategories[categoryName].responses.filter(r => r.id !== id);
             
-            // Save the new state to Firestore. The onSnapshot listener will then update the UI.
             saveToFirestore(updatedCategories);
             showMessage("Response deleted successfully!");
         };
@@ -1372,6 +1372,10 @@
         };
 
         const exportData = () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to export data.", 'error');
+                return;
+            }
             const dataStr = JSON.stringify(categories, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1386,12 +1390,15 @@
         };
 
         const importData = (file) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to import data.", 'error');
+                return;
+            }
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (typeof importedData === 'object' && importedData !== null) {
-                        // Set the local state and then save it to Firestore
                         categories = importedData;
                         const categoryNames = Object.keys(categories);
                         if (categoryNames.length > 0) {
@@ -1467,7 +1474,6 @@
           staticLinksList.innerHTML = '';
           userLinksList.innerHTML = '';
 
-          // Render static links from the global defaultLinks variable
           if (defaultLinks.length > 0) {
             defaultLinks.forEach(link => {
               const card = document.createElement('div');
@@ -1487,6 +1493,10 @@
         }
         
         const checkForUpdates = async () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to check for updates.", 'error');
+                return;
+            }
             updateModal.classList.remove('hidden');
             updateModalTitle.textContent = "Checking for Updates...";
             updateModalMessage.textContent = "Comparing your data with the latest version. Please wait.";
@@ -1500,8 +1510,7 @@
             }
 
             try {
-                // Corrected path to have an even number of segments
-                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'private_data', 'app_data');
+                const userDocRef = getUserCannedResponsesDocRef(userId);
                 const userDoc = await getDoc(userDocRef);
                 const userCategories = userDoc.exists() ? userDoc.data().categories : {};
                 const blueprintCannedResponses = await getCannedResponsesBlueprint();
@@ -1534,8 +1543,7 @@
                     await setDoc(userDocRef, { categories: updatedCategories });
                 }
 
-                // Check for Helpful Links updates
-                const userLinksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
+                const userLinksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                 const userLinksSnapshot = await getDocs(userLinksCollectionRef);
                 const userLinks = userLinksSnapshot.docs.map(doc => doc.data());
                 const blueprintLinks = await getHelpfulLinksBlueprint();
@@ -1569,8 +1577,6 @@
             updateModalButtons.classList.remove('hidden');
         };
         
-        // --- Event Listeners ---
-        const categoryActionsBtn = document.getElementById('category-actions-btn');
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
         });
@@ -1639,11 +1645,13 @@
         });
 
         addCategoryBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             addCategoryModal.classList.remove('hidden');
             addCategoryInput.focus();
         });
 
         confirmAddCategoryBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const categoryName = addCategoryInput.value.trim();
             if (!categoryName) {
                 showMessage("Please enter a category name.", 'error');
@@ -1667,7 +1675,6 @@
             addCategoryModal.classList.add('hidden');
         });
         
-        // Handle clicking on category buttons to set the active category
         categoryList.addEventListener('click', (event) => {
             const target = event.target;
             const itemBtn = target.closest('.category-item');
@@ -1675,16 +1682,18 @@
                 const categoryName = itemBtn.dataset.category;
                 if (categoryName !== activeCategory) {
                     activeCategory = categoryName;
-                    const categoryActionsBtn = document.getElementById('category-actions-btn');
-                    if(categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
-                    categoryActionsMenu.classList.add('hidden');
+                    if (!isAnonymous) {
+                        const categoryActionsBtn = document.getElementById('category-actions-btn');
+                        if(categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
+                        categoryActionsMenu.classList.add('hidden');
+                    }
                     renderCategories();
                 }
             }
         });
         
-        // Handle the new single "Category Actions" button
         categoryActionsBtn.addEventListener('click', (event) => {
+            if (isAnonymous) return;
             event.stopPropagation();
             categoryActionsMenu.classList.toggle('hidden');
             categoryActionsBtn.classList.toggle('active');
@@ -1698,8 +1707,8 @@
             }
         });
 
-        // Handle the actions from the new central menu
         renameCategoryBtn.addEventListener('click', (event) => {
+            if (isAnonymous) return;
             event.stopPropagation();
             categoryToEdit = activeCategory;
             if (!activeCategory || !categories[activeCategory]) {
@@ -1715,6 +1724,7 @@
         });
         
         deleteCategoryBtn.addEventListener('click', (event) => {
+            if (isAnonymous) return;
             event.stopPropagation();
             categoryToEdit = activeCategory;
             if (!activeCategory || !categories[activeCategory]) {
@@ -1729,6 +1739,7 @@
         });
         
         changeColorBtn.addEventListener('click', (event) => {
+            if (isAnonymous) return;
             event.stopPropagation();
             categoryToEdit = activeCategory;
             if (!activeCategory || !categories[activeCategory]) {
@@ -1747,7 +1758,6 @@
         });
         
 
-        // Universal click handler to close menus when clicking outside
         document.addEventListener('click', (event) => {
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
             if (!isClickInsideCategoryActions) {
@@ -1759,6 +1769,7 @@
 
 
         confirmEditCategoryBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const newName = editCategoryInput.value.trim();
             if (!newName) {
                 showMessage("Category name cannot be empty.", 'error');
@@ -1792,6 +1803,7 @@
         });
 
         confirmDeleteCategoryBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const updatedCategories = JSON.parse(JSON.stringify(categories));
             if (categoryToEdit && updatedCategories[categoryToEdit]) {
                 delete updatedCategories[categoryToEdit];
@@ -1815,6 +1827,7 @@
         });
 
         saveColorBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const newColor = colorInput.value;
             const updatedCategories = JSON.parse(JSON.stringify(categories));
             if (categoryToEdit && updatedCategories[categoryToEdit]) {
@@ -1833,8 +1846,8 @@
             categoryToEdit = null;
         });
 
-        // New Logic for Add Response button and Modal
         openAddResponseModalBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             if (!Object.keys(categories).length) {
                 showMessage("Please create a category first.", 'error');
                 return;
@@ -1842,7 +1855,6 @@
             newResponseModal.classList.remove('hidden');
             newResponseTextInput.focus();
 
-            // Populate category dropdown
             newResponseCategorySelect.innerHTML = '';
             for (const categoryName in categories) {
                 const option = document.createElement('option');
@@ -1862,6 +1874,7 @@
         });
 
         saveNewResponseBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const text = newResponseTextInput.value.trim();
             const label = newResponseLabelInput.value.trim();
             const category = newResponseCategorySelect.value;
@@ -1891,6 +1904,7 @@
             const categoryName = parentEl.dataset.category;
             
             if (target.closest('.pin-btn')) {
+                if (isAnonymous) return;
                 if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
                     showMessage("Error: No active category found.", 'error');
                     return;
@@ -1911,6 +1925,7 @@
                 const text = responses.find(r => r.id === id).text;
                 processAndCopy(text);
             } else if (target.closest('.edit-btn')) {
+                if (isAnonymous) return;
                 if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
                     showMessage("Error: No active category found.", 'error');
                     return;
@@ -1927,6 +1942,7 @@
                     editResponseModal.classList.remove('hidden');
                 }
             } else if (target.closest('.delete-btn')) {
+                if (isAnonymous) return;
                 responseToDeleteId = id;
                 deleteModal.classList.remove('hidden');
             }
@@ -1934,6 +1950,7 @@
 
         const newSaveEditBtn = document.getElementById('save-edit-btn');
         newSaveEditBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             const newText = editResponseTextInput.value;
             const newLabel = editResponseLabelInput.value;
             const newCategory = editCategorySelect.value;
@@ -1985,6 +2002,7 @@
         });
 
         deleteConfirmBtn.addEventListener('click', () => {
+            if (isAnonymous) return;
             if (responseToDeleteId) {
                 const parentEl = document.querySelector(`.response-item[data-id="${responseToDeleteId}"]`);
                 const categoryName = parentEl ? parentEl.dataset.category : null;
@@ -1999,7 +2017,7 @@
             deleteModal.classList.add('hidden');
         });
 
-        checkUpdatesBtn.addEventListener('click', checkForUpdates);
+        checkUpdatesBtnSettings.addEventListener('click', checkForUpdates);
         closeUpdateBtn.addEventListener('click', () => {
             updateModal.classList.add('hidden');
         });
@@ -2098,20 +2116,19 @@
             }
         });
 
-        // Helpful Links Functions
         function showLinksStatus(message, color = 'text-gray-400') {
             linksStatusMessage.textContent = message;
             linksStatusMessage.className = `text-center mt-2 text-sm ${color}`;
         }
         
         async function deleteLink(docId) {
-            if (!db || !userId) {
-                showLinksStatus('Authentication in progress, please wait.', 'text-yellow-400');
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
                 return;
             }
             try {
                 showLinksStatus('Removing link...', 'text-yellow-400');
-                const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'user_links', docId);
+                const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', docId);
                 await deleteDoc(docRef);
                 showLinksStatus('Link removed successfully!', 'text-green-400');
             } catch (error) {
@@ -2121,6 +2138,7 @@
         }
 
         function editLink(docId, title, url) {
+            if (isAnonymous) return;
             editingLinkDocId = docId;
             linkTitleInput.value = title;
             linkUrlInput.value = url;
@@ -2140,15 +2158,17 @@
         }
         
         function listenForUserLinks() {
-            if (!db || !userId) {
-                console.error("Firestore or User ID not available.");
+            if (!db || !userId || isAnonymous) {
+                console.error("Firestore or User ID not available, or user is anonymous.");
                 return;
             }
+            // If listener already exists, do nothing
+            if (helpfulLinksUnsubscribe) return;
 
-            const linksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
+            const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
             const q = query(linksCollectionRef);
 
-            onSnapshot(q, (querySnapshot) => {
+            helpfulLinksUnsubscribe = onSnapshot(q, (querySnapshot) => {
                 userLinksList.innerHTML = '';
                 if (querySnapshot.empty) {
                     userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
@@ -2157,7 +2177,6 @@
                         const linkData = doc.data();
                         const card = document.createElement('div');
                         
-                        // Sanitize data for HTML attributes to prevent XSS
                         const titleForHtml = linkData.title.replace(/'/g, "\\'");
                         const urlForHtml = linkData.url.replace(/'/g, "\\'");
                         
@@ -2192,8 +2211,8 @@
         
         linksForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!db || !userId) {
-                showLinksStatus('Authentication in progress, please wait.', 'text-yellow-400');
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
                 return;
             }
 
@@ -2208,7 +2227,7 @@
             try {
                 if (editingLinkDocId) {
                     showLinksStatus('Updating link...', 'text-yellow-400');
-                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'user_links', editingLinkDocId);
+                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
                     await updateDoc(docRef, {
                         title: title,
                         url: url,
@@ -2216,7 +2235,7 @@
                     showLinksStatus('Link updated successfully!', 'text-green-400');
                 } else {
                     showLinksStatus('Adding link...', 'text-yellow-400');
-                    const linksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                     await addDoc(linksCollectionRef, {
                         title: title,
                         url: url,
@@ -2237,6 +2256,7 @@
         });
 
         userLinksList.addEventListener('click', (event) => {
+            if (isAnonymous) return;
             const button = event.target.closest('.meatballs-button');
             const editBtn = event.target.closest('.edit-link-btn');
             const deleteBtn = event.target.closest('.delete-link-btn');
@@ -2247,7 +2267,6 @@
                 const menu = parentDiv.querySelector('.meatballs-menu');
                 if (menu) {
                     const isHidden = menu.classList.contains('hidden');
-                    // Close all other menus before opening the clicked one
                     const allMenus = document.querySelectorAll('.meatballs-menu');
                     allMenus.forEach(m => m.classList.add('hidden'));
 
@@ -2283,37 +2302,58 @@
             }
         });
 
-        // Universal click handler to close menus when clicking outside
         document.addEventListener('click', (event) => {
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+            const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
+
             if (!isClickInsideCategoryActions) {
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
                 const categoryActionsBtn = document.getElementById('category-actions-btn');
                 if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
             }
+            if (!isClickInsideMeatballsMenu) {
+                const allMenus = document.querySelectorAll('.meatballs-menu');
+                allMenus.forEach(m => m.classList.add('hidden'));
+                openMenuId = null;
+            }
         });
         
-        // Initial render
         onAuthStateChanged(auth, async (user) => {
+            // Unsubscribe from any previous listeners to prevent duplicates
+            if (cannedResponsesUnsubscribe) {
+              cannedResponsesUnsubscribe();
+              cannedResponsesUnsubscribe = null;
+            }
+            if (helpfulLinksUnsubscribe) {
+              helpfulLinksUnsubscribe();
+              helpfulLinksUnsubscribe = null;
+            }
+        
             if (user) {
                 userId = user.uid;
+                isAnonymous = user.isAnonymous; // Update anonymous status
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
-
-                await createSiteUpdateDocuments();
-
+                linksUserInfo.textContent = `User ID: ${userId}`;
+        
+                // Load static blueprint data regardless of user type
                 defaultLinks = await getHelpfulLinksBlueprint();
                 
-                // Corrected user document reference here
-                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'private_data', 'app_data');
+                const userDocRef = getUserCannedResponsesDocRef(userId);
                 
-                onSnapshot(userDocRef, (doc) => {
+                cannedResponsesUnsubscribe = onSnapshot(userDocRef, async (doc) => {
                     if (doc.exists()) {
                         categories = doc.data().categories || {};
                     } else {
-                        categories = JSON.parse(JSON.stringify(defaultCannedResponsesBlueprint));
-                        saveToFirestore(categories);
-                        console.log("Migrated default data to Firestore for new user.");
+                        // User has no private data, so initialize it from the in-memory blueprint
+                        try {
+                            const blueprint = await getCannedResponsesBlueprint();
+                            categories = JSON.parse(JSON.stringify(blueprint));
+                            await setDoc(userDocRef, { categories: categories });
+                            console.log("Migrated default data to Firestore for new user.");
+                        } catch (error) {
+                            console.error("Error migrating data for new user:", error);
+                        }
                     }
                     
                     for (const key in categories) {
@@ -2334,11 +2374,13 @@
                     showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
                 });
                 
-                listenForUserLinks();
+                // Only listen for user links if the user is not anonymous
+                if (!isAnonymous) {
+                  listenForUserLinks();
+                }
             } else {
                 try {
-                    const anonymousUser = await signInAnonymously(auth);
-                    userId = anonymousUser.user.uid;
+                    await signInAnonymously(auth);
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
