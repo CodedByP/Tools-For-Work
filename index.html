@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -437,12 +437,12 @@
                             </div>
                             <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
                                 <a href="https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya Audits </h3>
+                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya Audits </h3>
                                     <p class="text-sm text-gray-400">An internal tool for audits.</p>
                                 </a>
                             </div>
                             <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=US&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP" target="_blank" rel="noopener noreferrer" class="block">
+                                <a href="https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP" target="_blank" rel="noopener noreferrer" class="block">
                                     <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Find Net blocks</h3>
                                     <p class="text-sm text-gray-400">A tool for searching corporate network information.</p>
                                 </a>
@@ -712,20 +712,12 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
-            authDomain: "tools-a180f.firebaseapp.com",
-            projectId: "tools-a180f",
-            storageBucket: "tools-a180f.firebasestorage.app",
-            messagingSenderId: "195275159442",
-            appId: "1:195275159442:web:20031fd5ccf0428162334b",
-            measurementId: "G-TP0VKGV0EE"
-        };
-        const appId = firebaseConfig.appId;
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -1100,22 +1092,26 @@
                         }
                         
                         const responseEl = document.createElement('div');
-                        responseEl.className = 'response-item flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700 p-4 rounded-lg border border-gray-600';
+                        responseEl.className = 'response-item flex flex-col bg-gray-700 p-4 rounded-lg border border-gray-600';
                         responseEl.dataset.id = response.id;
                         responseEl.dataset.category = response.category;
                         responseEl.innerHTML = `
+                            <!-- Response content in the middle -->
                             <div class="flex-grow display-mode space-y-2 w-full">
-                                <h4 class="response-label-display text-sm font-semibold text-gray-400">${response.label || 'Unlabeled'}</h4>
+                                <h4 class="response-label-display text-sm font-semibold text-gray-400 mb-2">${response.label || 'Unlabeled'}</h4>
                                 <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
-                                <div class="flex-shrink-0 flex space-x-2 mt-2 sm:mt-0">
-                                    <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
+                            </div>
+                            <!-- Buttons at the bottom, using flex to space them -->
+                            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
+                                <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                                <div class="flex space-x-2">
                                     <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
-                                        <i class="fas fa-pencil-alt"></i>
+                                        <i class="fas fa-pencil-alt"></i> Edit
                                     </button>
                                     <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </div>
                             </div>
@@ -2050,10 +2046,10 @@
                 
                 listenForUserLinks();
             } else {
-                try {
+                 if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
                     await signInAnonymously(auth);
-                } catch (error) {
-                    console.error("Authentication failed", error);
                 }
                 signInBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
@@ -2063,4 +2059,3 @@
     </script>
 </body>
 </html>
-```
