@@ -712,12 +712,21 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // REPLACE THE FOLLOWING OBJECT WITH YOUR ACTUAL FIREBASE CONFIGURATION
+        const firebaseConfig = {
+          apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+          authDomain: "tools-a180f.firebaseapp.com",
+          projectId: "tools-a180f",
+          storageBucket: "tools-a180f.firebasestorage.app",
+          messagingSenderId: "195275159442",
+          appId: "1:195275159442:web:20031fd5ccf0428162334b",
+          measurementId: "G-TP0VKGV0EE"
+        };
+        const appId = firebaseConfig.appId;
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -2071,13 +2080,12 @@
                 
                 listenForUserLinks();
             } else {
-                 if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
+                // If there's no user, try to sign in anonymously.
+                try {
                     await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Anonymous sign-in failed", error);
                 }
-                signInBtn.classList.remove('hidden');
-                signOutBtn.classList.add('hidden');
             }
         });
         
