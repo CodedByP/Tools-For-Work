@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -364,13 +364,13 @@
             <div class="main-card p-8 w-full max-w-2xl mx-auto">
                 <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
                 <p class="text-center text-gray-400 mb-8 text-lg">Extract and manage your FedEx tracking numbers easily.</p>
-        
+    
                 <!-- Input Section -->
                 <div class="mb-6">
                     <label for="input-text" class="block text-sm font-medium text-gray-300 mb-2">Paste or type your text here:</label>
                     <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-300 text-lg" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
                 </div>
-        
+    
                 <!-- Extracted Numbers Section -->
                 <div class="mb-6">
                     <h2 class="text-2xl font-semibold text-gray-200 mb-4">Extracted Tracking Numbers</h2>
@@ -386,7 +386,7 @@
                         </div>
                     </div>
                 </div>
-        
+    
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                     <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50">
@@ -421,49 +421,9 @@
                         <h2 class="text-3xl font-bold text-center mb-8 link-title">
                             Static Resources
                         </h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya KB</h3>
-                                    <p class="text-sm text-gray-400">A knowledge base for support and resources.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Astreya Audits </h3>
-                                    <p class="text-sm text-gray-400">An internal tool for audits.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Find Net blocks</h3>
-                                    <p class="text-sm text-gray-400">A tool for searching corporate network information.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Bronco Plant Codes </h3>
-                                    <p class="text-sm text-gray-400">A spreadsheet containing plant codes.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">GUTS CTI</h3>
-                                    <p class="text-sm text-gray-400">A spreadsheet for CTI tracking.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">Technician Workload Management</h3>
-                                    <p class="text-sm text-gray-400">A tool for monitoring and managing technician workload.</p>
-                                </a>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl pulse-effect">
-                                <a href="https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="block">
-                                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">GUTS Ticket Checklist</h3>
-                                    <p class="text-sm text-gray-400">A tool to make sure tickets are updated correctly.</p>
-                                </a>
-                            </div>
+                        <div id="static-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Static links will be dynamically added here from Firestore -->
+                            <p class="text-center text-gray-400 col-span-full">Loading static links...</p>
                         </div>
                     </section>
                     
@@ -781,7 +741,6 @@
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
-        // REPLACE THE FOLLOWING OBJECT WITH YOUR ACTUAL FIREBASE CONFIGURATION
         const firebaseConfig = {
           apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
           authDomain: "tools-a180f.firebaseapp.com",
@@ -791,7 +750,8 @@
           appId: "1:195275159442:web:20031fd5ccf0428162334b",
           measurementId: "G-TP0VKGV0EE"
         };
-        const appId = firebaseConfig.appId;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const safeAppId = appId.replace(/[:\/]/g, '-');
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -811,8 +771,12 @@
         let openCategoryMenu = null;
         let editingLinkDocId = null;
         let openMenuId = null;
-        
-        const defaultCannedResponses = {
+        let defaultLinks = [];
+
+        // --- Master Blueprint Data for Initialization ---
+        // This data will be uploaded to Firestore once. After that, we only
+        // reference the data in Firestore.
+        const defaultCannedResponsesBlueprint = {
             'BRONCO': {
                 color: '#32789C',
                 responses: [
@@ -827,7 +791,7 @@
                 ]
             },
             'PAR': {
-                color: '#0F0F0F',
+                color: '#242020',
                 responses: [
                     { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
                     { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
@@ -849,15 +813,71 @@
                 ]
             }
         };
+
+        const defaultHelpfulLinksBlueprint = [
+            { id: 'default-1', title: 'Astreya KB', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
+            { id: 'default-2', title: 'Astreya Audits', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
+            { id: 'default-3', title: 'Find Net blocks', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
+            { id: 'default-4', title: 'Bronco Plant Codes', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
+            { id: 'default-5', title: 'GUTS CTI', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
+            { id: 'default-6', title: 'Technician Workload Management', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
+            { id: 'default-7', title: 'GUTS Ticket Checklist', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
+        ];
+
+        const createSiteUpdateDocuments = async () => {
+            console.log("Checking for master update documents...");
+            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
+            const defaultCannedResponsesDocRef = doc(publicCollection, 'master_data_canned_responses');
+            const defaultLinksDocRef = doc(publicCollection, 'master_data_helpful_links');
+
+            try {
+                const cannedResponsesDoc = await getDoc(defaultCannedResponsesDocRef);
+                if (!cannedResponsesDoc.exists()) {
+                    await setDoc(defaultCannedResponsesDocRef, { categories: defaultCannedResponsesBlueprint });
+                    console.log("Default canned responses blueprint created.");
+                }
+
+                const linksDoc = await getDoc(defaultLinksDocRef);
+                if (!linksDoc.exists()) {
+                    await setDoc(defaultLinksDocRef, { links: defaultHelpfulLinksBlueprint });
+                    console.log("Default helpful links blueprint created.");
+                }
+            } catch (error) {
+                console.error("Error creating default site update documents:", error);
+            }
+        };
+
+        const getCannedResponsesBlueprint = async () => {
+            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
+            const defaultDocRef = doc(publicCollection, 'master_data_canned_responses');
+            try {
+                const docSnap = await getDoc(defaultDocRef);
+                return docSnap.exists() ? docSnap.data().categories : {};
+            } catch (error) {
+                console.error("Error fetching canned responses blueprint:", error);
+                return {};
+            }
+        };
+
+        const getHelpfulLinksBlueprint = async () => {
+            const publicCollection = collection(db, 'artifacts', safeAppId, 'public');
+            const defaultDocRef = doc(publicCollection, 'master_data_helpful_links');
+            try {
+                const docSnap = await getDoc(defaultDocRef);
+                return docSnap.exists() ? docSnap.data().links : [];
+            } catch (error) {
+                console.error("Error fetching helpful links blueprint:", error);
+                return [];
+            }
+        };
         
+        // Corrected function to return a valid document path with an even number of segments
         const getUserDocRef = (uid) => {
-            const docPath = `artifacts/${appId}/users/${uid}/data/canned-responses`;
-            return doc(db, docPath);
+            return doc(db, 'artifacts', safeAppId, 'users', uid, 'private_data', 'app_data');
         };
         
         const getLinksCollectionRef = (uid) => {
-            const collectionPath = `artifacts/${appId}/users/${uid}/user_links`;
-            return collection(db, collectionPath);
+            return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_links');
         }
 
         const saveToFirestore = async (dataToSave) => {
@@ -865,9 +885,9 @@
                 console.error("User not authenticated.");
                 return;
             }
+            // Use the corrected function to get the document reference
             const userDocRef = getUserDocRef(userId);
             try {
-                // Perform a deep copy and cleanup to prevent undefined values
                 const cleanedData = JSON.parse(JSON.stringify(dataToSave));
                 for (const key in cleanedData) {
                     if (!cleanedData[key].responses) {
@@ -913,6 +933,7 @@
             } else if (currentPage === 'helpful-links') {
                 if (helpfulLinksApp) helpfulLinksApp.classList.remove('hidden');
                 if (mainTitle) mainTitle.textContent = 'Helpful Links';
+                renderHelpfulLinks();
                 listenForUserLinks();
             } else if (currentPage === 'settings') {
                 if (settingsPage) settingsPage.classList.remove('hidden');
@@ -965,7 +986,8 @@
         const closeUpdateBtn = document.getElementById('close-update-btn');
         const checkUpdatesBtn = document.getElementById('check-updates-btn-settings');
         
-        const categoryActionsBtn = document.getElementById('category-actions-btn');
+        // This was declared twice, so I'm removing the second one to avoid conflicts
+        // const categoryActionsBtn = document.getElementById('category-actions-btn');
         const categoryActionsMenu = document.getElementById('category-actions-menu');
         const renameCategoryBtn = document.getElementById('rename-category-btn');
         const deleteCategoryBtn = document.getElementById('delete-category-btn');
@@ -1007,6 +1029,8 @@
         const editCategorySelect = document.getElementById('edit-category-select');
         const saveEditBtn = document.getElementById('save-edit-btn');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+        const staticLinksList = document.getElementById('static-links-list');
         
         const renderSettingsPage = () => {
             if (document.body.classList.contains('light-mode')) {
@@ -1094,10 +1118,14 @@
             const categoryNames = Object.keys(categories);
             
             if (categoryNames.length > 0) {
-                categoryActionsBtn.classList.remove('hidden');
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
             } else {
-                categoryActionsBtn.classList.add('hidden');
-                categoryActionsMenu.classList.add('hidden');
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if (categoryActionsBtn) {
+                  categoryActionsBtn.classList.add('hidden');
+                  categoryActionsMenu.classList.add('hidden');
+                }
             }
 
             if (categoryNames.length === 0) {
@@ -1434,6 +1462,29 @@
             }
             return result;
         };
+
+        const renderHelpfulLinks = () => {
+          staticLinksList.innerHTML = '';
+          userLinksList.innerHTML = '';
+
+          // Render static links from the global defaultLinks variable
+          if (defaultLinks.length > 0) {
+            defaultLinks.forEach(link => {
+              const card = document.createElement('div');
+              card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+              card.innerHTML = `
+                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
+                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                    <p class="text-sm text-gray-400">${link.url}</p>
+                </a>
+              `;
+              staticLinksList.appendChild(card);
+            });
+          } else {
+             staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+          }
+
+        }
         
         const checkForUpdates = async () => {
             updateModal.classList.remove('hidden');
@@ -1449,41 +1500,64 @@
             }
 
             try {
-                const userDocRef = getUserDocRef(userId);
+                // Corrected path to have an even number of segments
+                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'private_data', 'app_data');
                 const userDoc = await getDoc(userDocRef);
                 const userCategories = userDoc.exists() ? userDoc.data().categories : {};
+                const blueprintCannedResponses = await getCannedResponsesBlueprint();
                 
                 const updatedCategories = JSON.parse(JSON.stringify(userCategories));
                 let updatesFound = false;
 
-                for (const defaultCategoryName in defaultCannedResponses) {
-                    const defaultCategory = defaultCannedResponses[defaultCategoryName];
+                for (const defaultCategoryName in blueprintCannedResponses) {
+                    const defaultCategory = blueprintCannedResponses[defaultCategoryName];
                     const userCategory = updatedCategories[defaultCategoryName];
 
                     if (!userCategory) {
-                        // Add the entire new category if it doesn't exist
                         updatedCategories[defaultCategoryName] = defaultCategory;
                         updatesFound = true;
                     } else {
-                        // Check for new responses within an existing category
+                        if (defaultCategory.color && userCategory.color !== defaultCategory.color) {
+                             userCategory.color = defaultCategory.color;
+                             updatesFound = true;
+                        }
                         const existingResponseIds = new Set(userCategory.responses.map(r => r.id));
                         for (const defaultResponse of defaultCategory.responses) {
                             if (!existingResponseIds.has(defaultResponse.id)) {
-                                // Add the new response to the existing category
                                 userCategory.responses.push(defaultResponse);
                                 updatesFound = true;
                             }
                         }
                     }
                 }
+                if (updatesFound) {
+                    await setDoc(userDocRef, { categories: updatedCategories });
+                }
+
+                // Check for Helpful Links updates
+                const userLinksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
+                const userLinksSnapshot = await getDocs(userLinksCollectionRef);
+                const userLinks = userLinksSnapshot.docs.map(doc => doc.data());
+                const blueprintLinks = await getHelpfulLinksBlueprint();
+
+                const existingLinkUrls = new Set(userLinks.map(link => link.url));
+                for (const defaultLink of blueprintLinks) {
+                    if (!existingLinkUrls.has(defaultLink.url)) {
+                        await addDoc(userLinksCollectionRef, {
+                            title: defaultLink.title,
+                            url: defaultLink.url,
+                            createdAt: new Date()
+                        });
+                        updatesFound = true;
+                    }
+                }
 
                 if (updatesFound) {
-                    await saveToFirestore(updatedCategories);
                     updateModalTitle.textContent = "Updates Found & Applied!";
-                    updateModalMessage.textContent = "New categories and/or responses have been added to your collection.";
+                    updateModalMessage.textContent = "New content has been added to your website.";
                 } else {
                     updateModalTitle.textContent = "No Updates Found";
-                    updateModalMessage.textContent = "Your canned responses are already up to date!";
+                    updateModalMessage.textContent = "Your website is already up to date!";
                 }
 
             } catch (error) {
@@ -1496,6 +1570,7 @@
         };
         
         // --- Event Listeners ---
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
         });
@@ -1600,7 +1675,8 @@
                 const categoryName = itemBtn.dataset.category;
                 if (categoryName !== activeCategory) {
                     activeCategory = categoryName;
-                    categoryActionsBtn.classList.remove('hidden');
+                    const categoryActionsBtn = document.getElementById('category-actions-btn');
+                    if(categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
                     categoryActionsMenu.classList.add('hidden');
                     renderCategories();
                 }
@@ -1676,7 +1752,8 @@
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
             if (!isClickInsideCategoryActions) {
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
-                categoryActionsBtn.classList.remove('active');
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
             }
         });
 
@@ -2034,7 +2111,7 @@
             }
             try {
                 showLinksStatus('Removing link...', 'text-yellow-400');
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'user_links', docId);
+                const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'user_links', docId);
                 await deleteDoc(docRef);
                 showLinksStatus('Link removed successfully!', 'text-green-400');
             } catch (error) {
@@ -2068,7 +2145,7 @@
                 return;
             }
 
-            const linksCollectionRef = getLinksCollectionRef(userId);
+            const linksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
             const q = query(linksCollectionRef);
 
             onSnapshot(q, (querySnapshot) => {
@@ -2131,7 +2208,7 @@
             try {
                 if (editingLinkDocId) {
                     showLinksStatus('Updating link...', 'text-yellow-400');
-                    const docRef = doc(db, 'artifacts', appId, 'users', userId, 'user_links', editingLinkDocId);
+                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'user_links', editingLinkDocId);
                     await updateDoc(docRef, {
                         title: title,
                         url: url,
@@ -2139,7 +2216,7 @@
                     showLinksStatus('Link updated successfully!', 'text-green-400');
                 } else {
                     showLinksStatus('Adding link...', 'text-yellow-400');
-                    const linksCollectionRef = getLinksCollectionRef(userId);
+                    const linksCollectionRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'user_links');
                     await addDoc(linksCollectionRef, {
                         title: title,
                         url: url,
@@ -2211,7 +2288,8 @@
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
             if (!isClickInsideCategoryActions) {
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
-                categoryActionsBtn.classList.remove('active');
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
             }
         });
         
@@ -2221,21 +2299,23 @@
                 userId = user.uid;
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
+
+                await createSiteUpdateDocuments();
+
+                defaultLinks = await getHelpfulLinksBlueprint();
                 
-                const userDocRef = getUserDocRef(userId);
+                // Corrected user document reference here
+                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'private_data', 'app_data');
                 
-                // Set up the single onSnapshot listener here
                 onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
                         categories = doc.data().categories || {};
                     } else {
-                        // One-time migration for new users (including anonymous ones)
-                        categories = JSON.parse(JSON.stringify(defaultCannedResponses));
+                        categories = JSON.parse(JSON.stringify(defaultCannedResponsesBlueprint));
                         saveToFirestore(categories);
                         console.log("Migrated default data to Firestore for new user.");
                     }
                     
-                    // Always make sure the data structure is clean
                     for (const key in categories) {
                         if (!categories[key].responses) {
                             categories[key].responses = [];
@@ -2243,20 +2323,22 @@
                     }
 
                     if (Object.keys(categories).length > 0) {
-                        // Retain active category if it still exists
                         const existingCategoryNames = Object.keys(categories);
                         if (!existingCategoryNames.includes(activeCategory)) {
                              activeCategory = existingCategoryNames[0];
                         }
                     }
                     renderContent();
+                }, (error) => {
+                    console.error("Error with onSnapshot listener:", error);
+                    showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
                 });
                 
                 listenForUserLinks();
             } else {
-                // If there's no user, try to sign in anonymously.
                 try {
-                    await signInAnonymously(auth);
+                    const anonymousUser = await signInAnonymously(auth);
+                    userId = anonymousUser.user.uid;
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
