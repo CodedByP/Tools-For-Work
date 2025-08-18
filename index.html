@@ -451,6 +451,10 @@
                                     <input type="text" id="link-title" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
                                 </div>
                                 <div>
+                                    <label for="link-description" class="block text-sm font-medium text-gray-400">Description</label>
+                                    <input type="text" id="link-description" class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                </div>
+                                <div>
                                     <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
                                     <input type="url" id="link-url" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
                                 </div>
@@ -821,13 +825,13 @@
         };
 
         const defaultHelpfulLinksBlueprint = [
-            { id: 'default-1', title: 'Astreya KB', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
-            { id: 'default-2', title: 'Astreya Audits', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
-            { id: 'default-3', title: 'Find Net blocks', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
-            { id: 'default-4', title: 'Bronco Plant Codes', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
-            { id: 'default-5', title: 'GUTS CTI', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
-            { id: 'default-6', title: 'Technician Workload Management', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
-            { id: 'default-7', title: 'GUTS Ticket Checklist', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
+            { id: 'default-1', title: 'Astreya KB', description: 'Centralized knowledge base for all things Astreya.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
+            { id: 'default-2', title: 'Astreya Audits', description: 'Internal tool for conducting and tracking audits.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
+            { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP addresses.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
+            { id: 'default-4', title: 'Bronco Plant Codes', description: 'Spreadsheet of plant codes for Bronco sites.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
+            { id: 'default-5', title: 'GUTS CTI', description: 'Internal tool for GUTS team to find and manage assets.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
+            { id: 'default-6', title: 'Technician Workload Management', description: 'Dashboard for tracking technician workload and performance.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
+            { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for handling GUTS tickets and ensuring all steps are followed.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
         ];
 
         const getCannedResponsesBlueprint = async () => {
@@ -1088,6 +1092,7 @@
 
         const linksForm = document.getElementById('add-link-form');
         const linkTitleInput = document.getElementById('link-title');
+        const linkDescriptionInput = document.getElementById('link-description');
         const linkUrlInput = document.getElementById('link-url');
         const linksSubmitButton = document.getElementById('submit-button');
         const linksCancelButton = document.getElementById('cancel-button');
@@ -1478,10 +1483,11 @@
             defaultLinks.forEach(link => {
               const card = document.createElement('div');
               card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+              const descriptionText = link.description || 'No description available.';
               card.innerHTML = `
                 <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
                     <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
-                    <p class="text-sm text-gray-400">${link.url}</p>
+                    <p class="text-sm text-gray-400 mb-2">${descriptionText}</p>
                 </a>
               `;
               staticLinksList.appendChild(card);
@@ -1554,6 +1560,7 @@
                         await addDoc(userLinksCollectionRef, {
                             title: defaultLink.title,
                             url: defaultLink.url,
+                            description: defaultLink.description,
                             createdAt: new Date()
                         });
                         updatesFound = true;
@@ -2137,10 +2144,11 @@
             }
         }
 
-        function editLink(docId, title, url) {
+        function editLink(docId, title, description, url) {
             if (isAnonymous) return;
             editingLinkDocId = docId;
             linkTitleInput.value = title;
+            linkDescriptionInput.value = description;
             linkUrlInput.value = url;
             linksSubmitButton.textContent = 'Update Link';
             linksFormTitle.textContent = 'Edit Link';
@@ -2150,6 +2158,7 @@
         function resetLinksForm() {
             editingLinkDocId = null;
             linkTitleInput.value = '';
+            linkDescriptionInput.value = '';
             linkUrlInput.value = '';
             linksSubmitButton.textContent = 'Add Link';
             linksFormTitle.textContent = 'Add a New Link';
@@ -2178,15 +2187,17 @@
                         const card = document.createElement('div');
                         
                         const titleForHtml = linkData.title.replace(/'/g, "\\'");
+                        const descriptionForHtml = linkData.description ? linkData.description.replace(/'/g, "\\'") : '';
                         const urlForHtml = linkData.url.replace(/'/g, "\\'");
+                        const descriptionText = linkData.description || 'No description available.';
                         
                         card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
                         card.innerHTML = `
                             <a href="${linkData.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
                                 <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
-                                <p class="text-sm text-gray-400">${linkData.url}</p>
+                                <p class="text-sm text-gray-400 mb-2">${descriptionText}</p>
                             </a>
-                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}">
+                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-description="${descriptionForHtml}" data-url="${urlForHtml}">
                                 <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
                                         <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
@@ -2217,10 +2228,11 @@
             }
 
             const title = linkTitleInput.value;
+            const description = linkDescriptionInput.value;
             const url = linkUrlInput.value;
 
             if (!title || !url) {
-                showLinksStatus('Please fill out both fields.', 'text-red-400');
+                showLinksStatus('Please fill out the title and URL fields.', 'text-red-400');
                 return;
             }
 
@@ -2230,6 +2242,7 @@
                     const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
                     await updateDoc(docRef, {
                         title: title,
+                        description: description,
                         url: url,
                     });
                     showLinksStatus('Link updated successfully!', 'text-green-400');
@@ -2238,6 +2251,7 @@
                     const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                     await addDoc(linksCollectionRef, {
                         title: title,
+                        description: description,
                         url: url,
                         createdAt: new Date()
                     });
@@ -2283,8 +2297,9 @@
                 if (parentDiv) {
                     const docId = parentDiv.dataset.docId;
                     const title = parentDiv.dataset.title;
+                    const description = parentDiv.dataset.description;
                     const url = parentDiv.dataset.url;
-                    editLink(docId, title, url);
+                    editLink(docId, title, description, url);
                     const menu = parentDiv.querySelector('.meatballs-menu');
                     if (menu) menu.classList.add('hidden');
                     openMenuId = null;
@@ -2377,6 +2392,8 @@
                 // Only listen for user links if the user is not anonymous
                 if (!isAnonymous) {
                   listenForUserLinks();
+                } else {
+                    renderContent();
                 }
             } else {
                 try {
