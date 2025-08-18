@@ -224,19 +224,19 @@
     
     <!-- Favicon links for all browsers and devices -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 
     <!-- Legacy favicon link for older browsers -->
     <link rel="shortcut icon" href="favicon.ico">
 
     <!-- Apple touch icon for iOS devices -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
     <!-- Manifest for Progressive Web Apps (PWAs) -->
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="manifest" href="site.webmanifest">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
 
@@ -1666,7 +1666,8 @@
             }
         });
 
-        saveEditBtn.addEventListener('click', () => {
+        const newSaveEditBtn = document.getElementById('save-edit-btn');
+        newSaveEditBtn.addEventListener('click', () => {
             const newText = editResponseTextInput.value;
             const newLabel = editResponseLabelInput.value;
             const newCategory = editCategorySelect.value;
