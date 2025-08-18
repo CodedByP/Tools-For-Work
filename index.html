@@ -1481,8 +1481,6 @@
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
                 categoryActionsBtn.classList.remove('active');
             }
-            const allLinkMenus = document.querySelectorAll('.meatballs-menu');
-            allLinkMenus.forEach(m => m.classList.add('hidden'));
         });
 
 
@@ -2007,12 +2005,18 @@
             if (user) {
                 userId = user.uid;
                 const displayName = user.displayName || user.email || 'User';
-                const firstName = displayName.split(' ')[0].split('@')[0];
-                userName = firstName;
+                userName = displayName.split(' ')[0].split('@')[0];
                 document.getElementById('auth-status').textContent = `Signed in as: ${displayName}`;
                 document.getElementById('auth-status').title = user.email;
-                signInBtn.classList.add('hidden');
-                signOutBtn.classList.remove('hidden');
+                
+                // Correctly handle button visibility based on user type
+                if (user.isAnonymous) {
+                    signInBtn.classList.remove('hidden');
+                    signOutBtn.classList.add('hidden');
+                } else {
+                    signInBtn.classList.add('hidden');
+                    signOutBtn.classList.remove('hidden');
+                }
                 
                 const userDocRef = getUserDocRef(userId);
                 
