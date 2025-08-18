@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -449,10 +449,6 @@
                                 <div>
                                     <label for="link-title" class="block text-sm font-medium text-gray-400">Title</label>
                                     <input type="text" id="link-title" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
-                                </div>
-                                <div>
-                                    <label for="link-description" class="block text-sm font-medium text-gray-400">Description</label>
-                                    <input type="text" id="link-description" class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
                                 </div>
                                 <div>
                                     <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
@@ -746,7 +742,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel,getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
@@ -825,13 +821,13 @@
         };
 
         const defaultHelpfulLinksBlueprint = [
-            { id: 'default-1', title: 'Astreya KB', description: 'Centralized knowledge base for all things Astreya.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
-            { id: 'default-2', title: 'Astreya Audits', description: 'Internal tool for conducting and tracking audits.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
-            { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP addresses.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
-            { id: 'default-4', title: 'Bronco Plant Codes', description: 'Spreadsheet of plant codes for Bronco sites.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
-            { id: 'default-5', title: 'GUTS CTI', description: 'Internal tool for GUTS team to find and manage assets.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
-            { id: 'default-6', title: 'Technician Workload Management', description: 'Dashboard for tracking technician workload and performance.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
-            { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for handling GUTS tickets and ensuring all steps are followed.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
+            { id: 'default-1', title: 'Astreya KB', description: 'Access the Astreya knowledge base for support.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
+            { id: 'default-2', title: 'Astreya Audits', description: 'Review and manage Astreya audit reports.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
+            { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP information.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
+            { id: 'default-4', title: 'Bronco Plant Codes', description: 'A spreadsheet of plant codes for the Bronco project.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
+            { id: 'default-5', title: 'GUTS CTI', description: 'Check the GUTS CTI spreadsheet for contact info.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
+            { id: 'default-6', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
+            { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
         ];
 
         const getCannedResponsesBlueprint = async () => {
@@ -1092,8 +1088,8 @@
 
         const linksForm = document.getElementById('add-link-form');
         const linkTitleInput = document.getElementById('link-title');
-        const linkDescriptionInput = document.getElementById('link-description');
         const linkUrlInput = document.getElementById('link-url');
+        const linkDescriptionInput = document.getElementById('link-description');
         const linksSubmitButton = document.getElementById('submit-button');
         const linksCancelButton = document.getElementById('cancel-button');
         const linksFormTitle = document.getElementById('form-title');
@@ -1124,8 +1120,8 @@
             } else {
                 const categoryActionsBtn = document.getElementById('category-actions-btn');
                 if (categoryActionsBtn) {
-                  categoryActionsBtn.classList.add('hidden');
-                  categoryActionsMenu.classList.add('hidden');
+                    categoryActionsBtn.classList.add('hidden');
+                    categoryActionsMenu.classList.add('hidden');
                 }
             }
 
@@ -1487,13 +1483,13 @@
               card.innerHTML = `
                 <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
                     <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
-                    <p class="text-sm text-gray-400 mb-2">${descriptionText}</p>
+                    <p class="text-sm text-gray-400">${link.description || link.url}</p>
                 </a>
               `;
               staticLinksList.appendChild(card);
             });
           } else {
-             staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+              staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
           }
 
         }
@@ -1560,7 +1556,7 @@
                         await addDoc(userLinksCollectionRef, {
                             title: defaultLink.title,
                             url: defaultLink.url,
-                            description: defaultLink.description,
+                            description: defaultLink.description, // Added description to new links
                             createdAt: new Date()
                         });
                         updatesFound = true;
@@ -1767,10 +1763,17 @@
 
         document.addEventListener('click', (event) => {
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+            const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
+
             if (!isClickInsideCategoryActions) {
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
                 const categoryActionsBtn = document.getElementById('category-actions-btn');
                 if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
+            }
+            if (!isClickInsideMeatballsMenu) {
+                const allMenus = document.querySelectorAll('.meatballs-menu');
+                allMenus.forEach(m => m.classList.add('hidden'));
+                openMenuId = null;
             }
         });
 
@@ -2144,12 +2147,12 @@
             }
         }
 
-        function editLink(docId, title, description, url) {
+        function editLink(docId, title, url, description) {
             if (isAnonymous) return;
             editingLinkDocId = docId;
             linkTitleInput.value = title;
-            linkDescriptionInput.value = description;
             linkUrlInput.value = url;
+            linkDescriptionInput.value = description || '';
             linksSubmitButton.textContent = 'Update Link';
             linksFormTitle.textContent = 'Edit Link';
             linksCancelButton.classList.remove('hidden');
@@ -2158,8 +2161,8 @@
         function resetLinksForm() {
             editingLinkDocId = null;
             linkTitleInput.value = '';
-            linkDescriptionInput.value = '';
             linkUrlInput.value = '';
+            linkDescriptionInput.value = '';
             linksSubmitButton.textContent = 'Add Link';
             linksFormTitle.textContent = 'Add a New Link';
             linksCancelButton.classList.add('hidden');
@@ -2184,20 +2187,27 @@
                 } else {
                     querySnapshot.forEach((doc) => {
                         const linkData = doc.data();
+                        
+                        // Data validation check: skip rendering if title or url is missing
+                        if (!linkData.title || !linkData.url) {
+                            console.warn("Skipping invalid link document due to missing title or URL:", doc.id);
+                            return;
+                        }
+
                         const card = document.createElement('div');
                         
+                        // Sanitize data attributes to prevent HTML breakages from apostrophes
                         const titleForHtml = linkData.title.replace(/'/g, "\\'");
-                        const descriptionForHtml = linkData.description ? linkData.description.replace(/'/g, "\\'") : '';
                         const urlForHtml = linkData.url.replace(/'/g, "\\'");
-                        const descriptionText = linkData.description || 'No description available.';
+                        const descriptionForHtml = (linkData.description || '').replace(/'/g, "\\'");
                         
                         card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
                         card.innerHTML = `
                             <a href="${linkData.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
                                 <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
-                                <p class="text-sm text-gray-400 mb-2">${descriptionText}</p>
+                                <p class="text-sm text-gray-400">${linkData.description || 'No description available.'}</p>
                             </a>
-                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-description="${descriptionForHtml}" data-url="${urlForHtml}">
+                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}" data-description="${descriptionForHtml}">
                                 <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
                                         <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
@@ -2228,11 +2238,11 @@
             }
 
             const title = linkTitleInput.value;
-            const description = linkDescriptionInput.value;
             const url = linkUrlInput.value;
+            const description = linkDescriptionInput.value;
 
             if (!title || !url) {
-                showLinksStatus('Please fill out the title and URL fields.', 'text-red-400');
+                showLinksStatus('Please fill out all required fields.', 'text-red-400');
                 return;
             }
 
@@ -2242,8 +2252,8 @@
                     const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
                     await updateDoc(docRef, {
                         title: title,
-                        description: description,
                         url: url,
+                        description: description,
                     });
                     showLinksStatus('Link updated successfully!', 'text-green-400');
                 } else {
@@ -2251,8 +2261,8 @@
                     const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                     await addDoc(linksCollectionRef, {
                         title: title,
-                        description: description,
                         url: url,
+                        description: description,
                         createdAt: new Date()
                     });
                     showLinksStatus('Link added successfully!', 'text-green-400');
@@ -2297,9 +2307,9 @@
                 if (parentDiv) {
                     const docId = parentDiv.dataset.docId;
                     const title = parentDiv.dataset.title;
-                    const description = parentDiv.dataset.description;
                     const url = parentDiv.dataset.url;
-                    editLink(docId, title, description, url);
+                    const description = parentDiv.dataset.description;
+                    editLink(docId, title, url, description);
                     const menu = parentDiv.querySelector('.meatballs-menu');
                     if (menu) menu.classList.add('hidden');
                     openMenuId = null;
@@ -2392,8 +2402,6 @@
                 // Only listen for user links if the user is not anonymous
                 if (!isAnonymous) {
                   listenForUserLinks();
-                } else {
-                    renderContent();
                 }
             } else {
                 try {
@@ -2407,3 +2415,4 @@
     </script>
 </body>
 </html>
+```
