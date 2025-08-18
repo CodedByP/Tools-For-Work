@@ -1108,7 +1108,11 @@
                         }
                         
                         const responseEl = document.createElement('div');
-                        responseEl.className = 'response-item flex flex-col bg-gray-700 p-4 rounded-lg border border-gray-600 relative';
+                        const categoryColor = categories[response.category].color || '#60a5fa';
+
+                        responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
+                        responseEl.style.backgroundColor = categoryColor;
+                        responseEl.style.borderColor = categoryColor;
                         responseEl.dataset.id = response.id;
                         responseEl.dataset.category = response.category;
                         responseEl.innerHTML = `
