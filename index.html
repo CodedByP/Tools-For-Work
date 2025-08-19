@@ -801,39 +801,62 @@
         </div>
     </div>
 
-    <!-- Tutorial Modal -->
-    <div id="tutorial-modal" class="modal hidden show">
+    <!-- Multi-step Tutorial Modal -->
+    <div id="tutorial-modal" class="modal hidden">
         <div class="modal-content w-full max-w-lg">
-            <div class="space-y-6">
+            <div id="tutorial-step-1" class="tutorial-step space-y-6">
                 <h3 class="text-3xl font-extrabold text-blue-400 text-center">Welcome! 👋</h3>
-                <p class="text-lg text-gray-300 text-center">Thanks for signing in! Here's a quick tour to show you how to customize this site.</p>
+                <p class="text-lg text-gray-300 text-center">Thanks for signing in! Here's a quick tour to show you how to get the most out of this site.</p>
+            </div>
 
+            <div id="tutorial-step-2" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Canned Responses</h3>
+                <p class="text-lg text-gray-300">This is the main section for your responses. The left column lets you **add new responses** and **search** through your existing ones.</p>
                 <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
                     <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-comment-dots text-purple-400 mr-3"></i> Canned Responses
+                        <i class="fas fa-plus-circle text-purple-400 mr-3"></i> Add New Responses
                     </h4>
-                    <p class="text-gray-400 mb-4">You can now add your own canned responses. Click the **<i class="fas fa-plus"></i> Add New Response** button to get started. You can also edit and delete the existing default responses. </p>
-                    <div class="flex items-center space-x-2 text-sm text-gray-400">
-                        <i class="fas fa-palette text-blue-400"></i>
-                        <span>To change a category's color, click the <i class="fas fa-ellipsis-v"></i> icon.</span>
-                    </div>
+                    <p class="text-gray-400">Click the **Add New Response** button to create a new response. You can give it a label and assign it to a category.</p>
                 </div>
-
                 <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
                     <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-link text-green-400 mr-3"></i> Dynamic Placeholders
+                        <i class="fas fa-search text-yellow-400 mr-3"></i> Search
                     </h4>
-                    <p class="text-gray-400 mb-4">Some responses contain **placeholders** like **[Customer's Name]** or **[TrackingNumber]**. When you copy a response with these, a window will pop up asking for the values before it's copied.</p>
-                    <div class="flex items-center space-x-2 text-sm text-gray-400">
-                        <i class="fas fa-lightbulb text-yellow-400"></i>
-                        <span>This helps you fill in details without editing the response each time!</span>
-                    </div>
+                    <p class="text-gray-400">Use the search bar to find responses quickly by their label or content.</p>
                 </div>
             </div>
 
-            <div class="flex justify-end mt-8">
-                <button id="close-tutorial-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
-                    Got it! Start Customizing
+            <div id="tutorial-step-3" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Categories</h3>
+                <p class="text-lg text-gray-300">Organize your responses with custom categories. You can create new categories with the **<i class="fas fa-plus"></i>** button.</p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-ellipsis-v text-pink-400 mr-3"></i> Manage Categories
+                    </h4>
+                    <p class="text-gray-400">Click the vertical ellipsis (<i class="fas fa-ellipsis-v"></i>) next to a category to **rename** it, **change its color**, or **delete** it. </p>
+                </div>
+            </div>
+
+            <div id="tutorial-step-4" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Dynamic Placeholders</h3>
+                <p class="text-lg text-gray-300">Many of the default responses contain special placeholders like `[Customer's Name]` or `[TrackingNumber]`. </p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-lightbulb text-yellow-400 mr-3"></i> How it Works
+                    </h4>
+                    <p class="text-gray-400">When you click **Copy** on a response with placeholders, a small window will pop up asking for the values. Fill them out, click copy again, and the final response will be ready to paste!</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-8">
+                <button id="tutorial-back-btn" class="bg-gray-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md hidden">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </button>
+                <button id="tutorial-next-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
+                    Next <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                <button id="tutorial-finish-btn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-700 transition duration-300 shadow-lg hidden">
+                    Finish <i class="fas fa-check ml-2"></i>
                 </button>
             </div>
         </div>
@@ -1137,6 +1160,32 @@
         const tutorialModal = document.getElementById('tutorial-modal');
         const closeTutorialBtn = document.getElementById('close-tutorial-btn');
         
+        // Multi-step tutorial elements
+        const tutorialSteps = [
+            document.getElementById('tutorial-step-1'),
+            document.getElementById('tutorial-step-2'),
+            document.getElementById('tutorial-step-3'),
+            document.getElementById('tutorial-step-4'),
+        ];
+        let currentTutorialStep = 0;
+        const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+        const tutorialBackBtn = document.getElementById('tutorial-back-btn');
+        const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
+        
+        const showTutorialStep = (stepIndex) => {
+            tutorialSteps.forEach((step, index) => {
+                step.classList.add('hidden');
+            });
+            tutorialSteps[stepIndex].classList.remove('hidden');
+            
+            // Show/hide navigation buttons based on step
+            tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
+            tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
+            tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
+            
+            currentTutorialStep = stepIndex;
+        }
+
         const renderSettingsPage = () => {
             if (document.body.classList.contains('light-mode')) {
                 themeIconSettings.className = 'fas fa-sun mr-2';
@@ -2503,7 +2552,19 @@
             }
         });
         
-        closeTutorialBtn.addEventListener('click', async () => {
+        tutorialNextBtn.addEventListener('click', () => {
+            if (currentTutorialStep < tutorialSteps.length - 1) {
+                showTutorialStep(currentTutorialStep + 1);
+            }
+        });
+
+        tutorialBackBtn.addEventListener('click', () => {
+            if (currentTutorialStep > 0) {
+                showTutorialStep(currentTutorialStep - 1);
+            }
+        });
+
+        tutorialFinishBtn.addEventListener('click', async () => {
             tutorialModal.classList.add('hidden');
             if (userId) {
                 const userDocRef = getUserRootDocRef(userId);
@@ -2582,6 +2643,7 @@
 
                     if (!tutorialSeen) {
                         tutorialModal.classList.remove('hidden');
+                        showTutorialStep(0); // Start the tutorial at the beginning
                     } else {
                         tutorialModal.classList.add('hidden');
                     }
