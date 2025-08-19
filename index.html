@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -220,6 +220,52 @@
         .kebab-button svg {
             transition: transform 0.2s ease-in-out;
         }
+
+        /* Login Popup Styles */
+        .login-popup {
+            position: absolute;
+            top: 50%;
+            left: 110%;
+            transform: translateY(-50%);
+            background-color: #1f2937;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            padding: 1rem;
+            width: 250px;
+            transition: all 0.5s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .login-popup.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .login-popup::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -10px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 10px solid #1f2937;
+        }
+
+        .light-mode .login-popup {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #111827;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .light-mode .login-popup::after {
+            border-right-color: rgba(255, 255, 255, 0.9);
+        }
+
     </style>
     
     <!-- Favicon links for all browsers and devices -->
@@ -267,12 +313,26 @@
     <!-- Main Content -->
     <div id="main-content" class="flex-1 p-6 sm:p-10 flex flex-col items-center transition-all duration-300 ease-in-out">
         <header class="w-full mb-8">
-            <div class="flex items-center justify-between">
-                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Open Menu">
+            <div class="flex items-center justify-between relative">
+                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300 relative z-50" aria-label="Open Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
+                <!-- New Login Popup -->
+                <div id="login-popup" class="login-popup flex flex-col space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-semibold">Sign In for more!</span>
+                        <button id="close-login-popup-btn" class="p-1 rounded-full hover:bg-gray-600 transition duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <button id="login-popup-btn" class="w-full text-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition duration-300">
+                        Sign In with Google
+                    </button>
+                </div>
                 <div class="flex items-center space-x-4">
                     <h1 id="main-title" class="text-3xl sm:text-5xl font-extrabold text-gray-100 transition-colors duration-300">Canned Responses</h1>
                     <div id="category-menu-container" class="relative">
@@ -436,7 +496,7 @@
                             Your Links
                         </h2>
                         <div id="user-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <p class="text-center text-gray-400 col-span-full">Loading your links...</p>
+                            <p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>
                         </div>
                     </section>
 
@@ -453,6 +513,10 @@
                                 <div>
                                     <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
                                     <input type="url" id="link-url" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                </div>
+                                <div>
+                                    <label for="link-description" class="block text-sm font-medium text-gray-400">Description (Optional)</label>
+                                    <input type="text" id="link-description" class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
                                 </div>
                                 <div class="flex space-x-4">
                                     <button type="submit" id="submit-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
@@ -1582,8 +1646,11 @@
         
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
+            // Hide the login popup when the sidebar opens
+            loginPopup.classList.remove('show');
+            sessionStorage.setItem('hasShownLoginPrompt', 'true');
         });
-
+        
         closeSidebarBtn.addEventListener('click', () => {
             sidebar.classList.remove('open');
         });
@@ -2342,6 +2409,31 @@
                 openMenuId = null;
             }
         });
+
+        // Get the new login popup elements
+        const loginPopup = document.getElementById('login-popup');
+        const closeLoginPopupBtn = document.getElementById('close-login-popup-btn');
+        const loginPopupBtn = document.getElementById('login-popup-btn');
+
+        // Close button listener for the popup
+        closeLoginPopupBtn.addEventListener('click', () => {
+            loginPopup.classList.remove('show');
+            sessionStorage.setItem('hasShownLoginPrompt', 'true');
+        });
+
+        // Sign in button listener for the popup
+        loginPopupBtn.addEventListener('click', async () => {
+            loginPopup.classList.remove('show');
+            sessionStorage.setItem('hasShownLoginPrompt', 'true');
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showMessage("Signed in with Google!");
+            } catch (error) {
+                console.error("Google sign-in failed", error);
+                showMessage("Google sign-in failed. Please try again.", 'error');
+            }
+        });
         
         onAuthStateChanged(auth, async (user) => {
             // Unsubscribe from any previous listeners to prevent duplicates
@@ -2360,7 +2452,10 @@
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
                 linksUserInfo.textContent = `User ID: ${userId}`;
-        
+                
+                // Hide the login popup if the user is authenticated
+                loginPopup.classList.remove('show');
+
                 // Load static blueprint data regardless of user type
                 defaultLinks = await getHelpfulLinksBlueprint();
                 
@@ -2406,6 +2501,10 @@
             } else {
                 try {
                     await signInAnonymously(auth);
+                    // Show the login popup for the first time an anonymous user arrives
+                    if (sessionStorage.getItem('hasShownLoginPrompt') !== 'true') {
+                        loginPopup.classList.add('show');
+                    }
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
@@ -2415,4 +2514,3 @@
     </script>
 </body>
 </html>
-```
