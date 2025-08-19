@@ -2348,6 +2348,32 @@
             showLinksStatus('');
         }
         
+        // Caches the static links so they are only rendered once
+        let renderedStaticLinks = false;
+        function renderStaticLinks() {
+            if (renderedStaticLinks) {
+                return;
+            }
+            staticLinksList.innerHTML = '';
+            if (defaultLinks.length > 0) {
+                defaultLinks.forEach(link => {
+                    const card = document.createElement('div');
+                    card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+                    const descriptionText = link.description || 'No description available.';
+                    card.innerHTML = `
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
+                            <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                            <p class="text-sm text-gray-400">${link.description || link.url}</p>
+                        </a>
+                    `;
+                    staticLinksList.appendChild(card);
+                });
+            } else {
+                staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+            }
+            renderedStaticLinks = true;
+        }
+
         function listenForUserLinks() {
             if (!db || !userId || isAnonymous) {
                 console.error("Firestore or User ID not available, or user is anonymous.");
@@ -2624,6 +2650,10 @@
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
                 linksUserInfo.textContent = `User ID: ${userId}`;
+
+                // Render static links only once on auth change, regardless of page
+                defaultLinks = await getHelpfulLinksBlueprint();
+                renderStaticLinks();
                 
                 // Now, check if the user is anonymous AFTER we have the user object
                 if (isAnonymous) {
@@ -2653,8 +2683,7 @@
                     
                     // For anonymous users, load data directly from the blueprint
                     categories = await getCannedResponsesBlueprint();
-                    defaultLinks = await getHelpfulLinksBlueprint();
-
+                    
                     if (Object.keys(categories).length > 0) {
                         const existingCategoryNames = Object.keys(categories);
                         if (!existingCategoryNames.includes(activeCategory)) {
@@ -2678,9 +2707,6 @@
                     } else {
                         tutorialModal.classList.add('hidden');
                     }
-
-                    // Load static blueprint data regardless of user type
-                    defaultLinks = await getHelpfulLinksBlueprint();
                     
                     const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
                     
