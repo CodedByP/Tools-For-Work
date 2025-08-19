@@ -2453,8 +2453,17 @@
                 userName = displayName.split(' ')[0].split('@')[0];
                 linksUserInfo.textContent = `User ID: ${userId}`;
                 
-                // Hide the login popup if the user is authenticated
-                loginPopup.classList.add('hidden');
+                // Now, check if the user is anonymous AFTER we have the user object
+                if (isAnonymous && sessionStorage.getItem('hasShownLoginPrompt') !== 'true') {
+                    loginPopup.classList.remove('hidden');
+                    // Use a setTimeout to allow the CSS transition to play
+                    setTimeout(() => {
+                       loginPopup.classList.add('show');
+                    }, 10);
+                } else {
+                    // Hide the popup if the user is not anonymous
+                    loginPopup.classList.add('hidden');
+                }
 
                 // Load static blueprint data regardless of user type
                 defaultLinks = await getHelpfulLinksBlueprint();
@@ -2501,14 +2510,6 @@
             } else {
                 try {
                     await signInAnonymously(auth);
-                    // On anonymous sign-in, check session storage and show popup
-                    if (sessionStorage.getItem('hasShownLoginPrompt') !== 'true') {
-                        loginPopup.classList.remove('hidden');
-                        // Use a setTimeout to allow the CSS transition to play
-                        setTimeout(() => {
-                           loginPopup.classList.add('show');
-                        }, 10);
-                    }
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
                 }
