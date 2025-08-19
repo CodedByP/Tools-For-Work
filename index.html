@@ -320,7 +320,7 @@
                     </svg>
                 </button>
                 <!-- New Login Popup -->
-                <div id="login-popup" class="login-popup flex flex-col space-y-3">
+                <div id="login-popup" class="login-popup flex flex-col space-y-3 hidden">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-semibold">Sign In for more!</span>
                         <button id="close-login-popup-btn" class="p-1 rounded-full hover:bg-gray-600 transition duration-200">
@@ -1647,7 +1647,7 @@
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
             // Hide the login popup when the sidebar opens
-            loginPopup.classList.remove('show');
+            loginPopup.classList.add('hidden');
             sessionStorage.setItem('hasShownLoginPrompt', 'true');
         });
         
@@ -2417,13 +2417,13 @@
 
         // Close button listener for the popup
         closeLoginPopupBtn.addEventListener('click', () => {
-            loginPopup.classList.remove('show');
+            loginPopup.classList.add('hidden');
             sessionStorage.setItem('hasShownLoginPrompt', 'true');
         });
 
         // Sign in button listener for the popup
         loginPopupBtn.addEventListener('click', async () => {
-            loginPopup.classList.remove('show');
+            loginPopup.classList.add('hidden');
             sessionStorage.setItem('hasShownLoginPrompt', 'true');
             try {
                 const provider = new GoogleAuthProvider();
@@ -2454,7 +2454,7 @@
                 linksUserInfo.textContent = `User ID: ${userId}`;
                 
                 // Hide the login popup if the user is authenticated
-                loginPopup.classList.remove('show');
+                loginPopup.classList.add('hidden');
 
                 // Load static blueprint data regardless of user type
                 defaultLinks = await getHelpfulLinksBlueprint();
@@ -2501,9 +2501,13 @@
             } else {
                 try {
                     await signInAnonymously(auth);
-                    // Show the login popup for the first time an anonymous user arrives
+                    // On anonymous sign-in, check session storage and show popup
                     if (sessionStorage.getItem('hasShownLoginPrompt') !== 'true') {
-                        loginPopup.classList.add('show');
+                        loginPopup.classList.remove('hidden');
+                        // Use a setTimeout to allow the CSS transition to play
+                        setTimeout(() => {
+                           loginPopup.classList.add('show');
+                        }, 10);
                     }
                 } catch (error) {
                     console.error("Anonymous sign-in failed", error);
