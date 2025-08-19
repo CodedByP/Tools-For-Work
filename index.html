@@ -564,6 +564,12 @@
                             <i class="fas fa-exchange-alt mr-2"></i> Import / Export
                         </button>
                     </div>
+                    <div id="tutorial-reset-section" class="flex items-center justify-between border-t border-gray-600 pt-6 mt-6 w-full hidden">
+                        <span class="text-lg text-gray-300">Tutorial</span>
+                        <button id="show-tutorial-btn" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg">
+                            <i class="fas fa-book mr-2"></i> Show Me Again
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1158,7 +1164,7 @@
         const addLinkSection = document.getElementById('add-link-section');
         
         const tutorialModal = document.getElementById('tutorial-modal');
-        const closeTutorialBtn = document.getElementById('close-tutorial-btn');
+        const tutorialResetSection = document.getElementById('tutorial-reset-section');
         
         // Multi-step tutorial elements
         const tutorialSteps = [
@@ -1201,14 +1207,17 @@
                 if (isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
+                    tutorialResetSection.classList.add('hidden');
                 } else {
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
+                    tutorialResetSection.classList.remove('hidden');
                 }
             } else {
                 authStatusSettings.textContent = 'Not signed in.';
                 signInBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
+                tutorialResetSection.classList.add('hidden');
             }
         };
 
@@ -2573,6 +2582,24 @@
                 } catch (error) {
                     console.error("Error setting tutorialSeen flag:", error);
                 }
+            }
+        });
+
+        // "Show Me Again" button click listener
+        const showTutorialBtn = document.getElementById('show-tutorial-btn');
+        showTutorialBtn.addEventListener('click', async () => {
+            if (userId && !isAnonymous) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
+                    showTutorialStep(0); // Reset and show the first step
+                    tutorialModal.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Error resetting tutorialSeen flag:", error);
+                    showMessage("Error showing tutorial. Please try again.", 'error');
+                }
+            } else {
+                showMessage("Please sign in to view the tutorial.", 'error');
             }
         });
 
