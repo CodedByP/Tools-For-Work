@@ -2416,15 +2416,31 @@
         const loginPopupBtn = document.getElementById('login-popup-btn');
 
         // Close button listener for the popup
-        closeLoginPopupBtn.addEventListener('click', () => {
+        closeLoginPopupBtn.addEventListener('click', async () => {
             loginPopup.classList.add('hidden');
-            sessionStorage.setItem('hasShownLoginPrompt', 'true');
+            // Update the Firestore flag for the anonymous user
+            if (userId) {
+                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                try {
+                    await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting hasSeenLoginPrompt flag:", error);
+                }
+            }
         });
 
         // Sign in button listener for the popup
         loginPopupBtn.addEventListener('click', async () => {
             loginPopup.classList.add('hidden');
-            sessionStorage.setItem('hasShownLoginPrompt', 'true');
+            // Update the Firestore flag as the user is now signing in
+            if (userId) {
+                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                try {
+                    await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting hasSeenLoginPrompt flag:", error);
+                }
+            }
             try {
                 const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
@@ -2454,12 +2470,30 @@
                 linksUserInfo.textContent = `User ID: ${userId}`;
                 
                 // Now, check if the user is anonymous AFTER we have the user object
-                if (isAnonymous && sessionStorage.getItem('hasShownLoginPrompt') !== 'true') {
-                    loginPopup.classList.remove('hidden');
-                    // Use a setTimeout to allow the CSS transition to play
-                    setTimeout(() => {
-                       loginPopup.classList.add('show');
-                    }, 10);
+                if (isAnonymous) {
+                    // Check Firestore for the flag
+                    const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                    try {
+                        const userDoc = await getDoc(userDocRef);
+                        const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
+                        
+                        if (!hasSeenPrompt) {
+                            loginPopup.classList.remove('hidden');
+                            // Use a setTimeout to allow the CSS transition to play
+                            setTimeout(() => {
+                               loginPopup.classList.add('show');
+                            }, 10);
+                        } else {
+                            loginPopup.classList.add('hidden');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching user data for login prompt:", error);
+                        // Fallback to showing the pop-up if there's an error
+                        loginPopup.classList.remove('hidden');
+                        setTimeout(() => {
+                            loginPopup.classList.add('show');
+                        }, 10);
+                    }
                 } else {
                     // Hide the popup if the user is not anonymous
                     loginPopup.classList.add('hidden');
