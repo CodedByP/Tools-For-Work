@@ -1011,12 +1011,17 @@
             
             const mainTitle = document.getElementById('main-title');
             const categoryActionsBtn = document.getElementById('category-actions-btn');
+            const categoryActionsMenu = document.getElementById('category-actions-menu');
             const addCategoryBtn = document.getElementById('add-category-btn');
             const addResponseSection = document.getElementById('add-response-section');
             const userLinksSection = document.getElementById('user-links-section');
             const addLinkSection = document.getElementById('add-link-section');
             const importExportBtnSettings = document.getElementById('import-export-btn-settings');
             const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+
+            // Hide the kebab menu button and menu by default for all pages
+            categoryActionsBtn.classList.add('hidden');
+            categoryActionsMenu.classList.add('hidden');
             
             if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
             if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
@@ -1030,17 +1035,16 @@
                 mainTitle.textContent = 'Canned Responses';
                 renderCategories();
                 
-                // Hide interactive elements for anonymous users
-                if (isAnonymous) {
-                    addCategoryBtn.classList.add('hidden');
-                    addResponseSection.classList.add('hidden');
-                    if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
-                } else {
+                // Show interactive elements for signed-in users on this page
+                if (!isAnonymous) {
                     addCategoryBtn.classList.remove('hidden');
                     addResponseSection.classList.remove('hidden');
                     if (Object.keys(categories).length > 0) {
                         categoryActionsBtn.classList.remove('hidden');
                     }
+                } else {
+                    addCategoryBtn.classList.add('hidden');
+                    addResponseSection.classList.add('hidden');
                 }
             } else if (currentPage === 'fedex-tracker') {
                 fedexTrackerApp.classList.remove('hidden');
