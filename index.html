@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                             radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                             radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -562,6 +562,12 @@
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full justify-center">
                         <button id="import-export-btn-settings" class="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-gray-700 text-white font-bold hover:bg-gray-600 transition duration-300 shadow-lg">
                             <i class="fas fa-exchange-alt mr-2"></i> Import / Export
+                        </button>
+                    </div>
+                    <div id="tutorial-reset-section" class="flex items-center justify-between border-t border-gray-600 pt-6 mt-6 w-full hidden">
+                        <span class="text-lg text-gray-300">Tutorial</span>
+                        <button id="show-tutorial-btn" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300 shadow-lg">
+                            <i class="fas fa-book mr-2"></i> Show Me Again
                         </button>
                     </div>
                 </div>
@@ -953,6 +959,8 @@
             { id: 'default-6', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
             { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
         ];
+        
+        let userLinks = [];
 
         const getCannedResponsesBlueprint = async () => {
             return defaultCannedResponsesBlueprint;
@@ -1005,12 +1013,17 @@
             
             const mainTitle = document.getElementById('main-title');
             const categoryActionsBtn = document.getElementById('category-actions-btn');
+            const categoryActionsMenu = document.getElementById('category-actions-menu');
             const addCategoryBtn = document.getElementById('add-category-btn');
             const addResponseSection = document.getElementById('add-response-section');
             const userLinksSection = document.getElementById('user-links-section');
             const addLinkSection = document.getElementById('add-link-section');
             const importExportBtnSettings = document.getElementById('import-export-btn-settings');
             const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+
+            // Hide the kebab menu button and menu by default for all pages
+            categoryActionsBtn.classList.add('hidden');
+            categoryActionsMenu.classList.add('hidden');
             
             if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
             if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
@@ -1024,17 +1037,16 @@
                 mainTitle.textContent = 'Canned Responses';
                 renderCategories();
                 
-                // Hide interactive elements for anonymous users
-                if (isAnonymous) {
-                    addCategoryBtn.classList.add('hidden');
-                    addResponseSection.classList.add('hidden');
-                    if (categoryActionsBtn) categoryActionsBtn.classList.add('hidden');
-                } else {
+                // Show interactive elements for signed-in users on this page
+                if (!isAnonymous) {
                     addCategoryBtn.classList.remove('hidden');
                     addResponseSection.classList.remove('hidden');
                     if (Object.keys(categories).length > 0) {
                         categoryActionsBtn.classList.remove('hidden');
                     }
+                } else {
+                    addCategoryBtn.classList.add('hidden');
+                    addResponseSection.classList.add('hidden');
                 }
             } else if (currentPage === 'fedex-tracker') {
                 fedexTrackerApp.classList.remove('hidden');
@@ -1051,7 +1063,6 @@
                 } else {
                     userLinksSection.classList.remove('hidden');
                     addLinkSection.classList.remove('hidden');
-                    listenForUserLinks();
                 }
             } else if (currentPage === 'settings') {
                 settingsPage.classList.remove('hidden');
@@ -1158,7 +1169,7 @@
         const addLinkSection = document.getElementById('add-link-section');
         
         const tutorialModal = document.getElementById('tutorial-modal');
-        const closeTutorialBtn = document.getElementById('close-tutorial-btn');
+        const tutorialResetSection = document.getElementById('tutorial-reset-section');
         
         // Multi-step tutorial elements
         const tutorialSteps = [
@@ -1201,14 +1212,17 @@
                 if (isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
+                    tutorialResetSection.classList.add('hidden');
                 } else {
                     signInBtn.classList.add('hidden');
                     signOutBtn.classList.remove('hidden');
+                    tutorialResetSection.classList.remove('hidden');
                 }
             } else {
                 authStatusSettings.textContent = 'Not signed in.';
                 signInBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
+                tutorialResetSection.classList.add('hidden');
             }
         };
 
@@ -1281,16 +1295,6 @@
                     categoryActionsBtn.classList.add('hidden');
                     categoryActionsMenu.classList.add('hidden');
                 }
-            }
-
-            if (categoryNames.length === 0) {
-                activeCategory = '';
-                addResponseSection.classList.add('hidden');
-                searchBarContainer.classList.add('hidden');
-                responsesHeading.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                responsesList.innerHTML = '';
-                return;
             }
 
             // Only show interactive elements for non-anonymous users
@@ -1442,7 +1446,7 @@
                     responsesList.appendChild(labelSection);
                 }
             } else {
-                emptyState.classList.remove('hidden');
+                emptyState.classList.add('hidden');
             }
         };
 
@@ -1628,768 +1632,135 @@
             }
             return result;
         };
+        
+        // Caches the static links so they are only rendered once
+        let renderedStaticLinks = false;
+        function renderStaticLinks() {
+            if (renderedStaticLinks) {
+                return;
+            }
+            staticLinksList.innerHTML = '';
+            if (defaultLinks.length > 0) {
+                defaultLinks.forEach(link => {
+                    const card = document.createElement('div');
+                    card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+                    const descriptionText = link.description || 'No description available.';
+                    card.innerHTML = `
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
+                            <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                            <p class="text-sm text-gray-400">${descriptionText}</p>
+                        </a>
+                    `;
+                    staticLinksList.appendChild(card);
+                });
+            } else {
+                staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+            }
+            renderedStaticLinks = true;
+        }
+
+        const renderUserLinks = (linksArray) => {
+            userLinksList.innerHTML = '';
+            if (linksArray.length > 0) {
+                linksArray.forEach(link => {
+                    const card = document.createElement('div');
+                    const titleForHtml = link.title.replace(/'/g, "\\'");
+                    const urlForHtml = link.url.replace(/'/g, "\\'");
+                    const descriptionForHtml = (link.description || '').replace(/'/g, "\\'");
+                    
+                    card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
+                    card.innerHTML = `
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
+                            <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                            <p class="text-sm text-gray-400">${descriptionForHtml || 'No description available.'}</p>
+                        </a>
+                        <div class="relative inline-block text-left" data-doc-id="${link.id}" data-title="${titleForHtml}" data-url="${urlForHtml}" data-description="${descriptionForHtml}">
+                            <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                </svg>
+                            </button>
+                            <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                                <div class="py-1">
+                                    <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
+                                    <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    userLinksList.appendChild(card);
+                });
+            } else {
+                userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
+            }
+        }
 
         const renderHelpfulLinks = () => {
-          staticLinksList.innerHTML = '';
-          userLinksList.innerHTML = '';
-
-          if (defaultLinks.length > 0) {
-            defaultLinks.forEach(link => {
-              const card = document.createElement('div');
-              card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
-              const descriptionText = link.description || 'No description available.';
-              card.innerHTML = `
-                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
-                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
-                    <p class="text-sm text-gray-400">${link.description || link.url}</p>
-                </a>
-              `;
-              staticLinksList.appendChild(card);
-            });
-          } else {
-              staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
-          }
-
+            renderStaticLinks();
+            if (!isAnonymous) {
+                renderUserLinks(userLinks);
+            }
         }
         
-        const checkForUpdates = async () => {
-            if (isAnonymous) {
-                showMessage("Please sign in to check for updates.", 'error');
-                return;
-            }
-            updateModal.classList.remove('hidden');
-            updateModalTitle.textContent = "Checking for Updates...";
-            updateModalMessage.textContent = "Comparing your data with the latest version. Please wait.";
-            updateModalButtons.classList.add('hidden');
-
-            if (!userId) {
-                updateModalTitle.textContent = "Authentication Error";
-                updateModalMessage.textContent = "Please sign in to check for updates.";
-                updateModalButtons.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const userDocRef = getUserCannedResponsesDocRef(userId);
-                const userDoc = await getDoc(userDocRef);
-                const userCategories = userDoc.exists() ? userDoc.data().categories : {};
-                const blueprintCannedResponses = await getCannedResponsesBlueprint();
-                
-                const updatedCategories = JSON.parse(JSON.stringify(userCategories));
-                let updatesFound = false;
-
-                for (const defaultCategoryName in blueprintCannedResponses) {
-                    const defaultCategory = blueprintCannedResponses[defaultCategoryName];
-                    const userCategory = updatedCategories[defaultCategoryName];
-
-                    if (!userCategory) {
-                        updatedCategories[defaultCategoryName] = defaultCategory;
-                        updatesFound = true;
-                    } else {
-                        if (defaultCategory.color && userCategory.color !== defaultCategory.color) {
-                             userCategory.color = defaultCategory.color;
-                             updatesFound = true;
-                        }
-                        const existingResponseIds = new Set(userCategory.responses.map(r => r.id));
-                        for (const defaultResponse of defaultCategory.responses) {
-                            if (!existingResponseIds.has(defaultResponse.id)) {
-                                userCategory.responses.push(defaultResponse);
-                                updatesFound = true;
-                            }
-                        }
-                    }
-                }
-                if (updatesFound) {
-                    await setDoc(userDocRef, { categories: updatedCategories });
-                }
-
-                const userLinksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
-                const userLinksSnapshot = await getDocs(userLinksCollectionRef);
-                const userLinks = userLinksSnapshot.docs.map(doc => doc.data());
-                const blueprintLinks = await getHelpfulLinksBlueprint();
-
-                const existingLinkUrls = new Set(userLinks.map(link => link.url));
-                for (const defaultLink of blueprintLinks) {
-                    if (!existingLinkUrls.has(defaultLink.url)) {
-                        await addDoc(userLinksCollectionRef, {
-                            title: defaultLink.title,
-                            url: defaultLink.url,
-                            description: defaultLink.description, // Added description to new links
-                            createdAt: new Date()
-                        });
-                        updatesFound = true;
-                    }
-                }
-
-                if (updatesFound) {
-                    updateModalTitle.textContent = "Updates Found & Applied!";
-                    updateModalMessage.textContent = "New content has been added to your website.";
-                } else {
-                    updateModalTitle.textContent = "No Updates Found";
-                    updateModalMessage.textContent = "Your website is already up to date!";
-                }
-
-            } catch (error) {
-                console.error("Error during update check:", error);
-                updateModalTitle.textContent = "Update Failed";
-                updateModalMessage.textContent = `An error occurred: ${error.message}`;
-            }
-
-            updateModalButtons.classList.remove('hidden');
-        };
-        
-        hamburgerMenuBtn.addEventListener('click', () => {
-            sidebar.classList.add('open');
-            // Hide the login popup when the sidebar opens
-            loginPopupModal.classList.add('hidden');
-            // Update the Firestore flag for the anonymous user
-            if (userId && isAnonymous) {
-                const userDocRef = getUserRootDocRef(userId);
-                setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true })
-                    .catch(error => console.error("Error setting hasSeenLoginPrompt flag:", error));
-            }
-        });
-        
-        closeSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-        });
-
-        navCannedResponses.addEventListener('click', () => {
-            currentPage = 'canned-responses';
-            renderContent();
-            sidebar.classList.remove('open');
-        });
-
-        navFedexTracker.addEventListener('click', () => {
-            currentPage = 'fedex-tracker';
-            renderContent();
-            sidebar.classList.remove('open');
-        });
-        
-        navHelpfulLinks.addEventListener('click', () => {
-            currentPage = 'helpful-links';
-            renderContent();
-            sidebar.classList.remove('open');
-        });
-
-        navSettings.addEventListener('click', () => {
-            currentPage = 'settings';
-            renderContent();
-            sidebar.classList.remove('open');
-        });
-
-        signInBtn.addEventListener('click', async () => {
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-                showMessage("Signed in with Google!");
-            } catch (error) {
-                console.error("Google sign-in failed", error);
-                showMessage("Google sign-in failed. Please try again.", 'error');
-            }
-        });
-
-        signOutBtn.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                showMessage("Signed out successfully!");
-            } catch (error) {
-                console.error("Sign out failed", error);
-                showMessage("Sign out failed. Please try again.", 'error');
-            }
-        });
-
-        importExportBtnSettings.addEventListener('click', () => {
-            importExportModal.classList.remove('hidden');
-        });
-        closeImportExportModalBtn.addEventListener('click', () => {
-            importExportModal.classList.add('hidden');
-        });
-        exportBtn.addEventListener('click', exportData);
-        importFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                importData(file);
-            }
-        });
-
-        addCategoryBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            addCategoryModal.classList.remove('hidden');
-            addCategoryInput.focus();
-        });
-
-        confirmAddCategoryBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const categoryName = addCategoryInput.value.trim();
-            if (!categoryName) {
-                showMessage("Please enter a category name.", 'error');
-                return;
-            }
-            if (categories[categoryName]) {
-                showMessage("A category with this name already exists.", 'error');
-                return;
-            }
-            
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            updatedCategories[categoryName] = { color: '#60a5fa', responses: [] };
-            activeCategory = categoryName;
-            addCategoryModal.classList.add('hidden');
-            saveToFirestore(updatedCategories);
-            showMessage(`Category '${categoryName}' created successfully!`);
-        });
-
-        cancelAddCategoryBtn.addEventListener('click', () => {
-            addCategoryInput.value = '';
-            addCategoryModal.classList.add('hidden');
-        });
-        
-        categoryList.addEventListener('click', (event) => {
-            const target = event.target;
-            const itemBtn = target.closest('.category-item');
-            if (itemBtn) {
-                const categoryName = itemBtn.dataset.category;
-                if (categoryName !== activeCategory) {
-                    activeCategory = categoryName;
-                    if (!isAnonymous) {
-                        const categoryActionsBtn = document.getElementById('category-actions-btn');
-                        if(categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
-                        categoryActionsMenu.classList.add('hidden');
-                    }
-                    renderCategories();
-                }
-            }
-        });
-        
-        categoryActionsBtn.addEventListener('click', (event) => {
-            if (isAnonymous) return;
-            event.stopPropagation();
-            categoryActionsMenu.classList.toggle('hidden');
-            categoryActionsBtn.classList.toggle('active');
-            
-            if (!categoryActionsMenu.classList.contains('hidden')) {
-                categoryActionsMenu.classList.remove('scale-95', 'opacity-0');
-                categoryActionsMenu.classList.add('scale-100', 'opacity-100');
-            } else {
-                categoryActionsMenu.classList.add('scale-95', 'opacity-0');
-                categoryActionsMenu.classList.remove('scale-100', 'opacity-100');
-            }
-        });
-
-        renameCategoryBtn.addEventListener('click', (event) => {
-            if (isAnonymous) return;
-            event.stopPropagation();
-            categoryToEdit = activeCategory;
-            if (!activeCategory || !categories[activeCategory]) {
-                showMessage("Please select a valid category to rename.", 'error');
-                categoryActionsMenu.classList.add('hidden');
-                categoryActionsBtn.classList.remove('active');
-                return;
-            }
-            editCategoryInput.value = categoryToEdit;
-            editCategoryModal.classList.remove('hidden');
-            categoryActionsMenu.classList.add('hidden');
-            categoryActionsBtn.classList.remove('active');
-        });
-        
-        deleteCategoryBtn.addEventListener('click', (event) => {
-            if (isAnonymous) return;
-            event.stopPropagation();
-            categoryToEdit = activeCategory;
-            if (!activeCategory || !categories[activeCategory]) {
-                showMessage("Please select a valid category to delete.", 'error');
-                categoryActionsMenu.classList.add('hidden');
-                categoryActionsBtn.classList.remove('active');
-                return;
-            }
-            deleteCategoryModal.classList.remove('hidden');
-            categoryActionsMenu.classList.add('hidden');
-            categoryActionsBtn.classList.remove('active');
-        });
-        
-        changeColorBtn.addEventListener('click', (event) => {
-            if (isAnonymous) return;
-            event.stopPropagation();
-            categoryToEdit = activeCategory;
-            if (!activeCategory || !categories[activeCategory]) {
-              showMessage("Please select a valid category to change color.", 'error');
-              categoryActionsMenu.classList.add('hidden');
-              categoryActionsBtn.classList.remove('active');
-              return;
-            }
-            if (categories[categoryToEdit]) {
-              const currentColor = categories[categoryToEdit].color || '#60a5fa';
-              colorInput.value = currentColor;
-            }
-            colorPickerModal.classList.remove('hidden');
-            categoryActionsMenu.classList.add('hidden');
-            categoryActionsBtn.classList.remove('active');
-        });
-        
-
-        document.addEventListener('click', (event) => {
-            const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
-            const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
-
-            if (!isClickInsideCategoryActions) {
-                categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
-                const categoryActionsBtn = document.getElementById('category-actions-btn');
-                if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
-            }
-            if (!isClickInsideMeatballsMenu) {
-                const allMenus = document.querySelectorAll('.meatballs-menu');
-                allMenus.forEach(m => m.classList.add('hidden'));
-                openMenuId = null;
-            }
-        });
-
-
-        confirmEditCategoryBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const newName = editCategoryInput.value.trim();
-            if (!newName) {
-                showMessage("Category name cannot be empty.", 'error');
-                return;
-            }
-            if (categories[newName] && newName !== categoryToEdit) {
-                showMessage("A category with this name already exists.", 'error');
-                return;
-            }
-            
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            if (newName !== categoryToEdit) {
-                if (updatedCategories[categoryToEdit]) { 
-                    updatedCategories[newName] = updatedCategories[categoryToEdit];
-                    delete updatedCategories[categoryToEdit];
-                    if (activeCategory === categoryToEdit) {
-                        activeCategory = newName;
-                    }
-                }
-            }
-
-            categoryToEdit = null;
-            saveToFirestore(updatedCategories);
-            editCategoryModal.classList.add('hidden');
-            showMessage("Category renamed successfully!");
-        });
-
-        cancelEditCategoryBtn.addEventListener('click', () => {
-            categoryToEdit = null;
-            editCategoryModal.classList.add('hidden');
-        });
-
-        confirmDeleteCategoryBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            if (categoryToEdit && updatedCategories[categoryToEdit]) {
-                delete updatedCategories[categoryToEdit];
-                if (activeCategory === categoryToEdit) {
-                    const categoryNames = Object.keys(updatedCategories);
-                    activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
-                }
-                categoryToEdit = null;
-                saveToFirestore(updatedCategories);
-                deleteCategoryModal.classList.add('hidden');
-                showMessage("Category deleted successfully!");
-            } else {
-                showMessage("Error: The category no longer exists.", 'error');
-                deleteCategoryModal.classList.add('hidden');
-            }
-        });
-
-        cancelDeleteCategoryBtn.addEventListener('click', () => {
-            categoryToEdit = null;
-            deleteCategoryModal.classList.add('hidden');
-        });
-
-        saveColorBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const newColor = colorInput.value;
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            if (categoryToEdit && updatedCategories[categoryToEdit]) {
-                updatedCategories[categoryToEdit].color = newColor;
-                saveToFirestore(updatedCategories);
-                showMessage(`Color for '${categoryToEdit}' changed successfully!`);
-            } else {
-                showMessage("Error: No valid category selected to change color.", 'error');
-            }
-            colorPickerModal.classList.add('hidden');
-            categoryToEdit = null;
-        });
-
-        closeColorPickerBtn.addEventListener('click', () => {
-            colorPickerModal.classList.add('hidden');
-            categoryToEdit = null;
-        });
-
-        openAddResponseModalBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            if (!Object.keys(categories).length) {
-                showMessage("Please create a category first.", 'error');
-                return;
-            }
-            newResponseModal.classList.remove('hidden');
-            newResponseTextInput.focus();
-
-            newResponseCategorySelect.innerHTML = '';
-            for (const categoryName in categories) {
-                const option = document.createElement('option');
-                option.value = categoryName;
-                option.textContent = categoryName;
-                if (categoryName === activeCategory) {
-                    option.selected = true;
-                }
-                newResponseCategorySelect.appendChild(option);
-            }
-        });
-        
-        cancelNewResponseBtn.addEventListener('click', () => {
-            newResponseModal.classList.add('hidden');
-            newResponseTextInput.value = '';
-            newResponseLabelInput.value = '';
-        });
-
-        saveNewResponseBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const text = newResponseTextInput.value.trim();
-            const label = newResponseLabelInput.value.trim();
-            const category = newResponseCategorySelect.value;
-            
-            if (!text) {
-                showMessage("Response text cannot be empty.", 'error');
-                return;
-            }
-            
-            if (!category) {
-                showMessage("Please select a category.", 'error');
-                return;
-            }
-
-            addResponse(text, label, category);
-            
-            newResponseModal.classList.add('hidden');
-            newResponseTextInput.value = '';
-            newResponseLabelInput.value = '';
-        });
-
-        responsesList.addEventListener('click', (event) => {
-            const target = event.target;
-            const parentEl = target.closest('.response-item');
-            if (!parentEl) return;
-            const id = parentEl.dataset.id;
-            const categoryName = parentEl.dataset.category;
-            
-            if (target.closest('.pin-btn')) {
-                if (isAnonymous) return;
-                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
-                    showMessage("Error: No active category found.", 'error');
-                    return;
-                }
-                const responseToPin = categories[categoryName].responses.find(r => r.id === id);
-                if (responseToPin) {
-                    responseToPin.isPinned = !responseToPin.isPinned;
-                    saveToFirestore(categories);
-                    showMessage(responseToPin.isPinned ? "Response pinned!" : "Response unpinned!");
-                }
-            }
-            if (target.closest('.copy-btn')) {
-                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
-                    showMessage("Error: No active category found.", 'error');
-                    return;
-                }
-                const responses = categories[categoryName].responses;
-                const text = responses.find(r => r.id === id).text;
-                processAndCopy(text);
-            } else if (target.closest('.edit-btn')) {
-                if (isAnonymous) return;
-                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) {
-                    showMessage("Error: No active category found.", 'error');
-                    return;
-                }
-                const responseToEdit = categories[categoryName].responses.find(r => r.id === id);
-                if (responseToEdit) {
-                    currentEditingId = id;
-                    editResponseLabelInput.value = responseToEdit.label || '';
-                    editResponseTextInput.value = responseToEdit.text;
-
-                    const categoryOptions = Object.keys(categories).map(cat => `<option value="${cat}" ${cat === categoryName ? 'selected' : ''}>${cat}</option>`).join('');
-                    editCategorySelect.innerHTML = categoryOptions;
-
-                    editResponseModal.classList.remove('hidden');
-                }
-            } else if (target.closest('.delete-btn')) {
-                if (isAnonymous) return;
-                responseToDeleteId = id;
-                deleteModal.classList.remove('hidden');
-            }
-        });
-
-        const newSaveEditBtn = document.getElementById('save-edit-btn');
-        newSaveEditBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            const newText = editResponseTextInput.value;
-            const newLabel = editResponseLabelInput.value;
-            const newCategory = editCategorySelect.value;
-            const oldCategory = activeCategory;
-
-            if (!oldCategory || !currentEditingId) {
-                showMessage("Error: Could not determine original category or response ID.", 'error');
-                editResponseModal.classList.add('hidden');
-                currentEditingId = null;
-                return;
-            }
-
-            updateResponse(currentEditingId, newText, newLabel, newCategory, oldCategory);
-            
-            editResponseModal.classList.add('hidden');
-            currentEditingId = null;
-        });
-
-        cancelEditBtn.addEventListener('click', () => {
-            editResponseModal.classList.add('hidden');
-            currentEditingId = null;
-        });
-
-        confirmPlaceholderBtn.addEventListener('click', () => {
-            const inputs = placeholderInputsContainer.querySelectorAll('input');
-            const userValues = {};
-            inputs.forEach(input => {
-                const placeholder = input.id.replace('placeholder-', '').replace(/-/g, ' ');
-                if (input.type === 'date') {
-                    const [year, month, day] = input.value.split('-');
-                    const date = new Date(year, month - 1, day);
-                    userValues[placeholder] = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                } else {
-                    userValues[placeholder] = input.value.trim() || `[${placeholder}]`;
-                }
-            });
-            const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-            copyToClipboard(finalContent);
-            placeholderModal.classList.add('hidden');
-        });
-
-        cancelPlaceholderBtn.addEventListener('click', () => {
-            placeholderModal.classList.add('hidden');
-            showMessage("Copy cancelled.", 'error');
-        });
-
-        searchInput.addEventListener('input', (e) => {
-            renderResponses(e.target.value);
-        });
-
-        deleteConfirmBtn.addEventListener('click', () => {
-            if (isAnonymous) return;
-            if (responseToDeleteId) {
-                const parentEl = document.querySelector(`.response-item[data-id="${responseToDeleteId}"]`);
-                const categoryName = parentEl ? parentEl.dataset.category : null;
-                deleteResponse(responseToDeleteId, categoryName);
-                responseToDeleteId = null;
-                deleteModal.classList.add('hidden');
-            }
-        });
-
-        deleteCancelBtn.addEventListener('click', () => {
-            responseToDeleteId = null;
-            deleteModal.classList.add('hidden');
-        });
-
-        checkUpdatesBtnSettings.addEventListener('click', checkForUpdates);
-        closeUpdateBtn.addEventListener('click', () => {
-            updateModal.classList.add('hidden');
-        });
-
-        const extractAndDisplayNumbers = () => {
-            loadingIndicator.classList.remove('hidden');
-            noNumbersMessage.classList.add('hidden');
-            trackingNumbersContainer.innerHTML = '';
-            
-            setTimeout(() => {
-                const text = inputTextareaFedex.value;
-                const matches = text.match(fedexRegex);
-
-                loadingIndicator.classList.add('hidden');
-
-                if (matches && matches.length > 0) {
-                    const uniqueNumbers = [...new Set(matches)];
-
-                    uniqueNumbers.forEach(number => {
-                        const trackingNumberLink = document.createElement('a');
-                        trackingNumberLink.href = `https://www.fedex.com/fedextrack/?tracknumbers=${number}`;
-                        trackingNumberLink.target = "_blank";
-                        trackingNumberLink.classList.add(
-                            'tracking-tab', 'flex', 'items-center', 'justify-between', 'p-3', 'rounded-lg',
-                            'border', 'border-gray-600', 'shadow-sm', 'mb-2',
-                            'hover:scale-105', 'hover:shadow-md', 'transition-all', 'duration-300', 'animate-fade-in'
-                        );
-
-                        const numberText = document.createElement('span');
-                        numberText.textContent = number;
-                        numberText.classList.add('font-mono', 'text-sm', 'md:text-base', 'text-gray-200');
-
-                        const copyBtn = document.createElement('button');
-                        copyBtn.classList.add(
-                            'ml-4', 'p-2', 'rounded-full', 'hover:bg-gray-700', 'transition-colors',
-                            'duration-200', 'text-gray-400'
-                        );
-                        copyBtn.title = "Copy to clipboard";
-                        copyBtn.innerHTML = `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" /></svg>`;
-                        copyBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            const tempInput = document.createElement('input');
-                            tempInput.value = number;
-                            document.body.appendChild(tempInput);
-                            tempInput.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(tempInput);
-                            showMessage('Tracking number copied!');
-                        });
-
-                        trackingNumberLink.appendChild(numberText);
-                        trackingNumberLink.appendChild(copyBtn);
-                        trackingNumbersContainer.appendChild(trackingNumberLink);
-                    });
-
-                    copyButtonFedex.disabled = false;
-                } else {
-                    noNumbersMessage.classList.remove('hidden');
-                    trackingNumbersContainer.appendChild(noNumbersMessage);
-                    copyButtonFedex.disabled = true;
-                }
-
-                if (text.length > 0) {
-                    clearButtonFedex.disabled = false;
-                } else {
-                    clearButtonFedex.disabled = true;
-                }
-            }, 300);
-        };
-
-        inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
-        clearButtonFedex.addEventListener('click', () => {
-            inputTextareaFedex.value = '';
-            extractAndDisplayNumbers();
-            showMessage('Text area cleared!');
-        });
-
-        copyButtonFedex.addEventListener('click', () => {
-            const trackingNumberElements = trackingNumbersContainer.querySelectorAll('span');
-            let allNumbersText = '';
-            trackingNumberElements.forEach(el => {
-                allNumbersText += el.textContent + '\n';
-            });
-
-            if (allNumbersText.trim().length > 0) {
-                const tempTextarea = document.createElement('textarea');
-                tempTextarea.value = allNumbersText.trim();
-                document.body.appendChild(tempTextarea);
-                tempTextarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempTextarea);
-
-                window.open('https://www.fedex.com/en-us/tracking.html', '_blank');
-
-                showMessage('Tracking numbers copied to clipboard. Paste them on the FedEx page to track.');
-            }
-        });
-
-        function showLinksStatus(message, color = 'text-gray-400') {
+        const showLinksStatus = (message, colorClass) => {
             linksStatusMessage.textContent = message;
-            linksStatusMessage.className = `text-center mt-2 text-sm ${color}`;
-        }
+            linksStatusMessage.className = `text-center mt-2 text-sm font-semibold ${colorClass}`;
+            setTimeout(() => {
+                linksStatusMessage.textContent = '';
+                linksStatusMessage.className = 'text-center mt-2 text-sm text-gray-400';
+            }, 3000);
+        };
         
-        async function deleteLink(docId) {
-            if (!db || !userId || isAnonymous) {
-                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
-                return;
-            }
-            try {
-                showLinksStatus('Removing link...', 'text-yellow-400');
-                const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', docId);
-                await deleteDoc(docRef);
-                showLinksStatus('Link removed successfully!', 'text-green-400');
-            } catch (error) {
-                console.error("Error removing document:", error);
-                showLinksStatus(`Failed to remove link: ${error.message}`, 'text-red-400');
-            }
-        }
-
-        function editLink(docId, title, url, description) {
-            if (isAnonymous) return;
-            editingLinkDocId = docId;
-            linkTitleInput.value = title;
-            linkUrlInput.value = url;
-            linkDescriptionInput.value = description || '';
-            linksSubmitButton.textContent = 'Update Link';
-            linksFormTitle.textContent = 'Edit Link';
-            linksCancelButton.classList.remove('hidden');
-        }
-
-        function resetLinksForm() {
-            editingLinkDocId = null;
+        const resetLinksForm = () => {
+            linksFormTitle.textContent = "Add a New Link";
             linkTitleInput.value = '';
             linkUrlInput.value = '';
             linkDescriptionInput.value = '';
             linksSubmitButton.textContent = 'Add Link';
-            linksFormTitle.textContent = 'Add a New Link';
             linksCancelButton.classList.add('hidden');
-            showLinksStatus('');
-        }
+            editingLinkDocId = null;
+        };
+
+        const editLink = (docId, title, url, description) => {
+            linksFormTitle.textContent = "Edit Link";
+            linkTitleInput.value = title;
+            linkUrlInput.value = url;
+            linkDescriptionInput.value = description;
+            linksSubmitButton.textContent = 'Save Changes';
+            linksCancelButton.classList.remove('hidden');
+            editingLinkDocId = docId;
+            // Scroll to the form
+            addLinkSection.scrollIntoView({ behavior: 'smooth' });
+        };
         
+        const deleteLink = async (docId) => {
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to delete links.', 'text-red-400');
+                return;
+            }
+            const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', docId);
+            try {
+                await deleteDoc(docRef);
+                showLinksStatus('Link deleted successfully!', 'text-green-400');
+            } catch (error) {
+                console.error("Error deleting link:", error);
+                showLinksStatus(`Failed to delete link: ${error.message}`, 'text-red-400');
+            }
+        };
+
         function listenForUserLinks() {
             if (!db || !userId || isAnonymous) {
                 console.error("Firestore or User ID not available, or user is anonymous.");
                 return;
             }
-            // If listener already exists, do nothing
-            if (helpfulLinksUnsubscribe) return;
-
+            
             const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
             const q = query(linksCollectionRef);
 
             helpfulLinksUnsubscribe = onSnapshot(q, (querySnapshot) => {
-                userLinksList.innerHTML = '';
-                if (querySnapshot.empty) {
-                    userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
-                } else {
-                    querySnapshot.forEach((doc) => {
-                        const linkData = doc.data();
-                        
-                        // Data validation check: skip rendering if title or url is missing
-                        if (!linkData.title || !linkData.url) {
-                            console.warn("Skipping invalid link document due to missing title or URL:", doc.id);
-                            return;
-                        }
-
-                        const card = document.createElement('div');
-                        
-                        // Sanitize data attributes to prevent HTML breakages from apostrophes
-                        const titleForHtml = linkData.title.replace(/'/g, "\\'");
-                        const urlForHtml = linkData.url.replace(/'/g, "\\'");
-                        const descriptionForHtml = (linkData.description || '').replace(/'/g, "\\'");
-                        
-                        card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
-                        card.innerHTML = `
-                            <a href="${linkData.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
-                                <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${linkData.title}</h3>
-                                <p class="text-sm text-gray-400">${linkData.description || 'No description available.'}</p>
-                            </a>
-                            <div class="relative inline-block text-left" data-doc-id="${doc.id}" data-title="${titleForHtml}" data-url="${urlForHtml}" data-description="${descriptionForHtml}">
-                                <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
-                                        <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-                                    </svg>
-                                </button>
-                                <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                                    <div class="py-1">
-                                        <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
-                                        <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        userLinksList.appendChild(card);
-                    });
-                }
+                userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Now call the dedicated render function with the updated data
+                renderUserLinks(userLinks);
             }, (error) => {
                 console.error("Error listening for documents:", error);
                 showLinksStatus('Failed to load links. Please try again.', 'text-red-400');
@@ -2576,6 +1947,24 @@
             }
         });
 
+        // "Show Me Again" button click listener
+        const showTutorialBtn = document.getElementById('show-tutorial-btn');
+        showTutorialBtn.addEventListener('click', async () => {
+            if (userId && !isAnonymous) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
+                    showTutorialStep(0); // Reset and show the first step
+                    tutorialModal.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Error resetting tutorialSeen flag:", error);
+                    showMessage("Error showing tutorial. Please try again.", 'error');
+                }
+            } else {
+                showMessage("Please sign in to view the tutorial.", 'error');
+            }
+        });
+
         onAuthStateChanged(auth, async (user) => {
             // Unsubscribe from any previous listeners to prevent duplicates
             if (cannedResponsesUnsubscribe) {
@@ -2593,6 +1982,10 @@
                 const displayName = user.displayName || user.email || 'User';
                 userName = displayName.split(' ')[0].split('@')[0];
                 linksUserInfo.textContent = `User ID: ${userId}`;
+
+                // Render static links only once on auth change, regardless of page
+                defaultLinks = await getHelpfulLinksBlueprint();
+                renderStaticLinks();
                 
                 // Now, check if the user is anonymous AFTER we have the user object
                 if (isAnonymous) {
@@ -2622,12 +2015,11 @@
                     
                     // For anonymous users, load data directly from the blueprint
                     categories = await getCannedResponsesBlueprint();
-                    defaultLinks = await getHelpfulLinksBlueprint();
-
+                    
                     if (Object.keys(categories).length > 0) {
                         const existingCategoryNames = Object.keys(categories);
                         if (!existingCategoryNames.includes(activeCategory)) {
-                             activeCategory = existingCategoryNames[0];
+                               activeCategory = existingCategoryNames[0];
                         }
                     }
                     renderContent();
@@ -2647,11 +2039,9 @@
                     } else {
                         tutorialModal.classList.add('hidden');
                     }
-
-                    // Load static blueprint data regardless of user type
-                    defaultLinks = await getHelpfulLinksBlueprint();
                     
                     const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                     
                     cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
                         if (doc.exists()) {
@@ -2686,10 +2076,16 @@
                         showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
                     });
                     
-                    // Only listen for user links if the user is not anonymous
-                    if (!isAnonymous) {
-                      listenForUserLinks();
-                    }
+                    // Here is the fix for the disappearing helpful links bug.
+                    // The listener for user-specific links is now set up here, immediately after
+                    // the user is authenticated. It will now fetch and update the userLinks
+                    // array in real-time, regardless of what page the user is viewing.
+                    helpfulLinksUnsubscribe = onSnapshot(linksCollectionRef, (querySnapshot) => {
+                        userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderUserLinks(userLinks);
+                    }, (error) => {
+                        console.error("Error listening for user links:", error);
+                    });
                 }
             } else {
                 try {
@@ -2698,6 +2094,527 @@
                     console.error("Anonymous sign-in failed", error);
                 }
             }
+        });
+        
+        // --- Event Listeners ---
+        
+        // Navigation Listeners
+        hamburgerMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+
+        navCannedResponses.addEventListener('click', () => {
+            currentPage = 'canned-responses';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navFedexTracker.addEventListener('click', () => {
+            currentPage = 'fedex-tracker';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navHelpfulLinks.addEventListener('click', async () => {
+            currentPage = 'helpful-links';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navSettings.addEventListener('click', () => {
+            currentPage = 'settings';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        // Theme Toggle Listener
+        themeToggleBtnSettings.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            const icon = themeToggleBtnSettings.querySelector('i');
+            icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
+        });
+
+        // Canned Responses Listeners
+        categoryList.addEventListener('click', (e) => {
+            const button = e.target.closest('.category-item');
+            if (button) {
+                const newCategory = button.dataset.category;
+                if (newCategory !== activeCategory) {
+                    activeCategory = newCategory;
+                    renderCategories(); // This will re-render everything
+                }
+            }
+        });
+        
+        responsesList.addEventListener('click', (e) => {
+            const copyBtn = e.target.closest('.copy-btn');
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+            const pinBtn = e.target.closest('.pin-btn');
+
+            if (copyBtn) {
+                const responseItem = copyBtn.closest('.response-item');
+                const textToCopy = responseItem.querySelector('.response-text-display').textContent;
+                processAndCopy(textToCopy);
+            }
+            if (editBtn) {
+                const responseItem = editBtn.closest('.response-item');
+                const id = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                const responseData = categories[category].responses.find(r => r.id === id);
+                if (responseData) {
+                    editResponseLabelInput.value = responseData.label || '';
+                    editResponseTextInput.value = responseData.text;
+                    editResponseModal.dataset.originalId = responseData.id;
+                    editResponseModal.dataset.originalCategory = category;
+                    
+                    editCategorySelect.innerHTML = '';
+                    const categoryNames = Object.keys(categories);
+                    categoryNames.forEach(catName => {
+                        const option = document.createElement('option');
+                        option.value = catName;
+                        option.textContent = catName;
+                        if (catName === category) {
+                            option.selected = true;
+                        }
+                        editCategorySelect.appendChild(option);
+                    });
+                    
+                    editResponseModal.classList.remove('hidden');
+                }
+            }
+            if (deleteBtn) {
+                const responseItem = deleteBtn.closest('.response-item');
+                responseToDeleteId = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                deleteModal.dataset.category = category;
+                deleteModal.classList.remove('hidden');
+            }
+            if (pinBtn) {
+                const responseItem = pinBtn.closest('.response-item');
+                const id = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                const responseData = categories[category].responses.find(r => r.id === id);
+                if (responseData) {
+                    responseData.isPinned = !responseData.isPinned;
+                    saveToFirestore(categories);
+                }
+            }
+        });
+
+        // Add/Edit response modal listeners
+        openAddResponseModalBtn.addEventListener('click', () => {
+            newResponseModal.classList.remove('hidden');
+            newResponseLabelInput.value = '';
+            newResponseTextInput.value = '';
+            
+            newResponseCategorySelect.innerHTML = '';
+            const categoryNames = Object.keys(categories);
+            categoryNames.forEach(catName => {
+                const option = document.createElement('option');
+                option.value = catName;
+                option.textContent = catName;
+                if (catName === activeCategory) {
+                    option.selected = true;
+                }
+                newResponseCategorySelect.appendChild(option);
+            });
+        });
+        
+        cancelNewResponseBtn.addEventListener('click', () => {
+            newResponseModal.classList.add('hidden');
+        });
+        
+        saveNewResponseBtn.addEventListener('click', () => {
+            const label = newResponseLabelInput.value;
+            const text = newResponseTextInput.value;
+            const category = newResponseCategorySelect.value;
+            if (text.trim() !== '') {
+                addResponse(text, label, category);
+                newResponseModal.classList.add('hidden');
+            } else {
+                showMessage("Response text cannot be empty.", 'error');
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            editResponseModal.classList.add('hidden');
+            currentEditingId = null;
+        });
+
+        saveEditBtn.addEventListener('click', () => {
+            const id = editResponseModal.dataset.originalId;
+            const oldCategory = editResponseModal.dataset.originalCategory;
+            const newLabel = editResponseLabelInput.value;
+            const newText = editResponseTextInput.value;
+            const newCategory = editCategorySelect.value;
+            if (newText.trim() !== '') {
+                updateResponse(id, newText, newLabel, newCategory, oldCategory);
+                editResponseModal.classList.add('hidden');
+                currentEditingId = null;
+            } else {
+                showMessage("Response text cannot be empty.", 'error');
+            }
+        });
+
+        // Delete confirmation modal listeners
+        deleteConfirmBtn.addEventListener('click', () => {
+            const category = deleteModal.dataset.category;
+            deleteResponse(responseToDeleteId, category);
+            deleteModal.classList.add('hidden');
+        });
+        
+        deleteCancelBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            responseToDeleteId = null;
+        });
+
+        // Search listener
+        searchInput.addEventListener('input', () => {
+            renderResponses(searchInput.value);
+        });
+
+        // Category management listeners
+        addCategoryBtn.addEventListener('click', () => {
+            addCategoryModal.classList.remove('hidden');
+            addCategoryInput.focus();
+        });
+
+        cancelAddCategoryBtn.addEventListener('click', () => {
+            addCategoryModal.classList.add('hidden');
+            addCategoryInput.value = '';
+        });
+
+        confirmAddCategoryBtn.addEventListener('click', () => {
+            const newCategoryName = addCategoryInput.value.trim();
+            if (newCategoryName && !categories[newCategoryName]) {
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                updatedCategories[newCategoryName] = { color: '#60a5fa', responses: [] };
+                saveToFirestore(updatedCategories);
+                activeCategory = newCategoryName;
+                addCategoryModal.classList.add('hidden');
+                addCategoryInput.value = '';
+                showMessage("Category created successfully!");
+            } else if (categories[newCategoryName]) {
+                showMessage("Category already exists.", 'error');
+            }
+        });
+
+        categoryActionsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            categoryActionsMenu.classList.toggle('hidden');
+            categoryActionsBtn.classList.toggle('active');
+        });
+
+        renameCategoryBtn.addEventListener('click', () => {
+            editCategoryModal.classList.remove('hidden');
+            editCategoryInput.value = activeCategory;
+            categoryToEdit = activeCategory;
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        cancelEditCategoryBtn.addEventListener('click', () => {
+            editCategoryModal.classList.add('hidden');
+        });
+
+        confirmEditCategoryBtn.addEventListener('click', () => {
+            const newName = editCategoryInput.value.trim();
+            if (newName && newName !== categoryToEdit) {
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                if (updatedCategories[newName]) {
+                    showMessage("A category with that name already exists.", 'error');
+                    return;
+                }
+                const oldCategoryData = updatedCategories[categoryToEdit];
+                delete updatedCategories[categoryToEdit];
+                updatedCategories[newName] = oldCategoryData;
+                saveToFirestore(updatedCategories);
+                activeCategory = newName;
+                editCategoryModal.classList.add('hidden');
+                showMessage("Category renamed successfully!");
+            } else {
+                editCategoryModal.classList.add('hidden');
+            }
+        });
+
+        deleteCategoryBtn.addEventListener('click', () => {
+            deleteCategoryModal.classList.remove('hidden');
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        cancelDeleteCategoryBtn.addEventListener('click', () => {
+            deleteCategoryModal.classList.add('hidden');
+        });
+
+        confirmDeleteCategoryBtn.addEventListener('click', () => {
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            delete updatedCategories[activeCategory];
+            const categoryNames = Object.keys(updatedCategories);
+            activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
+            saveToFirestore(updatedCategories);
+            deleteCategoryModal.classList.add('hidden');
+            showMessage("Category deleted successfully!");
+        });
+
+        changeColorBtn.addEventListener('click', () => {
+            colorPickerModal.classList.remove('hidden');
+            const currentColor = categories[activeCategory]?.color || '#60a5fa';
+            colorInput.value = currentColor;
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        closeColorPickerBtn.addEventListener('click', () => {
+            colorPickerModal.classList.add('hidden');
+        });
+
+        saveColorBtn.addEventListener('click', () => {
+            const newColor = colorInput.value;
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            if (updatedCategories[activeCategory]) {
+                updatedCategories[activeCategory].color = newColor;
+                saveToFirestore(updatedCategories);
+                colorPickerModal.classList.add('hidden');
+                showMessage("Color updated successfully!");
+            }
+        });
+
+        // FedEx tracker listeners
+        const extractAndDisplayNumbers = () => {
+            const text = inputTextareaFedex.value;
+            const matches = text.match(fedexRegex) || [];
+            const uniqueMatches = [...new Set(matches)]; // Get unique numbers
+
+            trackingNumbersContainer.innerHTML = '';
+            if (uniqueMatches.length > 0) {
+                noNumbersMessage.classList.add('hidden');
+                uniqueMatches.forEach(num => {
+                    const div = document.createElement('div');
+                    div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
+                    div.innerHTML = `
+                        <span class="text-sm font-semibold">${num}</span>
+                        <button class="copy-tracking-btn bg-indigo-500 text-white text-xs px-2 py-1 rounded-full hover:bg-indigo-400 transition-colors">
+                            Copy
+                        </button>
+                    `;
+                    trackingNumbersContainer.appendChild(div);
+                });
+            } else {
+                noNumbersMessage.classList.remove('hidden');
+            }
+            
+            // Re-attach listeners to new buttons
+            document.querySelectorAll('.copy-tracking-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const number = button.previousElementSibling.textContent;
+                    copyToClipboard(number);
+                });
+            });
+        };
+
+        inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
+
+        clearButtonFedex.addEventListener('click', () => {
+            inputTextareaFedex.value = '';
+            extractAndDisplayNumbers();
+            showMessage('Input cleared!', 'success');
+        });
+
+        copyButtonFedex.addEventListener('click', () => {
+            const text = inputTextareaFedex.value;
+            const matches = text.match(fedexRegex) || [];
+            if (matches.length > 0) {
+                const uniqueNumbers = [...new Set(matches)];
+                const numbersToCopy = uniqueNumbers.join(' ');
+                copyToClipboard(numbersToCopy);
+                
+                // Open FedEx tracking page
+                const fedexUrl = `https://www.fedex.com/fedextrack/?action=track&trackingnumber=${uniqueNumbers[0]}`;
+                window.open(fedexUrl, '_blank');
+            } else {
+                showMessage('No tracking numbers to copy.', 'error');
+            }
+        });
+
+        // Import/Export Listeners
+        importExportBtnSettings.addEventListener('click', () => {
+            importExportModal.classList.remove('hidden');
+        });
+
+        closeImportExportModalBtn.addEventListener('click', () => {
+            importExportModal.classList.add('hidden');
+        });
+
+        exportBtn.addEventListener('click', () => {
+            exportData();
+        });
+
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                importData(file);
+            }
+        });
+
+        // Helpful Links Listeners
+        linksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
+                return;
+            }
+
+            const title = linkTitleInput.value;
+            const url = linkUrlInput.value;
+            const description = linkDescriptionInput.value;
+
+            if (!title || !url) {
+                showLinksStatus('Please fill out all required fields.', 'text-red-400');
+                return;
+            }
+
+            try {
+                if (editingLinkDocId) {
+                    showLinksStatus('Updating link...', 'text-yellow-400');
+                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
+                    await updateDoc(docRef, {
+                        title: title,
+                        url: url,
+                        description: description,
+                    });
+                    showLinksStatus('Link updated successfully!', 'text-green-400');
+                } else {
+                    showLinksStatus('Adding link...', 'text-yellow-400');
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+                    await addDoc(linksCollectionRef, {
+                        title: title,
+                        url: url,
+                        description: description,
+                        createdAt: new Date()
+                    });
+                    showLinksStatus('Link added successfully!', 'text-green-400');
+                }
+                resetLinksForm();
+
+            } catch (error) {
+                console.error("Error during link operation:", error);
+                showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            }
+        });
+
+        linksCancelButton.addEventListener('click', () => {
+            resetLinksForm();
+        });
+
+        // Placeholder modal listeners
+        confirmPlaceholderBtn.addEventListener('click', () => {
+            const inputs = placeholderInputsContainer.querySelectorAll('input, textarea');
+            const userValues = {};
+            inputs.forEach(input => {
+                const key = input.id.replace('placeholder-', '');
+                userValues[key] = input.value;
+            });
+            const finalContent = replacePlaceholders(currentTextToCopy, userValues);
+            copyToClipboard(finalContent);
+            placeholderModal.classList.add('hidden');
+        });
+
+        cancelPlaceholderBtn.addEventListener('click', () => {
+            placeholderModal.classList.add('hidden');
+        });
+        
+        // Settings page buttons
+        signInBtn.addEventListener('click', async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showMessage("Signed in with Google!");
+            } catch (error) {
+                console.error("Google sign-in failed", error);
+                showMessage("Google sign-in failed. Please try again.", 'error');
+            }
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showMessage("Signed out successfully!");
+                // After signing out, sign in as an anonymous user to allow for core functionality
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Sign out failed", error);
+                showMessage("Sign out failed. Please try again.", 'error');
+            }
+        });
+
+        checkUpdatesBtnSettings.addEventListener('click', async () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to check for updates.", "error");
+                return;
+            }
+
+            updateModal.classList.remove('hidden');
+            updateModalTitle.textContent = "Checking for Updates...";
+            updateModalMessage.textContent = "Please wait while we check for new content.";
+            updateModalButtons.classList.add('hidden');
+
+            try {
+                const blueprint = await getCannedResponsesBlueprint();
+                let hasUpdates = false;
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                let changesMade = false;
+                let newCategoryCount = 0;
+                let newResponseCount = 0;
+
+                // Check for new categories
+                for (const cat in blueprint) {
+                    if (!updatedCategories[cat]) {
+                        updatedCategories[cat] = blueprint[cat];
+                        newCategoryCount++;
+                        changesMade = true;
+                    }
+                }
+                
+                // Check for new responses within existing categories
+                for (const cat in blueprint) {
+                    if (updatedCategories[cat]) {
+                        const existingResponses = updatedCategories[cat].responses.map(r => r.id);
+                        const newResponses = blueprint[cat].responses.filter(r => !existingResponses.includes(r.id));
+                        if (newResponses.length > 0) {
+                            updatedCategories[cat].responses.push(...newResponses);
+                            newResponseCount += newResponses.length;
+                            changesMade = true;
+                        }
+                    }
+                }
+                
+                if (changesMade) {
+                    await saveToFirestore(updatedCategories);
+                    updateModalTitle.textContent = "Updates Found!";
+                    updateModalMessage.innerHTML = `
+                        <p>${newCategoryCount} new categories and ${newResponseCount} new responses were added.</p>
+                        <p class="mt-2">Your data has been updated with the new content.</p>
+                    `;
+                    updateModalButtons.classList.remove('hidden');
+                } else {
+                    updateModalTitle.textContent = "No Updates Found";
+                    updateModalMessage.textContent = "Your content is already up to date.";
+                    updateModalButtons.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error checking for updates:", error);
+                updateModalTitle.textContent = "Update Failed";
+                updateModalMessage.textContent = "There was an error checking for updates. Please try again later.";
+                updateModalButtons.classList.remove('hidden');
+            }
+        });
+
+        closeUpdateBtn.addEventListener('click', () => {
+            updateModal.classList.add('hidden');
         });
         
     </script>
