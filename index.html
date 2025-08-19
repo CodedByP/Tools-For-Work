@@ -800,6 +800,44 @@
             </button>
         </div>
     </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal hidden show">
+        <div class="modal-content w-full max-w-lg">
+            <div class="space-y-6">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Welcome! 👋</h3>
+                <p class="text-lg text-gray-300 text-center">Thanks for signing in! Here's a quick tour to show you how to customize this site.</p>
+
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-comment-dots text-purple-400 mr-3"></i> Canned Responses
+                    </h4>
+                    <p class="text-gray-400 mb-4">You can now add your own canned responses. Click the **<i class="fas fa-plus"></i> Add New Response** button to get started. You can also edit and delete the existing default responses. </p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-400">
+                        <i class="fas fa-palette text-blue-400"></i>
+                        <span>To change a category's color, click the <i class="fas fa-ellipsis-v"></i> icon.</span>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-link text-green-400 mr-3"></i> Dynamic Placeholders
+                    </h4>
+                    <p class="text-gray-400 mb-4">Some responses contain **placeholders** like **[Customer's Name]** or **[TrackingNumber]**. When you copy a response with these, a window will pop up asking for the values before it's copied.</p>
+                    <div class="flex items-center space-x-2 text-sm text-gray-400">
+                        <i class="fas fa-lightbulb text-yellow-400"></i>
+                        <span>This helps you fill in details without editing the response each time!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-8">
+                <button id="close-tutorial-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
+                    Got it! Start Customizing
+                </button>
+            </div>
+        </div>
+    </div>
     
     <!-- Firebase SDKs -->
     <script type="module">
@@ -1095,6 +1133,9 @@
         const staticLinksList = document.getElementById('static-links-list');
         const userLinksSection = document.getElementById('user-links-section');
         const addLinkSection = document.getElementById('add-link-section');
+        
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const closeTutorialBtn = document.getElementById('close-tutorial-btn');
         
         const renderSettingsPage = () => {
             if (document.body.classList.contains('light-mode')) {
@@ -2462,6 +2503,18 @@
             }
         });
         
+        closeTutorialBtn.addEventListener('click', async () => {
+            tutorialModal.classList.add('hidden');
+            if (userId) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { tutorialSeen: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting tutorialSeen flag:", error);
+                }
+            }
+        });
+
         onAuthStateChanged(auth, async (user) => {
             // Unsubscribe from any previous listeners to prevent duplicates
             if (cannedResponsesUnsubscribe) {
@@ -2522,12 +2575,23 @@
                     // Hide the popup if the user is not anonymous
                     loginPopupModal.classList.add('hidden');
 
+                    // Check for tutorial flag for signed-in users
+                    const userDocRef = getUserRootDocRef(userId);
+                    const userDoc = await getDoc(userDocRef);
+                    const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
+
+                    if (!tutorialSeen) {
+                        tutorialModal.classList.remove('hidden');
+                    } else {
+                        tutorialModal.classList.add('hidden');
+                    }
+
                     // Load static blueprint data regardless of user type
                     defaultLinks = await getHelpfulLinksBlueprint();
                     
-                    const userDocRef = getUserCannedResponsesDocRef(userId);
+                    const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
                     
-                    cannedResponsesUnsubscribe = onSnapshot(userDocRef, async (doc) => {
+                    cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
                         if (doc.exists()) {
                             categories = doc.data().categories || {};
                         } else {
@@ -2535,7 +2599,7 @@
                             try {
                                 const blueprint = await getCannedResponsesBlueprint();
                                 categories = JSON.parse(JSON.stringify(blueprint));
-                                await setDoc(userDocRef, { categories: categories });
+                                await setDoc(userCannedResponsesDocRef, { categories: categories });
                                 console.log("Migrated default data to Firestore for new user.");
                             } catch (error) {
                                 console.error("Error migrating data for new user:", error);
