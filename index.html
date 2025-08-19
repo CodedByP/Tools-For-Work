@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                             radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                             radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -221,39 +221,33 @@
             transition: transform 0.2s ease-in-out;
         }
 
-        /* Login Popup Styles */
+        /* Login Modal and Popup Styles */
+        #login-popup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        #login-popup-modal.show {
+            display: flex;
+        }
+
         .login-popup {
-            position: absolute;
-            top: 50%;
-            left: 110%;
-            transform: translateY(-50%);
             background-color: #1f2937;
             border-radius: 1rem;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            padding: 1rem;
-            width: 250px;
-            transition: all 0.5s ease-in-out;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        .login-popup.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .login-popup::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: -10px;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-right: 10px solid #1f2937;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 350px;
+            animation: fadeInModal 0.3s ease-in-out;
+            z-index: 3001;
         }
 
         .light-mode .login-popup {
@@ -262,8 +256,9 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        .light-mode .login-popup::after {
-            border-right-color: rgba(255, 255, 255, 0.9);
+        @keyframes fadeInModal {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
     </style>
@@ -319,20 +314,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <!-- New Login Popup -->
-                <div id="login-popup" class="login-popup flex flex-col space-y-3 hidden">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-semibold">Sign In for more!</span>
-                        <button id="close-login-popup-btn" class="p-1 rounded-full hover:bg-gray-600 transition duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                    <button id="login-popup-btn" class="w-full text-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition duration-300">
-                        Sign In with Google
-                    </button>
-                </div>
                 <div class="flex items-center space-x-4">
                     <h1 id="main-title" class="text-3xl sm:text-5xl font-extrabold text-gray-100 transition-colors duration-300">Canned Responses</h1>
                     <div id="category-menu-container" class="relative">
@@ -536,10 +517,10 @@
         
         <!-- Settings App Content -->
         <div id="settings-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
-            <div class="w-full max-w-7xl mx-auto space-y-8 md:grid md:grid-cols-2 md:gap-8">
+            <div class="w-full max-w-7xl mx-auto space-y-8 md:flex md:flex-wrap md:gap-8">
                 
                 <!-- Account Section -->
-                <div class="floating-card p-6 sm:p-8 flex flex-col items-center col-span-1">
+                <div class="floating-card p-6 sm:p-8 flex flex-col items-center flex-1 md:w-1/2 min-h-full">
                     <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
                         <i class="fas fa-user-circle mr-3 text-3xl text-blue-400"></i> Account
                     </h2>
@@ -555,7 +536,7 @@
                 </div>
 
                 <!-- Theme & Updates Section -->
-                <div class="floating-card p-6 sm:p-8 space-y-6 col-span-1">
+                <div class="floating-card p-6 sm:p-8 flex-1 md:w-1/2 min-h-full space-y-6">
                     <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
                         <i class="fas fa-paint-brush mr-3 text-3xl text-purple-400"></i> Appearance
                     </h2>
@@ -574,7 +555,7 @@
                 </div>
 
                 <!-- Data Management Section -->
-                <div class="floating-card p-6 sm:p-8 flex flex-col items-center col-span-2">
+                <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
                     <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
                         <i class="fas fa-database mr-3 text-3xl text-green-400"></i> Data Management
                     </h2>
@@ -802,6 +783,24 @@
         </div>
     </div>
     
+    <!-- Login Modal - This is the new, modal pop-up container -->
+    <div id="login-popup-modal" class="modal hidden">
+        <div class="login-popup flex flex-col space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-200">Sign In for more!</span>
+                <button id="close-login-popup-btn" class="p-1 rounded-full hover:bg-gray-600 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-xs text-gray-400">Sign in to save your canned responses and helpful links across all your devices.</p>
+            <button id="login-popup-btn" class="w-full text-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition duration-300">
+                Sign In with Google
+            </button>
+        </div>
+    </div>
+    
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -909,6 +908,11 @@
         const getUserHelpfulLinksCollectionRef = (uid) => {
             return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data');
         };
+        
+        // This is a new function to get the user's root document.
+        const getUserRootDocRef = (uid) => {
+            return doc(db, 'artifacts', safeAppId, 'users', uid);
+        }
 
         const saveToFirestore = async (dataToSave) => {
             if (!userId || isAnonymous) {
@@ -1647,8 +1651,13 @@
         hamburgerMenuBtn.addEventListener('click', () => {
             sidebar.classList.add('open');
             // Hide the login popup when the sidebar opens
-            loginPopup.classList.add('hidden');
-            sessionStorage.setItem('hasShownLoginPrompt', 'true');
+            loginPopupModal.classList.add('hidden');
+            // Update the Firestore flag for the anonymous user
+            if (userId && isAnonymous) {
+                const userDocRef = getUserRootDocRef(userId);
+                setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true })
+                    .catch(error => console.error("Error setting hasSeenLoginPrompt flag:", error));
+            }
         });
         
         closeSidebarBtn.addEventListener('click', () => {
@@ -2410,17 +2419,18 @@
             }
         });
 
-        // Get the new login popup elements
-        const loginPopup = document.getElementById('login-popup');
+        // Get the new login modal elements
+        const loginPopupModal = document.getElementById('login-popup-modal');
         const closeLoginPopupBtn = document.getElementById('close-login-popup-btn');
         const loginPopupBtn = document.getElementById('login-popup-btn');
 
         // Close button listener for the popup
         closeLoginPopupBtn.addEventListener('click', async () => {
-            loginPopup.classList.add('hidden');
+            loginPopupModal.classList.remove('show');
+            loginPopupModal.classList.add('hidden');
             // Update the Firestore flag for the anonymous user
             if (userId) {
-                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                const userDocRef = getUserRootDocRef(userId);
                 try {
                     await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
                 } catch (error) {
@@ -2431,10 +2441,11 @@
 
         // Sign in button listener for the popup
         loginPopupBtn.addEventListener('click', async () => {
-            loginPopup.classList.add('hidden');
+            loginPopupModal.classList.remove('show');
+            loginPopupModal.classList.add('hidden');
             // Update the Firestore flag as the user is now signing in
             if (userId) {
-                const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                const userDocRef = getUserRootDocRef(userId);
                 try {
                     await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
                 } catch (error) {
@@ -2472,31 +2483,31 @@
                 // Now, check if the user is anonymous AFTER we have the user object
                 if (isAnonymous) {
                     // Check Firestore for the flag
-                    const userDocRef = doc(db, 'artifacts', safeAppId, 'users', userId);
+                    const userDocRef = getUserRootDocRef(userId);
                     try {
                         const userDoc = await getDoc(userDocRef);
                         const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
                         
                         if (!hasSeenPrompt) {
-                            loginPopup.classList.remove('hidden');
+                            loginPopupModal.classList.remove('hidden');
                             // Use a setTimeout to allow the CSS transition to play
                             setTimeout(() => {
-                               loginPopup.classList.add('show');
+                               loginPopupModal.classList.add('show');
                             }, 10);
                         } else {
-                            loginPopup.classList.add('hidden');
+                            loginPopupModal.classList.add('hidden');
                         }
                     } catch (error) {
                         console.error("Error fetching user data for login prompt:", error);
                         // Fallback to showing the pop-up if there's an error
-                        loginPopup.classList.remove('hidden');
+                        loginPopupModal.classList.remove('hidden');
                         setTimeout(() => {
-                            loginPopup.classList.add('show');
+                            loginPopupModal.classList.add('show');
                         }, 10);
                     }
                 } else {
                     // Hide the popup if the user is not anonymous
-                    loginPopup.classList.add('hidden');
+                    loginPopupModal.classList.add('hidden');
                 }
 
                 // Load static blueprint data regardless of user type
