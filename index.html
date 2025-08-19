@@ -2505,36 +2505,10 @@
                             loginPopupModal.classList.add('show');
                         }, 10);
                     }
-                } else {
-                    // Hide the popup if the user is not anonymous
-                    loginPopupModal.classList.add('hidden');
-                }
-
-                // Load static blueprint data regardless of user type
-                defaultLinks = await getHelpfulLinksBlueprint();
-                
-                const userDocRef = getUserCannedResponsesDocRef(userId);
-                
-                cannedResponsesUnsubscribe = onSnapshot(userDocRef, async (doc) => {
-                    if (doc.exists()) {
-                        categories = doc.data().categories || {};
-                    } else {
-                        // User has no private data, so initialize it from the in-memory blueprint
-                        try {
-                            const blueprint = await getCannedResponsesBlueprint();
-                            categories = JSON.parse(JSON.stringify(blueprint));
-                            await setDoc(userDocRef, { categories: categories });
-                            console.log("Migrated default data to Firestore for new user.");
-                        } catch (error) {
-                            console.error("Error migrating data for new user:", error);
-                        }
-                    }
                     
-                    for (const key in categories) {
-                        if (!categories[key].responses) {
-                            categories[key].responses = [];
-                        }
-                    }
+                    // For anonymous users, load data directly from the blueprint
+                    categories = await getCannedResponsesBlueprint();
+                    defaultLinks = await getHelpfulLinksBlueprint();
 
                     if (Object.keys(categories).length > 0) {
                         const existingCategoryNames = Object.keys(categories);
@@ -2543,14 +2517,53 @@
                         }
                     }
                     renderContent();
-                }, (error) => {
-                    console.error("Error with onSnapshot listener:", error);
-                    showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
-                });
-                
-                // Only listen for user links if the user is not anonymous
-                if (!isAnonymous) {
-                  listenForUserLinks();
+
+                } else {
+                    // Hide the popup if the user is not anonymous
+                    loginPopupModal.classList.add('hidden');
+
+                    // Load static blueprint data regardless of user type
+                    defaultLinks = await getHelpfulLinksBlueprint();
+                    
+                    const userDocRef = getUserCannedResponsesDocRef(userId);
+                    
+                    cannedResponsesUnsubscribe = onSnapshot(userDocRef, async (doc) => {
+                        if (doc.exists()) {
+                            categories = doc.data().categories || {};
+                        } else {
+                            // User has no private data, so initialize it from the in-memory blueprint
+                            try {
+                                const blueprint = await getCannedResponsesBlueprint();
+                                categories = JSON.parse(JSON.stringify(blueprint));
+                                await setDoc(userDocRef, { categories: categories });
+                                console.log("Migrated default data to Firestore for new user.");
+                            } catch (error) {
+                                console.error("Error migrating data for new user:", error);
+                            }
+                        }
+                        
+                        for (const key in categories) {
+                            if (!categories[key].responses) {
+                                categories[key].responses = [];
+                            }
+                        }
+
+                        if (Object.keys(categories).length > 0) {
+                            const existingCategoryNames = Object.keys(categories);
+                            if (!existingCategoryNames.includes(activeCategory)) {
+                                 activeCategory = existingCategoryNames[0];
+                            }
+                        }
+                        renderContent();
+                    }, (error) => {
+                        console.error("Error with onSnapshot listener:", error);
+                        showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
+                    });
+                    
+                    // Only listen for user links if the user is not anonymous
+                    if (!isAnonymous) {
+                      listenForUserLinks();
+                    }
                 }
             } else {
                 try {
