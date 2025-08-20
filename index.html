@@ -1774,14 +1774,27 @@
                 return;
             }
 
-            const title = linkTitleInput.value;
-            const url = linkUrlInput.value;
-            const description = linkDescriptionInput.value;
+            const title = linkTitleInput.value.trim();
+            const url = linkUrlInput.value.trim();
+            const description = linkDescriptionInput.value.trim();
 
             if (!title || !url) {
                 showLinksStatus('Please fill out all required fields.', 'text-red-400');
                 return;
             }
+
+            // Check for duplicates before proceeding, only for adding new links
+            if (!editingLinkDocId) {
+                const isDuplicate = userLinks.some(link => link.title.toLowerCase() === title.toLowerCase() && link.url.toLowerCase() === url.toLowerCase());
+                if (isDuplicate) {
+                    showLinksStatus('A link with this title and URL already exists.', 'text-red-400');
+                    return;
+                }
+            }
+
+            const originalButtonText = linksSubmitButton.textContent;
+            linksSubmitButton.textContent = 'Saving...';
+            linksSubmitButton.disabled = true;
 
             try {
                 if (editingLinkDocId) {
@@ -1809,6 +1822,9 @@
             } catch (error) {
                 console.error("Error during link operation:", error);
                 showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            } finally {
+                linksSubmitButton.textContent = originalButtonText;
+                linksSubmitButton.disabled = false;
             }
         });
 
@@ -2067,7 +2083,7 @@
                         if (Object.keys(categories).length > 0) {
                             const existingCategoryNames = Object.keys(categories);
                             if (!existingCategoryNames.includes(activeCategory)) {
-                                   activeCategory = existingCategoryNames[0];
+                                    activeCategory = existingCategoryNames[0];
                             }
                         }
                         renderContent();
@@ -2085,6 +2101,7 @@
                         renderUserLinks(userLinks);
                     }, (error) => {
                         console.error("Error listening for user links:", error);
+                        showMessage('Failed to load links. Please try again.', 'text-red-400');
                     });
                 }
             } else {
@@ -2472,14 +2489,25 @@
                 return;
             }
 
-            const title = linkTitleInput.value;
-            const url = linkUrlInput.value;
-            const description = linkDescriptionInput.value;
+            const title = linkTitleInput.value.trim();
+            const url = linkUrlInput.value.trim();
+            const description = linkDescriptionInput.value.trim();
 
             if (!title || !url) {
                 showLinksStatus('Please fill out all required fields.', 'text-red-400');
                 return;
             }
+
+            // Check for duplicates before proceeding
+            const isDuplicate = userLinks.some(link => link.title.toLowerCase() === title.toLowerCase() && link.url.toLowerCase() === url.toLowerCase());
+            if (isDuplicate && !editingLinkDocId) {
+                showLinksStatus('A link with this title and URL already exists.', 'text-red-400');
+                return;
+            }
+
+            const originalButtonText = linksSubmitButton.textContent;
+            linksSubmitButton.textContent = 'Saving...';
+            linksSubmitButton.disabled = true;
 
             try {
                 if (editingLinkDocId) {
@@ -2507,6 +2535,9 @@
             } catch (error) {
                 console.error("Error during link operation:", error);
                 showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            } finally {
+                linksSubmitButton.textContent = originalButtonText;
+                linksSubmitButton.disabled = false;
             }
         });
 
