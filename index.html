@@ -1608,6 +1608,7 @@
                             input = document.createElement('input');
                             input.type = 'text';
                         }
+                        input.dataset.placeholder = placeholder;
                         input.id = `placeholder-${placeholder.replace(/\s/g, '-')}`;
                         input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
                         inputGroup.appendChild(label);
@@ -2519,7 +2520,7 @@
             const inputs = placeholderInputsContainer.querySelectorAll('input, textarea');
             const userValues = {};
             inputs.forEach(input => {
-                const key = input.id.replace('placeholder-', '');
+                const key = input.dataset.placeholder;
                 userValues[key] = input.value;
             });
             const finalContent = replacePlaceholders(currentTextToCopy, userValues);
