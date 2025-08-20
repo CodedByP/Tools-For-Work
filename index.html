@@ -469,6 +469,48 @@
                             <p class="text-center text-gray-400 col-span-full">Loading static links...</p>
                         </div>
                     </section>
+                    
+                    <!-- Category: User-Added Links -->
+                    <!-- This section is now conditionally rendered for non-anonymous users -->
+                    <section id="user-links-section" class="col-span-1 md:col-span-2 lg:col-span-3 mt-12">
+                        <h2 class="text-3xl font-bold text-center mb-8 link-title">
+                            Your Links
+                        </h2>
+                        <div id="user-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>
+                        </div>
+                    </section>
+
+                    <!-- Form to add new links -->
+                    <!-- This section is now conditionally rendered for non-anonymous users -->
+                    <section id="add-link-section" class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center">
+                        <div class="floating-card rounded-2xl p-8 max-w-lg w-full">
+                            <h2 id="form-title" class="text-2xl font-bold text-blue-400 mb-4">Add a New Link</h2>
+                            <form id="add-link-form" class="space-y-4">
+                                <div>
+                                    <label for="link-title" class="block text-sm font-medium text-gray-400">Title</label>
+                                    <input type="text" id="link-title" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                </div>
+                                <div>
+                                    <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
+                                    <input type="url" id="link-url" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                </div>
+                                <div>
+                                    <label for="link-description" class="block text-sm font-medium text-gray-400">Description (Optional)</label>
+                                    <input type="text" id="link-description" class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
+                                </div>
+                                <div class="flex space-x-4">
+                                    <button type="submit" id="submit-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
+                                        Add Link
+                                    </button>
+                                    <button type="button" id="cancel-button" class="w-full inline-flex justify-center py-3 px-6 border border-gray-600 shadow-md text-lg font-bold rounded-xl text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 hidden">
+                                        Cancel
+                                    </button>
+                                </div>
+                                <div id="status-message" class="text-center mt-2 text-sm text-gray-400"></div>
+                            </form>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -832,807 +874,1196 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- Delay execution until DOM is ready to prevent ReferenceErrors ---
-        window.onload = function() {
+        // --- Firebase Initialization and Auth ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
+          authDomain: "tools-a180f.firebaseapp.com",
+          projectId: "tools-a180f",
+          storageBucket: "tools-a180f.firebasestorage.app",
+          messagingSenderId: "195275159442",
+          appId: "1:195275159442:web:20031fd5ccf0428162334b",
+          measurementId: "G-TP0VKGV0EE"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-tools-app';
+        const safeAppId = appId.replace(/[:\/]/g, '-');
 
-            // --- Firebase Initialization and Auth ---
-            const firebaseConfig = {
-              apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
-              authDomain: "tools-a180f.firebaseapp.com",
-              projectId: "tools-a180f",
-              storageBucket: "tools-a180f.firebasestorage.app",
-              messagingSenderId: "195275159442",
-              appId: "1:195275159442:web:20031fd5ccf0428162334b",
-              measurementId: "G-TP0VKGV0EE"
-            };
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-tools-app';
-            const safeAppId = appId.replace(/[:\/]/g, '-');
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        setLogLevel('debug');
+        
+        // The one true source of data, updated only by the onSnapshot listener.
+        let categories = {};
+        let activeCategory = '';
+        let userId = null;
+        let isAnonymous = true; // Track if the user is anonymous
+        let responseToDeleteId = null;
+        let categoryToEdit = null;
+        let currentPage = 'canned-responses';
+        let userName = '';
+        let currentTextToCopy = '';
+        let currentEditingId = null;
+        let openCategoryMenu = null;
+        let editingLinkDocId = null;
+        let openMenuId = null;
+        let defaultLinks = [];
+        let cannedResponsesUnsubscribe = null;
+        let helpfulLinksUnsubscribe = null;
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            setLogLevel('debug');
-            
-            // The one true source of data, updated only by the onSnapshot listener.
-            let categories = {};
-            let activeCategory = '';
-            let userId = null;
-            let isAnonymous = true; // Track if the user is anonymous
-            let responseToDeleteId = null;
-            let categoryToEdit = null;
-            let currentPage = 'canned-responses';
-            let userName = '';
-            let currentTextToCopy = '';
-            let currentEditingId = null;
-            let openCategoryMenu = null;
-            let defaultLinks = [];
-            let cannedResponsesUnsubscribe = null;
-            
-            // Flags to ensure data is loaded before rendering
-            let cannedDataLoaded = false;
-
-            // --- Master Blueprint Data for Initialization ---
-            const defaultCannedResponsesBlueprint = {
-                'BRONCO': {
-                    color: '#32789C',
-                    responses: [
-                        { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk [Desk Location] this morning [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to [Desk Location]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
-                    ]
-                },
-                'PAR': {
-                    color: '#242020',
-                    responses: [
-                        { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString() }
-                    ]
-                },
-                'GUTS': {
-                    color: '#014B34',
-                    responses: [
-                        { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-                        { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
-                    ]
-                },
-            };
-
-            const defaultHelpfulLinksBlueprint = [
-                { id: 'default-1', title: 'Astreya KB', description: 'Access the Astreya knowledge base for support.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
-                { id: 'default-2', title: 'Astreya Audits', description: 'Review and manage Astreya audit reports.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
-                { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP information.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
-                { id: 'default-4', title: 'Bronco Plant Codes', description: 'A spreadsheet of plant codes for the Bronco project.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
-                { id: 'default-5', title: 'GUTS CTI', description: 'Check the GUTS CTI spreadsheet for contact info.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
-                { id: 'default-6', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
-                { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
-            ];
-            
-            // NOTE: userLinks and any related functionality has been removed.
-            // This global variable is no longer needed.
-            let userLinks = [];
-
-            const getCannedResponsesBlueprint = async () => {
-                return defaultCannedResponsesBlueprint;
-            };
-
-            const getHelpfulLinksBlueprint = async () => {
-                return defaultHelpfulLinksBlueprint;
-            };
-            
-            const getUserCannedResponsesDocRef = (uid) => {
-                return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data');
-            };
-
-            // NOTE: This function and the Firestore collection it references have been removed.
-            // const getUserHelpfulLinksCollectionRef = (uid) => {
-            //     return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data');
-            // };
-            
-            // This is a new function to get the user's root document.
-            const getUserRootDocRef = (uid) => {
-                return doc(db, 'artifacts', safeAppId, 'users', uid);
+        // --- Master Blueprint Data for Initialization ---
+        const defaultCannedResponsesBlueprint = {
+            'BRONCO': {
+                color: '#32789C',
+                responses: [
+                    { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk [Desk Location] this morning [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to [Desk Location]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
+                ]
+            },
+            'PAR': {
+                color: '#242020',
+                responses: [
+                    { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString() }
+                ]
+            },
+            'GUTS': {
+                color: '#014B34',
+                responses: [
+                    { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
+                    { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
+                ]
             }
+        };
 
-            const saveToFirestore = async (dataToSave) => {
-                if (!userId || isAnonymous) {
-                    console.error("User not authenticated or is anonymous. Cannot save data.");
-                    showMessage("Please sign in to save your data.", 'error');
-                    return;
-                }
-                const userDocRef = getUserCannedResponsesDocRef(userId);
-                try {
-                    const cleanedData = JSON.parse(JSON.stringify(dataToSave));
-                    for (const key in cleanedData) {
-                        if (!cleanedData[key].responses) {
-                            cleanedData[key].responses = [];
-                        }
+        const defaultHelpfulLinksBlueprint = [
+            { id: 'default-1', title: 'Astreya KB', description: 'Access the Astreya knowledge base for support.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
+            { id: 'default-2', title: 'Astreya Audits', description: 'Review and manage Astreya audit reports.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
+            { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP information.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
+            { id: 'default-4', title: 'Bronco Plant Codes', description: 'A spreadsheet of plant codes for the Bronco project.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
+            { id: 'default-5', title: 'GUTS CTI', description: 'Check the GUTS CTI spreadsheet for contact info.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
+            { id: 'default-6', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
+            { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
+        ];
+        
+        let userLinks = [];
+
+        const getCannedResponsesBlueprint = async () => {
+            return defaultCannedResponsesBlueprint;
+        };
+
+        const getHelpfulLinksBlueprint = async () => {
+            return defaultHelpfulLinksBlueprint;
+        };
+        
+        const getUserCannedResponsesDocRef = (uid) => {
+            return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data');
+        };
+
+        const getUserHelpfulLinksCollectionRef = (uid) => {
+            return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data');
+        };
+        
+        // This is a new function to get the user's root document.
+        const getUserRootDocRef = (uid) => {
+            return doc(db, 'artifacts', safeAppId, 'users', uid);
+        }
+
+        const saveToFirestore = async (dataToSave) => {
+            if (!userId || isAnonymous) {
+                console.error("User not authenticated or is anonymous. Cannot save data.");
+                showMessage("Please sign in to save your data.", 'error');
+                return;
+            }
+            const userDocRef = getUserCannedResponsesDocRef(userId);
+            try {
+                const cleanedData = JSON.parse(JSON.stringify(dataToSave));
+                for (const key in cleanedData) {
+                    if (!cleanedData[key].responses) {
+                        cleanedData[key].responses = [];
                     }
-                    await setDoc(userDocRef, { categories: cleanedData });
-                } catch (error) {
-                    console.error("Error saving to Firestore:", error);
-                    showMessage("Error saving data. Check your permissions.", 'error');
                 }
-            };
+                await setDoc(userDocRef, { categories: cleanedData });
+            } catch (error) {
+                console.error("Error saving to Firestore:", error);
+                showMessage("Error saving data. Check your permissions.", 'error');
+            }
+        };
+
+        const renderContent = () => {
+            const cannedResponsesApp = document.getElementById('canned-responses-app');
+            const fedexTrackerApp = document.getElementById('fedex-tracker-app');
+            const helpfulLinksApp = document.getElementById('helpful-links-app');
+            const settingsPage = document.getElementById('settings-page');
+            const categoryBar = document.getElementById('category-bar');
             
-            // --- Caching DOM elements for efficiency ---
-            const responsesList = document.getElementById('responses-list');
-            const emptyState = document.getElementById('empty-state');
-            const messageBox = document.getElementById('message-box');
-            const deleteModal = document.getElementById('delete-modal');
-            const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
-            const deleteCancelBtn = document.getElementById('delete-cancel-btn');
-            const categoryList = document.getElementById('category-list');
-            const addCategoryBtn = document.getElementById('add-category-btn');
-            const addCategoryModal = document.getElementById('add-category-modal');
-            const addCategoryInput = document.getElementById('add-category-input');
-            const confirmAddCategoryBtn = document.getElementById('confirm-add-category-btn');
-            const cancelAddCategoryBtn = document.getElementById('cancel-add-category-btn');
-            const addResponseSection = document.getElementById('add-response-section');
-            const responsesHeading = document.getElementById('responses-heading');
-            const importExportModal = document.getElementById('import-export-modal');
-            const exportBtn = document.getElementById('export-btn');
-            const importFileInput = document.getElementById('import-file-input');
-            const closeImportExportModalBtn = document.getElementById('close-import-export-modal-btn');
-            const searchInput = document.getElementById('search-input');
-            const searchBarContainer = document.getElementById('search-bar-container');
-            const editCategoryModal = document.getElementById('edit-category-modal');
-            const editCategoryInput = document.getElementById('edit-category-input');
-            const confirmEditCategoryBtn = document.getElementById('confirm-edit-category-btn');
-            const cancelEditCategoryBtn = document.getElementById('cancel-edit-category-btn');
-            const deleteCategoryModal = document.getElementById('delete-category-modal');
-            const confirmDeleteCategoryBtn = document.getElementById('confirm-delete-category-btn');
-            const cancelDeleteCategoryBtn = document.getElementById('cancel-delete-category-btn');
-            const colorPickerModal = document.getElementById('color-picker-modal');
-            const colorInput = document.getElementById('color-input');
-            const closeColorPickerBtn = document.getElementById('close-color-picker-btn');
-            const saveColorBtn = document.getElementById('save-color-btn');
-            const updateModal = document.getElementById('update-modal');
-            const updateModalTitle = document.getElementById('update-modal-title');
-            const updateModalMessage = document.getElementById('update-modal-message');
-            const updateModalButtons = document.getElementById('update-modal-buttons');
-            const closeUpdateBtn = document.getElementById('close-update-btn');
-            const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+            const mainTitle = document.getElementById('main-title');
             const categoryActionsBtn = document.getElementById('category-actions-btn');
             const categoryActionsMenu = document.getElementById('category-actions-menu');
-            const renameCategoryBtn = document.getElementById('rename-category-btn');
-            const deleteCategoryBtn = document.getElementById('delete-category-btn');
-            const changeColorBtn = document.getElementById('change-color-btn');
-            const hamburgerMenuBtn = document.getElementById('hamburger-menu-btn');
-            const sidebar = document.getElementById('sidebar');
-            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-            const navCannedResponses = document.getElementById('nav-canned-responses');
-            const navFedexTracker = document.getElementById('nav-fedex-tracker');
-            const navHelpfulLinks = document.getElementById('nav-helpful-links');
-            const navSettings = document.getElementById('nav-settings');
-            const signInBtn = document.getElementById('sign-in-btn-settings');
-            const signOutBtn = document.getElementById('sign-out-btn-settings');
-            const authStatusSettings = document.getElementById('auth-status-settings');
-            const themeToggleBtnSettings = document.getElementById('theme-toggle-btn-settings');
-            const themeIconSettings = document.getElementById('theme-icon-settings');
+            const addCategoryBtn = document.getElementById('add-category-btn');
+            const addResponseSection = document.getElementById('add-response-section');
+            const userLinksSection = document.getElementById('user-links-section');
+            const addLinkSection = document.getElementById('add-link-section');
             const importExportBtnSettings = document.getElementById('import-export-btn-settings');
-            const placeholderModal = document.getElementById('placeholder-modal');
-            const placeholderInputsContainer = document.getElementById('placeholder-inputs');
-            const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
-            const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
-            const newResponseModal = document.getElementById('new-response-modal');
-            const openAddResponseModalBtn = document.getElementById('open-add-response-modal-btn');
-            const newResponseLabelInput = document.getElementById('new-response-label');
-            const newResponseTextInput = document.getElementById('new-response-text');
-            const newResponseCategorySelect = document.getElementById('new-response-category');
-            const saveNewResponseBtn = document.getElementById('save-new-response-btn');
-            const cancelNewResponseBtn = document.getElementById('cancel-new-response-btn');
-            const editResponseModal = document.getElementById('edit-response-modal');
-            const editResponseLabelInput = document.getElementById('edit-response-label');
-            const editResponseTextInput = document.getElementById('edit-response-text');
-            const editCategorySelect = document.getElementById('edit-category-select');
-            const saveEditBtn = document.getElementById('save-edit-btn');
-            const cancelEditBtn = document.getElementById('cancel-edit-btn');
-            const staticLinksList = document.getElementById('static-links-list');
-            const linksUserInfo = document.getElementById('links-user-info');
-            const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
-            const inputTextareaFedex = document.getElementById('input-text-fedex');
-            const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
-            const copyButtonFedex = document.getElementById('copy-button-fedex');
-            const clearButtonFedex = document.getElementById('clear-button-fedex');
-            const noNumbersMessage = document.getElementById('no-numbers-message');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const loginPopupModal = document.getElementById('login-popup-modal');
-            const closeLoginPopupBtn = document.getElementById('close-login-popup-btn');
-            const loginPopupBtn = document.getElementById('login-popup-btn');
-            const tutorialModal = document.getElementById('tutorial-modal');
-            const tutorialResetSection = document.getElementById('tutorial-reset-section');
-            const tutorialSteps = [
-                document.getElementById('tutorial-step-1'),
-                document.getElementById('tutorial-step-2'),
-                document.getElementById('tutorial-step-3'),
-                document.getElementById('tutorial-step-4'),
-            ];
-            let currentTutorialStep = 0;
-            const tutorialNextBtn = document.getElementById('tutorial-next-btn');
-            const tutorialBackBtn = document.getElementById('tutorial-back-btn');
-            const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
-            const showTutorialBtn = document.getElementById('show-tutorial-btn');
-            
-            const showMessage = (text, type = 'success') => {
-                messageBox.textContent = text;
-                messageBox.className = 'message-box show';
-                if (type === 'success') {
-                    messageBox.style.backgroundColor = '#10B981';
-                } else if (type === 'error') {
-                    messageBox.style.backgroundColor = '#EF4444';
-                }
-                setTimeout(() => {
-                    messageBox.className = 'message-box';
-                }, 3000);
-            };
-            
-            const renderSettingsPage = () => {
-                if (document.body.classList.contains('light-mode')) {
-                    themeIconSettings.className = 'fas fa-sun mr-2';
-                } else {
-                    themeIconSettings.className = 'fas fa-moon mr-2';
-                }
+            const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
 
-                if (auth.currentUser) {
-                    const displayName = auth.currentUser.displayName || auth.currentUser.email || 'User';
-                    authStatusSettings.textContent = `Signed in as: ${displayName}`;
-                    authStatusSettings.title = auth.currentUser.email;
-
-                    if (isAnonymous) {
-                        signInBtn.classList.remove('hidden');
-                        signOutBtn.classList.add('hidden');
-                        tutorialResetSection.classList.add('hidden');
-                    } else {
-                        signInBtn.classList.add('hidden');
-                        signOutBtn.classList.remove('hidden');
-                        tutorialResetSection.classList.remove('hidden');
+            // Hide the kebab menu button and menu by default for all pages
+            categoryActionsBtn.classList.add('hidden');
+            categoryActionsMenu.classList.add('hidden');
+            
+            if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
+            if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
+            if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
+            if (settingsPage) settingsPage.classList.add('hidden');
+            if (categoryBar) categoryBar.classList.add('hidden');
+            
+            if (currentPage === 'canned-responses') {
+                cannedResponsesApp.classList.remove('hidden');
+                categoryBar.classList.remove('hidden');
+                mainTitle.textContent = 'Canned Responses';
+                renderCategories();
+                
+                // Show interactive elements for signed-in users on this page
+                if (!isAnonymous) {
+                    addCategoryBtn.classList.remove('hidden');
+                    addResponseSection.classList.remove('hidden');
+                    if (Object.keys(categories).length > 0) {
+                        categoryActionsBtn.classList.remove('hidden');
                     }
                 } else {
-                    authStatusSettings.textContent = 'Not signed in.';
+                    addCategoryBtn.classList.add('hidden');
+                    addResponseSection.classList.add('hidden');
+                }
+            } else if (currentPage === 'fedex-tracker') {
+                fedexTrackerApp.classList.remove('hidden');
+                mainTitle.textContent = 'FedEx Tracker';
+                extractAndDisplayNumbers();
+            } else if (currentPage === 'helpful-links') {
+                helpfulLinksApp.classList.remove('hidden');
+                mainTitle.textContent = 'Helpful Links';
+                renderHelpfulLinks();
+                // Hide interactive elements for anonymous users
+                if (isAnonymous) {
+                    userLinksSection.classList.add('hidden');
+                    addLinkSection.classList.add('hidden');
+                } else {
+                    userLinksSection.classList.remove('hidden');
+                    addLinkSection.classList.remove('hidden');
+                }
+            } else if (currentPage === 'settings') {
+                settingsPage.classList.remove('hidden');
+                mainTitle.textContent = 'Settings';
+                renderSettingsPage();
+                // Hide interactive elements for anonymous users
+                if (isAnonymous) {
+                    importExportBtnSettings.classList.add('hidden');
+                    checkUpdatesBtnSettings.classList.add('hidden');
+                } else {
+                    importExportBtnSettings.classList.remove('hidden');
+                    checkUpdatesBtnSettings.classList.remove('hidden');
+                }
+            }
+        };
+
+        const responsesList = document.getElementById('responses-list');
+        const emptyState = document.getElementById('empty-state');
+        const messageBox = document.getElementById('message-box');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
+        const deleteCancelBtn = document.getElementById('delete-cancel-btn');
+        const categoryList = document.getElementById('category-list');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const addCategoryModal = document.getElementById('add-category-modal');
+        const addCategoryInput = document.getElementById('add-category-input');
+        const confirmAddCategoryBtn = document.getElementById('confirm-add-category-btn');
+        const cancelAddCategoryBtn = document.getElementById('cancel-add-category-btn');
+        const addResponseSection = document.getElementById('add-response-section');
+        const responsesHeading = document.getElementById('responses-heading');
+        
+        const importExportModal = document.getElementById('import-export-modal');
+        const exportBtn = document.getElementById('export-btn');
+        const importFileInput = document.getElementById('import-file-input');
+        const closeImportExportModalBtn = document.getElementById('close-import-export-modal-btn');
+        
+        const searchInput = document.getElementById('search-input');
+        const searchBarContainer = document.getElementById('search-bar-container');
+
+        const editCategoryModal = document.getElementById('edit-category-modal');
+        const editCategoryInput = document.getElementById('edit-category-input');
+        const confirmEditCategoryBtn = document.getElementById('confirm-edit-category-btn');
+        const cancelEditCategoryBtn = document.getElementById('cancel-edit-category-btn');
+        const deleteCategoryModal = document.getElementById('delete-category-modal');
+        const confirmDeleteCategoryBtn = document.getElementById('confirm-delete-category-btn');
+        const cancelDeleteCategoryBtn = document.getElementById('cancel-delete-category-btn');
+
+        const colorPickerModal = document.getElementById('color-picker-modal');
+        const colorInput = document.getElementById('color-input');
+        const closeColorPickerBtn = document.getElementById('close-color-picker-btn');
+        const saveColorBtn = document.getElementById('save-color-btn');
+
+        const updateModal = document.getElementById('update-modal');
+        const updateModalTitle = document.getElementById('update-modal-title');
+        const updateModalMessage = document.getElementById('update-modal-message');
+        const updateModalButtons = document.getElementById('update-modal-buttons');
+        const closeUpdateBtn = document.getElementById('close-update-btn');
+        const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+        
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
+        const categoryActionsMenu = document.getElementById('category-actions-menu');
+        const renameCategoryBtn = document.getElementById('rename-category-btn');
+        const deleteCategoryBtn = document.getElementById('delete-category-btn');
+        const changeColorBtn = document.getElementById('change-color-btn');
+
+        const hamburgerMenuBtn = document.getElementById('hamburger-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const navCannedResponses = document.getElementById('nav-canned-responses');
+        const navFedexTracker = document.getElementById('nav-fedex-tracker');
+        const navHelpfulLinks = document.getElementById('nav-helpful-links');
+        const navSettings = document.getElementById('nav-settings');
+
+        const signInBtn = document.getElementById('sign-in-btn-settings');
+        const signOutBtn = document.getElementById('sign-out-btn-settings');
+        const authStatusSettings = document.getElementById('auth-status-settings');
+        const themeToggleBtnSettings = document.getElementById('theme-toggle-btn-settings');
+        const themeIconSettings = document.getElementById('theme-icon-settings');
+        const importExportBtnSettings = document.getElementById('import-export-btn-settings');
+
+        const placeholderModal = document.getElementById('placeholder-modal');
+        const placeholderInputsContainer = document.getElementById('placeholder-inputs');
+        const confirmPlaceholderBtn = document.getElementById('confirm-placeholder-btn');
+        const cancelPlaceholderBtn = document.getElementById('cancel-placeholder-btn');
+        
+        const newResponseModal = document.getElementById('new-response-modal');
+        const openAddResponseModalBtn = document.getElementById('open-add-response-modal-btn');
+        const newResponseLabelInput = document.getElementById('new-response-label');
+        const newResponseTextInput = document.getElementById('new-response-text');
+        const newResponseCategorySelect = document.getElementById('new-response-category');
+        const saveNewResponseBtn = document.getElementById('save-new-response-btn');
+        const cancelNewResponseBtn = document.getElementById('cancel-new-response-btn');
+
+
+        const editResponseModal = document.getElementById('edit-response-modal');
+        const editResponseLabelInput = document.getElementById('edit-response-label');
+        const editResponseTextInput = document.getElementById('edit-response-text');
+        const editCategorySelect = document.getElementById('edit-category-select');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+        const staticLinksList = document.getElementById('static-links-list');
+        const userLinksSection = document.getElementById('user-links-section');
+        const addLinkSection = document.getElementById('add-link-section');
+        
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const tutorialResetSection = document.getElementById('tutorial-reset-section');
+        
+        // Multi-step tutorial elements
+        const tutorialSteps = [
+            document.getElementById('tutorial-step-1'),
+            document.getElementById('tutorial-step-2'),
+            document.getElementById('tutorial-step-3'),
+            document.getElementById('tutorial-step-4'),
+        ];
+        let currentTutorialStep = 0;
+        const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+        const tutorialBackBtn = document.getElementById('tutorial-back-btn');
+        const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
+        
+        const showTutorialStep = (stepIndex) => {
+            tutorialSteps.forEach((step, index) => {
+                step.classList.add('hidden');
+            });
+            tutorialSteps[stepIndex].classList.remove('hidden');
+            
+            // Show/hide navigation buttons based on step
+            tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
+            tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
+            tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
+            
+            currentTutorialStep = stepIndex;
+        }
+
+        const renderSettingsPage = () => {
+            if (document.body.classList.contains('light-mode')) {
+                themeIconSettings.className = 'fas fa-sun mr-2';
+            } else {
+                themeIconSettings.className = 'fas fa-moon mr-2';
+            }
+
+            if (auth.currentUser) {
+                const displayName = auth.currentUser.displayName || auth.currentUser.email || 'User';
+                authStatusSettings.textContent = `Signed in as: ${displayName}`;
+                authStatusSettings.title = auth.currentUser.email;
+
+                if (isAnonymous) {
                     signInBtn.classList.remove('hidden');
                     signOutBtn.classList.add('hidden');
                     tutorialResetSection.classList.add('hidden');
+                } else {
+                    signInBtn.classList.add('hidden');
+                    signOutBtn.classList.remove('hidden');
+                    tutorialResetSection.classList.remove('hidden');
                 }
-            };
+            } else {
+                authStatusSettings.textContent = 'Not signed in.';
+                signInBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+                tutorialResetSection.classList.add('hidden');
+            }
+        };
+
+        const themeToggleBtn = document.getElementById('theme-toggle-btn-settings');
+        const themeIcon = document.getElementById('theme-icon-settings');
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('light-mode')) {
+                document.body.classList.remove('light-mode');
+                themeIcon.className = 'fas fa-moon mr-2';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.add('light-mode');
+                themeIcon.className = 'fas fa-sun mr-2';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.className = 'fas fa-sun mr-2';
+        } else {
+            document.body.classList.remove('light-mode');
+            themeIcon.className = 'fas fa-moon mr-2';
+        }
+
+        const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
+        const inputTextareaFedex = document.getElementById('input-text-fedex');
+        const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
+        const copyButtonFedex = document.getElementById('copy-button-fedex');
+        const clearButtonFedex = document.getElementById('clear-button-fedex');
+        const noNumbersMessage = document.getElementById('no-numbers-message');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        const linksForm = document.getElementById('add-link-form');
+        const linkTitleInput = document.getElementById('link-title');
+        const linkUrlInput = document.getElementById('link-url');
+        const linkDescriptionInput = document.getElementById('link-description');
+        const linksSubmitButton = document.getElementById('submit-button');
+        const linksCancelButton = document.getElementById('cancel-button');
+        const linksFormTitle = document.getElementById('form-title');
+        const linksStatusMessage = document.getElementById('status-message');
+        const userLinksList = document.getElementById('user-links-list');
+        const linksUserInfo = document.getElementById('links-user-info');
+        
+        const showMessage = (text, type = 'success') => {
+            messageBox.textContent = text;
+            messageBox.className = 'message-box show';
+            if (type === 'success') {
+                messageBox.style.backgroundColor = '#10B981';
+            } else if (type === 'error') {
+                messageBox.style.backgroundColor = '#EF4444';
+            }
+            setTimeout(() => {
+                messageBox.className = 'message-box';
+            }, 3000);
+        };
+        
+        const renderCategories = () => {
+            categoryList.innerHTML = '';
+            const categoryNames = Object.keys(categories);
             
-            function showTutorialStep(stepIndex) {
-                tutorialSteps.forEach((step, index) => {
-                    step.classList.add('hidden');
-                });
-                tutorialSteps[stepIndex].classList.remove('hidden');
-                
-                tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
-                tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
-                tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
-                
-                currentTutorialStep = stepIndex;
+            if (categoryNames.length > 0) {
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
+            } else {
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if (categoryActionsBtn) {
+                    categoryActionsBtn.classList.add('hidden');
+                    categoryActionsMenu.classList.add('hidden');
+                }
             }
 
-            const renderContent = () => {
-                const cannedResponsesApp = document.getElementById('canned-responses-app');
-                const fedexTrackerApp = document.getElementById('fedex-tracker-app');
-                const helpfulLinksApp = document.getElementById('helpful-links-app');
-                const settingsPage = document.getElementById('settings-page');
-                const categoryBar = document.getElementById('category-bar');
-                
-                const mainTitle = document.getElementById('main-title');
-                const categoryActionsBtn = document.getElementById('category-actions-btn');
-                const categoryActionsMenu = document.getElementById('category-actions-menu');
-                const addCategoryBtn = document.getElementById('add-category-btn');
-                const addResponseSection = document.getElementById('add-response-section');
-                const userLinksSection = document.getElementById('user-links-section');
-                const addLinkSection = document.getElementById('add-link-section');
-                const importExportBtnSettings = document.getElementById('import-export-btn-settings');
-                const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
-
-                // Hide the kebab menu button and menu by default for all pages
-                categoryActionsBtn.classList.add('hidden');
-                categoryActionsMenu.classList.add('hidden');
-                
-                if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
-                if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
-                if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
-                if (settingsPage) settingsPage.classList.add('hidden');
-                if (categoryBar) categoryBar.classList.add('hidden');
-                
-                if (currentPage === 'canned-responses') {
-                    cannedResponsesApp.classList.remove('hidden');
-                    categoryBar.classList.remove('hidden');
-                    mainTitle.textContent = 'Canned Responses';
-                    renderCategories();
-                    
-                    // Show interactive elements for signed-in users on this page
-                    if (!isAnonymous) {
-                        addCategoryBtn.classList.remove('hidden');
-                        addResponseSection.classList.remove('hidden');
-                        if (Object.keys(categories).length > 0) {
-                            categoryActionsBtn.classList.remove('hidden');
-                        }
-                    } else {
-                        addCategoryBtn.classList.add('hidden');
-                        addResponseSection.classList.add('hidden');
-                    }
-                } else if (currentPage === 'fedex-tracker') {
-                    fedexTrackerApp.classList.remove('hidden');
-                    mainTitle.textContent = 'FedEx Tracker';
-                    extractAndDisplayNumbers();
-                } else if (currentPage === 'helpful-links') {
-                    helpfulLinksApp.classList.remove('hidden');
-                    mainTitle.textContent = 'Helpful Links';
-                    renderHelpfulLinks();
-                    // Hide interactive elements for anonymous users
-                    if (isAnonymous) {
-                        if(userLinksSection) userLinksSection.classList.add('hidden');
-                        if(addLinkSection) addLinkSection.classList.add('hidden');
-                    } else {
-                        if(userLinksSection) userLinksSection.classList.remove('hidden');
-                        if(addLinkSection) addLinkSection.classList.remove('hidden');
-                    }
-                } else if (currentPage === 'settings') {
-                    settingsPage.classList.remove('hidden');
-                    mainTitle.textContent = 'Settings';
-                    renderSettingsPage();
-                    // Hide interactive elements for anonymous users
-                    if (isAnonymous) {
-                        if(importExportBtnSettings) importExportBtnSettings.classList.add('hidden');
-                        if(checkUpdatesBtnSettings) checkUpdatesBtnSettings.classList.add('hidden');
-                    } else {
-                        if(importExportBtnSettings) importExportBtnSettings.classList.remove('hidden');
-                        if(checkUpdatesBtnSettings) checkUpdatesBtnSettings.classList.remove('hidden');
-                    }
-                }
-            };
+            // Only show interactive elements for non-anonymous users
+            if (!isAnonymous) {
+                addResponseSection.classList.remove('hidden');
+                searchBarContainer.classList.remove('hidden');
+            }
             
-            const renderCategories = () => {
-                categoryList.innerHTML = '';
-                const categoryNames = Object.keys(categories);
+            categoryNames.forEach(name => {
+                const button = document.createElement('button');
+                button.className = `category-item font-bold py-2 px-4 rounded-lg shadow-md text-white transition-colors
+                    ${name === activeCategory ? 'border-2 border-white' : ''}
+                    hover:scale-105 active:scale-95 transition-all duration-300`;
+                const categoryColor = categories[name].color || '#60a5fa';
+                button.style.backgroundColor = categoryColor;
+                button.textContent = name;
+                button.dataset.category = name;
                 
-                if (categoryNames.length > 0) {
-                    const categoryActionsBtn = document.getElementById('category-actions-btn');
-                    if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
-                } else {
-                    const categoryActionsBtn = document.getElementById('category-actions-btn');
-                    if (categoryActionsBtn) {
-                        categoryActionsBtn.classList.add('hidden');
-                        categoryActionsMenu.classList.add('hidden');
-                    }
-                }
+                categoryList.appendChild(button);
+            });
+            
+            if (!categories[activeCategory]) {
+                activeCategory = categoryNames[0];
+            }
+            renderResponses();
+        };
 
-                // Only show interactive elements for non-anonymous users
-                if (!isAnonymous) {
-                    addResponseSection.classList.remove('hidden');
-                    searchBarContainer.classList.remove('hidden');
+        const renderResponses = (searchQuery = '') => {
+            responsesList.innerHTML = '';
+            
+            let responsesToRender = [];
+            let headingText = '';
+            const query = searchQuery.toLowerCase();
+
+            if (query) {
+                let allResponses = [];
+                for (const categoryName in categories) {
+                    allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
                 }
                 
-                categoryNames.forEach(name => {
-                    const button = document.createElement('button');
-                    button.className = `category-item font-bold py-2 px-4 rounded-lg shadow-md text-white transition-colors
-                        ${name === activeCategory ? 'border-2 border-white' : ''}
-                        hover:scale-105 active:scale-95 transition-all duration-300`;
-                    const categoryColor = categories[name].color || '#60a5fa';
-                    button.style.backgroundColor = categoryColor;
-                    button.textContent = name;
-                    button.dataset.category = name;
+                let labelMatches = [];
+                let textMatches = [];
+
+                allResponses.forEach(r => {
+                    const labelMatch = r.label && r.label.toLowerCase().includes(query);
+                    const textMatch = r.text && r.text.toLowerCase().includes(query);
                     
-                    categoryList.appendChild(button);
+                    if (labelMatch) {
+                        labelMatches.push(r);
+                    } else if (textMatch) {
+                        textMatches.push(r);
+                    }
                 });
                 
-                if (!categories[activeCategory]) {
-                    activeCategory = categoryNames[0];
-                }
-                renderResponses();
-            };
-
-            const renderResponses = (searchQuery = '') => {
-                responsesList.innerHTML = '';
-                
-                let responsesToRender = [];
-                let headingText = '';
-                const query = searchQuery.toLowerCase();
-
-                if (query) {
-                    let allResponses = [];
-                    for (const categoryName in categories) {
-                        allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
-                    }
+                responsesToRender = [...new Set([...labelMatches, ...textMatches])];
+                headingText = 'Search Results';
+            } else {
+                if (categories[activeCategory]) {
+                    const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
+                    const pinnedResponses = allResponses.filter(r => r.isPinned);
+                    const unpinnedResponses = allResponses.filter(r => !r.isPinned);
                     
-                    let labelMatches = [];
-                    let textMatches = [];
+                    // Sort unpinned responses alphabetically by label
+                    unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
 
-                    allResponses.forEach(r => {
-                        const labelMatch = r.label && r.label.toLowerCase().includes(query);
-                        const textMatch = r.text && r.text.toLowerCase().includes(query);
-                        
-                        if (labelMatch) {
-                            labelMatches.push(r);
-                        } else if (textMatch) {
-                            textMatches.push(r);
-                        }
-                    });
-                    
-                    responsesToRender = [...new Set([...labelMatches, ...textMatches])];
-                    headingText = 'Search Results';
+                    responsesToRender = [...pinnedResponses, ...unpinnedResponses];
+                    headingText = `Responses in: ${activeCategory}`;
                 } else {
-                    if (categories[activeCategory]) {
-                        const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
-                        const pinnedResponses = allResponses.filter(r => r.isPinned);
-                        const unpinnedResponses = allResponses.filter(r => !r.isPinned);
-                        
-                        // Sort unpinned responses alphabetically by label
-                        unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
-
-                        responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-                        headingText = `Responses in: ${activeCategory}`;
-                    } else {
-                        responsesToRender = [];
-                        headingText = 'No Active Category';
-                    }
+                    responsesToRender = [];
+                    headingText = 'No Active Category';
                 }
-                
-                document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
-                document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
+            }
+            
+            document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
+            document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
 
-                responsesHeading.textContent = headingText;
-                responsesHeading.classList.remove('hidden');
-                
-                if (responsesToRender.length > 0) {
-                    emptyState.classList.add('hidden');
-                    const groupedResponses = responsesToRender.reduce((acc, response) => {
-                        const label = response.label || 'Unlabeled';
-                        if (!acc[label]) {
-                            acc[label] = [];
-                        }
-                        acc[label].push(response);
-                        return acc;
-                    }, {});
+            responsesHeading.textContent = headingText;
+            responsesHeading.classList.remove('hidden');
+            
+            if (responsesToRender.length > 0) {
+                emptyState.classList.add('hidden');
+                const groupedResponses = responsesToRender.reduce((acc, response) => {
+                    const label = response.label || 'Unlabeled';
+                    if (!acc[label]) {
+                        acc[label] = [];
+                    }
+                    acc[label].push(response);
+                    return acc;
+                }, {});
 
-                    for (const label in groupedResponses) {
-                        const labelSection = document.createElement('div');
-                        labelSection.className = 'mb-6';
-                        let highlightedLabel = label;
-                        if(query) {
+                for (const label in groupedResponses) {
+                    const labelSection = document.createElement('div');
+                    labelSection.className = 'mb-6';
+                    let highlightedLabel = label;
+                    if(query) {
+                        const regex = new RegExp(query, 'gi');
+                        highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+                    }
+
+                    labelSection.innerHTML = `
+                        <h3 class="text-xl font-bold text-gray-400 mb-2">${highlightedLabel}</h3>
+                        <div class="space-y-4"></div>
+                    `;
+                    const responsesInSection = labelSection.querySelector('div');
+
+                    groupedResponses[label].forEach(response => {
+                        let displayText = response.text;
+                        if (query) {
                             const regex = new RegExp(query, 'gi');
-                            highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+                            displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
                         }
+                        
+                        const responseEl = document.createElement('div');
+                        const categoryColor = categories[response.category].color || '#60a5fa';
 
-                        labelSection.innerHTML = `
-                            <h3 class="text-xl font-bold text-gray-400 mb-2">${highlightedLabel}</h3>
-                            <div class="space-y-4"></div>
-                        `;
-                        const responsesInSection = labelSection.querySelector('div');
+                        responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
+                        responseEl.style.backgroundColor = categoryColor;
+                        responseEl.style.borderColor = categoryColor;
+                        responseEl.dataset.id = response.id;
+                        responseEl.dataset.category = response.category;
+                        responseEl.innerHTML = `
+                            <!-- Pin button in the top right -->
+                            <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
+                                <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
+                            </button>
 
-                        groupedResponses[label].forEach(response => {
-                            let displayText = response.text;
-                            if (query) {
-                                const regex = new RegExp(query, 'gi');
-                                displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
-                            }
-                            
-                            const responseEl = document.createElement('div');
-                            const categoryColor = categories[response.category].color || '#60a5fa';
-
-                            responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
-                            responseEl.style.backgroundColor = categoryColor;
-                            responseEl.style.borderColor = categoryColor;
-                            responseEl.dataset.id = response.id;
-                            responseEl.dataset.category = response.category;
-                            responseEl.innerHTML = `
-                                <!-- Pin button in the top right -->
-                                <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
-                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
+                            <!-- Response content -->
+                            <div class="flex-grow display-mode space-y-2 w-full pt-8 sm:pt-0">
+                                <h4 class="response-label-display text-sm font-semibold text-gray-400 mb-2">${response.label || 'Unlabeled'}</h4>
+                                <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
+                            </div>
+                            <!-- Buttons at the bottom, using flex to space them -->
+                            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
+                                <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+                                    <i class="fas fa-copy"></i> Copy
                                 </button>
-
-                                <!-- Response content -->
-                                <div class="flex-grow display-mode space-y-2 w-full pt-8 sm:pt-0">
-                                    <h4 class="response-label-display text-sm font-semibold text-gray-400 mb-2">${response.label || 'Unlabeled'}</h4>
-                                    <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
-                                </div>
-                                <!-- Buttons at the bottom, using flex to space them -->
-                                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
-                                    <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                                        <i class="fas fa-copy"></i> Copy
+                                <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
+                                    <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
+                                        <i class="fas fa-pencil-alt"></i> Edit
                                     </button>
-                                    <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
-                                        <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
-                                            <i class="fas fa-pencil-alt"></i> Edit
-                                        </button>
-                                        <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
+                                    <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
                                 </div>
-                            `;
-                            responsesInSection.appendChild(responseEl);
-                        });
-                        responsesList.appendChild(labelSection);
-                    }
-                } else {
-                    emptyState.classList.add('hidden');
+                            </div>
+                        `;
+                        responsesInSection.appendChild(responseEl);
+                    });
+                    responsesList.appendChild(labelSection);
                 }
-            };
+            } else {
+                emptyState.classList.add('hidden');
+            }
+        };
 
-            const addResponse = (text, label, category) => {
-                if (isAnonymous) {
-                    showMessage("Please sign in to add responses.", 'error');
-                    return;
+        const addResponse = (text, label, category) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to add responses.", 'error');
+                return;
+            }
+            const newId = Date.now().toString();
+            const newResponse = { id: newId, text: text, label: label || '', isPinned: false, createdAt: new Date().toISOString() };
+            
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            if (!updatedCategories[category]) {
+                updatedCategories[category] = { color: categories[category]?.color || '#60a5fa', responses: [] };
+            }
+            if (!updatedCategories[category].responses) {
+                updatedCategories[category].responses = [];
+            }
+            updatedCategories[category].responses.push(newResponse);
+            
+            saveToFirestore(updatedCategories);
+            showMessage("Response added successfully!");
+        };
+
+        const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to edit responses.", 'error');
+                return;
+            }
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            const oldResponsesList = updatedCategories[oldCategory]?.responses || [];
+            const responseToUpdate = oldResponsesList.find(r => r.id === id);
+
+            if (!responseToUpdate) {
+                showMessage("Error: The response no longer exists in its original category.", 'error');
+                return;
+            }
+            
+            if (newCategory && newCategory !== oldCategory) {
+                const index = oldResponsesList.findIndex(r => r.id === id);
+                if (index > -1) {
+                    oldResponsesList.splice(index, 1);
                 }
-                const newId = Date.now().toString();
-                const newResponse = { id: newId, text: text, label: label || '', isPinned: false, createdAt: new Date().toISOString() };
                 
-                const updatedCategories = JSON.parse(JSON.stringify(categories));
-                if (!updatedCategories[category]) {
-                    updatedCategories[category] = { color: categories[category]?.color || '#60a5fa', responses: [] };
+                if (!updatedCategories[newCategory]) {
+                    updatedCategories[newCategory] = { color: updatedCategories[newCategory]?.color || '#60a5fa', responses: [] };
                 }
-                if (!updatedCategories[category].responses) {
-                    updatedCategories[category].responses = [];
+                if (!updatedCategories[newCategory].responses) {
+                    updatedCategories[newCategory].responses = [];
                 }
-                updatedCategories[category].responses.push(newResponse);
-                
-                saveToFirestore(updatedCategories);
-                showMessage("Response added successfully!");
-            };
+                responseToUpdate.text = newText;
+                responseToUpdate.label = newLabel || '';
+                updatedCategories[newCategory].responses.push(responseToUpdate);
+                activeCategory = newCategory;
 
-            const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
-                if (isAnonymous) {
-                    showMessage("Please sign in to edit responses.", 'error');
-                    return;
-                }
-                const updatedCategories = JSON.parse(JSON.stringify(categories));
-                const oldResponsesList = updatedCategories[oldCategory]?.responses || [];
-                const responseToUpdate = oldResponsesList.find(r => r.id === id);
+            } else {
+                responseToUpdate.text = newText;
+                responseToUpdate.label = newLabel || '';
+            }
+            saveToFirestore(updatedCategories);
+            showMessage("Response updated successfully!");
+        };
 
-                if (!responseToUpdate) {
-                    showMessage("Error: The response no longer exists in its original category.", 'error');
-                    return;
-                }
-                
-                if (newCategory && newCategory !== oldCategory) {
-                    const index = oldResponsesList.findIndex(r => r.id === id);
-                    if (index > -1) {
-                        oldResponsesList.splice(index, 1);
-                    }
-                    
-                    if (!updatedCategories[newCategory]) {
-                        updatedCategories[newCategory] = { color: updatedCategories[newCategory]?.color || '#60a5fa', responses: [] };
-                    }
-                    if (!updatedCategories[newCategory].responses) {
-                        updatedCategories[newCategory].responses = [];
-                    }
-                    responseToUpdate.text = newText;
-                    responseToUpdate.label = newLabel || '';
-                    updatedCategories[newCategory].responses.push(responseToUpdate);
-                    activeCategory = newCategory;
+        const deleteResponse = (id, categoryName) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to delete responses.", 'error');
+                return;
+            }
+            if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) return;
 
-                } else {
-                    responseToUpdate.text = newText;
-                    responseToUpdate.label = newLabel || '';
-                }
-                saveToFirestore(updatedCategories);
-                showMessage("Response updated successfully!");
-            };
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            updatedCategories[categoryName].responses = updatedCategories[categoryName].responses.filter(r => r.id !== id);
+            
+            saveToFirestore(updatedCategories);
+            showMessage("Response deleted successfully!");
+        };
 
-            const deleteResponse = (id, categoryName) => {
-                if (isAnonymous) {
-                    showMessage("Please sign in to delete responses.", 'error');
-                    return;
-                }
-                if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) return;
+        const copyToClipboard = (text) => {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showMessage("Copied to clipboard!");
+        };
 
-                const updatedCategories = JSON.parse(JSON.stringify(categories));
-                updatedCategories[categoryName].responses = updatedCategories[categoryName].responses.filter(r => r.id !== id);
-                
-                saveToFirestore(updatedCategories);
-                showMessage("Response deleted successfully!");
-            };
+        const exportData = () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to export data.", 'error');
+                return;
+            }
+            const dataStr = JSON.stringify(categories, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'canned_responses.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage("Data exported successfully!");
+        };
 
-            const copyToClipboard = (text) => {
-                const el = document.createElement('textarea');
-                el.value = text;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                showMessage("Copied to clipboard!");
-            };
-
-            const exportData = () => {
-                if (isAnonymous) {
-                    showMessage("Please sign in to export data.", 'error');
-                    return;
-                }
-                const dataStr = JSON.stringify(categories, null, 2);
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'canned_responses.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showMessage("Data exported successfully!");
-            };
-
-            const importData = (file) => {
-                if (isAnonymous) {
-                    showMessage("Please sign in to import data.", 'error');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const importedData = JSON.parse(e.target.result);
-                        if (typeof importedData === 'object' && importedData !== null) {
-                            categories = importedData;
-                            const categoryNames = Object.keys(categories);
-                            if (categoryNames.length > 0) {
-                                activeCategory = categoryNames[0];
-                            } else {
-                                activeCategory = '';
-                            }
-                            saveToFirestore(categories);
-                            showMessage("Data imported successfully!");
-                            importExportModal.classList.add('hidden');
+        const importData = (file) => {
+            if (isAnonymous) {
+                showMessage("Please sign in to import data.", 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (typeof importedData === 'object' && importedData !== null) {
+                        categories = importedData;
+                        const categoryNames = Object.keys(categories);
+                        if (categoryNames.length > 0) {
+                            activeCategory = categoryNames[0];
                         } else {
-                            throw new Error('Invalid JSON format.');
+                            activeCategory = '';
+                        }
+                        saveToFirestore(categories);
+                        showMessage("Data imported successfully!");
+                        importExportModal.classList.add('hidden');
+                    } else {
+                        throw new Error('Invalid JSON format.');
+                    }
+                } catch (error) {
+                    showMessage(`Error importing file: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+        
+        const placeholderRegex = /\[([^\]]+)\]/g;
+        
+        const processAndCopy = (text) => {
+            currentTextToCopy = text;
+            const matches = text.match(placeholderRegex);
+            const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
+            
+            if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
+                placeholderInputsContainer.innerHTML = '';
+                const today = new Date().toISOString().split('T')[0];
+                placeholders.forEach(placeholder => {
+                    if (placeholder !== 'Name') {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.className = 'flex flex-col';
+                        const label = document.createElement('label');
+                        label.className = 'block text-sm font-medium text-gray-400 mb-1';
+                        label.textContent = placeholder;
+                        let input;
+                        if (placeholder.toLowerCase().includes('date')) {
+                            input = document.createElement('input');
+                            input.type = 'date';
+                            input.value = today;
+                        } else {
+                            input = document.createElement('input');
+                            input.type = 'text';
+                        }
+                        input.id = `placeholder-${placeholder.replace(/\s/g, '-')}`;
+                        input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
+                        inputGroup.appendChild(label);
+                        inputGroup.appendChild(input);
+                        placeholderInputsContainer.appendChild(inputGroup);
+                    }
+                });
+                placeholderModal.classList.remove('hidden');
+                document.querySelector('#placeholder-inputs input')?.focus();
+            } else {
+                const finalContent = replacePlaceholders(currentTextToCopy, {});
+                copyToClipboard(finalContent);
+            }
+        };
+
+        const replacePlaceholders = (text, userValues) => {
+            let result = text;
+            result = result.replace(/\[Name\]/g, userName);
+            for (const key in userValues) {
+                const regex = new RegExp(`\\[${key}\\]`, 'g');
+                result = result.replace(regex, userValues[key]);
+            }
+            return result;
+        };
+        
+        // Caches the static links so they are only rendered once
+        let renderedStaticLinks = false;
+        function renderStaticLinks() {
+            if (renderedStaticLinks) {
+                return;
+            }
+            staticLinksList.innerHTML = '';
+            if (defaultLinks.length > 0) {
+                defaultLinks.forEach(link => {
+                    const card = document.createElement('div');
+                    card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+                    const descriptionText = link.description || 'No description available.';
+                    card.innerHTML = `
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
+                            <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                            <p class="text-sm text-gray-400">${descriptionText}</p>
+                        </a>
+                    `;
+                    staticLinksList.appendChild(card);
+                });
+            } else {
+                staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+            }
+            renderedStaticLinks = true;
+        }
+
+        const renderUserLinks = (linksArray) => {
+            userLinksList.innerHTML = '';
+            if (linksArray.length > 0) {
+                linksArray.forEach(link => {
+                    const card = document.createElement('div');
+                    const titleForHtml = link.title.replace(/'/g, "\\'");
+                    const urlForHtml = link.url.replace(/'/g, "\\'");
+                    const descriptionForHtml = (link.description || '').replace(/'/g, "\\'");
+                    
+                    card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
+                    card.innerHTML = `
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
+                            <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
+                            <p class="text-sm text-gray-400">${descriptionForHtml || 'No description available.'}</p>
+                        </a>
+                        <div class="relative inline-block text-left" data-doc-id="${link.id}" data-title="${titleForHtml}" data-url="${urlForHtml}" data-description="${descriptionForHtml}">
+                            <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                </svg>
+                            </button>
+                            <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                                <div class="py-1">
+                                    <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
+                                    <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    userLinksList.appendChild(card);
+                });
+            } else {
+                userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
+            }
+        }
+
+        const renderHelpfulLinks = () => {
+            renderStaticLinks();
+            if (!isAnonymous) {
+                renderUserLinks(userLinks);
+            }
+        }
+        
+        const showLinksStatus = (message, colorClass) => {
+            linksStatusMessage.textContent = message;
+            linksStatusMessage.className = `text-center mt-2 text-sm font-semibold ${colorClass}`;
+            setTimeout(() => {
+                linksStatusMessage.textContent = '';
+                linksStatusMessage.className = 'text-center mt-2 text-sm text-gray-400';
+            }, 3000);
+        };
+        
+        const resetLinksForm = () => {
+            linksFormTitle.textContent = "Add a New Link";
+            linkTitleInput.value = '';
+            linkUrlInput.value = '';
+            linkDescriptionInput.value = '';
+            linksSubmitButton.textContent = 'Add Link';
+            linksCancelButton.classList.add('hidden');
+            editingLinkDocId = null;
+        };
+
+        const editLink = (docId, title, url, description) => {
+            linksFormTitle.textContent = "Edit Link";
+            linkTitleInput.value = title;
+            linkUrlInput.value = url;
+            linkDescriptionInput.value = description;
+            linksSubmitButton.textContent = 'Save Changes';
+            linksCancelButton.classList.remove('hidden');
+            editingLinkDocId = docId;
+            // Scroll to the form
+            addLinkSection.scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        const deleteLink = async (docId) => {
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to delete links.', 'text-red-400');
+                return;
+            }
+            const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', docId);
+            try {
+                await deleteDoc(docRef);
+                showLinksStatus('Link deleted successfully!', 'text-green-400');
+            } catch (error) {
+                console.error("Error deleting link:", error);
+                showLinksStatus(`Failed to delete link: ${error.message}`, 'text-red-400');
+            }
+        };
+
+        function listenForUserLinks() {
+            if (!db || !userId || isAnonymous) {
+                console.error("Firestore or User ID not available, or user is anonymous.");
+                return;
+            }
+            
+            const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+            const q = query(linksCollectionRef);
+
+            helpfulLinksUnsubscribe = onSnapshot(q, (querySnapshot) => {
+                userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Now call the dedicated render function with the updated data
+                renderUserLinks(userLinks);
+            }, (error) => {
+                console.error("Error listening for documents:", error);
+                showLinksStatus('Failed to load links. Please try again.', 'text-red-400');
+            });
+        }
+        
+        linksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
+                return;
+            }
+
+            const title = linkTitleInput.value;
+            const url = linkUrlInput.value;
+            const description = linkDescriptionInput.value;
+
+            if (!title || !url) {
+                showLinksStatus('Please fill out all required fields.', 'text-red-400');
+                return;
+            }
+
+            try {
+                if (editingLinkDocId) {
+                    showLinksStatus('Updating link...', 'text-yellow-400');
+                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
+                    await updateDoc(docRef, {
+                        title: title,
+                        url: url,
+                        description: description,
+                    });
+                    showLinksStatus('Link updated successfully!', 'text-green-400');
+                } else {
+                    showLinksStatus('Adding link...', 'text-yellow-400');
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+                    await addDoc(linksCollectionRef, {
+                        title: title,
+                        url: url,
+                        description: description,
+                        createdAt: new Date()
+                    });
+                    showLinksStatus('Link added successfully!', 'text-green-400');
+                }
+                resetLinksForm();
+
+            } catch (error) {
+                console.error("Error during link operation:", error);
+                showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            }
+        });
+
+        linksCancelButton.addEventListener('click', () => {
+            resetLinksForm();
+        });
+
+        userLinksList.addEventListener('click', (event) => {
+            if (isAnonymous) return;
+            const button = event.target.closest('.meatballs-button');
+            const editBtn = event.target.closest('.edit-link-btn');
+            const deleteBtn = event.target.closest('.delete-link-btn');
+
+            if (button) {
+                event.stopPropagation();
+                const parentDiv = button.closest('[data-doc-id]');
+                const menu = parentDiv.querySelector('.meatballs-menu');
+                if (menu) {
+                    const isHidden = menu.classList.contains('hidden');
+                    const allMenus = document.querySelectorAll('.meatballs-menu');
+                    allMenus.forEach(m => m.classList.add('hidden'));
+
+                    if (isHidden) {
+                        menu.classList.remove('hidden');
+                        openMenuId = parentDiv.dataset.docId;
+                    } else {
+                        openMenuId = null;
+                    }
+                }
+            } else if (editBtn) {
+                event.stopPropagation();
+                const parentDiv = editBtn.closest('[data-doc-id]');
+                if (parentDiv) {
+                    const docId = parentDiv.dataset.docId;
+                    const title = parentDiv.dataset.title;
+                    const url = parentDiv.dataset.url;
+                    const description = parentDiv.dataset.description;
+                    editLink(docId, title, url, description);
+                    const menu = parentDiv.querySelector('.meatballs-menu');
+                    if (menu) menu.classList.add('hidden');
+                    openMenuId = null;
+                }
+            } else if (deleteBtn) {
+                event.stopPropagation();
+                const parentDiv = deleteBtn.closest('[data-doc-id]');
+                if (parentDiv) {
+                    const docId = parentDiv.dataset.docId;
+                    deleteLink(docId);
+                    const menu = parentDiv.querySelector('.meatballs-menu');
+                    if (menu) menu.classList.add('hidden');
+                    openMenuId = null;
+                }
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+            const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
+
+            if (!isClickInsideCategoryActions) {
+                categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
+                const categoryActionsBtn = document.getElementById('category-actions-btn');
+                if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
+            }
+            if (!isClickInsideMeatballsMenu) {
+                const allMenus = document.querySelectorAll('.meatballs-menu');
+                allMenus.forEach(m => m.classList.add('hidden'));
+                openMenuId = null;
+            }
+        });
+
+        // Get the new login modal elements
+        const loginPopupModal = document.getElementById('login-popup-modal');
+        const closeLoginPopupBtn = document.getElementById('close-login-popup-btn');
+        const loginPopupBtn = document.getElementById('login-popup-btn');
+
+        // Close button listener for the popup
+        closeLoginPopupBtn.addEventListener('click', async () => {
+            loginPopupModal.classList.remove('show');
+            loginPopupModal.classList.add('hidden');
+            // Update the Firestore flag for the anonymous user
+            if (userId) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting hasSeenLoginPrompt flag:", error);
+                }
+            }
+        });
+
+        // Sign in button listener for the popup
+        loginPopupBtn.addEventListener('click', async () => {
+            loginPopupModal.classList.remove('show');
+            loginPopupModal.classList.add('hidden');
+            // Update the Firestore flag as the user is now signing in
+            if (userId) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting hasSeenLoginPrompt flag:", error);
+                }
+            }
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showMessage("Signed in with Google!");
+            } catch (error) {
+                console.error("Google sign-in failed", error);
+                showMessage("Google sign-in failed. Please try again.", 'error');
+            }
+        });
+        
+        tutorialNextBtn.addEventListener('click', () => {
+            if (currentTutorialStep < tutorialSteps.length - 1) {
+                showTutorialStep(currentTutorialStep + 1);
+            }
+        });
+
+        tutorialBackBtn.addEventListener('click', () => {
+            if (currentTutorialStep > 0) {
+                showTutorialStep(currentTutorialStep - 1);
+            }
+        });
+
+        tutorialFinishBtn.addEventListener('click', async () => {
+            tutorialModal.classList.add('hidden');
+            if (userId) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { tutorialSeen: true }, { merge: true });
+                } catch (error) {
+                    console.error("Error setting tutorialSeen flag:", error);
+                }
+            }
+        });
+
+        // "Show Me Again" button click listener
+        const showTutorialBtn = document.getElementById('show-tutorial-btn');
+        showTutorialBtn.addEventListener('click', async () => {
+            if (userId && !isAnonymous) {
+                const userDocRef = getUserRootDocRef(userId);
+                try {
+                    await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
+                    showTutorialStep(0); // Reset and show the first step
+                    tutorialModal.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Error resetting tutorialSeen flag:", error);
+                    showMessage("Error showing tutorial. Please try again.", 'error');
+                }
+            } else {
+                showMessage("Please sign in to view the tutorial.", 'error');
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            // Unsubscribe from any previous listeners to prevent duplicates
+            if (cannedResponsesUnsubscribe) {
+              cannedResponsesUnsubscribe();
+              cannedResponsesUnsubscribe = null;
+            }
+            if (helpfulLinksUnsubscribe) {
+              helpfulLinksUnsubscribe();
+              helpfulLinksUnsubscribe = null;
+            }
+        
+            if (user) {
+                userId = user.uid;
+                isAnonymous = user.isAnonymous; // Update anonymous status
+                const displayName = user.displayName || user.email || 'User';
+                userName = displayName.split(' ')[0].split('@')[0];
+                linksUserInfo.textContent = `User ID: ${userId}`;
+
+                // Render static links only once on auth change, regardless of page
+                defaultLinks = await getHelpfulLinksBlueprint();
+                renderStaticLinks();
+                
+                // Now, check if the user is anonymous AFTER we have the user object
+                if (isAnonymous) {
+                    // Check Firestore for the flag
+                    const userDocRef = getUserRootDocRef(userId);
+                    try {
+                        const userDoc = await getDoc(userDocRef);
+                        const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
+                        
+                        if (!hasSeenPrompt) {
+                            loginPopupModal.classList.remove('hidden');
+                            // Use a setTimeout to allow the CSS transition to play
+                            setTimeout(() => {
+                               loginPopupModal.classList.add('show');
+                            }, 10);
+                        } else {
+                            loginPopupModal.classList.add('hidden');
                         }
                     } catch (error) {
-                        showMessage(`Error importing file: ${error.message}`, 'error');
+                        console.error("Error fetching user data for login prompt:", error);
+                        // Fallback to showing the pop-up if there's an error
+                        loginPopupModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            loginPopupModal.classList.add('show');
+                        }, 10);
                     }
-                };
-                reader.readAsText(file);
-            };
-            
-            const placeholderRegex = /\[([^\]]+)\]/g;
-            
-            const processAndCopy = (text) => {
-                currentTextToCopy = text;
-                const matches = text.match(placeholderRegex);
-                const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
-                
-                if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
-                    placeholderInputsContainer.innerHTML = '';
-                    const today = new Date().toISOString().split('T')[0];
-                    placeholders.forEach(placeholder => {
-                        if (placeholder !== 'Name') {
-                            const inputGroup = document.createElement('div');
-                            inputGroup.className = 'flex flex-col';
-                            const label = document.createElement('label');
-                            label.className = 'block text-sm font-medium text-gray-400 mb-1';
-                            label.textContent = placeholder;
-                            let input;
-                            if (placeholder.toLowerCase().includes('date')) {
-                                input = document.createElement('input');
-                                input.type = 'date';
-                                input.value = today;
-                            } else {
-                                input = document.createElement('input');
-                                input.type = 'text';
-                            }
-                            input.id = `placeholder-${placeholder.replace(/\s/g, '-')}`;
-                            input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
-                            inputGroup.appendChild(label);
-                            inputGroup.appendChild(input);
-                            placeholderInputsContainer.appendChild(inputGroup);
-                        }
-                    });
-                    placeholderModal.classList.remove('hidden');
-                    document.querySelector('#placeholder-inputs input')?.focus();
-                } else {
-                    const finalContent = replacePlaceholders(currentTextToCopy, {});
-                    copyToClipboard(finalContent);
-                }
-            };
-
-            const replacePlaceholders = (text, userValues) => {
-                let result = text;
-                result = result.replace(/\[Name\]/g, userName);
-                for (const key in userValues) {
-                    const regex = new RegExp(`\\[${key}\\]`, 'g');
-                    result = result.replace(regex, userValues[key]);
-                }
-                return result;
-            };
-            
-            // Caches the static links so they are only rendered once
-            let renderedStaticLinks = false;
-            function renderStaticLinks() {
-                if (renderedStaticLinks) {
-                    return;
-                }
-                staticLinksList.innerHTML = '';
-                if (defaultLinks.length > 0) {
-                    defaultLinks.forEach(link => {
-                        const card = document.createElement('div');
-                        card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
-                        const descriptionText = link.description || 'No description available.';
-                        card.innerHTML = `
-                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
-                                <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${link.title}</h3>
-                                <p class="text-sm text-gray-400">${descriptionText}</p>
-                            </a>
-                        `;
-                        staticLinksList.appendChild(card);
-                    });
-                } else {
-                    staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
-                }
-                renderedStaticLinks = true;
-            }
-            
-            const renderHelpfulLinks = () => {
-                renderStaticLinks();
-            }
-            
-            const showLinksStatus = (message, colorClass) => {
-                messageBox.textContent = message;
-                messageBox.className = `message-box show`;
-                if (colorClass.includes('red')) {
-                    messageBox.style.backgroundColor = '#EF4444';
-                } else if (colorClass.includes('green')) {
-                    messageBox.style.backgroundColor = '#10B981';
-                }
-                setTimeout(() => {
-                    messageBox.className = 'message-box';
-                }, 3000);
-            };
-
-            onAuthStateChanged(auth, async (user) => {
-                // Unsubscribe from any previous canned responses listener
-                if (cannedResponsesUnsubscribe) {
-                  cannedResponsesUnsubscribe();
-                  cannedResponsesUnsubscribe = null;
-                }
-            
-                if (user) {
-                    userId = user.uid;
-                    isAnonymous = user.isAnonymous;
-                    const displayName = user.displayName || user.email || 'User';
-                    userName = displayName.split(' ')[0].split('@')[0];
-                    linksUserInfo.textContent = ``;
-
-                    defaultLinks = await getHelpfulLinksBlueprint();
                     
-                    if (isAnonymous) {
-                        const userDocRef = getUserRootDocRef(userId);
-                        try {
-                            const userDoc = await getDoc(userDocRef);
-                            const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
-                            
-                            if (!hasSeenPrompt && loginPopupModal) {
-                                loginPopupModal.classList.remove('hidden');
-                                setTimeout(() => {
-                                   loginPopupModal.classList.add('show');
-                                }, 10);
-                            } else if (loginPopupModal) {
-                                loginPopupModal.classList.add('hidden');
-                            }
-                        } catch (error) {
-                            console.error("Error fetching user data for login prompt:", error);
-                            if (loginPopupModal) {
-                                loginPopupModal.classList.remove('hidden');
-                                setTimeout(() => {
-                                    loginPopupModal.classList.add('show');
-                                }, 10);
+                    // For anonymous users, load data directly from the blueprint
+                    categories = await getCannedResponsesBlueprint();
+                    
+                    if (Object.keys(categories).length > 0) {
+                        const existingCategoryNames = Object.keys(categories);
+                        if (!existingCategoryNames.includes(activeCategory)) {
+                               activeCategory = existingCategoryNames[0];
+                        }
+                    }
+                    renderContent();
+
+                } else {
+                    // Hide the popup if the user is not anonymous
+                    loginPopupModal.classList.add('hidden');
+
+                    // Check for tutorial flag for signed-in users
+                    const userDocRef = getUserRootDocRef(userId);
+                    const userDoc = await getDoc(userDocRef);
+                    const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
+
+                    if (!tutorialSeen) {
+                        tutorialModal.classList.remove('hidden');
+                        showTutorialStep(0); // Start the tutorial at the beginning
+                    } else {
+                        tutorialModal.classList.add('hidden');
+                    }
+                    
+                    const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+                    
+                    cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
+                        if (doc.exists()) {
+                            categories = doc.data().categories || {};
+                        } else {
+                            // User has no private data, so initialize it from the in-memory blueprint
+                            try {
+                                const blueprint = await getCannedResponsesBlueprint();
+                                categories = JSON.parse(JSON.stringify(blueprint));
+                                await setDoc(userCannedResponsesDocRef, { categories: categories });
+                                console.log("Migrated default data to Firestore for new user.");
+                            } catch (error) {
+                                console.error("Error migrating data for new user:", error);
                             }
                         }
                         
-                        categories = await getCannedResponsesBlueprint();
-                        
+                        for (const key in categories) {
+                            if (!categories[key].responses) {
+                                categories[key].responses = [];
+                            }
+                        }
+
                         if (Object.keys(categories).length > 0) {
                             const existingCategoryNames = Object.keys(categories);
                             if (!existingCategoryNames.includes(activeCategory)) {
@@ -1640,729 +2071,555 @@
                             }
                         }
                         renderContent();
-
-                    } else {
-                        if (loginPopupModal) loginPopupModal.classList.add('hidden');
-
-                        const userDocRef = getUserRootDocRef(userId);
-                        const userDoc = await getDoc(userDocRef);
-                        const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
-
-                        if (!tutorialSeen) {
-                            if (tutorialModal) tutorialModal.classList.remove('hidden');
-                            showTutorialStep(0);
-                        } else {
-                            if (tutorialModal) tutorialModal.classList.add('hidden');
-                        }
-                        
-                        const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
-                        
-                        cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
-                            if (doc.exists()) {
-                                categories = doc.data().categories || {};
-                            } else {
-                                try {
-                                    const blueprint = await getCannedResponsesBlueprint();
-                                    categories = JSON.parse(JSON.stringify(blueprint));
-                                    await setDoc(userCannedResponsesDocRef, { categories: categories });
-                                    console.log("Migrated default data to Firestore for new user.");
-                                } catch (error) {
-                                    console.error("Error migrating data for new user:", error);
-                                }
-                            }
-                            
-                            for (const key in categories) {
-                                if (!categories[key].responses) {
-                                    categories[key].responses = [];
-                                }
-                            }
-
-                            if (Object.keys(categories).length > 0) {
-                                const existingCategoryNames = Object.keys(categories);
-                                if (!existingCategoryNames.includes(activeCategory)) {
-                                        activeCategory = existingCategoryNames[0];
-                                }
-                            }
-                            renderContent();
-                        }, (error) => {
-                            console.error("Error with onSnapshot listener:", error);
-                            showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
-                        });
-                    }
-                } else {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Anonymous sign-in failed", error);
-                    }
-                }
-            });
-            
-            // --- Event Listeners ---
-            
-            // Navigation Listeners
-            if (hamburgerMenuBtn) {
-                hamburgerMenuBtn.addEventListener('click', () => {
-                    sidebar.classList.toggle('open');
-                });
-            }
-
-            if (closeSidebarBtn) {
-                closeSidebarBtn.addEventListener('click', () => {
-                    sidebar.classList.remove('open');
-                });
-            }
-
-            if (navCannedResponses) {
-                navCannedResponses.addEventListener('click', () => {
-                    currentPage = 'canned-responses';
-                    renderContent();
-                    sidebar.classList.remove('open');
-                });
-            }
-
-            if (navFedexTracker) {
-                navFedexTracker.addEventListener('click', () => {
-                    currentPage = 'fedex-tracker';
-                    renderContent();
-                    sidebar.classList.remove('open');
-                });
-            }
-
-            if (navHelpfulLinks) {
-                navHelpfulLinks.addEventListener('click', async () => {
-                    currentPage = 'helpful-links';
-                    renderContent();
-                    sidebar.classList.remove('open');
-                });
-            }
-
-            if (navSettings) {
-                navSettings.addEventListener('click', () => {
-                    currentPage = 'settings';
-                    renderContent();
-                    sidebar.classList.remove('open');
-                });
-            }
-
-            // Theme Toggle Listener
-            const themeToggleBtn = document.getElementById('theme-toggle-btn-settings');
-            const themeIcon = document.getElementById('theme-icon-settings');
-
-            if (themeToggleBtn && themeIcon) {
-                themeToggleBtn.addEventListener('click', () => {
-                    document.body.classList.toggle('light-mode');
-                    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-                    const icon = themeToggleBtn.querySelector('i');
-                    icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
-                });
-
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'light') {
-                    document.body.classList.add('light-mode');
-                    themeIcon.className = 'fas fa-sun mr-2';
-                } else {
-                    document.body.classList.remove('light-mode');
-                    themeIcon.className = 'fas fa-moon mr-2';
-                }
-            }
-
-            // Canned Responses Listeners
-            if (categoryList) {
-                categoryList.addEventListener('click', (e) => {
-                    const button = e.target.closest('.category-item');
-                    if (button) {
-                        const newCategory = button.dataset.category;
-                        if (newCategory !== activeCategory) {
-                            activeCategory = newCategory;
-                            renderCategories(); // This will re-render everything
-                        }
-                    }
-                });
-            }
-            
-            if (responsesList) {
-                responsesList.addEventListener('click', (e) => {
-                    const copyBtn = e.target.closest('.copy-btn');
-                    const editBtn = e.target.closest('.edit-btn');
-                    const deleteBtn = e.target.closest('.delete-btn');
-                    const pinBtn = e.target.closest('.pin-btn');
-
-                    if (copyBtn) {
-                        const responseItem = copyBtn.closest('.response-item');
-                        const textToCopy = responseItem.querySelector('.response-text-display').textContent;
-                        processAndCopy(textToCopy);
-                    }
-                    if (editBtn) {
-                        const responseItem = editBtn.closest('.response-item');
-                        const id = responseItem.dataset.id;
-                        const category = responseItem.dataset.category;
-                        const responseData = categories[category].responses.find(r => r.id === id);
-                        if (responseData) {
-                            editResponseLabelInput.value = responseData.label || '';
-                            editResponseTextInput.value = responseData.text;
-                            editResponseModal.dataset.originalId = responseData.id;
-                            editResponseModal.dataset.originalCategory = category;
-                            
-                            editCategorySelect.innerHTML = '';
-                            const categoryNames = Object.keys(categories);
-                            categoryNames.forEach(catName => {
-                                const option = document.createElement('option');
-                                option.value = catName;
-                                option.textContent = catName;
-                                if (catName === category) {
-                                    option.selected = true;
-                                }
-                                editCategorySelect.appendChild(option);
-                            });
-                            
-                            editResponseModal.classList.remove('hidden');
-                        }
-                    }
-                    if (deleteBtn) {
-                        const responseItem = deleteBtn.closest('.response-item');
-                        responseToDeleteId = responseItem.dataset.id;
-                        const category = responseItem.dataset.category;
-                        deleteModal.dataset.category = category;
-                        deleteModal.classList.remove('hidden');
-                    }
-                    if (pinBtn) {
-                        const responseItem = pinBtn.closest('.response-item');
-                        const id = responseItem.dataset.id;
-                        const category = responseItem.dataset.category;
-                        const responseData = categories[category].responses.find(r => r.id === id);
-                        if (responseData) {
-                            responseData.isPinned = !responseData.isPinned;
-                            saveToFirestore(categories);
-                        }
-                    }
-                });
-            }
-
-            // Add/Edit response modal listeners
-            if (openAddResponseModalBtn) {
-                openAddResponseModalBtn.addEventListener('click', () => {
-                    newResponseModal.classList.remove('hidden');
-                    newResponseLabelInput.value = '';
-                    newResponseTextInput.value = '';
+                    }, (error) => {
+                        console.error("Error with onSnapshot listener:", error);
+                        showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
+                    });
                     
-                    newResponseCategorySelect.innerHTML = '';
+                    // Here is the fix for the disappearing helpful links bug.
+                    // The listener for user-specific links is now set up here, immediately after
+                    // the user is authenticated. It will now fetch and update the userLinks
+                    // array in real-time, regardless of what page the user is viewing.
+                    helpfulLinksUnsubscribe = onSnapshot(linksCollectionRef, (querySnapshot) => {
+                        userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderUserLinks(userLinks);
+                    }, (error) => {
+                        console.error("Error listening for user links:", error);
+                    });
+                }
+            } else {
+                try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Anonymous sign-in failed", error);
+                }
+            }
+        });
+        
+        // --- Event Listeners ---
+        
+        // Navigation Listeners
+        hamburgerMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+
+        navCannedResponses.addEventListener('click', () => {
+            currentPage = 'canned-responses';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navFedexTracker.addEventListener('click', () => {
+            currentPage = 'fedex-tracker';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navHelpfulLinks.addEventListener('click', async () => {
+            currentPage = 'helpful-links';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        navSettings.addEventListener('click', () => {
+            currentPage = 'settings';
+            renderContent();
+            sidebar.classList.remove('open');
+        });
+
+        // Theme Toggle Listener
+        themeToggleBtnSettings.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            const icon = themeToggleBtnSettings.querySelector('i');
+            icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
+        });
+
+        // Canned Responses Listeners
+        categoryList.addEventListener('click', (e) => {
+            const button = e.target.closest('.category-item');
+            if (button) {
+                const newCategory = button.dataset.category;
+                if (newCategory !== activeCategory) {
+                    activeCategory = newCategory;
+                    renderCategories(); // This will re-render everything
+                }
+            }
+        });
+        
+        responsesList.addEventListener('click', (e) => {
+            const copyBtn = e.target.closest('.copy-btn');
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+            const pinBtn = e.target.closest('.pin-btn');
+
+            if (copyBtn) {
+                const responseItem = copyBtn.closest('.response-item');
+                const textToCopy = responseItem.querySelector('.response-text-display').textContent;
+                processAndCopy(textToCopy);
+            }
+            if (editBtn) {
+                const responseItem = editBtn.closest('.response-item');
+                const id = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                const responseData = categories[category].responses.find(r => r.id === id);
+                if (responseData) {
+                    editResponseLabelInput.value = responseData.label || '';
+                    editResponseTextInput.value = responseData.text;
+                    editResponseModal.dataset.originalId = responseData.id;
+                    editResponseModal.dataset.originalCategory = category;
+                    
+                    editCategorySelect.innerHTML = '';
                     const categoryNames = Object.keys(categories);
                     categoryNames.forEach(catName => {
                         const option = document.createElement('option');
                         option.value = catName;
                         option.textContent = catName;
-                        if (catName === activeCategory) {
+                        if (catName === category) {
                             option.selected = true;
                         }
-                        newResponseCategorySelect.appendChild(option);
+                        editCategorySelect.appendChild(option);
                     });
+                    
+                    editResponseModal.classList.remove('hidden');
+                }
+            }
+            if (deleteBtn) {
+                const responseItem = deleteBtn.closest('.response-item');
+                responseToDeleteId = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                deleteModal.dataset.category = category;
+                deleteModal.classList.remove('hidden');
+            }
+            if (pinBtn) {
+                const responseItem = pinBtn.closest('.response-item');
+                const id = responseItem.dataset.id;
+                const category = responseItem.dataset.category;
+                const responseData = categories[category].responses.find(r => r.id === id);
+                if (responseData) {
+                    responseData.isPinned = !responseData.isPinned;
+                    saveToFirestore(categories);
+                }
+            }
+        });
+
+        // Add/Edit response modal listeners
+        openAddResponseModalBtn.addEventListener('click', () => {
+            newResponseModal.classList.remove('hidden');
+            newResponseLabelInput.value = '';
+            newResponseTextInput.value = '';
+            
+            newResponseCategorySelect.innerHTML = '';
+            const categoryNames = Object.keys(categories);
+            categoryNames.forEach(catName => {
+                const option = document.createElement('option');
+                option.value = catName;
+                option.textContent = catName;
+                if (catName === activeCategory) {
+                    option.selected = true;
+                }
+                newResponseCategorySelect.appendChild(option);
+            });
+        });
+        
+        cancelNewResponseBtn.addEventListener('click', () => {
+            newResponseModal.classList.add('hidden');
+        });
+        
+        saveNewResponseBtn.addEventListener('click', () => {
+            const label = newResponseLabelInput.value;
+            const text = newResponseTextInput.value;
+            const category = newResponseCategorySelect.value;
+            if (text.trim() !== '') {
+                addResponse(text, label, category);
+                newResponseModal.classList.add('hidden');
+            } else {
+                showMessage("Response text cannot be empty.", 'error');
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            editResponseModal.classList.add('hidden');
+            currentEditingId = null;
+        });
+
+        saveEditBtn.addEventListener('click', () => {
+            const id = editResponseModal.dataset.originalId;
+            const oldCategory = editResponseModal.dataset.originalCategory;
+            const newLabel = editResponseLabelInput.value;
+            const newText = editResponseTextInput.value;
+            const newCategory = editCategorySelect.value;
+            if (newText.trim() !== '') {
+                updateResponse(id, newText, newLabel, newCategory, oldCategory);
+                editResponseModal.classList.add('hidden');
+                currentEditingId = null;
+            } else {
+                showMessage("Response text cannot be empty.", 'error');
+            }
+        });
+
+        // Delete confirmation modal listeners
+        deleteConfirmBtn.addEventListener('click', () => {
+            const category = deleteModal.dataset.category;
+            deleteResponse(responseToDeleteId, category);
+            deleteModal.classList.add('hidden');
+        });
+        
+        deleteCancelBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            responseToDeleteId = null;
+        });
+
+        // Search listener
+        searchInput.addEventListener('input', () => {
+            renderResponses(searchInput.value);
+        });
+
+        // Category management listeners
+        addCategoryBtn.addEventListener('click', () => {
+            addCategoryModal.classList.remove('hidden');
+            addCategoryInput.focus();
+        });
+
+        cancelAddCategoryBtn.addEventListener('click', () => {
+            addCategoryModal.classList.add('hidden');
+            addCategoryInput.value = '';
+        });
+
+        confirmAddCategoryBtn.addEventListener('click', () => {
+            const newCategoryName = addCategoryInput.value.trim();
+            if (newCategoryName && !categories[newCategoryName]) {
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                updatedCategories[newCategoryName] = { color: '#60a5fa', responses: [] };
+                saveToFirestore(updatedCategories);
+                activeCategory = newCategoryName;
+                addCategoryModal.classList.add('hidden');
+                addCategoryInput.value = '';
+                showMessage("Category created successfully!");
+            } else if (categories[newCategoryName]) {
+                showMessage("Category already exists.", 'error');
+            }
+        });
+
+        categoryActionsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            categoryActionsMenu.classList.toggle('hidden');
+            categoryActionsBtn.classList.toggle('active');
+        });
+
+        renameCategoryBtn.addEventListener('click', () => {
+            editCategoryModal.classList.remove('hidden');
+            editCategoryInput.value = activeCategory;
+            categoryToEdit = activeCategory;
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        cancelEditCategoryBtn.addEventListener('click', () => {
+            editCategoryModal.classList.add('hidden');
+        });
+
+        confirmEditCategoryBtn.addEventListener('click', () => {
+            const newName = editCategoryInput.value.trim();
+            if (newName && newName !== categoryToEdit) {
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                if (updatedCategories[newName]) {
+                    showMessage("A category with that name already exists.", 'error');
+                    return;
+                }
+                const oldCategoryData = updatedCategories[categoryToEdit];
+                delete updatedCategories[categoryToEdit];
+                updatedCategories[newName] = oldCategoryData;
+                saveToFirestore(updatedCategories);
+                activeCategory = newName;
+                editCategoryModal.classList.add('hidden');
+                showMessage("Category renamed successfully!");
+            } else {
+                editCategoryModal.classList.add('hidden');
+            }
+        });
+
+        deleteCategoryBtn.addEventListener('click', () => {
+            deleteCategoryModal.classList.remove('hidden');
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        cancelDeleteCategoryBtn.addEventListener('click', () => {
+            deleteCategoryModal.classList.add('hidden');
+        });
+
+        confirmDeleteCategoryBtn.addEventListener('click', () => {
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            delete updatedCategories[activeCategory];
+            const categoryNames = Object.keys(updatedCategories);
+            activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
+            saveToFirestore(updatedCategories);
+            deleteCategoryModal.classList.add('hidden');
+            showMessage("Category deleted successfully!");
+        });
+
+        changeColorBtn.addEventListener('click', () => {
+            colorPickerModal.classList.remove('hidden');
+            const currentColor = categories[activeCategory]?.color || '#60a5fa';
+            colorInput.value = currentColor;
+            categoryActionsMenu.classList.add('hidden');
+        });
+
+        closeColorPickerBtn.addEventListener('click', () => {
+            colorPickerModal.classList.add('hidden');
+        });
+
+        saveColorBtn.addEventListener('click', () => {
+            const newColor = colorInput.value;
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            if (updatedCategories[activeCategory]) {
+                updatedCategories[activeCategory].color = newColor;
+                saveToFirestore(updatedCategories);
+                colorPickerModal.classList.add('hidden');
+                showMessage("Color updated successfully!");
+            }
+        });
+
+        // FedEx tracker listeners
+        const extractAndDisplayNumbers = () => {
+            const text = inputTextareaFedex.value;
+            const matches = text.match(fedexRegex) || [];
+            const uniqueMatches = [...new Set(matches)]; // Get unique numbers
+
+            trackingNumbersContainer.innerHTML = '';
+            if (uniqueMatches.length > 0) {
+                noNumbersMessage.classList.add('hidden');
+                uniqueMatches.forEach(num => {
+                    const div = document.createElement('div');
+                    div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
+                    div.innerHTML = `
+                        <span class="text-sm font-semibold">${num}</span>
+                        <button class="copy-tracking-btn bg-indigo-500 text-white text-xs px-2 py-1 rounded-full hover:bg-indigo-400 transition-colors">
+                            Copy
+                        </button>
+                    `;
+                    trackingNumbersContainer.appendChild(div);
                 });
+            } else {
+                noNumbersMessage.classList.remove('hidden');
             }
             
-            if (cancelNewResponseBtn) {
-                cancelNewResponseBtn.addEventListener('click', () => {
-                    newResponseModal.classList.add('hidden');
+            // Re-attach listeners to new buttons
+            document.querySelectorAll('.copy-tracking-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const number = button.previousElementSibling.textContent;
+                    copyToClipboard(number);
                 });
+            });
+        };
+
+        inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
+
+        clearButtonFedex.addEventListener('click', () => {
+            inputTextareaFedex.value = '';
+            extractAndDisplayNumbers();
+            showMessage('Input cleared!', 'success');
+        });
+
+        copyButtonFedex.addEventListener('click', () => {
+            const text = inputTextareaFedex.value;
+            const matches = text.match(fedexRegex) || [];
+            if (matches.length > 0) {
+                const uniqueNumbers = [...new Set(matches)];
+                const numbersToCopy = uniqueNumbers.join('\t'); // Use a tab character as requested
+                copyToClipboard(numbersToCopy);
+                
+                // Join with commas for the URL and encode to handle spaces or other chars
+                const numbersForUrl = uniqueNumbers.join(',');
+                const encodedNumbers = encodeURIComponent(numbersForUrl);
+                
+                // Use the correct FedEx tracking URL and pass all numbers
+                const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
+                window.open(fedexUrl, '_blank');
+            } else {
+                showMessage('No tracking numbers to copy.', 'error');
             }
-            
-            if (saveNewResponseBtn) {
-                saveNewResponseBtn.addEventListener('click', () => {
-                    const label = newResponseLabelInput.value;
-                    const text = newResponseTextInput.value;
-                    const category = newResponseCategorySelect.value;
-                    if (text.trim() !== '') {
-                        addResponse(text, label, category);
-                        newResponseModal.classList.add('hidden');
-                    } else {
-                        showMessage("Response text cannot be empty.", 'error');
-                    }
-                });
+        });
+
+        // Import/Export Listeners
+        importExportBtnSettings.addEventListener('click', () => {
+            importExportModal.classList.remove('hidden');
+        });
+
+        closeImportExportModalBtn.addEventListener('click', () => {
+            importExportModal.classList.add('hidden');
+        });
+
+        exportBtn.addEventListener('click', () => {
+            exportData();
+        });
+
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                importData(file);
+            }
+        });
+
+        // Helpful Links Listeners
+        linksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!db || !userId || isAnonymous) {
+                showLinksStatus('Please sign in to manage your links.', 'text-yellow-400');
+                return;
             }
 
-            if (cancelEditBtn) {
-                cancelEditBtn.addEventListener('click', () => {
-                    editResponseModal.classList.add('hidden');
-                    currentEditingId = null;
-                });
+            const title = linkTitleInput.value;
+            const url = linkUrlInput.value;
+            const description = linkDescriptionInput.value;
+
+            if (!title || !url) {
+                showLinksStatus('Please fill out all required fields.', 'text-red-400');
+                return;
             }
 
-            if (saveEditBtn) {
-                saveEditBtn.addEventListener('click', () => {
-                    const id = editResponseModal.dataset.originalId;
-                    const oldCategory = editResponseModal.dataset.originalCategory;
-                    const newLabel = editResponseLabelInput.value;
-                    const newText = editResponseTextInput.value;
-                    const newCategory = editCategorySelect.value;
-                    if (newText.trim() !== '') {
-                        updateResponse(id, newText, newLabel, newCategory, oldCategory);
-                        editResponseModal.classList.add('hidden');
-                        currentEditingId = null;
-                    } else {
-                        showMessage("Response text cannot be empty.", 'error');
-                    }
-                });
-            }
-
-            // Delete confirmation modal listeners
-            if (deleteConfirmBtn) {
-                deleteConfirmBtn.addEventListener('click', () => {
-                    const category = deleteModal.dataset.category;
-                    deleteResponse(responseToDeleteId, category);
-                    deleteModal.classList.add('hidden');
-                });
-            }
-            
-            if (deleteCancelBtn) {
-                deleteCancelBtn.addEventListener('click', () => {
-                    deleteModal.classList.add('hidden');
-                    responseToDeleteId = null;
-                });
-            }
-
-            // Search listener
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    renderResponses(searchInput.value);
-                });
-            }
-
-            // Category management listeners
-            if (addCategoryBtn) {
-                addCategoryBtn.addEventListener('click', () => {
-                    addCategoryModal.classList.remove('hidden');
-                    addCategoryInput.focus();
-                });
-            }
-
-            if (cancelAddCategoryBtn) {
-                cancelAddCategoryBtn.addEventListener('click', () => {
-                    addCategoryModal.classList.add('hidden');
-                    addCategoryInput.value = '';
-                });
-            }
-
-            if (confirmAddCategoryBtn) {
-                confirmAddCategoryBtn.addEventListener('click', () => {
-                    const newCategoryName = addCategoryInput.value.trim();
-                    if (newCategoryName && !categories[newCategoryName]) {
-                        const updatedCategories = JSON.parse(JSON.stringify(categories));
-                        updatedCategories[newCategoryName] = { color: '#60a5fa', responses: [] };
-                        saveToFirestore(updatedCategories);
-                        activeCategory = newCategoryName;
-                        addCategoryModal.classList.add('hidden');
-                        addCategoryInput.value = '';
-                        showMessage("Category created successfully!");
-                    } else if (categories[newCategoryName]) {
-                        showMessage("Category already exists.", 'error');
-                    }
-                });
-            }
-
-            if (categoryActionsBtn) {
-                categoryActionsBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    categoryActionsMenu.classList.toggle('hidden');
-                    categoryActionsBtn.classList.toggle('active');
-                });
-            }
-
-            if (renameCategoryBtn) {
-                renameCategoryBtn.addEventListener('click', () => {
-                    editCategoryModal.classList.remove('hidden');
-                    editCategoryInput.value = activeCategory;
-                    categoryToEdit = activeCategory;
-                    categoryActionsMenu.classList.add('hidden');
-                });
-            }
-
-            if (cancelEditCategoryBtn) {
-                cancelEditCategoryBtn.addEventListener('click', () => {
-                    editCategoryModal.classList.add('hidden');
-                });
-            }
-
-            if (confirmEditCategoryBtn) {
-                confirmEditCategoryBtn.addEventListener('click', () => {
-                    const newName = editCategoryInput.value.trim();
-                    if (newName && newName !== categoryToEdit) {
-                        const updatedCategories = JSON.parse(JSON.stringify(categories));
-                        if (updatedCategories[newName]) {
-                            showMessage("A category with that name already exists.", 'error');
-                            return;
-                        }
-                        const oldCategoryData = updatedCategories[categoryToEdit];
-                        delete updatedCategories[categoryToEdit];
-                        updatedCategories[newName] = oldCategoryData;
-                        saveToFirestore(updatedCategories);
-                        activeCategory = newName;
-                        editCategoryModal.classList.add('hidden');
-                        showMessage("Category renamed successfully!");
-                    } else {
-                        editCategoryModal.classList.add('hidden');
-                    }
-                });
-            }
-
-            if (deleteCategoryBtn) {
-                deleteCategoryBtn.addEventListener('click', () => {
-                    deleteCategoryModal.classList.remove('hidden');
-                    categoryActionsMenu.classList.add('hidden');
-                });
-            }
-
-            if (cancelDeleteCategoryBtn) {
-                cancelDeleteCategoryBtn.addEventListener('click', () => {
-                    deleteCategoryModal.classList.add('hidden');
-                });
-            }
-
-            if (confirmDeleteCategoryBtn) {
-                confirmDeleteCategoryBtn.addEventListener('click', () => {
-                    const updatedCategories = JSON.parse(JSON.stringify(categories));
-                    delete updatedCategories[activeCategory];
-                    const categoryNames = Object.keys(updatedCategories);
-                    activeCategory = categoryNames.length > 0 ? categoryNames[0] : '';
-                    saveToFirestore(updatedCategories);
-                    deleteCategoryModal.classList.add('hidden');
-                    showMessage("Category deleted successfully!");
-                });
-            }
-
-            if (changeColorBtn) {
-                changeColorBtn.addEventListener('click', () => {
-                    colorPickerModal.classList.remove('hidden');
-                    const currentColor = categories[activeCategory]?.color || '#60a5fa';
-                    colorInput.value = currentColor;
-                    categoryActionsMenu.classList.add('hidden');
-                });
-            }
-
-            if (closeColorPickerBtn) {
-                closeColorPickerBtn.addEventListener('click', () => {
-                    colorPickerModal.classList.add('hidden');
-                });
-            }
-
-            if (saveColorBtn) {
-                saveColorBtn.addEventListener('click', () => {
-                    const newColor = colorInput.value;
-                    const updatedCategories = JSON.parse(JSON.stringify(categories));
-                    if (updatedCategories[activeCategory]) {
-                        updatedCategories[activeCategory].color = newColor;
-                        saveToFirestore(updatedCategories);
-                        colorPickerModal.classList.add('hidden');
-                        showMessage("Color updated successfully!");
-                    }
-                });
-            }
-
-            // FedEx tracker listeners
-            const extractAndDisplayNumbers = () => {
-                const text = inputTextareaFedex.value;
-                const matches = text.match(fedexRegex) || [];
-                const uniqueMatches = [...new Set(matches)]; // Get unique numbers
-
-                trackingNumbersContainer.innerHTML = '';
-                if (uniqueMatches.length > 0) {
-                    noNumbersMessage.classList.add('hidden');
-                    uniqueMatches.forEach(num => {
-                        const div = document.createElement('div');
-                        div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
-                        div.innerHTML = `
-                            <span class="text-sm font-semibold">${num}</span>
-                            <button class="copy-tracking-btn bg-indigo-500 text-white text-xs px-2 py-1 rounded-full hover:bg-indigo-400 transition-colors">
-                                Copy
-                            </button>
-                        `;
-                        trackingNumbersContainer.appendChild(div);
+            try {
+                if (editingLinkDocId) {
+                    showLinksStatus('Updating link...', 'text-yellow-400');
+                    const docRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'helpful_links_data', editingLinkDocId);
+                    await updateDoc(docRef, {
+                        title: title,
+                        url: url,
+                        description: description,
                     });
+                    showLinksStatus('Link updated successfully!', 'text-green-400');
                 } else {
-                    noNumbersMessage.classList.remove('hidden');
+                    showLinksStatus('Adding link...', 'text-yellow-400');
+                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+                    await addDoc(linksCollectionRef, {
+                        title: title,
+                        url: url,
+                        description: description,
+                        createdAt: new Date()
+                    });
+                    showLinksStatus('Link added successfully!', 'text-green-400');
+                }
+                resetLinksForm();
+
+            } catch (error) {
+                console.error("Error during link operation:", error);
+                showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
+            }
+        });
+
+        linksCancelButton.addEventListener('click', () => {
+            resetLinksForm();
+        });
+
+        // Placeholder modal listeners
+        confirmPlaceholderBtn.addEventListener('click', () => {
+            const inputs = placeholderInputsContainer.querySelectorAll('input, textarea');
+            const userValues = {};
+            inputs.forEach(input => {
+                const key = input.id.replace('placeholder-', '');
+                userValues[key] = input.value;
+            });
+            const finalContent = replacePlaceholders(currentTextToCopy, userValues);
+            copyToClipboard(finalContent);
+            placeholderModal.classList.add('hidden');
+        });
+
+        cancelPlaceholderBtn.addEventListener('click', () => {
+            placeholderModal.classList.add('hidden');
+        });
+        
+        // Settings page buttons
+        signInBtn.addEventListener('click', async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showMessage("Signed in with Google!");
+            } catch (error) {
+                console.error("Google sign-in failed", error);
+                showMessage("Google sign-in failed. Please try again.", 'error');
+            }
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showMessage("Signed out successfully!");
+                // After signing out, sign in as an anonymous user to allow for core functionality
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Sign out failed", error);
+                showMessage("Sign out failed. Please try again.", 'error');
+            }
+        });
+
+        checkUpdatesBtnSettings.addEventListener('click', async () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to check for updates.", "error");
+                return;
+            }
+
+            updateModal.classList.remove('hidden');
+            updateModalTitle.textContent = "Checking for Updates...";
+            updateModalMessage.textContent = "Please wait while we check for new content.";
+            updateModalButtons.classList.add('hidden');
+
+            try {
+                const blueprint = await getCannedResponsesBlueprint();
+                let hasUpdates = false;
+                const updatedCategories = JSON.parse(JSON.stringify(categories));
+                let changesMade = false;
+                let newCategoryCount = 0;
+                let newResponseCount = 0;
+
+                // Check for new categories
+                for (const cat in blueprint) {
+                    if (!updatedCategories[cat]) {
+                        updatedCategories[cat] = blueprint[cat];
+                        newCategoryCount++;
+                        changesMade = true;
+                    }
                 }
                 
-                // Re-attach listeners to new buttons
-                document.querySelectorAll('.copy-tracking-btn').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const number = button.previousElementSibling.textContent;
-                        copyToClipboard(number);
-                    });
-                });
-            };
-
-            if(inputTextareaFedex) {
-                inputTextareaFedex.addEventListener('input', extractAndDisplayNumbers);
-            }
-
-            if(clearButtonFedex) {
-                clearButtonFedex.addEventListener('click', () => {
-                    inputTextareaFedex.value = '';
-                    extractAndDisplayNumbers();
-                    showMessage('Input cleared!', 'success');
-                });
-            }
-
-            if(copyButtonFedex) {
-                copyButtonFedex.addEventListener('click', () => {
-                    const text = inputTextareaFedex.value;
-                    const matches = text.match(fedexRegex) || [];
-                    if (matches.length > 0) {
-                        const uniqueNumbers = [...new Set(matches)];
-                        const numbersToCopy = uniqueNumbers.join('\t'); // Use a tab character as requested
-                        copyToClipboard(numbersToCopy);
-                        
-                        // Join with commas for the URL and encode to handle spaces or other chars
-                        const numbersForUrl = uniqueNumbers.join(',');
-                        const encodedNumbers = encodeURIComponent(numbersForUrl);
-                        
-                        // Use the correct FedEx tracking URL and pass all numbers
-                        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-                        window.open(fedexUrl, '_blank');
-                    } else {
-                        showMessage('No tracking numbers to copy.', 'error');
-                    }
-                });
-            }
-
-            // Import/Export Listeners
-            if(importExportBtnSettings) {
-                importExportBtnSettings.addEventListener('click', () => {
-                    importExportModal.classList.remove('hidden');
-                });
-            }
-
-            if(closeImportExportModalBtn) {
-                closeImportExportModalBtn.addEventListener('click', () => {
-                    importExportModal.classList.add('hidden');
-                });
-            }
-
-            if(exportBtn) {
-                exportBtn.addEventListener('click', () => {
-                    exportData();
-                });
-            }
-
-            if(importFileInput) {
-                importFileInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        importData(file);
-                    }
-                });
-            }
-            
-            // Placeholder modal listeners
-            if(confirmPlaceholderBtn) {
-                confirmPlaceholderBtn.addEventListener('click', () => {
-                    const inputs = placeholderInputsContainer.querySelectorAll('input, textarea');
-                    const userValues = {};
-                    inputs.forEach(input => {
-                        const key = input.id.replace('placeholder-', '');
-                        userValues[key] = input.value;
-                    });
-                    const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-                    copyToClipboard(finalContent);
-                    placeholderModal.classList.add('hidden');
-                });
-            }
-
-            if(cancelPlaceholderBtn) {
-                cancelPlaceholderBtn.addEventListener('click', () => {
-                    placeholderModal.classList.add('hidden');
-                });
-            }
-            
-            // Settings page buttons
-            if(signInBtn) {
-                signInBtn.addEventListener('click', async () => {
-                    try {
-                        const provider = new GoogleAuthProvider();
-                        await signInWithPopup(auth, provider);
-                        showMessage("Signed in with Google!");
-                    } catch (error) {
-                        console.error("Google sign-in failed", error);
-                        showMessage("Google sign-in failed. Please try again.", 'error');
-                    }
-                });
-            }
-
-            if(signOutBtn) {
-                signOutBtn.addEventListener('click', async () => {
-                    try {
-                        await signOut(auth);
-                        showMessage("Signed out successfully!");
-                        // After signing out, sign in as an anonymous user to allow for core functionality
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Sign out failed", error);
-                        showMessage("Sign out failed. Please try again.", 'error');
-                    }
-                });
-            }
-
-            if(checkUpdatesBtnSettings) {
-                checkUpdatesBtnSettings.addEventListener('click', async () => {
-                    if (isAnonymous) {
-                        showMessage("Please sign in to check for updates.", "error");
-                        return;
-                    }
-
-                    updateModal.classList.remove('hidden');
-                    updateModalTitle.textContent = "Checking for Updates...";
-                    updateModalMessage.textContent = "Please wait while we check for new content.";
-                    updateModalButtons.classList.add('hidden');
-
-                    try {
-                        const blueprint = await getCannedResponsesBlueprint();
-                        let hasUpdates = false;
-                        const updatedCategories = JSON.parse(JSON.stringify(categories));
-                        let changesMade = false;
-                        let newCategoryCount = 0;
-                        let newResponseCount = 0;
-
-                        // Check for new categories
-                        for (const cat in blueprint) {
-                            if (!updatedCategories[cat]) {
-                                updatedCategories[cat] = blueprint[cat];
-                                newCategoryCount++;
-                                changesMade = true;
-                            }
-                        }
-                        
-                        // Check for new responses within existing categories
-                        for (const cat in blueprint) {
-                            if (updatedCategories[cat]) {
-                                const existingResponses = updatedCategories[cat].responses.map(r => r.id);
-                                const newResponses = blueprint[cat].responses.filter(r => !existingResponses.includes(r.id));
-                                if (newResponses.length > 0) {
-                                    updatedCategories[cat].responses.push(...newResponses);
-                                    newResponseCount += newResponses.length;
-                                    changesMade = true;
-                                }
-                            }
-                        }
-                        
-                        if (changesMade) {
-                            await saveToFirestore(updatedCategories);
-                            updateModalTitle.textContent = "Updates Found!";
-                            updateModalMessage.innerHTML = `
-                                <p>${newCategoryCount} new categories and ${newResponseCount} new responses were added.</p>
-                                <p class="mt-2">Your data has been updated with the new content.</p>
-                            `;
-                            updateModalButtons.classList.remove('hidden');
-                        } else {
-                            updateModalTitle.textContent = "No Updates Found";
-                            updateModalMessage.textContent = "Your content is already up to date.";
-                            updateModalButtons.classList.remove('hidden');
-                        }
-                    } catch (error) {
-                        console.error("Error checking for updates:", error);
-                        updateModalTitle.textContent = "Update Failed";
-                        updateModalMessage.textContent = "There was an error checking for updates. Please try again later.";
-                        updateModalButtons.classList.remove('hidden');
-                    }
-                });
-            }
-
-            if(closeUpdateBtn) {
-                closeUpdateBtn.addEventListener('click', () => {
-                    updateModal.classList.add('hidden');
-                });
-            }
-
-            // Login modal button listeners
-            if (closeLoginPopupBtn) {
-                closeLoginPopupBtn.addEventListener('click', async () => {
-                    if (loginPopupModal) {
-                        loginPopupModal.classList.remove('show');
-                        loginPopupModal.classList.add('hidden');
-                    }
-                    if (userId) {
-                        const userDocRef = getUserRootDocRef(userId);
-                        try {
-                            await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
-                        } catch (error) {
-                            console.error("Error setting hasSeenLoginPrompt flag:", error);
+                // Check for new responses within existing categories
+                for (const cat in blueprint) {
+                    if (updatedCategories[cat]) {
+                        const existingResponses = updatedCategories[cat].responses.map(r => r.id);
+                        const newResponses = blueprint[cat].responses.filter(r => !existingResponses.includes(r.id));
+                        if (newResponses.length > 0) {
+                            updatedCategories[cat].responses.push(...newResponses);
+                            newResponseCount += newResponses.length;
+                            changesMade = true;
                         }
                     }
-                });
+                }
+                
+                if (changesMade) {
+                    await saveToFirestore(updatedCategories);
+                    updateModalTitle.textContent = "Updates Found!";
+                    updateModalMessage.innerHTML = `
+                        <p>${newCategoryCount} new categories and ${newResponseCount} new responses were added.</p>
+                        <p class="mt-2">Your data has been updated with the new content.</p>
+                    `;
+                    updateModalButtons.classList.remove('hidden');
+                } else {
+                    updateModalTitle.textContent = "No Updates Found";
+                    updateModalMessage.textContent = "Your content is already up to date.";
+                    updateModalButtons.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error checking for updates:", error);
+                updateModalTitle.textContent = "Update Failed";
+                updateModalMessage.textContent = "There was an error checking for updates. Please try again later.";
+                updateModalButtons.classList.remove('hidden');
             }
+        });
 
-            if (loginPopupBtn) {
-                loginPopupBtn.addEventListener('click', async () => {
-                    if (loginPopupModal) {
-                        loginPopupModal.classList.remove('show');
-                        loginPopupModal.classList.add('hidden');
-                    }
-                    if (userId) {
-                        const userDocRef = getUserRootDocRef(userId);
-                        try {
-                            await setDoc(userDocRef, { hasSeenLoginPrompt: true }, { merge: true });
-                        } catch (error) {
-                            console.error("Error setting hasSeenLoginPrompt flag:", error);
-                        }
-                    }
-                    try {
-                        const provider = new GoogleAuthProvider();
-                        await signInWithPopup(auth, provider);
-                        showMessage("Signed in with Google!");
-                    } catch (error) {
-                        console.error("Google sign-in failed", error);
-                        showMessage("Google sign-in failed. Please try again.", 'error');
-                    }
-                });
-            }
-
-            // Tutorial event listeners
-            if (tutorialNextBtn) {
-                tutorialNextBtn.addEventListener('click', () => {
-                    if (currentTutorialStep < tutorialSteps.length - 1) {
-                        showTutorialStep(currentTutorialStep + 1);
-                    }
-                });
-            }
-        
-            if (tutorialBackBtn) {
-                tutorialBackBtn.addEventListener('click', () => {
-                    if (currentTutorialStep > 0) {
-                        showTutorialStep(currentTutorialStep - 1);
-                    }
-                });
-            }
-
-            if (tutorialFinishBtn) {
-                tutorialFinishBtn.addEventListener('click', async () => {
-                    if (tutorialModal) tutorialModal.classList.add('hidden');
-                    if (userId) {
-                        const userDocRef = getUserRootDocRef(userId);
-                        try {
-                            await setDoc(userDocRef, { tutorialSeen: true }, { merge: true });
-                        } catch (error) {
-                            console.error("Error setting tutorialSeen flag:", error);
-                        }
-                    }
-                });
-            }
-
-            if (showTutorialBtn) {
-                showTutorialBtn.addEventListener('click', async () => {
-                    if (userId && !isAnonymous) {
-                        const userDocRef = getUserRootDocRef(userId);
-                        try {
-                            await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
-                            if (tutorialModal) tutorialModal.classList.remove('hidden');
-                            showTutorialStep(0); // Reset and show the first step
-                        } catch (error) {
-                            console.error("Error resetting tutorialSeen flag:", error);
-                            showMessage("Error showing tutorial. Please try again.", 'error');
-                        }
-                    } else {
-                        showMessage("Please sign in to view the tutorial.", 'error');
-                    }
-                });
-            }
-        }
+        closeUpdateBtn.addEventListener('click', () => {
+            updateModal.classList.add('hidden');
+        });
         
     </script>
 </body>
