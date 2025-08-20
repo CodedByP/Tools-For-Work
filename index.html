@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -177,7 +177,7 @@
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                              radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -2067,7 +2067,7 @@
                         if (Object.keys(categories).length > 0) {
                             const existingCategoryNames = Object.keys(categories);
                             if (!existingCategoryNames.includes(activeCategory)) {
-                                 activeCategory = existingCategoryNames[0];
+                                   activeCategory = existingCategoryNames[0];
                             }
                         }
                         renderContent();
@@ -2429,11 +2429,15 @@
             const matches = text.match(fedexRegex) || [];
             if (matches.length > 0) {
                 const uniqueNumbers = [...new Set(matches)];
-                const numbersToCopy = uniqueNumbers.join(' ');
+                const numbersToCopy = uniqueNumbers.join('\t'); // Use a tab character as requested
                 copyToClipboard(numbersToCopy);
                 
-                // Open FedEx tracking page
-                const fedexUrl = `https://www.fedex.com/fedextrack/?action=track&trackingnumber=${uniqueNumbers[0]}`;
+                // Join with commas for the URL and encode to handle spaces or other chars
+                const numbersForUrl = uniqueNumbers.join(',');
+                const encodedNumbers = encodeURIComponent(numbersForUrl);
+                
+                // Use the correct FedEx tracking URL and pass all numbers
+                const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
                 window.open(fedexUrl, '_blank');
             } else {
                 showMessage('No tracking numbers to copy.', 'error');
