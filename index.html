@@ -2520,7 +2520,7 @@
             const inputs = placeholderInputsContainer.querySelectorAll('input, textarea');
             const userValues = {};
             inputs.forEach(input => {
-                const key = input.id.replace('placeholder-', '');
+                const key = input.dataset.placeholder;
                 userValues[key] = input.value;
             });
             const finalContent = replacePlaceholders(currentTextToCopy, userValues);
