@@ -1869,11 +1869,11 @@
             const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
             const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
 
-            if (!isClickInsideCategoryActions) {
+            if (!categoryActionsMenu.contains(event.target) && !categoryActionsBtn.contains(event.target)) {
                 categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
-                const categoryActionsBtn = document.getElementById('category-actions-btn');
-                if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
+                categoryActionsBtn.classList.remove('active');
             }
+
             if (!isClickInsideMeatballsMenu) {
                 const allMenus = document.querySelectorAll('.meatballs-menu');
                 allMenus.forEach(m => m.classList.add('hidden'));
@@ -2309,8 +2309,10 @@
         categoryActionsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             categoryActionsMenu.classList.toggle('hidden');
+            categoryActionsMenu.classList.toggle('scale-95');
+            categoryActionsMenu.classList.toggle('opacity-0');
             categoryActionsBtn.classList.toggle('active');
-        });
+         });
 
         renameCategoryBtn.addEventListener('click', () => {
             editCategoryModal.classList.remove('hidden');
