@@ -1748,18 +1748,23 @@
             }
         };
 
-        function listenForUserLinks() {
-            if (!db || !userId || isAnonymous) {
+        // FIX: Moved the listener setup to its own function
+        function setupLinksListener(uid) {
+            if (!db || !uid) {
                 console.error("Firestore or User ID not available, or user is anonymous.");
                 return;
             }
             
-            const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+            // Unsubscribe the previous listener if it exists
+            if (helpfulLinksUnsubscribe) {
+              helpfulLinksUnsubscribe();
+            }
+
+            const linksCollectionRef = getUserHelpfulLinksCollectionRef(uid);
             const q = query(linksCollectionRef);
 
             helpfulLinksUnsubscribe = onSnapshot(q, (querySnapshot) => {
                 userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Now call the dedicated render function with the updated data
                 renderUserLinks(userLinks);
             }, (error) => {
                 console.error("Error listening for documents:", error);
@@ -1987,6 +1992,7 @@
               cannedResponsesUnsubscribe();
               cannedResponsesUnsubscribe = null;
             }
+            // FIX: Unsubscribe from the helpful links listener before re-attaching
             if (helpfulLinksUnsubscribe) {
               helpfulLinksUnsubscribe();
               helpfulLinksUnsubscribe = null;
@@ -2039,6 +2045,9 @@
                         }
                     }
                     renderContent();
+                    // FIX: Anonymous users should not have a listener for helpful links
+                    // We'll call renderUserLinks directly with an empty array or no data
+                    renderUserLinks([]);
 
                 } else {
                     // Hide the popup if the user is not anonymous
@@ -2057,7 +2066,6 @@
                     }
                     
                     const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
-                    const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                     
                     cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
                         if (doc.exists()) {
@@ -2092,17 +2100,8 @@
                         showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
                     });
                     
-                    // Here is the fix for the disappearing helpful links bug.
-                    // The listener for user-specific links is now set up here, immediately after
-                    // the user is authenticated. It will now fetch and update the userLinks
-                    // array in real-time, regardless of what page the user is viewing.
-                    helpfulLinksUnsubscribe = onSnapshot(linksCollectionRef, (querySnapshot) => {
-                        userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        renderUserLinks(userLinks);
-                    }, (error) => {
-                        console.error("Error listening for user links:", error);
-                        showMessage('Failed to load links. Please try again.', 'text-red-400');
-                    });
+                    // FIX: Call the new function to set up the listener for helpful links
+                    setupLinksListener(userId);
                 }
             } else {
                 try {
