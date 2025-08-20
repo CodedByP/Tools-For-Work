@@ -910,6 +910,10 @@
         let defaultLinks = [];
         let cannedResponsesUnsubscribe = null;
         let helpfulLinksUnsubscribe = null;
+        
+        // Flags to ensure data is loaded before rendering
+        let cannedDataLoaded = false;
+        let linksDataLoaded = false;
 
         // --- Master Blueprint Data for Initialization ---
         const defaultCannedResponsesBlueprint = {
@@ -947,7 +951,7 @@
                     { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
                     { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
                 ]
-            }
+            },
         };
 
         const defaultHelpfulLinksBlueprint = [
@@ -1765,7 +1769,9 @@
 
             helpfulLinksUnsubscribe = onSnapshot(q, (querySnapshot) => {
                 userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderUserLinks(userLinks);
+                // FIX: Instead of rendering immediately, set a flag and call the main render function
+                linksDataLoaded = true;
+                checkAndRender();
             }, (error) => {
                 console.error("Error listening for documents:", error);
                 showLinksStatus('Failed to load links. Please try again.', 'text-red-400');
@@ -1985,6 +1991,13 @@
                 showMessage("Please sign in to view the tutorial.", 'error');
             }
         });
+        
+        // FIX: The main rendering function, called only when both data sources are loaded.
+        const checkAndRender = () => {
+            if (cannedDataLoaded && linksDataLoaded) {
+                renderContent();
+            }
+        }
 
         onAuthStateChanged(auth, async (user) => {
             // Unsubscribe from any previous listeners to prevent duplicates
@@ -1992,11 +2005,14 @@
               cannedResponsesUnsubscribe();
               cannedResponsesUnsubscribe = null;
             }
-            // FIX: Unsubscribe from the helpful links listener before re-attaching
             if (helpfulLinksUnsubscribe) {
               helpfulLinksUnsubscribe();
               helpfulLinksUnsubscribe = null;
             }
+            
+            // Reset data loaded flags
+            cannedDataLoaded = false;
+            linksDataLoaded = false;
         
             if (user) {
                 userId = user.uid;
@@ -2005,13 +2021,10 @@
                 userName = displayName.split(' ')[0].split('@')[0];
                 linksUserInfo.textContent = `User ID: ${userId}`;
 
-                // Render static links only once on auth change, regardless of page
                 defaultLinks = await getHelpfulLinksBlueprint();
                 renderStaticLinks();
                 
-                // Now, check if the user is anonymous AFTER we have the user object
                 if (isAnonymous) {
-                    // Check Firestore for the flag
                     const userDocRef = getUserRootDocRef(userId);
                     try {
                         const userDoc = await getDoc(userDocRef);
@@ -2019,7 +2032,6 @@
                         
                         if (!hasSeenPrompt) {
                             loginPopupModal.classList.remove('hidden');
-                            // Use a setTimeout to allow the CSS transition to play
                             setTimeout(() => {
                                loginPopupModal.classList.add('show');
                             }, 10);
@@ -2028,39 +2040,34 @@
                         }
                     } catch (error) {
                         console.error("Error fetching user data for login prompt:", error);
-                        // Fallback to showing the pop-up if there's an error
                         loginPopupModal.classList.remove('hidden');
                         setTimeout(() => {
                             loginPopupModal.classList.add('show');
                         }, 10);
                     }
                     
-                    // For anonymous users, load data directly from the blueprint
                     categories = await getCannedResponsesBlueprint();
-                    
                     if (Object.keys(categories).length > 0) {
                         const existingCategoryNames = Object.keys(categories);
                         if (!existingCategoryNames.includes(activeCategory)) {
                                activeCategory = existingCategoryNames[0];
                         }
                     }
-                    renderContent();
-                    // FIX: Anonymous users should not have a listener for helpful links
-                    // We'll call renderUserLinks directly with an empty array or no data
-                    renderUserLinks([]);
+                    userLinks = []; // Anonymous users have no custom links
+                    cannedDataLoaded = true;
+                    linksDataLoaded = true;
+                    checkAndRender();
 
                 } else {
-                    // Hide the popup if the user is not anonymous
                     loginPopupModal.classList.add('hidden');
 
-                    // Check for tutorial flag for signed-in users
                     const userDocRef = getUserRootDocRef(userId);
                     const userDoc = await getDoc(userDocRef);
                     const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
 
                     if (!tutorialSeen) {
                         tutorialModal.classList.remove('hidden');
-                        showTutorialStep(0); // Start the tutorial at the beginning
+                        showTutorialStep(0);
                     } else {
                         tutorialModal.classList.add('hidden');
                     }
@@ -2071,7 +2078,6 @@
                         if (doc.exists()) {
                             categories = doc.data().categories || {};
                         } else {
-                            // User has no private data, so initialize it from the in-memory blueprint
                             try {
                                 const blueprint = await getCannedResponsesBlueprint();
                                 categories = JSON.parse(JSON.stringify(blueprint));
@@ -2094,13 +2100,13 @@
                                     activeCategory = existingCategoryNames[0];
                             }
                         }
-                        renderContent();
+                        cannedDataLoaded = true;
+                        checkAndRender();
                     }, (error) => {
                         console.error("Error with onSnapshot listener:", error);
                         showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
                     });
                     
-                    // FIX: Call the new function to set up the listener for helpful links
                     setupLinksListener(userId);
                 }
             } else {
