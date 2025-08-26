@@ -1529,6 +1529,9 @@ const showTutorialStep = async (stepIndex) => {
             step.classList.remove('hidden');
         }
     });
+
+	clearTutorialHighlights();
+    tutorialModal.classList.remove(...positionClasses);
     // Determine the target page based on the tutorial step
     const targetPage = tutorialPages[stepIndex];
 
@@ -1546,10 +1549,6 @@ const showTutorialStep = async (stepIndex) => {
         });
     }
 	
-    // We now clear the highlights and hide the modal AFTER the page content is rendered.
-    clearTutorialHighlights();
-    tutorialModal.classList.remove(...positionClasses);
-
     const currentStepElement = tutorialSteps[stepIndex];
     if (currentStepElement) {
         currentStepElement.classList.remove('hidden');
