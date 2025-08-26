@@ -1148,7 +1148,7 @@ let userId = null;
 let isAnonymous = true;
 let responseToDeleteId = null;
 let categoryToEdit = null;
-let currentPage = 'canned-responses';
+let currentPage = localStorage.getItem('currentPage') || 'canned-responses';
 let userName = '';
 let currentTextToCopy = '';
 let currentEditingId = null;
@@ -1389,6 +1389,13 @@ const showMessage = (text, type = 'success') => {
     document.querySelectorAll('.highlight-target').forEach(el => {
         el.classList.remove('highlight-target');
     });
+};
+
+const navigateTo = (page) => {
+    currentPage = page;
+    localStorage.setItem('currentPage', page); // Save the current page
+    renderContent();
+    closeSidebar();
 };		
 
 // Add this new function to your helper functions section
@@ -1486,61 +1493,26 @@ const renderLinks = (searchQuery = '') => {
 		
 
 // This is the new, combined function that handles all tutorial logic
+// This is the new, combined function that handles all tutorial logic
 const showTutorialStep = async (stepIndex) => {
-	    isTutorialActive = true;
-    // Define the elements and their positions for each step
-    const highlightedElements = [
-        null, // Step 0 (Welcome)
-        document.getElementById('add-response-section'), // Step 1: Add New Response
-        document.getElementById('search-bar-container'), // Step 2: Search Bar
-        document.getElementById('category-bar'), // Step 3: Categories
-        document.getElementById('category-menu-container'), // Step 4: Kebab menu
-        null, // Step 5: Will find dynamically below
-        null, // Step 6: Will find dynamically below
-        null, // Step 7: Dynamic Placeholders
-        null, // Step 8: Placeholder Demo
-		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
-        document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
-        document.getElementById('copy-button-fedex'), // Step 12: New highlight
-    ];
-    
-    const positionClasses = [
-        'show-modal', // Step 0: Centered modal
-        'top-right',  // Step 1: Add response section
-        'top-right',  // Step 2: Search bar
-        'bottom-left', // Step 3: Category bar
-        'upper-right', // Step 4: Kebab menu
-        'on-response', // Step 5: Manage Responses (new)
-        'on-response', // Step 6: Pin button (new)
-        'left-response', // Step 7: Dynamic placeholders
-        'show-modal', // Step 8: Placeholder demo
-		'top-left',
-        'on-tracker-page', // Step 10: New position
-        'on-tracker-page' // Step 11: Position on the tracker page
-    ];
-
+    isTutorialActive = true;
     const tutorialModal = document.getElementById('tutorial-modal');
     const tutorialOverlay = document.getElementById('tutorial-overlay');
 
-    tutorialSteps.forEach((step, index) => {
-        if (index !== stepIndex) {
-            step.classList.add('hidden');
-        } else {
-            step.classList.remove('hidden');
-        }
-    });
+    // --- Phase 1: Teardown Current Step ---
+    // First, hide the modal and clear all old highlights and positioning. This prevents visual glitches.
+    tutorialModal.classList.add('hidden');
+    tutorialOverlay.classList.add('hidden');
+    clearTutorialHighlights();
+    tutorialModal.classList.remove(...modalPositions);
 
-	clearTutorialHighlights();
-    tutorialModal.classList.remove(...positionClasses);
-    // Determine the target page based on the tutorial step
+    // --- Phase 2: Page Transition ---
     const targetPage = tutorialPages[stepIndex];
-
-    // Check if a page change is required
     if (currentPage !== targetPage) {
         currentPage = targetPage;
+        localStorage.setItem('currentPage', currentPage); // Persist the page state
         
-        // Use a promise to wait for the page to render.
-        // This is the crucial change to fix the race condition.
+        // Asynchronously render the new page and wait for the browser to be ready.
         await new Promise(resolve => {
             renderContent();
             requestAnimationFrame(() => {
@@ -1548,110 +1520,75 @@ const showTutorialStep = async (stepIndex) => {
             });
         });
     }
-	
-    const currentStepElement = tutorialSteps[stepIndex];
-    if (currentStepElement) {
-        currentStepElement.classList.remove('hidden');
 
-        // Dynamically set highlights based on stepIndex
-        if (stepIndex === 5) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
-                buttons.forEach(button => button.classList.add('highlight-target'));
-            }
-        } else if (stepIndex === 6) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                const pinButton = firstResponse.querySelector('.pin-btn');
-                if (pinButton) pinButton.classList.add('highlight-target');
-            }
-        } else if (stepIndex === 7) {
-            const responsesWithPlaceholders = [];
-            if (categories[activeCategory]) {
-                categories[activeCategory].responses.forEach(response => {
+    // --- Phase 3: Setup New Step ---
+    // Now that the correct page is guaranteed to be in the DOM, set up the new step.
+    
+    // Show the correct text for the current step.
+    tutorialSteps.forEach((step, index) => {
+        step.classList.toggle('hidden', index !== stepIndex);
+    });
+
+    // Apply the highlight to the correct element for the current step.
+    // This logic runs *after* the page transition to ensure the elements exist.
+    if (stepIndex === 5) {
+        const firstResponse = document.querySelector('.response-item');
+        if (firstResponse) {
+            const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
+            buttons.forEach(button => button.classList.add('highlight-target'));
+        }
+    } else if (stepIndex === 6) {
+        const firstResponse = document.querySelector('.response-item');
+        if (firstResponse) {
+            const pinButton = firstResponse.querySelector('.pin-btn');
+            if (pinButton) pinButton.classList.add('highlight-target');
+        }
+    } else if (stepIndex === 7) {
+        const responsesWithPlaceholders = [];
+        if (categories[activeCategory] && categories[activeCategory].responses) {
+            categories[activeCategory].responses.forEach(response => {
+                if (response.text.match(/\[([^\]]+)\]/g)) {
+                    responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
+                }
+            });
+        }
+        if (responsesWithPlaceholders.length === 0) {
+            for (const category in categories) {
+                categories[category].responses.forEach(response => {
                     if (response.text.match(/\[([^\]]+)\]/g)) {
-                        responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
+                        const foundResponse = document.querySelector(`.response-item[data-id="${response.id}"]`);
+                        if (foundResponse) {
+                            responsesWithPlaceholders.push(foundResponse);
+                        }
                     }
                 });
             }
-            if (responsesWithPlaceholders.length === 0) {
-                for (const category in categories) {
-                    categories[category].responses.forEach(response => {
-                        if (response.text.match(/\[([^\]]+)\]/g)) {
-                            const foundResponse = document.querySelector(`.response-item[data-id="${response.id}"]`);
-                            if (foundResponse) {
-                                responsesWithPlaceholders.push(foundResponse);
-                            }
-                        }
-                    });
-                }
-            }
-            const responseToHighlight = responsesWithPlaceholders[0];
-            if (responseToHighlight) {
-                responseToHighlight.classList.add('highlight-target');
-                if (responseToHighlight.dataset.category !== activeCategory) {
-                    activeCategory = responseToHighlight.dataset.category;
-                    renderCategories();
-                    const newHighlight = document.querySelector(`.response-item[data-id="${responseToHighlight.dataset.id}"]`);
-                    if (newHighlight) {
-                        newHighlight.classList.add('highlight-target');
-                        newHighlight.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-                } else {
-                    responseToHighlight.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
-            } else {
-                console.warn("No canned response with dynamic placeholders found for the tutorial.");
-            }
-		} else if (stepIndex === 9) { // New logic for the hamburger icon
-		const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        hamburgerBtn.classList.add('highlight-target', 'bg-gray-700');	
-			hamburgerBtn.scrollIntoView({
-            		behavior: 'smooth',
-            		block: 'start' // This positions the element at the top of the viewport
-        });
-        } else if (stepIndex === 10) {
-            document.getElementById('input-text-fedex').classList.add('highlight-target');
-            document.getElementById('input-text-fedex').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        } else if (stepIndex === 11) {
-            document.getElementById('copy-button-fedex').classList.add('highlight-target');
-            document.getElementById('copy-button-fedex').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
+        }
+        const responseToHighlight = responsesWithPlaceholders.find(el => el); // Find the first non-null element
+        if (responseToHighlight) {
+            responseToHighlight.classList.add('highlight-target');
         } else {
-            const targetElement = highlightedElements[stepIndex];
-            if (targetElement) {
-                if (Array.isArray(targetElement)) {
-                    targetElement.forEach(el => {
-                        el.classList.add('highlight-target');
-                    });
-                } else {
-                    targetElement.classList.add('highlight-target');
-                }
-            }
+            console.warn("No canned response with dynamic placeholders found for the tutorial.");
+        }
+    } else {
+        const elementToHighlight = highlightedElements[stepIndex];
+        if (elementToHighlight) {
+            elementToHighlight.classList.add('highlight-target');
         }
     }
-
-    // Now, show the modal with the correct positioning
+    
+    // Apply the new positioning class.
+    tutorialModal.classList.add(modalPositions[stepIndex]);
+    
+    // Make the modal and overlay visible again in their new, correct state.
     tutorialModal.classList.remove('hidden');
     tutorialOverlay.classList.remove('hidden');
-    tutorialModal.classList.add('modal', positionClasses[stepIndex]);
 
-    // Update button visibility
+    // --- Phase 4: Update UI Controls ---
     const tutorialBackBtn = document.getElementById('tutorial-back-btn');
     const tutorialNextBtn = document.getElementById('tutorial-next-btn');
     const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
+    
     tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
     tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
     tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
@@ -2383,30 +2320,10 @@ function attachEventListeners() {
     document.getElementById('hamburger-menu-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
     document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
 
-    // Updated navigation event listeners with a small delay for closing the sidebar
-    document.getElementById('nav-canned-responses').addEventListener('click', () => {
-        currentPage = 'canned-responses';
-        renderContent();
-        closeSidebar();
-    });
-
-    document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
-        currentPage = 'fedex-tracker';
-        renderContent();
-        closeSidebar();
-    });
-
-    document.getElementById('nav-helpful-links').addEventListener('click', () => {
-        currentPage = 'helpful-links';
-        renderContent();
-        closeSidebar();
-    });
-
-    document.getElementById('nav-settings').addEventListener('click', () => {
-        currentPage = 'settings';
-        renderContent();
-        closeSidebar();
-    });
+	document.getElementById('nav-canned-responses').addEventListener('click', () => navigateTo('canned-responses'));
+	document.getElementById('nav-fedex-tracker').addEventListener('click', () => navigateTo('fedex-tracker'));
+	document.getElementById('nav-helpful-links').addEventListener('click', () => navigateTo('helpful-links'));
+	document.getElementById('nav-settings').addEventListener('click', () => navigateTo('settings'));
 
     // Other one-time listeners
     document.getElementById('add-link-form').addEventListener('submit', async (e) => {
