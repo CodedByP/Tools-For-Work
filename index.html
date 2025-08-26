@@ -1510,11 +1510,10 @@ const showTutorialStep = async (stepIndex) => {
         currentPage = targetPage;
         localStorage.setItem('currentPage', currentPage);
         
+        // FIX: Using setTimeout(resolve, 0) is a more robust way to wait for the DOM to update.
         await new Promise(resolve => {
             renderContent();
-            requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
-            });
+            setTimeout(resolve, 0);
         });
     }
 
@@ -1525,7 +1524,6 @@ const showTutorialStep = async (stepIndex) => {
 
     let elementToHighlight = highlightedElements[stepIndex];
 
-    // --- Highlighting Logic with Fixes ---
     if (stepIndex === 5) { // Manage Responses
         const firstResponse = document.querySelector('.response-item');
         if (firstResponse) {
@@ -1538,22 +1536,16 @@ const showTutorialStep = async (stepIndex) => {
             if (pinButton) pinButton.classList.add('highlight-target');
         }
     } else if (stepIndex === 7) { // Dynamic Placeholders
-        // FIX: Check if the correct category is active. If not, switch to it.
         if (activeCategory !== 'BRONCO') {
             activeCategory = 'BRONCO';
-            renderCategories(); // This re-renders the category buttons and the responses list.
-            
-            // Wait a moment for the DOM to update after re-rendering.
-            await new Promise(resolve => requestAnimationFrame(resolve));
+            renderCategories();
+            await new Promise(resolve => setTimeout(resolve, 0)); // Also use the robust wait here
         }
-        
-        // Now that we're sure the BRONCO category is visible, we can reliably find the element.
         elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
         if (elementToHighlight) {
             elementToHighlight.classList.add('highlight-target');
         }
     } else {
-        // This is the default case for all other steps.
         if (elementToHighlight) {
             elementToHighlight.classList.add('highlight-target');
         }
