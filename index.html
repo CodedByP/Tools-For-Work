@@ -1500,7 +1500,6 @@ const showTutorialStep = async (stepIndex) => {
     const tutorialOverlay = document.getElementById('tutorial-overlay');
 
     // --- Phase 1: Teardown Current Step ---
-    // First, hide the modal and clear all old highlights and positioning. This prevents visual glitches.
     tutorialModal.classList.add('hidden');
     tutorialOverlay.classList.add('hidden');
     clearTutorialHighlights();
@@ -1510,9 +1509,8 @@ const showTutorialStep = async (stepIndex) => {
     const targetPage = tutorialPages[stepIndex];
     if (currentPage !== targetPage) {
         currentPage = targetPage;
-        localStorage.setItem('currentPage', currentPage); // Persist the page state
+        localStorage.setItem('currentPage', currentPage);
         
-        // Asynchronously render the new page and wait for the browser to be ready.
         await new Promise(resolve => {
             renderContent();
             requestAnimationFrame(() => {
@@ -1522,69 +1520,58 @@ const showTutorialStep = async (stepIndex) => {
     }
 
     // --- Phase 3: Setup New Step ---
-    // Now that the correct page is guaranteed to be in the DOM, set up the new step.
-    
-    // Show the correct text for the current step.
     tutorialSteps.forEach((step, index) => {
         step.classList.toggle('hidden', index !== stepIndex);
     });
 
-    // Apply the highlight to the correct element for the current step.
-    // This logic runs *after* the page transition to ensure the elements exist.
-    if (stepIndex === 5) {
+    let elementToHighlight = highlightedElements[stepIndex];
+
+    // --- BUG FIX #1: Highlighting Dynamic Elements ---
+    // The previous logic for finding dynamic elements was a bit too complex and could fail.
+    // This is a more direct and reliable way to handle the special cases.
+    if (stepIndex === 5) { // Manage Responses
         const firstResponse = document.querySelector('.response-item');
         if (firstResponse) {
             const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
             buttons.forEach(button => button.classList.add('highlight-target'));
         }
-    } else if (stepIndex === 6) {
+    } else if (stepIndex === 6) { // Pinning
         const firstResponse = document.querySelector('.response-item');
         if (firstResponse) {
             const pinButton = firstResponse.querySelector('.pin-btn');
             if (pinButton) pinButton.classList.add('highlight-target');
         }
-    } else if (stepIndex === 7) {
-        const responsesWithPlaceholders = [];
-        if (categories[activeCategory] && categories[activeCategory].responses) {
-            categories[activeCategory].responses.forEach(response => {
-                if (response.text.match(/\[([^\]]+)\]/g)) {
-                    responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
-                }
-            });
-        }
-        if (responsesWithPlaceholders.length === 0) {
-            for (const category in categories) {
-                categories[category].responses.forEach(response => {
-                    if (response.text.match(/\[([^\]]+)\]/g)) {
-                        const foundResponse = document.querySelector(`.response-item[data-id="${response.id}"]`);
-                        if (foundResponse) {
-                            responsesWithPlaceholders.push(foundResponse);
-                        }
-                    }
-                });
-            }
-        }
-        const responseToHighlight = responsesWithPlaceholders.find(el => el); // Find the first non-null element
-        if (responseToHighlight) {
-            responseToHighlight.classList.add('highlight-target');
-        } else {
-            console.warn("No canned response with dynamic placeholders found for the tutorial.");
+    } else if (stepIndex === 7) { // Dynamic Placeholders
+        // The tutorial is specifically about the 'OUT FOR DELIVERY' response.
+        // We will target it directly by its unique data-id for reliability.
+        elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
+        if (elementToHighlight) {
+            elementToHighlight.classList.add('highlight-target');
         }
     } else {
-        const elementToHighlight = highlightedElements[stepIndex];
+        // This is the default case for all other steps.
         if (elementToHighlight) {
             elementToHighlight.classList.add('highlight-target');
         }
     }
+
+    // --- BUG FIX #2: Scrolling to Highlighted Elements ---
+    // After highlighting an element, we need to make sure it's visible.
+    const finalHighlightedElement = document.querySelector('.highlight-target');
+    if (finalHighlightedElement) {
+        finalHighlightedElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'center'
+        });
+    }
     
-    // Apply the new positioning class.
+    // --- Phase 4: Position and Show Modal ---
     tutorialModal.classList.add(modalPositions[stepIndex]);
-    
-    // Make the modal and overlay visible again in their new, correct state.
     tutorialModal.classList.remove('hidden');
     tutorialOverlay.classList.remove('hidden');
 
-    // --- Phase 4: Update UI Controls ---
+    // --- Phase 5: Update UI Controls ---
     const tutorialBackBtn = document.getElementById('tutorial-back-btn');
     const tutorialNextBtn = document.getElementById('tutorial-next-btn');
     const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
