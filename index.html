@@ -2204,7 +2204,7 @@ const extractAndDisplayNumbers = () => {
     const inputTextareaFedex = document.getElementById('input-text-fedex');
     const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
     
-    // Check for null just in case the function is called before the element is ready
+    // This guard clause prevents errors if the function is called before the page is ready.
     if (!inputTextareaFedex || !trackingNumbersContainer) return;
 
     const text = inputTextareaFedex.value;
@@ -2212,7 +2212,7 @@ const extractAndDisplayNumbers = () => {
     const uniqueMatches = [...new Set(matches)];
 
     if (uniqueMatches.length > 0) {
-        // If numbers are found, build the HTML for them.
+        // If numbers are found, build the HTML for them. This is safer than finding and hiding elements.
         trackingNumbersContainer.innerHTML = uniqueMatches.map(num => `
             <div class="tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2">
                 <span class="text-sm font-semibold">${num}</span>
@@ -2222,7 +2222,7 @@ const extractAndDisplayNumbers = () => {
             </div>
         `).join('');
     } else {
-        // If no numbers are found, restore the original "no numbers" message.
+        // If no numbers are found, safely restore the original "no numbers" message.
         trackingNumbersContainer.innerHTML = '<p id="no-numbers-message" class="text-center text-gray-500 text-base">No tracking numbers found yet.</p>';
     }
 
