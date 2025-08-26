@@ -595,13 +595,22 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
 
-        <div id="helpful-links-app" class="w-full hidden container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
-            <div class="container mx-auto px-4">
-                <header class="text-center mb-16 animate-fade-in">
-                    <p class="mt-4 text-xl text-gray-300 max-w-2xl mx-auto">
-                        A carefully curated selection of resources, tools, and documentation.
-                    </p>
-                    <div id="links-user-info" class="mt-4 text-sm text-gray-500"></div>
+<div id="helpful-links-app" class="w-full hidden container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
+    <div class="container mx-auto px-4">
+        <div id="links-search-bar-container" class="floating-card mb-8 relative p-6 sm:p-8">
+            <div class="absolute inset-y-0 left-0 pl-11 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <input
+                type="text"
+                id="links-search-input"
+                class="w-full border-2 border-gray-600 rounded-xl p-4 pl-12 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg text-placeholder"
+                placeholder="Search helpful links..."
+            />
+        </div>
+        <header class="text-center mb-16 animate-fade-in">
                 </header>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1325,13 +1334,40 @@ const defaultCannedResponsesBlueprint = {
 };
 
 const defaultHelpfulLinksBlueprint = [
-    { id: 'default-1', title: 'Astreya KB', description: 'Access the Astreya knowledge base for support.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
-    { id: 'default-2', title: 'Astreya Audits', description: 'Review and manage Astreya audit reports.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
-    { id: 'default-3', title: 'Find Net blocks', description: 'Search for network blocks and IP information.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
-    { id: 'default-4', title: 'Bronco Plant Codes', description: 'A spreadsheet of plant codes for the Bronco project.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
-    { id: 'default-5', title: 'GUTS CTI', description: 'Check the GUTS CTI spreadsheet for contact info.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
-    { id: 'default-6', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
-    { id: 'default-7', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' }
+    { id: 'admin-device-portal', title: 'Admin Device Portal (Armada)', description: 'The Armada portal for device administration.', url: 'https://admin-device-portal.corp.google.com/' },
+    { id: 'astreya-audits', title: 'Astreya Audits', description: 'Review and manage Astreya audit reports.', url: 'https://ui-web-dot-emt-inspecto-dev.uc.r.appspot.com/app/' },
+    { id: 'astreya-kb', title: 'Astreya KB', description: 'Access the Astreya knowledge base for support.', url: 'https://supportcenter.corp.google.com/corpengkb/category/bltc1355050242a3f3d?e=ServicedeskCommonGuidedSupport::Launch' },
+    { id: 'bronco-plant-codes', title: 'Bronco Plant Codes', description: 'A spreadsheet of plant codes for the Bronco project.', url: 'https://docs.google.com/spreadsheets/d/1urmopWJvKXdXqAsPf1TBW2W97h5wbkFkNs9CKcBdwsE/edit?gid=0#gid=0' },
+    { id: 'bronco-support', title: 'Bronco Support', description: 'Resources for Bronco project support.', url: 'https://sites.google.com/corp/google.com/gobronco-support/home' },
+    { id: 'buganizer', title: 'Buganizer', description: 'A bug and issue tracking tool.', url: 'https://b.corp.google.com/issues?q=assignee:gasparl@google.com%20status:open' },
+    { id: 'clipper', title: 'Clipper', description: 'A search tool for BIOS passwords.', url: 'https://clipper.googleplex.com/ui/#/search' },
+    { id: 'emt-signage', title: 'EMT Signage', description: 'A folder of EMT signage and templates.', url: 'https://drive.google.com/corp/drive/folders/1uhrfZjH6Jz_9Mnftjl021nhduaRVdAtv?resourcekey=0-904bGgjllpWnTujOP-M5-w' },
+    { id: 'find-net-blocks', title: 'Find Net blocks', description: 'Search for network blocks and IP information.', url: 'https://ipdb.corp.google.com/ipdb/corp-list/?ip_address=&netmask=&description=&vlan=&address_type=all&region_name=&country_name=&city_name=&building_name=&network_name=&tag=ACL-CORP-MNP' },
+    { id: 'gallop', title: 'Gallop', description: 'The Gallop platform for asset and equipment management.', url: 'https://dasinfra-sap-fiori-prod5.gcpnode.com/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html#ZEQUIPMGMTSEMOBJ-display' },
+    { id: 'ganpati', title: 'Ganpati', description: 'Project management and group information.', url: 'https://ganpati2.corp.google.com/group/eng.corp?tab=descendants' },
+    { id: 'gng-audit-legacy', title: 'GNG Audit (Legacy)', description: 'Access to the legacy loaner audit system.', url: 'https://loaner-2.googleplex.com/authorization' },
+    { id: 'guts', title: 'GUTS', description: 'The GUTS ticket management system.', url: 'https://gutsv3.corp.google.com/#search/default/Assigned%20To%20Me/0' },
+    { id: 'guts-cti', title: 'GUTS CTI', description: 'Check the GUTS CTI spreadsheet for contact info.', url: 'https://docs.google.com/spreadsheets/d/1zYSxHSdwIwrEvWAcpVyhbx6b5R2raWq322pM3EGexy0/edit?resourcekey=0-ghk2iWDZcH3sFEZ_NA-uyQ&gid=421127237#gid=421127237' },
+    { id: 'guts-ticket-checklist', title: 'GUTS Ticket Checklist', description: 'A checklist for resolving GUTS tickets.', url: 'https://docs.google.com/spreadsheets/d/1VeKBxej95gIGqB2RhER9cRu-8DvD4kNcbL2PDIPMtp0/edit?gid=0#gid=0' },
+    { id: 'hardware-part-numbers', title: 'Hardware Part Numbers', description: 'A dashboard for looking up hardware part numbers.', url: 'https://lookerstudio.google.com/c/u/0/reporting/36d77f1b-9303-44f9-8cf2-7b63ec333308/page/JRgzB' },
+    { id: 'host-admin', title: 'Host Admin', description: 'A portal for host and asset management.', url: 'https://hostadmin.corp.google.com/#' },
+    { id: 'install-glinux', title: 'Install gLinux', description: 'Instructions for installing gLinux.', url: 'https://supportcenter.corp.google.com/techstop/article/00000185-7924-d5bd-a3c5-fff7c03b0000/interactive?visit_id=638917657833593233-968085255&hl=en&rd=3' },
+    { id: 'install-windows', title: 'Install Windows', description: 'Instructions for installing Windows on a corporate device.', url: 'https://supportcenter.corp.google.com/techstop/article/blt584aae127d944eb1?visit_id=638917657536484308-3551301642&hl=en&rd=2' },
+    { id: 'litigation-hold', title: 'Litigation Hold', description: 'Manage litigation holds for devices.', url: 'https://amionhold.googleplex.com/lookup' },
+    { id: 'mac-setup', title: 'Mac Setup', description: 'Instructions for setting up a new Mac.', url: 'https://drive.google.com/file/d/1TevV8ZdDYHOJFbpgXyaNAzyWUnLsyb3d/view?resourcekey=0-5eszItugO833_pRzoCePCw' },
+    { id: 'noogley', title: 'Noogley', description: 'Internal resources for Nooglers (new Googlers).', url: 'https://noogley.googleplex.com/' },
+    { id: 'office-move-stats', title: 'Office Move Stats', description: 'Statistics for office moves and logistics.', url: 'https://movestats.googleplex.com/' },
+    { id: 'people-view', title: 'People View', description: 'Internal employee information and directory (check for Director or VP).', url: 'https://data.corp.google.com/sites/persons/home/' },
+    { id: 'piktime', title: 'Piktime', description: 'The Piktime appointment and scheduling platform.', url: 'https://piktime.corp.google.com/' },
+    { id: 'print-central', title: 'Print Central', description: 'Manage and monitor corporate printers.', url: 'https://printcentral.googleplex.com/#/printers/active' },
+    { id: 'project-codes', title: 'Project Codes', description: 'A spreadsheet containing various project codes.', url: 'https://docs.google.com/spreadsheets/d/1li6NkMulPByZwcJrvQlK9Qrx64JWahwRg2xMSWEI6Dc/edit?gid=0#gid=0' },
+    { id: 'purser', title: 'Purser', description: 'An internal tool to destroy Host ID.', url: 'https://purser.corp.google.com/#/home' },
+    { id: 'recyclable-report', title: 'Recyclable Report', description: 'A report for tracking recyclable items.', url: 'https://lookerstudio.google.com/c/u/0/reporting/482b6544-e45b-4db3-ace7-2251d99b4e04/page/qPdtB?s=pF0bgEtUbIw' },
+    { id: 'recycling-helper', title: 'Recycling Helper', description: 'A tool to assist with recycling processes.', url: 'https://script.google.com/a/macros/google.com/s/AKfycbzuJiDm7OqFxA6fIRq4Huiu2bUJLbQjqaTtZ69D2r5w0A2sjVca/exec' },
+    { id: 'starting-gate', title: 'Starting Gate', description: 'Onboarding and new hire resources.', url: 'https://startinggate.corp.google.com/' },
+    { id: 'techstop', title: 'Techstop', description: 'The main Techstop support center.', url: 'https://supportcenter.corp.google.com/techstop/site' },
+    { id: 'technician-workload-management', title: 'Technician Workload Management', description: 'View and manage technician workload.', url: 'https://lookerstudio.google.com/c/u/0/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd' },
+    { id: 'wistek', title: 'Wistek / Iron Mountain', description: 'The Wistek and Iron Mountain return portal.', url: 'https://www.returntek.com/' }
 ];
 
 // --- Helper Functions ---
@@ -1354,6 +1390,100 @@ const showMessage = (text, type = 'success') => {
         el.classList.remove('highlight-target');
     });
 };		
+
+// Add this new function to your helper functions section
+const renderLinks = (searchQuery = '') => {
+    const staticLinksList = document.getElementById('static-links-list');
+    const userLinksList = document.getElementById('user-links-list');
+    const userLinksSection = document.getElementById('user-links-section');
+
+    const query = searchQuery.toLowerCase();
+    const regex = new RegExp(`(${query})`, 'gi'); // Create a case-insensitive regex for highlighting
+
+    // Filter static links based on the search query
+    const filteredStaticLinks = defaultLinks.filter(link => 
+        link.title.toLowerCase().includes(query) ||
+        (link.description && link.description.toLowerCase().includes(query))
+    );
+    
+    // Filter user links if they exist
+    let filteredUserLinks = [];
+    if (userLinks && userLinks.length > 0) {
+        filteredUserLinks = userLinks.filter(link =>
+            link.title.toLowerCase().includes(query) ||
+            (link.description && link.description.toLowerCase().includes(query))
+        );
+    }
+    
+    // Render static links
+    staticLinksList.innerHTML = '';
+    if (filteredStaticLinks.length > 0) {
+        filteredStaticLinks.forEach(link => {
+            const card = document.createElement('div');
+            card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+            
+            // Apply highlighting to title and description
+            const highlightedTitle = query ? link.title.replace(regex, `<span class="highlight">$&</span>`) : link.title;
+            const highlightedDescription = query && link.description ? link.description.replace(regex, `<span class="highlight">$&</span>`) : (link.description || 'No description available.');
+
+            card.innerHTML = `
+                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
+                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${highlightedTitle}</h3>
+                    <p class="text-sm text-gray-400">${highlightedDescription}</p>
+                </a>
+            `;
+            staticLinksList.appendChild(card);
+        });
+    } else {
+        staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+    }
+    
+    // Render user links
+    userLinksList.innerHTML = '';
+    if (!isAnonymous && filteredUserLinks.length > 0) {
+        userLinksSection.classList.remove('hidden'); // Ensure the section is visible if there are links
+        filteredUserLinks.forEach(link => {
+            const card = document.createElement('div');
+            card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
+            
+            // Apply highlighting to title and description
+            const highlightedTitle = query ? link.title.replace(regex, `<span class="highlight">$&</span>`) : link.title;
+            const highlightedDescription = query && link.description ? link.description.replace(regex, `<span class="highlight">$&</span>`) : (link.description || 'No description available.');
+            
+            card.innerHTML = `
+                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
+                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${highlightedTitle}</h3>
+                    <p class="text-sm text-gray-400">${highlightedDescription}</p>
+                </a>
+                <div class="relative inline-block text-left" data-doc-id="${link.id}" data-title="${link.title}" data-url="${link.url}" data-description="${link.description || ''}">
+                    <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
+                            <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                        </svg>
+                    </button>
+                    <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                        <div class="py-1">
+                            <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
+                            <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            userLinksList.appendChild(card);
+        });
+    } else if (!isAnonymous) {
+        userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No user links found.</p>';
+    }
+    
+    // Hide or show the user links section based on the filtered results
+    if (isAnonymous) {
+      userLinksSection.classList.add('hidden');
+    } else {
+      userLinksSection.classList.remove('hidden');
+    }
+};
+
+		
 
 // This is the new, combined function that handles all tutorial logic
 const showTutorialStep = async (stepIndex) => {
@@ -1576,19 +1706,19 @@ const renderContent = () => {
 
     categoryActionsBtn.classList.add('hidden');
     categoryActionsMenu.classList.add('hidden');
-    
+
     if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
     if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
-    
+
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
         categoryBar.classList.remove('hidden');
         mainTitle.textContent = 'Canned Responses';
         renderCategories();
-        
+
         if (!isAnonymous) {
             addCategoryBtn.classList.remove('hidden');
             addResponseSection.classList.remove('hidden');
@@ -1598,8 +1728,7 @@ const renderContent = () => {
         } else {
             addCategoryBtn.classList.add('hidden');
             addResponseSection.classList.add('hidden');
-            categoryActionsBtn.classList.add('hidden'); // Ensure it is hidden for anonymous users
-
+            categoryActionsBtn.classList.add('hidden');
         }
     } else if (currentPage === 'fedex-tracker') {
         fedexTrackerApp.classList.remove('hidden');
@@ -1608,10 +1737,8 @@ const renderContent = () => {
     } else if (currentPage === 'helpful-links') {
         helpfulLinksApp.classList.remove('hidden');
         mainTitle.textContent = 'Helpful Links';
-        
-        if (!renderedStaticLinks) {
-            renderStaticLinks();
-        }
+
+        renderLinks();
 
         if (isAnonymous) {
             userLinksSection.classList.add('hidden');
@@ -2066,20 +2193,26 @@ const renderUserLinks = () => {
     } else {
         userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
     }
+
+	    if (filteredUserLinks.length === 0 && isAnonymous) {
+      userLinksSection.classList.add('hidden');
+    } else {
+      userLinksSection.classList.remove('hidden');
+    }
 };
 const renderHelpfulLinks = () => {
     const userLinksSection = document.getElementById('user-links-section');
     const addLinkSection = document.getElementById('add-link-section');
-    if (!renderedStaticLinks) {
-        renderStaticLinks();
-    }
+    
+    // Call the unified rendering function with no search query
+    renderLinks(); 
+
     if (isAnonymous) {
         userLinksSection.classList.add('hidden');
         addLinkSection.classList.add('hidden');
     } else {
         userLinksSection.classList.remove('hidden');
         addLinkSection.classList.remove('hidden');
-        renderUserLinks();
     }
 };
 const showLinksStatus = (message, colorClass) => {
@@ -2091,6 +2224,15 @@ const showLinksStatus = (message, colorClass) => {
         linksStatusMessage.className = 'text-center mt-2 text-sm text-gray-400';
     }, 3000);
 };
+
+// Add this helper function somewhere in your script block
+const closeSidebar = () => {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+    }
+};
+
 const resetLinksForm = () => {
     const linksFormTitle = document.getElementById('form-title');
     const linkTitleInput = document.getElementById('link-title');
@@ -2239,13 +2381,34 @@ const showPlaceholderDemo = () => {
 function attachEventListeners() {
     // Navigation Listeners
     document.getElementById('hamburger-menu-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
-    document.getElementById('close-sidebar-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.remove('open'); });
-    document.getElementById('nav-canned-responses').addEventListener('click', () => { currentPage = 'canned-responses'; renderContent(); document.getElementById('sidebar').classList.remove('open'); });
-    document.getElementById('nav-fedex-tracker').addEventListener('click', () => { currentPage = 'fedex-tracker'; renderContent(); document.getElementById('sidebar').classList.remove('open'); });
-    document.getElementById('nav-helpful-links').addEventListener('click', () => { currentPage = 'helpful-links'; renderContent(); document.getElementById('sidebar').classList.remove('open'); });
-    document.getElementById('nav-settings').addEventListener('click', () => { currentPage = 'settings'; renderContent(); document.getElementById('sidebar').classList.remove('open'); });
-    
-    // Form Submission Listener (Attached only once)
+    document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
+
+    // Updated navigation event listeners with a small delay for closing the sidebar
+    document.getElementById('nav-canned-responses').addEventListener('click', () => {
+        currentPage = 'canned-responses';
+        renderContent();
+        closeSidebar();
+    });
+
+    document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
+        currentPage = 'fedex-tracker';
+        renderContent();
+        closeSidebar();
+    });
+
+    document.getElementById('nav-helpful-links').addEventListener('click', () => {
+        currentPage = 'helpful-links';
+        renderContent();
+        closeSidebar();
+    });
+
+    document.getElementById('nav-settings').addEventListener('click', () => {
+        currentPage = 'settings';
+        renderContent();
+        closeSidebar();
+    });
+
+    // Other one-time listeners
     document.getElementById('add-link-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (isSubmittingLink) { console.warn("Preventing duplicate form submission."); return; }
@@ -2276,7 +2439,11 @@ function attachEventListeners() {
         }
     });
 
-    // Other one-time listeners
+    document.getElementById('links-search-input').addEventListener('input', (e) => {
+        const query = e.target.value;
+        renderLinks(query);
+    });
+
     document.getElementById('cancel-button').addEventListener('click', () => { resetLinksForm(); });
     document.getElementById('user-links-list').addEventListener('click', (event) => {
         if (isAnonymous) return;
@@ -2313,7 +2480,7 @@ function attachEventListeners() {
             }
         }
     });
-    
+
     document.addEventListener('click', (event) => {
         const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
         const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
@@ -2328,7 +2495,7 @@ function attachEventListeners() {
             openMenuId = null;
         }
     });
-    
+
     document.getElementById('close-login-popup-btn').addEventListener('click', async () => {
         document.getElementById('login-popup-modal').classList.remove('show');
         document.getElementById('login-popup-modal').classList.add('hidden');
@@ -2349,10 +2516,9 @@ function attachEventListeners() {
 
     document.getElementById('close-copy-success-btn').addEventListener('click', () => {
         document.getElementById('copy-success-modal').classList.add('hidden');
-    
     });
-    
-// --- Tutorial Listeners (Corrected) ---
+
+    // --- Tutorial Listeners (Corrected) ---
     document.getElementById('tutorial-next-btn').addEventListener('click', () => {
         if (currentTutorialStep < tutorialSteps.length - 1) {
             currentTutorialStep++;
@@ -2368,13 +2534,13 @@ function attachEventListeners() {
     });
 
     document.getElementById('tutorial-finish-btn').addEventListener('click', async () => {
-		 isTutorialActive = false;
+        isTutorialActive = false;
         // Clear all highlights before hiding the modal
         clearTutorialHighlights();
-        
+
         document.getElementById('tutorial-modal').classList.add('hidden');
-        document.getElementById('tutorial-overlay').classList.add('hidden'); 
-        
+        document.getElementById('tutorial-overlay').classList.add('hidden');
+
         if (userId) {
             const userDocRef = getUserRootDocRef(userId);
             try {
@@ -2386,19 +2552,19 @@ function attachEventListeners() {
     });
 
     document.getElementById('show-tutorial-btn').addEventListener('click', async () => {
-    if (userId && !isAnonymous) {
-        const userDocRef = getUserRootDocRef(userId);
-        try {
-            await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
-            showTutorialStep(0); // This function call will now handle displaying the modal
-        } catch (error) {
-            console.error("Error resetting tutorialSeen flag:", error);
-            showMessage("Error showing tutorial. Please try again.", 'error');
+        if (userId && !isAnonymous) {
+            const userDocRef = getUserRootDocRef(userId);
+            try {
+                await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
+                showTutorialStep(0); // This function call will now handle displaying the modal
+            } catch (error) {
+                console.error("Error resetting tutorialSeen flag:", error);
+                showMessage("Error showing tutorial. Please try again.", 'error');
+            }
+        } else {
+            showMessage("Please sign in to view the tutorial.", 'error');
         }
-    } else {
-        showMessage("Please sign in to view the tutorial.", 'error');
-    }
-});
+    });
 
     document.getElementById('theme-toggle-btn-settings').addEventListener('click', () => {
         document.body.classList.toggle('light-mode');
@@ -2612,34 +2778,88 @@ function attachEventListeners() {
         const file = e.target.files[0];
         if (file) importData(file);
     });
-    document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-        const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
-        const userValues = {};
-        inputs.forEach(input => { const key = input.dataset.placeholder; userValues[key] = input.value; });
-        const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-        copyToClipboard(finalContent);
-        document.getElementById('placeholder-modal').classList.add('hidden');
-        document.getElementById('copied-text-display').textContent = finalContent;
+document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
+    // 1. Get user input from placeholders
+    const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
+    const userValues = {};
+    inputs.forEach(input => { 
+        const key = input.dataset.placeholder; 
+        userValues[key] = input.value; 
+    });
+    
+    // 2. Process and copy the final text
+    const finalContent = replacePlaceholders(currentTextToCopy, userValues);
+    copyToClipboard(finalContent);
+    
+    // 3. Hide the placeholder modal
+    document.getElementById('placeholder-modal').classList.add('hidden');
+    
+    // 4. Update the copied text display in the success modal
+    document.getElementById('copied-text-display').textContent = finalContent;
+    
+    // 5. Check the tutorial state and handle logic accordingly
+    if (isTutorialActive) {
+        // If tutorial is active, show the copy success modal and then advance the tutorial.
         document.getElementById('copy-success-modal').classList.remove('hidden');
-
+        
+        // This is a crucial change: we now advance the step AFTER showing the modal.
+        // It's also important to update the tutorial overlay.
         currentTutorialStep++;
         showTutorialStep(currentTutorialStep);
-        
-    });
-    document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
-        // Hide the placeholder modal
-        document.getElementById('placeholder-modal').classList.add('hidden');
-   		 // Conditionally show the tutorial based on the global flag
-    	if (isTutorialActive) {
-        	// This is the tutorial-specific logic
-        	document.getElementById('tutorial-modal').classList.remove('hidden');
-        	document.getElementById('tutorial-overlay').classList.remove('hidden');
-        	showTutorialStep(currentTutorialStep);
-    	} else {
-        // This is the normal operation; just close the modal.
-        // No need to show the tutorial or do anything else.
-   		 }
-	});
+    } else {
+        // If not in a tutorial, just show the copy success modal as a simple confirmation.
+        document.getElementById('copy-success-modal').classList.remove('hidden');
+    }
+});
+
+// The cancel button logic is correct and doesn't need to be changed.
+document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
+    document.getElementById('placeholder-modal').classList.add('hidden');
+    
+    if (isTutorialActive) {
+        document.getElementById('tutorial-modal').classList.remove('hidden');
+        document.getElementById('tutorial-overlay').classList.remove('hidden');
+        showTutorialStep(currentTutorialStep);
+    } 
+});
+
+// The showPlaceholderDemo logic should be updated slightly.
+document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+    isTutorialActive = true; 
+    const highlightedResponse = document.querySelector('.response-item.highlight-target');
+    if (highlightedResponse) {
+        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+        processAndCopy(textToCopy);
+    } else {
+        console.error("No highlighted response found for the tutorial demo.");
+        const fallbackText = "Hello [Customer's Name], this is a default message.";
+        processAndCopy(fallbackText);
+    }
+    
+    // Hide the tutorial modal and overlay so the placeholder modal is the main focus.
+    // This is correct.
+    document.getElementById('tutorial-modal').classList.add('hidden');
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+});
+
+// Add a check to the showPlaceholderDemo function as well to set the flag
+document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+    isTutorialActive = true; // Set the flag to true when starting the demo
+    const highlightedResponse = document.querySelector('.response-item.highlight-target');
+    if (highlightedResponse) {
+        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+        processAndCopy(textToCopy);
+    } else {
+        console.error("No highlighted response found for the tutorial demo.");
+        const fallbackText = "Hello [Customer's Name], this is a default message.";
+        processAndCopy(fallbackText);
+    }
+    // The placeholder modal is shown inside processAndCopy, so we don't do it here.
+    document.getElementById('tutorial-modal').classList.add('hidden');
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+});
+
+	
     document.getElementById('sign-in-btn-settings').addEventListener('click', async () => {
         try { const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); showMessage("Signed in with Google!"); } catch (error) { console.error("Google sign-in failed", error); showMessage("Google sign-in failed. Please try again.", 'error'); }
     });
