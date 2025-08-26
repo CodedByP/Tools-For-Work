@@ -2778,34 +2778,88 @@ function attachEventListeners() {
         const file = e.target.files[0];
         if (file) importData(file);
     });
-    document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-        const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
-        const userValues = {};
-        inputs.forEach(input => { const key = input.dataset.placeholder; userValues[key] = input.value; });
-        const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-        copyToClipboard(finalContent);
-        document.getElementById('placeholder-modal').classList.add('hidden');
-        document.getElementById('copied-text-display').textContent = finalContent;
+document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
+    // 1. Get user input from placeholders
+    const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
+    const userValues = {};
+    inputs.forEach(input => { 
+        const key = input.dataset.placeholder; 
+        userValues[key] = input.value; 
+    });
+    
+    // 2. Process and copy the final text
+    const finalContent = replacePlaceholders(currentTextToCopy, userValues);
+    copyToClipboard(finalContent);
+    
+    // 3. Hide the placeholder modal
+    document.getElementById('placeholder-modal').classList.add('hidden');
+    
+    // 4. Update the copied text display in the success modal
+    document.getElementById('copied-text-display').textContent = finalContent;
+    
+    // 5. Check the tutorial state and handle logic accordingly
+    if (isTutorialActive) {
+        // If tutorial is active, show the copy success modal and then advance the tutorial.
         document.getElementById('copy-success-modal').classList.remove('hidden');
-
+        
+        // This is a crucial change: we now advance the step AFTER showing the modal.
+        // It's also important to update the tutorial overlay.
         currentTutorialStep++;
         showTutorialStep(currentTutorialStep);
-        
-    });
-    document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
-        // Hide the placeholder modal
-        document.getElementById('placeholder-modal').classList.add('hidden');
-		 // Conditionally show the tutorial based on the global flag
-    	if (isTutorialActive) {
-        	// This is the tutorial-specific logic
-        	document.getElementById('tutorial-modal').classList.remove('hidden');
-        	document.getElementById('tutorial-overlay').classList.remove('hidden');
-        	showTutorialStep(currentTutorialStep);
-    	} else {
-        // This is the normal operation; just close the modal.
-        // No need to show the tutorial or do anything else.
-		 }
-	});
+    } else {
+        // If not in a tutorial, just show the copy success modal as a simple confirmation.
+        document.getElementById('copy-success-modal').classList.remove('hidden');
+    }
+});
+
+// The cancel button logic is correct and doesn't need to be changed.
+document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
+    document.getElementById('placeholder-modal').classList.add('hidden');
+    
+    if (isTutorialActive) {
+        document.getElementById('tutorial-modal').classList.remove('hidden');
+        document.getElementById('tutorial-overlay').classList.remove('hidden');
+        showTutorialStep(currentTutorialStep);
+    } 
+});
+
+// The showPlaceholderDemo logic should be updated slightly.
+document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+    isTutorialActive = true; 
+    const highlightedResponse = document.querySelector('.response-item.highlight-target');
+    if (highlightedResponse) {
+        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+        processAndCopy(textToCopy);
+    } else {
+        console.error("No highlighted response found for the tutorial demo.");
+        const fallbackText = "Hello [Customer's Name], this is a default message.";
+        processAndCopy(fallbackText);
+    }
+    
+    // Hide the tutorial modal and overlay so the placeholder modal is the main focus.
+    // This is correct.
+    document.getElementById('tutorial-modal').classList.add('hidden');
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+});
+
+// Add a check to the showPlaceholderDemo function as well to set the flag
+document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+    isTutorialActive = true; // Set the flag to true when starting the demo
+    const highlightedResponse = document.querySelector('.response-item.highlight-target');
+    if (highlightedResponse) {
+        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+        processAndCopy(textToCopy);
+    } else {
+        console.error("No highlighted response found for the tutorial demo.");
+        const fallbackText = "Hello [Customer's Name], this is a default message.";
+        processAndCopy(fallbackText);
+    }
+    // The placeholder modal is shown inside processAndCopy, so we don't do it here.
+    document.getElementById('tutorial-modal').classList.add('hidden');
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+});
+
+	
     document.getElementById('sign-in-btn-settings').addEventListener('click', async () => {
         try { const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); showMessage("Signed in with Google!"); } catch (error) { console.error("Google sign-in failed", error); showMessage("Google sign-in failed. Please try again.", 'error'); }
     });
