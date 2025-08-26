@@ -1526,14 +1526,11 @@ const showTutorialStep = async (stepIndex) => {
 
     let elementToHighlight = highlightedElements[stepIndex];
 
-    // --- BUG FIX #1: Highlighting Dynamic Elements ---
-    // The previous logic for finding dynamic elements was a bit too complex and could fail.
-    // This is a more direct and reliable way to handle the special cases.
+    // --- Highlighting Logic with Fixes ---
     if (stepIndex === 5) { // Manage Responses
         const firstResponse = document.querySelector('.response-item');
         if (firstResponse) {
-            const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
-            buttons.forEach(button => button.classList.add('highlight-target'));
+            firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn').forEach(btn => btn.classList.add('highlight-target'));
         }
     } else if (stepIndex === 6) { // Pinning
         const firstResponse = document.querySelector('.response-item');
@@ -1542,8 +1539,16 @@ const showTutorialStep = async (stepIndex) => {
             if (pinButton) pinButton.classList.add('highlight-target');
         }
     } else if (stepIndex === 7) { // Dynamic Placeholders
-        // The tutorial is specifically about the 'OUT FOR DELIVERY' response.
-        // We will target it directly by its unique data-id for reliability.
+        // FIX: Check if the correct category is active. If not, switch to it.
+        if (activeCategory !== 'BRONCO') {
+            activeCategory = 'BRONCO';
+            renderCategories(); // This re-renders the category buttons and the responses list.
+            
+            // Wait a moment for the DOM to update after re-rendering.
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        
+        // Now that we're sure the BRONCO category is visible, we can reliably find the element.
         elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
         if (elementToHighlight) {
             elementToHighlight.classList.add('highlight-target');
@@ -1555,8 +1560,7 @@ const showTutorialStep = async (stepIndex) => {
         }
     }
 
-    // --- BUG FIX #2: Scrolling to Highlighted Elements ---
-    // After highlighting an element, we need to make sure it's visible.
+    // --- Scroll into View ---
     const finalHighlightedElement = document.querySelector('.highlight-target');
     if (finalHighlightedElement) {
         finalHighlightedElement.scrollIntoView({
