@@ -1488,36 +1488,6 @@ const renderLinks = (searchQuery = '') => {
 // This is the new, combined function that handles all tutorial logic
 const showTutorialStep = async (stepIndex) => {
 	    isTutorialActive = true;
-    // Define the elements and their positions for each step
-    const highlightedElements = [
-        null, // Step 0 (Welcome)
-        document.getElementById('add-response-section'), // Step 1: Add New Response
-        document.getElementById('search-bar-container'), // Step 2: Search Bar
-        document.getElementById('category-bar'), // Step 3: Categories
-        document.getElementById('category-menu-container'), // Step 4: Kebab menu
-        null, // Step 5: Will find dynamically below
-        null, // Step 6: Will find dynamically below
-        null, // Step 7: Dynamic Placeholders
-        null, // Step 8: Placeholder Demo
-		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
-        document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
-        document.getElementById('copy-button-fedex'), // Step 12: New highlight
-    ];
-    
-    const positionClasses = [
-        'show-modal', // Step 0: Centered modal
-        'top-right',  // Step 1: Add response section
-        'top-right',  // Step 2: Search bar
-        'bottom-left', // Step 3: Category bar
-        'upper-right', // Step 4: Kebab menu
-        'on-response', // Step 5: Manage Responses (new)
-        'on-response', // Step 6: Pin button (new)
-        'left-response', // Step 7: Dynamic placeholders
-        'show-modal', // Step 8: Placeholder demo
-		'top-left',
-        'on-tracker-page', // Step 10: New position
-        'on-tracker-page' // Step 11: Position on the tracker page
-    ];
 
     const tutorialModal = document.getElementById('tutorial-modal');
     const tutorialOverlay = document.getElementById('tutorial-overlay');
@@ -1548,7 +1518,7 @@ const showTutorialStep = async (stepIndex) => {
 	
     // We now clear the highlights and hide the modal AFTER the page content is rendered.
     clearTutorialHighlights();
-    tutorialModal.classList.remove(...positionClasses);
+    tutorialModal.classList.remove(...modalPositions);
 
     const currentStepElement = tutorialSteps[stepIndex];
     if (currentStepElement) {
@@ -1647,7 +1617,7 @@ const showTutorialStep = async (stepIndex) => {
     // Now, show the modal with the correct positioning
     tutorialModal.classList.remove('hidden');
     tutorialOverlay.classList.remove('hidden');
-    tutorialModal.classList.add('modal', positionClasses[stepIndex]);
+    tutorialModal.classList.add('modal', modalPostions[stepIndex]);
 
     // Update button visibility
     const tutorialBackBtn = document.getElementById('tutorial-back-btn');
