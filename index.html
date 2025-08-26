@@ -1495,88 +1495,88 @@ const renderLinks = (searchQuery = '') => {
 
 // This is the new, combined function that handles all tutorial logic
 const showTutorialStep = async (stepIndex) => {
-    isTutorialActive = true;
-    const tutorialModal = document.getElementById('tutorial-modal');
-    const tutorialOverlay = document.getElementById('tutorial-overlay');
+    isTutorialActive = true;
+    const tutorialModal = document.getElementById('tutorial-modal');
+    const tutorialOverlay = document.getElementById('tutorial-overlay');
 
-    // --- Phase 1: Teardown Current Step ---
-    tutorialModal.classList.add('hidden');
-    tutorialOverlay.classList.add('hidden');
-    clearTutorialHighlights();
-    tutorialModal.classList.remove(...modalPositions);
+    // --- Phase 1: Teardown Current Step ---
+    // Hide the modal and clear all old highlights and positioning to prevent visual glitches.
+    tutorialModal.classList.add('hidden');
+    tutorialOverlay.classList.add('hidden');
+    clearTutorialHighlights();
+    modalPositions.forEach(posClass => tutorialModal.classList.remove(posClass));
 
-    // --- Phase 2: Page Transition ---
-    const targetPage = tutorialPages[stepIndex];
-    if (currentPage !== targetPage) {
-        currentPage = targetPage;
-        localStorage.setItem('currentPage', currentPage);
-        
-        // FIX: Using setTimeout(resolve, 0) is a more robust way to wait for the DOM to update.
-        await new Promise(resolve => {
-            renderContent();
-            setTimeout(resolve, 50);
-        });
-    }
+    // --- Phase 2: Page Transition (if needed) ---
+    const targetPage = tutorialPages[stepIndex];
+    if (currentPage !== targetPage) {
+        currentPage = targetPage;
+        localStorage.setItem('currentPage', currentPage);
+        
+        // Asynchronously render the new page and wait for the browser to be ready.
+        await new Promise(resolve => {
+            renderContent();
+            setTimeout(resolve, 50); // A small delay to ensure DOM is fully ready
+        });
+    }
 
-    // --- Phase 3: Setup New Step ---
-    tutorialSteps.forEach((step, index) => {
-        step.classList.toggle('hidden', index !== stepIndex);
-    });
+    // --- Phase 3: Setup New Step ---
+    // Now that the correct page is guaranteed to be in the DOM, set up the new step.
+    
+    tutorialSteps.forEach((step, index) => {
+        step.classList.toggle('hidden', index !== stepIndex);
+    });
 
-    let elementToHighlight = highlightedElements[stepIndex];
+    let elementToHighlight = highlightedElements[stepIndex];
 
-    if (stepIndex === 5) { // Manage Responses
-        const firstResponse = document.querySelector('.response-item');
-        if (firstResponse) {
-            firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn').forEach(btn => btn.classList.add('highlight-target'));
-        }
-    } else if (stepIndex === 6) { // Pinning
-        const firstResponse = document.querySelector('.response-item');
-        if (firstResponse) {
-            const pinButton = firstResponse.querySelector('.pin-btn');
-            if (pinButton) pinButton.classList.add('highlight-target');
-        }
-    } else if (stepIndex === 7) { // Dynamic Placeholders
-        if (activeCategory !== 'BRONCO') {
-            activeCategory = 'BRONCO';
-            renderCategories();
-            await new Promise(resolve => setTimeout(resolve, 50)); // Also use the robust wait here
-        }
-        elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
-        if (elementToHighlight) {
-            elementToHighlight.classList.add('highlight-target');
-        }
-    } else {
-        if (elementToHighlight) {
-            elementToHighlight.classList.add('highlight-target');
-        }
-    }
+    if (stepIndex === 5) {
+        const firstResponse = document.querySelector('.response-item');
+        if (firstResponse) {
+            firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn').forEach(btn => btn.classList.add('highlight-target'));
+        }
+    } else if (stepIndex === 6) {
+        const firstResponse = document.querySelector('.response-item');
+        if (firstResponse) {
+            const pinButton = firstResponse.querySelector('.pin-btn');
+            if (pinButton) pinButton.classList.add('highlight-target');
+        }
+    } else if (stepIndex === 7) {
+        if (activeCategory !== 'BRONCO') {
+            activeCategory = 'BRONCO';
+            renderCategories();
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
+        if (elementToHighlight) elementToHighlight.classList.add('highlight-target');
+    } else if (elementToHighlight) {
+        elementToHighlight.classList.add('highlight-target');
+    }
 
-    // --- Scroll into View ---
-    const finalHighlightedElement = document.querySelector('.highlight-target');
-    if (finalHighlightedElement) {
-        finalHighlightedElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'center'
-        });
-    }
-    
-    // --- Phase 4: Position and Show Modal ---
-    tutorialModal.classList.add(modalPositions[stepIndex]);
-    tutorialModal.classList.remove('hidden');
-    tutorialOverlay.classList.remove('hidden');
+    const finalHighlightedElement = document.querySelector('.highlight-target');
+    if (finalHighlightedElement) {
+        finalHighlightedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    }
+    
+    // --- Phase 4: Animate and Show Modal (CRITICAL FIX) ---
+    // 1. Make the modal part of the layout again, but keep it transparent.
+    tutorialModal.classList.remove('hidden');
+    tutorialOverlay.classList.remove('hidden');
+    
+    // 2. Force the browser to apply the above styles (a "reflow"). This is the key.
+    void tutorialModal.offsetHeight; 
 
-    // --- Phase 5: Update UI Controls ---
-    const tutorialBackBtn = document.getElementById('tutorial-back-btn');
-    const tutorialNextBtn = document.getElementById('tutorial-next-btn');
-    const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
-    
-    tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
-    tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
-    tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
+    // 3. NOW add the class that triggers the transition to the visible state.
+    tutorialModal.classList.add(modalPositions[stepIndex]);
 
-    currentTutorialStep = stepIndex;
+    // --- Phase 5: Update UI Controls ---
+    const tutorialBackBtn = document.getElementById('tutorial-back-btn');
+    const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+    const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
+    
+    tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
+    tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
+    tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
+
+    currentTutorialStep = stepIndex;
 };
 
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
