@@ -1513,7 +1513,7 @@ const showTutorialStep = async (stepIndex) => {
         // FIX: Using setTimeout(resolve, 0) is a more robust way to wait for the DOM to update.
         await new Promise(resolve => {
             renderContent();
-            setTimeout(resolve, 550);
+            setTimeout(resolve, 0);
         });
     }
 
