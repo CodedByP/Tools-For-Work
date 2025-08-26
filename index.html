@@ -1514,7 +1514,7 @@ const showTutorialStep = async (stepIndex) => {
         // FIX: Using setTimeout(resolve, 0) is a more robust way to wait for the DOM to update.
         await new Promise(resolve => {
             renderContent();
-            setTimeout(resolve, 0);
+            setTimeout(resolve, 50);
         });
     }
 
@@ -1540,7 +1540,7 @@ const showTutorialStep = async (stepIndex) => {
         if (activeCategory !== 'BRONCO') {
             activeCategory = 'BRONCO';
             renderCategories();
-            await new Promise(resolve => setTimeout(resolve, 0)); // Also use the robust wait here
+            await new Promise(resolve => setTimeout(resolve, 50)); // Also use the robust wait here
         }
         elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
         if (elementToHighlight) {
