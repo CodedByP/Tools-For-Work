@@ -1547,9 +1547,18 @@ const showTutorialStep = async (stepIndex) => {
         }
         elementToHighlight = document.querySelector('.response-item[data-id="bronco-3"]');
         if (elementToHighlight) elementToHighlight.classList.add('highlight-target');
-    } else if (elementToHighlight) {
-        elementToHighlight.classList.add('highlight-target');
-    }
+		
+	} else if (stepIndex === 10) { // Special handling for Step 11 (index 10)
+   		 extractAndDisplayNumbers(); // Manually call the function now
+   		 elementToHighlight = highlightedElements[stepIndex];
+    	if (elementToHighlight) {
+    	    elementToHighlight.classList.add('highlight-target');
+    	}
+	} else { // Default case for all other steps
+  		  if (elementToHighlight) {
+      	  elementToHighlight.classList.add('highlight-target');
+   	 	}
+	}
 
     const finalHighlightedElement = document.querySelector('.highlight-target');
     if (finalHighlightedElement) {
