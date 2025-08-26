@@ -2202,27 +2202,30 @@ const extractAndDisplayNumbers = () => {
     const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
     const inputTextareaFedex = document.getElementById('input-text-fedex');
     const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
-    const noNumbersMessage = document.getElementById('no-numbers-message');
+    
+    // Check for null just in case the function is called before the element is ready
+    if (!inputTextareaFedex || !trackingNumbersContainer) return;
+
     const text = inputTextareaFedex.value;
     const matches = text.match(fedexRegex) || [];
     const uniqueMatches = [...new Set(matches)];
-    trackingNumbersContainer.innerHTML = '';
+
     if (uniqueMatches.length > 0) {
-        noNumbersMessage.classList.add('hidden');
-        uniqueMatches.forEach(num => {
-            const div = document.createElement('div');
-            div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
-            div.innerHTML = `
+        // If numbers are found, build the HTML for them.
+        trackingNumbersContainer.innerHTML = uniqueMatches.map(num => `
+            <div class="tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2">
                 <span class="text-sm font-semibold">${num}</span>
                 <button class="copy-tracking-btn bg-indigo-500 text-white text-xs px-2 py-1 rounded-full hover:bg-indigo-400 transition-colors">
                     Copy
                 </button>
-            `;
-            trackingNumbersContainer.appendChild(div);
-        });
+            </div>
+        `).join('');
     } else {
-        noNumbersMessage.classList.remove('hidden');
+        // If no numbers are found, restore the original "no numbers" message.
+        trackingNumbersContainer.innerHTML = '<p id="no-numbers-message" class="text-center text-gray-500 text-base">No tracking numbers found yet.</p>';
     }
+
+    // Re-attach event listeners for any new copy buttons that were just created.
     document.querySelectorAll('.copy-tracking-btn').forEach(button => {
         button.addEventListener('click', () => {
             const number = button.previousElementSibling.textContent;
