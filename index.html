@@ -1653,7 +1653,10 @@ const renderContent = () => {
     } else if (currentPage === 'fedex-tracker') {
         fedexTrackerApp.classList.remove('hidden');
         mainTitle.textContent = 'FedEx Tracker';
-        extractAndDisplayNumbers();
+  	  if (!isTutorialActive) {
+       	 extractAndDisplayNumbers();
+    	}
+		
     } else if (currentPage === 'helpful-links') {
         helpfulLinksApp.classList.remove('hidden');
         mainTitle.textContent = 'Helpful Links';
