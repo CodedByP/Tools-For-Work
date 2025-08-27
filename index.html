@@ -1806,7 +1806,7 @@ const renderCategories = () => {
     const categoryActionsMenu = document.getElementById('category-actions-menu');
 
     categoryList.innerHTML = '';
-    const categoryNames = Object.keys(categories);
+    const categoryNames = Object.keys(categories).sort();
     
 if (!isAnonymous && categoryNames.length > 0) {
     if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
