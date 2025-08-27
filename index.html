@@ -1299,48 +1299,48 @@ const defaultCannedResponsesBlueprint = {
     'BRONCO': {
         color: '#32789C',
         responses: [
-            { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk location [Desk Location], as noted on MOMA, today [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to your desk location [Desk Location], as noted on MOMA, today [Date]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'bronco-9', label: 'Remote Security Key Delivery', text: 'Hello [Customer\'s Name],\n\nYour Security Key order has shipped. When the order arrives, please be sure to follow the Techstop Security Key setup instructions at go/setup-sk and Enroll: go/sl-enroll\n\nYou can track your shipment with the following FedEx tracking Number: [TrackingNumber]\n\nPlease view this tracking number for updates about your delivery, and expect an update once the package has been delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order. If you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1},
+            { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1},
+            { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk location [Desk Location], as noted on MOMA, today [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to your desk location [Desk Location], as noted on MOMA, today [Date]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'bronco-9', label: 'Remote Security Key Delivery', text: 'Hello [Customer\'s Name],\n\nYour Security Key order has shipped. When the order arrives, please be sure to follow the Techstop Security Key setup instructions at go/setup-sk and Enroll: go/sl-enroll\n\nYou can track your shipment with the following FedEx tracking Number: [TrackingNumber]\n\nPlease view this tracking number for updates about your delivery, and expect an update once the package has been delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order. If you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     },
     'PAR': {
         color: '#242020',
         responses: [
-            { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     },
     'GUTS': {
         color: '#014B34',
         responses: [
-            { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-9', label: 'Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nBecause this equipment is an upgrade from your current equipment, we need to obtain approval from your director before the order can proceed.\n\nBecause this is not self explanatory, I want to let you know that I am going to deny the approval of this request. This will trigger the approval chain to be activated so all necessary approvals are recorded.\n\nOnce all approvals are complete, the order will be released through the inventory system to a fulfillment team.  You will be able to track the progress of the approvals in this ticket, and the order status through your open orders on go/stuff.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-10', label: 'Approvals Complete', text: 'All approvals have been completed at this time and your order has been released to a fulfillment team.\n\nAt this point, the purpose for this ticket is complete and you can track further progress on your order from your open orders page through go/stuff.\n\nThank you for your patience.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-11', label: 'No Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nI have reviewed your asset records and verified your request falls within Google’s Distribution policy.\n\nWhen I approve this request, the ticket\'s purpose will be completed and resolved.\n\nYou can track the progress of your request though the go/stuff open orders page.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-12', label: 'DSS Scheduling Appointment', text: 'We are happy to assist you with &lt;issue description&gt; and would like to set an appointment for us to complete this service.\n\nWould [Date] at [Time] be a convenient time for this service appointment?\n\nIf not, please feel free to suggest a time that works best for you.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-13', label: 'DSS Confirming Appointment', text: 'Thank you for confirming your service appointment on [Date] at [Time].\n\nI will set this ticket to “Pending Date of Event” until the date of your appointment.In the meantime, feel free to reach out with any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-14', label: 'DSS Documentation and Resolution', text: 'This service appointment is complete and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-15', label: 'Out of Scope Request', text: 'Thank you for reaching out regarding &lt;Requested Service&gt;.\n\nUnfortunately this request is out of scope for our team, so we will route this ticket to the &lt;Team GUTS Group&gt; Team so that they can assist you with this request.\n\nHello &lt;GUTS Group&gt; Team,\n\nWould you please assist &lt;Requester Name&gt; with &lt;Requested Service&gt;?\n\n&lt;Provide all available information that will help the team successfully complete the request.&gt;\n\nThank you!\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-16', label: 'Ricoh Service Call Request was Submitted', text: 'I have submitted a request for a Ricoh service visit and I expect to receive call from a Ricoh service representative to schedule the appointment within the next 2 business days.\n\nI will set this ticket to Pending 3rd Party Action while we wait for the call from Ricoh, and I will update the ticket again to confirm the appointment date and time.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-17', label: 'Ricoh Service Call Appointment', text: 'I have scheduled a Ricoh service call appointment for [Date] at [Time] AM/PM.\n\nI will set this ticket to Pending Date of Event until the appointment date.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-18', label:	'Ricoh Replacement Part Order', text: '[Part Name] has been ordered for this service, and the order details are listed below.\n\nOrder GUTS Ticket number: [TicketNumber]\n\nETA: [Date]\n\nI will set this ticket to Pending Hardware while we wait for this part to be delivered, and I will update this ticket again to confirm when we receive the part and the service can be completed.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-			{ id: 'guts-19', label: 'AV Break/Fix Resolution Response', text: 'We concluded our investigation and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(, isDefault: true, version: 1) },
+            { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-9', label: 'Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nBecause this equipment is an upgrade from your current equipment, we need to obtain approval from your director before the order can proceed.\n\nBecause this is not self explanatory, I want to let you know that I am going to deny the approval of this request. This will trigger the approval chain to be activated so all necessary approvals are recorded.\n\nOnce all approvals are complete, the order will be released through the inventory system to a fulfillment team.  You will be able to track the progress of the approvals in this ticket, and the order status through your open orders on go/stuff.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-10', label: 'Approvals Complete', text: 'All approvals have been completed at this time and your order has been released to a fulfillment team.\n\nAt this point, the purpose for this ticket is complete and you can track further progress on your order from your open orders page through go/stuff.\n\nThank you for your patience.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-11', label: 'No Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nI have reviewed your asset records and verified your request falls within Google’s Distribution policy.\n\nWhen I approve this request, the ticket\'s purpose will be completed and resolved.\n\nYou can track the progress of your request though the go/stuff open orders page.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-12', label: 'DSS Scheduling Appointment', text: 'We are happy to assist you with &lt;issue description&gt; and would like to set an appointment for us to complete this service.\n\nWould [Date] at [Time] be a convenient time for this service appointment?\n\nIf not, please feel free to suggest a time that works best for you.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-13', label: 'DSS Confirming Appointment', text: 'Thank you for confirming your service appointment on [Date] at [Time].\n\nI will set this ticket to “Pending Date of Event” until the date of your appointment.In the meantime, feel free to reach out with any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-14', label: 'DSS Documentation and Resolution', text: 'This service appointment is complete and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-15', label: 'Out of Scope Request', text: 'Thank you for reaching out regarding &lt;Requested Service&gt;.\n\nUnfortunately this request is out of scope for our team, so we will route this ticket to the &lt;Team GUTS Group&gt; Team so that they can assist you with this request.\n\nHello &lt;GUTS Group&gt; Team,\n\nWould you please assist &lt;Requester Name&gt; with &lt;Requested Service&gt;?\n\n&lt;Provide all available information that will help the team successfully complete the request.&gt;\n\nThank you!\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-16', label: 'Ricoh Service Call Request was Submitted', text: 'I have submitted a request for a Ricoh service visit and I expect to receive call from a Ricoh service representative to schedule the appointment within the next 2 business days.\n\nI will set this ticket to Pending 3rd Party Action while we wait for the call from Ricoh, and I will update the ticket again to confirm the appointment date and time.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-17', label: 'Ricoh Service Call Appointment', text: 'I have scheduled a Ricoh service call appointment for [Date] at [Time] AM/PM.\n\nI will set this ticket to Pending Date of Event until the appointment date.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-18', label:	'Ricoh Replacement Part Order', text: '[Part Name] has been ordered for this service, and the order details are listed below.\n\nOrder GUTS Ticket number: [TicketNumber]\n\nETA: [Date]\n\nI will set this ticket to Pending Hardware while we wait for this part to be delivered, and I will update this ticket again to confirm when we receive the part and the service can be completed.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-19', label: 'AV Break/Fix Resolution Response', text: 'We concluded our investigation and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     }
 };
@@ -2893,53 +2893,100 @@ document.getElementById('show-placeholder-example-btn').addEventListener('click'
     document.getElementById('sign-out-btn-settings').addEventListener('click', async () => {
         try { await signOut(auth); showMessage("Signed out successfully!"); await signInAnonymously(auth); } catch (error) { console.error("Sign out failed", error); showMessage("Sign out failed. Please try again.", 'error'); }
     });
-    document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
-        if (isAnonymous) { showMessage("Please sign in to check for updates.", "error"); return; }
-        const updateModal = document.getElementById('update-modal');
-        const updateModalTitle = document.getElementById('update-modal-title');
-        const updateModalMessage = document.getElementById('update-modal-message');
-        const updateModalButtons = document.getElementById('update-modal-buttons');
-        updateModal.classList.remove('hidden');
-        updateModalTitle.textContent = "Checking for Updates...";
-        updateModalMessage.textContent = "Please wait while we check for new content.";
-        updateModalButtons.classList.add('hidden');
-        try {
-            const blueprint = await getCannedResponsesBlueprint();
-            let changesMade = false;
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            let newCategoryCount = 0;
-            let newResponseCount = 0;
-            for (const cat in blueprint) {
-                if (!updatedCategories[cat]) { updatedCategories[cat] = blueprint[cat]; newCategoryCount++; changesMade = true; }
+document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
+    if (isAnonymous) {
+        showMessage("Please sign in to check for updates.", "error");
+        return;
+    }
+
+    const updateModal = document.getElementById('update-modal');
+    const updateModalTitle = document.getElementById('update-modal-title');
+    const updateModalMessage = document.getElementById('update-modal-message');
+    const updateModalButtons = document.getElementById('update-modal-buttons');
+
+    // Show the modal immediately
+    updateModal.classList.remove('hidden');
+    updateModalTitle.textContent = "Checking for Updates...";
+    updateModalMessage.textContent = "Comparing your data with the latest blueprint...";
+    updateModalButtons.classList.add('hidden');
+
+    try {
+        // 1. Get the latest blueprint from your code
+        const blueprint = await getCannedResponsesBlueprint();
+        
+        // 2. Make a deep copy of the user's current data to modify it safely
+        const updatedCategories = JSON.parse(JSON.stringify(categories));
+        
+        let changesMade = false;
+        let updatedResponsesCount = 0;
+        let newResponsesCount = 0;
+        let newCategoryCount = 0;
+
+        // 3. Loop through every category and response in the blueprint
+        for (const blueprintCategoryName in blueprint) {
+            const blueprintCategory = blueprint[blueprintCategoryName];
+
+            // Check if the category exists for the user; if not, add it
+            if (!updatedCategories[blueprintCategoryName]) {
+                updatedCategories[blueprintCategoryName] = {
+                    color: blueprintCategory.color,
+                    responses: [] // Start with an empty array
+                };
+                newCategoryCount++;
+                changesMade = true;
             }
-            for (const cat in blueprint) {
-                if (updatedCategories[cat]) {
-                    const existingResponses = updatedCategories[cat].responses.map(r => r.id);
-                    const newResponses = blueprint[cat].responses.filter(r => !existingResponses.includes(r.id));
-                    if (newResponses.length > 0) {
-                        updatedCategories[cat].responses.push(...newResponses);
-                        newResponseCount += newResponses.length;
+
+            for (const blueprintResponse of blueprintCategory.responses) {
+                // Find the user's version of this response
+                const userResponse = updatedCategories[blueprintCategoryName].responses.find(r => r.id === blueprintResponse.id);
+
+                if (userResponse) {
+                    // Response exists, check its version
+                    // (Use 0 as a default if the user's response doesn't have a version yet)
+                    const userVersion = userResponse.version || 0;
+                    if (blueprintResponse.version > userVersion) {
+                        // Blueprint is newer! Overwrite the user's response text and update their version.
+                        userResponse.text = blueprintResponse.text;
+                        userResponse.label = blueprintResponse.label;
+                        userResponse.version = blueprintResponse.version; // Crucial!
+                        updatedResponsesCount++;
                         changesMade = true;
                     }
+                } else {
+                    // Response does not exist for the user, so add it
+                    updatedCategories[blueprintCategoryName].responses.push(blueprintResponse);
+                    newResponsesCount++;
+                    changesMade = true;
                 }
             }
-            if (changesMade) {
-                await saveToFirestore(updatedCategories);
-                updateModalTitle.textContent = "Updates Found!";
-                updateModalMessage.innerHTML = `<p>${newCategoryCount} new categories and ${newResponseCount} new responses were added.</p><p class="mt-2">Your data has been updated with the new content.</p>`;
-                updateModalButtons.classList.remove('hidden');
-            } else {
-                updateModalTitle.textContent = "No Updates Found";
-                updateModalMessage.textContent = "Your content is already up to date.";
-                updateModalButtons.classList.remove('hidden');
-            }
-        } catch (error) {
-            console.error("Error checking for updates:", error);
-            updateModalTitle.textContent = "Update Failed";
-            updateModalMessage.textContent = "There was an error checking for updates. Please try again later.";
-            updateModalButtons.classList.remove('hidden');
         }
-    });
+        
+        // 4. If any changes were made, save the updated data to Firestore
+        if (changesMade) {
+            await saveToFirestore(updatedCategories);
+            updateModalTitle.textContent = "Updates Applied! ✅";
+            updateModalMessage.innerHTML = `
+                <p>Your data has been successfully updated.</p>
+                <ul class="list-disc list-inside mt-2 text-left">
+                    ${newCategoryCount > 0 ? `<li>${newCategoryCount} new categories added.</li>` : ''}
+                    ${newResponsesCount > 0 ? `<li>${newResponsesCount} new responses added.</li>` : ''}
+                    ${updatedResponsesCount > 0 ? `<li>${updatedResponsesCount} existing responses updated.</li>` : ''}
+                </ul>
+            `;
+        } else {
+            updateModalTitle.textContent = "You're Up to Date! 👍";
+            updateModalMessage.textContent = "No new updates were found.";
+        }
+
+    } catch (error) {
+        console.error("Error checking for updates:", error);
+        updateModalTitle.textContent = "Update Failed ❌";
+        updateModalMessage.textContent = "An error occurred. Please try again later.";
+    } finally {
+        // Always show the close button at the end
+        updateModalButtons.classList.remove('hidden');
+    }
+});
     document.getElementById('close-update-btn').addEventListener('click', () => { document.getElementById('update-modal').classList.add('hidden'); });
     document.getElementById('show-placeholder-example-btn').addEventListener('click', showPlaceholderDemo);
 
