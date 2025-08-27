@@ -23,7 +23,7 @@
         .container-bg {
             background-color: #0d1117;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                  radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
@@ -283,7 +283,7 @@
 
             /* ADD THIS LINE to give the element a permanent, bright glow */
             border: 3px solid white; /* Adds a solid, white border for more visibility */
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));		
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)); /* Adds a soft glow effect */		
         }
 
 		/* Light Mode Highlighting Effect */
@@ -308,7 +308,7 @@ body.light-mode .highlight-target {
         .light-mode .container-bg {
             background-color: #f9fafb;
             background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                  radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
         }
         .light-mode .link-card, .light-mode .card-style, .light-mode .form-container, .light-mode .floating-card, .light-mode .main-card, .light-mode .sidebar, .light-mode .modal-content {
             background-color: rgba(255, 255, 255, 0.8);
@@ -1041,18 +1041,18 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
 
 			<div id="tutorial-step-10" class="tutorial-step space-y-6 hidden">
- 				 <h3 class="text-3xl font-extrabold text-blue-400 text-center">Navigate to Other Pages 🗺️</h3>
- 				 <p class="text-lg text-gray-300">
-    				 You can access other tools, like the **FedEx Tracker** and **Helpful Links**, by opening the main menu.
-    			 </p>
-    			 <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-        			 <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-             			<i class="fas fa-bars text-gray-400 mr-3"></i> How it Works
-         				</h4>
-        			 <p class="text-gray-400">
-            			 Click the hamburger icon on the top left to reveal the sidebar menu and switch between pages.
-         			</p>
-     			</div>
+   				 <h3 class="text-3xl font-extrabold text-blue-400 text-center">Navigate to Other Pages 🗺️</h3>
+   				 <p class="text-lg text-gray-300">
+       				 You can access other tools, like the **FedEx Tracker** and **Helpful Links**, by opening the main menu.
+   				 </p>
+   				 <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+       				 <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+            			<i class="fas fa-bars text-gray-400 mr-3"></i> How it Works
+        				</h4>
+       				 <p class="text-gray-400">
+           			 Click the hamburger icon on the top left to reveal the sidebar menu and switch between pages.
+        			</p>
+    			</div>
 			</div>
 
             <div id="tutorial-step-11" class="tutorial-step space-y-6 hidden">
@@ -1094,24 +1094,24 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
 
 			<div class="flex justify-between items-center mt-8">
- 				 <button id="tutorial-back-btn" class="py-3 px-6 rounded-xl shadow-md hidden 
-        			 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700
-         			light-mode:bg-gray-300 light-mode:text-gray-800 light-mode:hover:bg-gray-400
-         			transition duration-300">
-        			 <i class="fas fa-arrow-left mr-2"></i> Back
-    			 </button>
-    			 <button id="tutorial-next-btn" class="py-3 px-6 rounded-xl shadow-lg
-         			dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700
-         			light-mode:bg-blue-600 light-mode:text-white light-mode:hover:bg-blue-700
-         			transition duration-300">
-         			Next <i class="fas fa-arrow-right ml-2"></i>
-    			 </button>
-     			<button id="tutorial-finish-btn" class="py-3 px-6 rounded-xl shadow-lg hidden
-        			 dark:bg-green-600 dark:text-white dark:hover:bg-green-700
-        			 light-mode:bg-green-600 light-mode:text-white light-mode:hover:bg-green-700
-        			 transition duration-300">
-        			 Finish <i class="fas fa-check ml-2"></i>
-     			</button>
+   				 <button id="tutorial-back-btn" class="py-3 px-6 rounded-xl shadow-md hidden 
+       			 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700
+        			light-mode:bg-gray-300 light-mode:text-gray-800 light-mode:hover:bg-gray-400
+        			transition duration-300">
+       			 <i class="fas fa-arrow-left mr-2"></i> Back
+   			 </button>
+   			 <button id="tutorial-next-btn" class="py-3 px-6 rounded-xl shadow-lg
+        			dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700
+        			light-mode:bg-blue-600 light-mode:text-white light-mode:hover:bg-blue-700
+        			transition duration-300">
+        			Next <i class="fas fa-arrow-right ml-2"></i>
+   			 </button>
+    			<button id="tutorial-finish-btn" class="py-3 px-6 rounded-xl shadow-lg hidden
+       			 dark:bg-green-600 dark:text-white dark:hover:bg-green-700
+       			 light-mode:bg-green-600 light-mode:text-white light-mode:hover:bg-green-700
+       			 transition duration-300">
+       			 Finish <i class="fas fa-check ml-2"></i>
+    			</button>
 			</div>
         </div>
     </div>
@@ -1238,8 +1238,8 @@ const tutorialSteps = [
     document.getElementById('tutorial-step-2'),
     document.getElementById('tutorial-step-3'),
     document.getElementById('tutorial-step-4'),
-    document.getElementById('tutorial-step-5'),	
-    document.getElementById('tutorial-step-6'),	
+    document.getElementById('tutorial-step-5'), 
+    document.getElementById('tutorial-step-6'), 
     document.getElementById('tutorial-step-7'),
     document.getElementById('tutorial-step-8'),
     document.getElementById('tutorial-step-9'),
@@ -1275,7 +1275,7 @@ const tutorialPages = [
     'canned-responses', //step 9
 	'canned-responses', //step 10
     'fedex-tracker', // Step 11: Change page to FedEx tracker
-    'fedex-tracker', // Step 12: Change page to FedEx tracker    
+    'fedex-tracker', // Step 12: Change page to FedEx tracker   
 ];
 
 // An array to map each step to the modal's target position
@@ -1291,7 +1291,7 @@ const modalPositions = [
     'show-modal', //Step 9
 	'top-left',
     'left-response', // Step 10: New position
-    'on-tracker-page' // Step 11: Position on the tracker page    
+    'on-tracker-page' // Step 11: Position on the tracker page   
 ];
 
 // --- Master Blueprint Data for Initialization ---
@@ -1299,36 +1299,48 @@ const defaultCannedResponsesBlueprint = {
     'BRONCO': {
         color: '#32789C',
         responses: [
-            { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk [Desk Location] this morning [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to [Desk Location]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'bronco-1', label: 'NON ACTIONABLE ORDER', text: 'Hello [Customer\'s Name],\n\nI am writing to inform you that the item you ordered, [Device Model], is currently out of stock. We expect to have it back in stock within 2-4 weeks. I apologize for the inconvenience.\n\nOnce it is back in stock, we will deliver it to you as soon as possible. We appreciate your patience and understanding during this time.\n\nIf you have any other questions or concerns, please do not hesitate to contact me.\n\nSincerely,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1},
+            { id: 'bronco-2', label: 'ACTIONABLE ITEM RESPONSE', text: 'Hello [Customer\'s Name],\n\nThank you for your order!\n\nOur target is to have them either shipped or delivered to you in 1-3 business days time. We will let you know when your order is on its way.\n\nThank you\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-3', label: 'OUT FOR DELIVERY RESPONSE', text: 'Hello [Customer\'s Name],\n\nYour order will ship today or the next business day, depending on FedEx\'s pickup schedule. You can track your shipment with FedEx Tracking [TrackingNumber].\n\nPlease make sure to check your local Mail room once this order is marked delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1},
+            { id: 'bronco-4', label: 'ITEM DELIVERED', text: 'Hello [Customer\'s Name],\n\nI have delivered the [Device Model] to your desk location [Desk Location], as noted on MOMA, today [Date].\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-5', label: 'SECURITY KEY DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour security key order has been delivered to your desk location [Desk Location], as noted on MOMA, today [Date]. Please be sure to follow the Techstop security key setup instructions at go/setup-sk.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order.\n\nIf you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nThank you,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-6', label: 'PIKTIME', text: 'Hello [Customer\'s Name],\n\nThank you for your request.\n\nWe\'ve prepared your order and it will be ready for you to pick up at your confirmed appointment time.\n\nPick-up Location: https://floorscope.googleplex.com/US-LAX-BIN2-1#US-LAX-BIN2-1-100 (Please knock on our door when you arrive to pick up your order.)\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-7', label: 'PIKTIME DELIVERED', text: 'Hello [Customer\'s Name],\n\nYour order for a [Device Model] was successfully picked up on [Date]. Thanks for stopping by!\n\nWe will now mark this order delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'bronco-8', label: 'PIKTIME CANCELLED', text: 'Hello [Customer\'s Name],\n\nThis is to inform you that your order has been canceled. This is due to the failure to pick up the order at the confirmed date and time of your appointment.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'bronco-9', label: 'Remote Security Key Delivery', text: 'Hello [Customer\'s Name],\n\nYour Security Key order has shipped. When the order arrives, please be sure to follow the Techstop Security Key setup instructions at go/setup-sk and Enroll: go/sl-enroll\n\nYou can track your shipment with the following FedEx tracking Number: [TrackingNumber]\n\nPlease view this tracking number for updates about your delivery, and expect an update once the package has been delivered.\n\nPlease note that once the order is delivered, we are unable to see and respond to updates in the order. If you need further help, please submit a request through go/stuff by selecting “Have questions about your order?”, or by opening a ticket at go/emt-request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     },
     'PAR': {
         color: '#242020',
         responses: [
-            { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'par-1', label: 'PAR REMOTE ORDER', text: 'Hello [Customer\'s Name],\n\nYour shipping materials have been sent for your return order\n\nFedEx Tracking: [TrackingNumber]\nReturn Tracking: [ReturnTrackingNumber]\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-2', label: 'PAR SHIPPING MATERIALS DELIVERED', text: 'Hello [Customer\'s Name],\n\nAccording to the FedEx tracking number, the shipping Materials were delivered on [Date].\n\nScreenshot:\n\nAs a reminder, per Google’s device return policy, you have 10 business days to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged back after 40 days.\n\nBest regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-3', label: 'PAR STUFF LOCKER', text: 'Hello [Customer\'s Name],\n\nThank you for submitting your return request.\n\nWe\'ll retrieve your asset from the Stuff Station return locker as soon as it\'s dropped off.\n\nJust a friendly reminder: you have 10 business days from the creation date of this order to place your asset in the return locker. If it\'s not dropped off within this time frame, your return order will be automatically canceled.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'par-4', label: 'CANCEL RETURN LOCKER ORDER', text: 'Hello [Customer\'s Name],\n\nPlease be advised that this return order will be canceled. This is due to the failure to pick up the item from the designated return lockers.', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     },
     'GUTS': {
         color: '#014B34',
         responses: [
-            { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() },
-            { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString() }
+            { id: 'guts-1', label: 'GNG LOCKERS PROACTIVE TICKET', text: 'The GNG lockers contain [Number] loaners and [Number2] empty slots.\n\nScreenshot:\n\nThis ticket will be marked resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-2', label: 'GUTS STUFF STATION VENDING', text: 'The stuff station vending machine has been replenished .\n\nScreenshot:\n\nThis ticket will now be resolved.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-3', label: 'Remote Return Shipment Information', text: 'Your request has been prepped and ready to ship. Feel free to reach out to us if you need more assistance. (1 Box Sent)\n\nFedEx Tracking:[TrackingNumber]\nReturn Tracking:[ReturnTrackingNumber]\n\nAs a reminder, per Google’s device return policy, you have 14 days (10 business days) to complete your return. If you still have your device after the return window, this device will lose corporate access and your cost center will be charged.\n\nWe will send a reminder in 3 business days if we haven\'t received your return by then.\n\nI’ll set this ticket to Pending Hardware Return while we wait for delivery.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-4', label: 'Resolution For Lost Device', text: 'After conducting a search for [Asset Number] - [Device Model], I have concluded that this device is lost and I updated our records to reflect this.\n\nThe following actions were taken to search for this device:\n1:\n2:\n3:\n\nSince no further actions are needed, I will resolve this ticket now. Please feel free to reach out if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-5', label: 'Exit Onsite Collection Information', text: 'Thank you for confirming that your [Asset Number] - [Device Model] is ready for pickup on [Date].\n\nI will set this ticket to Pending Date of Event until the collection date, and I will update the ticket again when the collection is in progress.\n\nIn the meantime, please let me know if you have any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-6', label: 'Onsite Collection That Was Not Found/Not Ready for Pick Up', text: 'I just want to follow up because we visited [Desk Location] and your [Device Model] Asset Number [Asset Number] was not ready for collection.\n\nCan you please confirm a new collection date and the correct pick up location site code?\n\nAs a reminder, you have [Number] business days remaining to complete your return. If you do not complete your return in [Number] business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Customer Action while we wait for your reply.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-7', label: 'Remote Return Shipment That Has Not Been Received', text: 'I just want to follow up because we have not received your return.\n\nAs a reminder, you have 5 business days remaining to complete your return.\n\nIf you do not complete your return in 5 business days this request will be closed, and your device will lose corporate access.\n\nIn the meantime, I’ll set this ticket back to Pending Hardware Return while we wait for your return to be delivered.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+            { id: 'guts-8', label: 'Successful Return', text: 'The following devices have been returned to inventory, so I’ll resolve this ticket now:\n\n [Asset Number] - [Device Model]\n\nPlease feel free to reach out if you have any further questions regarding this return.\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-9', label: 'Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nBecause this equipment is an upgrade from your current equipment, we need to obtain approval from your director before the order can proceed.\n\nBecause this is not self explanatory, I want to let you know that I am going to deny the approval of this request. This will trigger the approval chain to be activated so all necessary approvals are recorded.\n\nOnce all approvals are complete, the order will be released through the inventory system to a fulfillment team.  You will be able to track the progress of the approvals in this ticket, and the order status through your open orders on go/stuff.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-10', label: 'Approvals Complete', text: 'All approvals have been completed at this time and your order has been released to a fulfillment team.\n\nAt this point, the purpose for this ticket is complete and you can track further progress on your order from your open orders page through go/stuff.\n\nThank you for your patience.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-11', label: 'No Approvals Needed', text: 'This ticket was generated because go/stuff was unable to determine your eligibility to receive the equipment you selected.\n\nI have reviewed your asset records and verified your request falls within Google’s Distribution policy.\n\nWhen I approve this request, the ticket\'s purpose will be completed and resolved.\n\nYou can track the progress of your request though the go/stuff open orders page.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-12', label: 'DSS Scheduling Appointment', text: 'We are happy to assist you with &lt;issue description&gt; and would like to set an appointment for us to complete this service.\n\nWould [Date] at [Time] be a convenient time for this service appointment?\n\nIf not, please feel free to suggest a time that works best for you.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-13', label: 'DSS Confirming Appointment', text: 'Thank you for confirming your service appointment on [Date] at [Time].\n\nI will set this ticket to “Pending Date of Event” until the date of your appointment.In the meantime, feel free to reach out with any further questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-14', label: 'DSS Documentation and Resolution', text: 'This service appointment is complete and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-15', label: 'Out of Scope Request', text: 'Thank you for reaching out regarding &lt;Requested Service&gt;.\n\nUnfortunately this request is out of scope for our team, so we will route this ticket to the &lt;Team GUTS Group&gt; Team so that they can assist you with this request.\n\nHello &lt;GUTS Group&gt; Team,\n\nWould you please assist &lt;Requester Name&gt; with &lt;Requested Service&gt;?\n\n&lt;Provide all available information that will help the team successfully complete the request.&gt;\n\nThank you!\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-16', label: 'Ricoh Service Call Request was Submitted', text: 'I have submitted a request for a Ricoh service visit and I expect to receive call from a Ricoh service representative to schedule the appointment within the next 2 business days.\n\nI will set this ticket to Pending 3rd Party Action while we wait for the call from Ricoh, and I will update the ticket again to confirm the appointment date and time.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-17', label: 'Ricoh Service Call Appointment', text: 'I have scheduled a Ricoh service call appointment for [Date] at [Time] AM/PM.\n\nI will set this ticket to Pending Date of Event until the appointment date.\n\nIn the meantime, please feel free to reach out if you have any questions regarding this request.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-18', label:	'Ricoh Replacement Part Order', text: '[Part Name] has been ordered for this service, and the order details are listed below.\n\nOrder GUTS Ticket number: [TicketNumber]\n\nETA: [Date]\n\nI will set this ticket to Pending Hardware while we wait for this part to be delivered, and I will update this ticket again to confirm when we receive the part and the service can be completed.\n\nKind regards,\n\n[Name]', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 },
+			{ id: 'guts-19', label: 'AV Break/Fix Resolution Response', text: 'We concluded our investigation and below are our findings. Please let us know if you have any further issues.\n\nKind regards,\n\n[Name]\n\n**Tech Report**\n\nSymptom(s) experienced by the Requester: \n\nWere you able to replicate the symptom(s) reported (Yes or No)?\n\nTroubleshooting steps from issue confirmation until resolution:\n\n1)\n\n2)\n\n3)\n\nRoot cause of the issue: \n\nAction that resolved the issue: ', isPinned: false, createdAt: new Date().toISOString(), isDefault: true, version: 1 }
         ]
     }
 };
@@ -1386,9 +1398,9 @@ const showMessage = (text, type = 'success') => {
 };
 
    const clearTutorialHighlights = () => {
-     document.querySelectorAll('.highlight-target').forEach(el => {
-         el.classList.remove('highlight-target');
-     });
+    document.querySelectorAll('.highlight-target').forEach(el => {
+        el.classList.remove('highlight-target');
+    });
 };		
 
 // Add this new function to your helper functions section
@@ -1488,6 +1500,36 @@ const renderLinks = (searchQuery = '') => {
 // This is the new, combined function that handles all tutorial logic
 const showTutorialStep = async (stepIndex) => {
 	    isTutorialActive = true;
+    // Define the elements and their positions for each step
+    const highlightedElements = [
+        null, // Step 0 (Welcome)
+        document.getElementById('add-response-section'), // Step 1: Add New Response
+        document.getElementById('search-bar-container'), // Step 2: Search Bar
+        document.getElementById('category-bar'), // Step 3: Categories
+        document.getElementById('category-menu-container'), // Step 4: Kebab menu
+        null, // Step 5: Will find dynamically below
+        null, // Step 6: Will find dynamically below
+        null, // Step 7: Dynamic Placeholders
+        null, // Step 8: Placeholder Demo
+		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
+        document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
+        document.getElementById('copy-button-fedex'), // Step 12: New highlight
+    ];
+    
+    const positionClasses = [
+        'show-modal', // Step 0: Centered modal
+        'top-right',  // Step 1: Add response section
+        'top-right',  // Step 2: Search bar
+        'bottom-left', // Step 3: Category bar
+        'upper-right', // Step 4: Kebab menu
+        'on-response', // Step 5: Manage Responses (new)
+        'on-response', // Step 6: Pin button (new)
+        'left-response', // Step 7: Dynamic placeholders
+        'show-modal', // Step 8: Placeholder demo
+		'top-left',
+        'on-tracker-page', // Step 10: New position
+        'on-tracker-page' // Step 11: Position on the tracker page
+    ];
 
     const tutorialModal = document.getElementById('tutorial-modal');
     const tutorialOverlay = document.getElementById('tutorial-overlay');
@@ -1518,7 +1560,7 @@ const showTutorialStep = async (stepIndex) => {
 	
     // We now clear the highlights and hide the modal AFTER the page content is rendered.
     clearTutorialHighlights();
-    tutorialModal.classList.remove(...modalPositions);
+    tutorialModal.classList.remove(...positionClasses);
 
     const currentStepElement = tutorialSteps[stepIndex];
     if (currentStepElement) {
@@ -1538,57 +1580,56 @@ const showTutorialStep = async (stepIndex) => {
                 if (pinButton) pinButton.classList.add('highlight-target');
             }
         } else if (stepIndex === 7) {
-            // This block now ensures the 'bronco' category is selected and waits for the UI to update
-            // before trying to find the element to highlight. This prevents errors.
-
-            // First, check if we need to switch to the 'bronco' category.
-            if (activeCategory !== 'bronco') {
-                // We'll use a Promise to wait for the DOM to update after switching the category.
-                await new Promise(resolve => {
-                    activeCategory = 'bronco';
-                    renderCategories(); // This triggers the re-render of responses for the 'bronco' category.
-                    
-                    // We wait for the next browser paint cycle to ensure the new elements are available.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(resolve);
-                    });
+            const responsesWithPlaceholders = [];
+            if (categories[activeCategory]) {
+                categories[activeCategory].responses.forEach(response => {
+                    if (response.text.match(/\[([^\]]+)\]/g)) {
+                        responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
+                    }
                 });
             }
-
-            // Now that the 'bronco' category is visible, we can safely find the response.
-            const responsesWithPlaceholders = [];
-            if (categories['bronco'] && categories['bronco'].responses) {
-                // Find the FIRST response in the 'bronco' category that has a placeholder.
-                const responseToFind = categories['bronco'].responses.find(response => response.text.match(/\[([^\]]+)\]/g));
-
-                if (responseToFind) {
-                    const element = document.querySelector(`.response-item[data-id="${responseToFind.id}"]`);
-                    if (element) {
-                        responsesWithPlaceholders.push(element);
-                    }
+            if (responsesWithPlaceholders.length === 0) {
+                for (const category in categories) {
+                    categories[category].responses.forEach(response => {
+                        if (response.text.match(/\[([^\]]+)\]/g)) {
+                            const foundResponse = document.querySelector(`.response-item[data-id="${response.id}"]`);
+                            if (foundResponse) {
+                                responsesWithPlaceholders.push(foundResponse);
+                            }
+                        }
+                    });
                 }
             }
-
-            // Highlight the found response.
             const responseToHighlight = responsesWithPlaceholders[0];
             if (responseToHighlight) {
                 responseToHighlight.classList.add('highlight-target');
-                // Scroll the highlighted response into the middle of the view for better visibility.
-                responseToHighlight.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                if (responseToHighlight.dataset.category !== activeCategory) {
+                    activeCategory = responseToHighlight.dataset.category;
+                    renderCategories();
+                    const newHighlight = document.querySelector(`.response-item[data-id="${responseToHighlight.dataset.id}"]`);
+                    if (newHighlight) {
+                        newHighlight.classList.add('highlight-target');
+                        newHighlight.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                } else {
+                    responseToHighlight.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
             } else {
-                // Log a warning if no suitable response was found for the tutorial step.
-                console.warn("Tutorial Step 8: No canned response with dynamic placeholders was found in the 'BRONCO' category.");
+                console.warn("No canned response with dynamic placeholders found for the tutorial.");
             }
 		} else if (stepIndex === 9) { // New logic for the hamburger icon
 		const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-    hamburgerBtn.classList.add('highlight-target', 'bg-gray-700');	
+        hamburgerBtn.classList.add('highlight-target', 'bg-gray-700');	
 			hamburgerBtn.scrollIntoView({
-        		behavior: 'smooth',
-        		block: 'start' // This positions the element at the top of the viewport
-    });
+            		behavior: 'smooth',
+            		block: 'start' // This positions the element at the top of the viewport
+        });
         } else if (stepIndex === 10) {
             document.getElementById('input-text-fedex').classList.add('highlight-target');
             document.getElementById('input-text-fedex').scrollIntoView({
@@ -1618,7 +1659,7 @@ const showTutorialStep = async (stepIndex) => {
     // Now, show the modal with the correct positioning
     tutorialModal.classList.remove('hidden');
     tutorialOverlay.classList.remove('hidden');
-    tutorialModal.classList.add('modal', modalPositions[stepIndex]);
+    tutorialModal.classList.add('modal', positionClasses[stepIndex]);
 
     // Update button visibility
     const tutorialBackBtn = document.getElementById('tutorial-back-btn');
@@ -1717,7 +1758,6 @@ const renderContent = () => {
         } else {
             userLinksSection.classList.remove('hidden');
             addLinkSection.classList.remove('hidden');
-            renderUserLinks();
         }
     } else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
@@ -1760,7 +1800,7 @@ if (!isAnonymous && categoryNames.length > 0) {
     categoryNames.forEach(name => {
         const button = document.createElement('button');
 		
-          // Determine the border color based on the theme
+         // Determine the border color based on the theme
         const activeClass = name === activeCategory ? 
             (document.body.classList.contains('light-mode') ? 'border-2 border-gray-900' : 'border-2 border-white') : 
             '';
@@ -2135,7 +2175,6 @@ const renderStaticLinks = () => {
 }
 const renderUserLinks = () => {
     const userLinksList = document.getElementById('user-links-list');
-    const userLinksSection = document.getElementById('user-links-section');
     userLinksList.innerHTML = '';
     if (userLinks && userLinks.length > 0) {
         userLinks.forEach(link => {
@@ -2166,7 +2205,7 @@ const renderUserLinks = () => {
         userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
     }
 
-	    if (userLinks.length === 0 && isAnonymous) {
+	    if (filteredUserLinks.length === 0 && isAnonymous) {
       userLinksSection.classList.add('hidden');
     } else {
       userLinksSection.classList.remove('hidden');
@@ -2177,7 +2216,7 @@ const renderHelpfulLinks = () => {
     const addLinkSection = document.getElementById('add-link-section');
     
     // Call the unified rendering function with no search query
-    renderLinks();	
+    renderLinks(); 
 
     if (isAnonymous) {
         userLinksSection.classList.add('hidden');
@@ -2257,21 +2296,24 @@ const extractAndDisplayNumbers = () => {
     const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
     const noNumbersMessage = document.getElementById('no-numbers-message');
 
-    // --- FIX: Add this check ---
-    // If any of these elements don't exist on the page when the function is called, just exit.
+    // Exit if any critical elements aren't found
     if (!inputTextareaFedex || !trackingNumbersContainer || !noNumbersMessage) {
-        return; 
+        return;
     }
-    // --- End of FIX ---
 
     const text = inputTextareaFedex.value;
     const matches = text.match(fedexRegex) || [];
     const uniqueMatches = [...new Set(matches)];
-    
-    trackingNumbersContainer.innerHTML = '';
-    
+
+    // **THE FIX:** Remove only the previously added tracking tabs.
+    const existingTabs = trackingNumbersContainer.querySelectorAll('.tracking-tab');
+    existingTabs.forEach(tab => tab.remove());
+
     if (uniqueMatches.length > 0) {
+        // Hide the "no numbers" message because we found results.
         noNumbersMessage.classList.add('hidden');
+        
+        // Add the new tracking number divs.
         uniqueMatches.forEach(num => {
             const div = document.createElement('div');
             div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
@@ -2284,9 +2326,11 @@ const extractAndDisplayNumbers = () => {
             trackingNumbersContainer.appendChild(div);
         });
     } else {
+        // If no numbers were found, make sure the message is visible.
         noNumbersMessage.classList.remove('hidden');
     }
 
+    // Re-attach event listeners to any new copy buttons that were created.
     document.querySelectorAll('.copy-tracking-btn').forEach(button => {
         button.addEventListener('click', () => {
             const number = button.previousElementSibling.textContent;
@@ -2765,9 +2809,9 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     // 1. Get user input from placeholders
     const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
     const userValues = {};
-    inputs.forEach(input => {	
-        const key = input.dataset.placeholder;	
-        userValues[key] = input.value;	
+    inputs.forEach(input => { 
+        const key = input.dataset.placeholder; 
+        userValues[key] = input.value; 
     });
     
     // 2. Process and copy the final text
@@ -2803,12 +2847,12 @@ document.getElementById('cancel-placeholder-btn').addEventListener('click', () =
         document.getElementById('tutorial-modal').classList.remove('hidden');
         document.getElementById('tutorial-overlay').classList.remove('hidden');
         showTutorialStep(currentTutorialStep);
-    }	
+    } 
 });
 
 // The showPlaceholderDemo logic should be updated slightly.
 document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
-    isTutorialActive = true;	
+    isTutorialActive = true; 
     const highlightedResponse = document.querySelector('.response-item.highlight-target');
     if (highlightedResponse) {
         const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
@@ -2849,53 +2893,100 @@ document.getElementById('show-placeholder-example-btn').addEventListener('click'
     document.getElementById('sign-out-btn-settings').addEventListener('click', async () => {
         try { await signOut(auth); showMessage("Signed out successfully!"); await signInAnonymously(auth); } catch (error) { console.error("Sign out failed", error); showMessage("Sign out failed. Please try again.", 'error'); }
     });
-    document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
-        if (isAnonymous) { showMessage("Please sign in to check for updates.", "error"); return; }
-        const updateModal = document.getElementById('update-modal');
-        const updateModalTitle = document.getElementById('update-modal-title');
-        const updateModalMessage = document.getElementById('update-modal-message');
-        const updateModalButtons = document.getElementById('update-modal-buttons');
-        updateModal.classList.remove('hidden');
-        updateModalTitle.textContent = "Checking for Updates...";
-        updateModalMessage.textContent = "Please wait while we check for new content.";
-        updateModalButtons.classList.add('hidden');
-        try {
-            const blueprint = await getCannedResponsesBlueprint();
-            let changesMade = false;
-            const updatedCategories = JSON.parse(JSON.stringify(categories));
-            let newCategoryCount = 0;
-            let newResponseCount = 0;
-            for (const cat in blueprint) {
-                if (!updatedCategories[cat]) { updatedCategories[cat] = blueprint[cat]; newCategoryCount++; changesMade = true; }
+document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
+    if (isAnonymous) {
+        showMessage("Please sign in to check for updates.", "error");
+        return;
+    }
+
+    const updateModal = document.getElementById('update-modal');
+    const updateModalTitle = document.getElementById('update-modal-title');
+    const updateModalMessage = document.getElementById('update-modal-message');
+    const updateModalButtons = document.getElementById('update-modal-buttons');
+
+    // Show the modal immediately
+    updateModal.classList.remove('hidden');
+    updateModalTitle.textContent = "Checking for Updates...";
+    updateModalMessage.textContent = "Comparing your data with the latest blueprint...";
+    updateModalButtons.classList.add('hidden');
+
+    try {
+        // 1. Get the latest blueprint from your code
+        const blueprint = await getCannedResponsesBlueprint();
+        
+        // 2. Make a deep copy of the user's current data to modify it safely
+        const updatedCategories = JSON.parse(JSON.stringify(categories));
+        
+        let changesMade = false;
+        let updatedResponsesCount = 0;
+        let newResponsesCount = 0;
+        let newCategoryCount = 0;
+
+        // 3. Loop through every category and response in the blueprint
+        for (const blueprintCategoryName in blueprint) {
+            const blueprintCategory = blueprint[blueprintCategoryName];
+
+            // Check if the category exists for the user; if not, add it
+            if (!updatedCategories[blueprintCategoryName]) {
+                updatedCategories[blueprintCategoryName] = {
+                    color: blueprintCategory.color,
+                    responses: [] // Start with an empty array
+                };
+                newCategoryCount++;
+                changesMade = true;
             }
-            for (const cat in blueprint) {
-                if (updatedCategories[cat]) {
-                    const existingResponses = updatedCategories[cat].responses.map(r => r.id);
-                    const newResponses = blueprint[cat].responses.filter(r => !existingResponses.includes(r.id));
-                    if (newResponses.length > 0) {
-                        updatedCategories[cat].responses.push(...newResponses);
-                        newResponseCount += newResponses.length;
+
+            for (const blueprintResponse of blueprintCategory.responses) {
+                // Find the user's version of this response
+                const userResponse = updatedCategories[blueprintCategoryName].responses.find(r => r.id === blueprintResponse.id);
+
+                if (userResponse) {
+                    // Response exists, check its version
+                    // (Use 0 as a default if the user's response doesn't have a version yet)
+                    const userVersion = userResponse.version || 0;
+                    if (blueprintResponse.version > userVersion) {
+                        // Blueprint is newer! Overwrite the user's response text and update their version.
+                        userResponse.text = blueprintResponse.text;
+                        userResponse.label = blueprintResponse.label;
+                        userResponse.version = blueprintResponse.version; // Crucial!
+                        updatedResponsesCount++;
                         changesMade = true;
                     }
+                } else {
+                    // Response does not exist for the user, so add it
+                    updatedCategories[blueprintCategoryName].responses.push(blueprintResponse);
+                    newResponsesCount++;
+                    changesMade = true;
                 }
             }
-            if (changesMade) {
-                await saveToFirestore(updatedCategories);
-                updateModalTitle.textContent = "Updates Found!";
-                updateModalMessage.innerHTML = `<p>${newCategoryCount} new categories and ${newResponseCount} new responses were added.</p><p class="mt-2">Your data has been updated with the new content.</p>`;
-                updateModalButtons.classList.remove('hidden');
-            } else {
-                updateModalTitle.textContent = "No Updates Found";
-                updateModalMessage.textContent = "Your content is already up to date.";
-                updateModalButtons.classList.remove('hidden');
-            }
-        } catch (error) {
-            console.error("Error checking for updates:", error);
-            updateModalTitle.textContent = "Update Failed";
-            updateModalMessage.textContent = "There was an error checking for updates. Please try again later.";
-            updateModalButtons.classList.remove('hidden');
         }
-    });
+        
+        // 4. If any changes were made, save the updated data to Firestore
+        if (changesMade) {
+            await saveToFirestore(updatedCategories);
+            updateModalTitle.textContent = "Updates Applied! ✅";
+            updateModalMessage.innerHTML = `
+                <p>Your data has been successfully updated.</p>
+                <ul class="list-disc list-inside mt-2 text-left">
+                    ${newCategoryCount > 0 ? `<li>${newCategoryCount} new categories added.</li>` : ''}
+                    ${newResponsesCount > 0 ? `<li>${newResponsesCount} new responses added.</li>` : ''}
+                    ${updatedResponsesCount > 0 ? `<li>${updatedResponsesCount} existing responses updated.</li>` : ''}
+                </ul>
+            `;
+        } else {
+            updateModalTitle.textContent = "You're Up to Date! 👍";
+            updateModalMessage.textContent = "No new updates were found.";
+        }
+
+    } catch (error) {
+        console.error("Error checking for updates:", error);
+        updateModalTitle.textContent = "Update Failed ❌";
+        updateModalMessage.textContent = "An error occurred. Please try again later.";
+    } finally {
+        // Always show the close button at the end
+        updateModalButtons.classList.remove('hidden');
+    }
+});
     document.getElementById('close-update-btn').addEventListener('click', () => { document.getElementById('update-modal').classList.add('hidden'); });
     document.getElementById('show-placeholder-example-btn').addEventListener('click', showPlaceholderDemo);
 
