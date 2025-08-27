@@ -1537,15 +1537,26 @@ const showTutorialStep = async (stepIndex) => {
                 const pinButton = firstResponse.querySelector('.pin-btn');
                 if (pinButton) pinButton.classList.add('highlight-target');
             }
-        } else if (stepIndex === 7) {
-            const responsesWithPlaceholders = [];
-            if (categories[activeCategory]) {
-                categories[activeCategory].responses.forEach(response => {
-                    if (response.text.match(/\[([^\]]+)\]/g)) {
-                        responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
-                    }
-                });
-            }
+} else if (stepIndex === 7) {
+    // First, check if the current category is NOT 'bronco'.
+    if (activeCategory !== 'bronco') {
+
+        switchCategory('bronco'); 
+    }
+    const responsesWithPlaceholders = [];
+
+    if (categories['bronco']) {
+        categories['bronco'].responses.forEach(response => {
+            // Find responses that contain placeholder text like [placeholder]
+            if (response.text.match(/\[([^\]]+)\]/g)) {
+                const element = document.querySelector(`.response-item[data-id="${response.id}"]`);
+                if (element) {
+                    responsesWithPlaceholders.push(element);
+               		 }
+           		 }
+      		  });
+   		 	}
+		}
             if (responsesWithPlaceholders.length === 0) {
                 for (const category in categories) {
                     categories[category].responses.forEach(response => {
