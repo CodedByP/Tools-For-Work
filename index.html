@@ -1540,7 +1540,6 @@ const showTutorialStep = async (stepIndex) => {
 } else if (stepIndex === 7) {
     // First, check if the current category is NOT 'bronco'.
     if (activeCategory !== 'bronco') {
-
         switchCategory('bronco'); 
     }
     const responsesWithPlaceholders = [];
@@ -1556,7 +1555,7 @@ const showTutorialStep = async (stepIndex) => {
            		 }
       		  });
    		 	}
-		}
+		
             if (responsesWithPlaceholders.length === 0) {
                 for (const category in categories) {
                     categories[category].responses.forEach(response => {
