@@ -125,7 +125,7 @@
 #tutorial-modal.top-right .modal-content {
     opacity: 1;
     top: 15%;
-    left: auto; /* Unset left */
+    left: 40%; /* Unset left */
     right: 10%; /* Anchor to the right */
     transform: translate(0, 0) scale(1);
     max-width: 400px;
@@ -134,10 +134,10 @@
 /* Positioned near the top-left of the screen */
 #tutorial-modal.top-left .modal-content {
     opacity: 1;
-    top: 10%;
+    top: 20%;
     left: 10%; /* Anchor to the left */
     right: auto; /* Unset right */
-    transform: translate(0, 0) scale(1);
+    transform: translate(-20%, -20%) scale(1);
     max-width: 400px;
 }		
 
@@ -145,8 +145,8 @@
 #tutorial-modal.bottom-left .modal-content {
     opacity: 1;
     top: auto; /* Unset top */
-    bottom: 15%; /* Anchor to the bottom */
-    left: 10%;   /* Anchor to the left */
+    bottom: 25%; /* Anchor to the bottom */
+    left: 40%;   /* Anchor to the left */
     right: auto; /* Unset right */
     transform: translate(0, 0) scale(1);
     max-width: 400px;
@@ -155,28 +155,38 @@
 /* Positioned on the right, vertically centered (for highlighting a response) */
 #tutorial-modal.on-response .modal-content {
     opacity: 1;
-    top: 50%;
+    top: 40%;
     left: auto;
-    right: 5%;
+    right: 25%;
     /* This vertically centers the popup next to the highlighted element */
     transform: translateY(-50%) scale(1); 
     max-width: 400px;
 }
 
-/* Position for the FedEx tracker page */
-#tutorial-modal.on-tracker-page .modal-content {
+#tutorial-modal.pin-response .modal-content {
     opacity: 1;
     top: 30%;
     left: auto;
+    right: 25%;
+    /* This vertically centers the popup next to the highlighted element */
+    transform: translateY(-50%) scale(1); 
+    max-width: 400px;
+}		
+
+/* Position for the FedEx tracker page */
+#tutorial-modal.on-tracker-page .modal-content {
+    opacity: 1;
+    top: 10%;
+    left: 70%;
     right: 10%;
-    transform: translate(0, 0) scale(1);
+    transform: translate(-0, 0) scale(1);
     max-width: 400px;
 }		
 		
 /* Positioned in the upper-right area of the screen */
 #tutorial-modal.upper-right .modal-content {
     opacity: 1;
-    top: 20%;
+    top: 10%;
     left: auto;
     right: 15%;
     transform: translate(0, 0) scale(1);
@@ -187,10 +197,10 @@
 #tutorial-modal.left-response .modal-content {
     opacity: 1;
     top: 50%;
-    left: 15%;
-    right: auto;
+    left: 73%;
+    right: 50%;
     /* This vertically centers the popup */
-    transform: translateY(-50%) scale(1); 
+    transform: translate(-2000%, -50%) scale(1); 
     max-width: 500px;
 }	 	
 
