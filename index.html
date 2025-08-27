@@ -105,79 +105,94 @@
 }
 
 /* Tutorial Pop-up specific positioning */
+/* Tutorial Pop-up specific positioning - REFACTORED FOR RESPONSIVENESS */
 #tutorial-modal .modal-content {
     opacity: 0;
     transform: scale(0.95);
+    /* Make sure transition is here for smooth animations */
+    transition: all 0.5s ease-in-out; 
 }
 
+/* This is your default centered modal, it's perfect */
 #tutorial-modal.show-modal .modal-content {
     opacity: 1;
-    transform: scale(1);
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1);
 }
 
+/* Positioned near the top-right of the screen */
 #tutorial-modal.top-right .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
     opacity: 1;
-    top: 200px;
-    left: calc(100% - 400px - 800px); /* Adjusting left to match your right: 800px value */
+    top: 15%;
+    left: auto; /* Unset left */
+    right: 10%; /* Anchor to the right */
     transform: translate(0, 0) scale(1);
     max-width: 400px;
 }
 		
+/* Positioned near the top-left of the screen */
 #tutorial-modal.top-left .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
     opacity: 1;
-    top: 100px;
-    left: calc(60% - 400px - 800px); /* Adjusting left to match your right: 800px value */
+    top: 10%;
+    left: 10%; /* Anchor to the left */
+    right: auto; /* Unset right */
     transform: translate(0, 0) scale(1);
     max-width: 400px;
 }		
 
+/* Positioned near the bottom-left of the screen */
 #tutorial-modal.bottom-left .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
     opacity: 1;
-    top: calc(100% - 380px - 400px); /* Adjusting top to match your bottom: 380px value */
-    left: 40%;
+    top: auto; /* Unset top */
+    bottom: 15%; /* Anchor to the bottom */
+    left: 10%;   /* Anchor to the left */
+    right: auto; /* Unset right */
     transform: translate(0, 0) scale(1);
     max-width: 400px;
 }
 
+/* Positioned on the right, vertically centered (for highlighting a response) */
 #tutorial-modal.on-response .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
     opacity: 1;
-    top: calc(100% - 300px - 400px); /* Adjusting top to match your bottom: 380px value */
-    left: 48.2%;
-    transform: translate(0, 0) scale(1);
+    top: 50%;
+    left: auto;
+    right: 5%;
+    /* This vertically centers the popup next to the highlighted element */
+    transform: translateY(-50%) scale(1); 
     max-width: 400px;
 }
 
+/* Position for the FedEx tracker page */
 #tutorial-modal.on-tracker-page .modal-content {
     opacity: 1;
-    top: 25%;
+    top: 30%;
+    left: auto;
     right: 10%;
     transform: translate(0, 0) scale(1);
     max-width: 400px;
 }		
 		
+/* Positioned in the upper-right area of the screen */
 #tutorial-modal.upper-right .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
     opacity: 1;
-    top: calc(85% - 400px - 400px); /* Adjusting top to match your bottom: 380px value */
-    left: 60%;
+    top: 20%;
+    left: auto;
+    right: 15%;
     transform: translate(0, 0) scale(1);
     max-width: 400px;
 }
- #tutorial-modal.left-response .modal-content {
-    /* Refactored to use top and left for positioning and a transform for a smooth animation */
+
+/* Positioned on the left, vertically centered */
+#tutorial-modal.left-response .modal-content {
     opacity: 1;
-    top: calc(85% - 300px - 400px); /* Adjusting top to match your bottom: 380px value */
+    top: 50%;
     left: 15%;
-    transform: translate(0, 0) scale(1);
+    right: auto;
+    /* This vertically centers the popup */
+    transform: translateY(-50%) scale(1); 
     max-width: 500px;
-}		 	
+}	 	
 
 
         /* Add these rules to ensure proper z-indexing for highlighting */
