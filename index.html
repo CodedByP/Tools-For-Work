@@ -2284,21 +2284,24 @@ const extractAndDisplayNumbers = () => {
     const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
     const noNumbersMessage = document.getElementById('no-numbers-message');
 
-    // --- FIX: Add this check ---
-    // If any of these elements don't exist on the page when the function is called, just exit.
+    // Exit if any critical elements aren't found
     if (!inputTextareaFedex || !trackingNumbersContainer || !noNumbersMessage) {
-        return; 
+        return;
     }
-    // --- End of FIX ---
 
     const text = inputTextareaFedex.value;
     const matches = text.match(fedexRegex) || [];
     const uniqueMatches = [...new Set(matches)];
-    
-    trackingNumbersContainer.innerHTML = '';
-    
+
+    // **THE FIX:** Remove only the previously added tracking tabs.
+    const existingTabs = trackingNumbersContainer.querySelectorAll('.tracking-tab');
+    existingTabs.forEach(tab => tab.remove());
+
     if (uniqueMatches.length > 0) {
+        // Hide the "no numbers" message because we found results.
         noNumbersMessage.classList.add('hidden');
+        
+        // Add the new tracking number divs.
         uniqueMatches.forEach(num => {
             const div = document.createElement('div');
             div.className = 'tracking-tab flex items-center justify-between p-3 rounded-lg shadow-md mb-2';
@@ -2311,9 +2314,11 @@ const extractAndDisplayNumbers = () => {
             trackingNumbersContainer.appendChild(div);
         });
     } else {
+        // If no numbers were found, make sure the message is visible.
         noNumbersMessage.classList.remove('hidden');
     }
 
+    // Re-attach event listeners to any new copy buttons that were created.
     document.querySelectorAll('.copy-tracking-btn').forEach(button => {
         button.addEventListener('click', () => {
             const number = button.previousElementSibling.textContent;
