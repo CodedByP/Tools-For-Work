@@ -2144,7 +2144,9 @@ const renderStaticLinks = () => {
 }
 const renderUserLinks = () => {
     const userLinksList = document.getElementById('user-links-list');
+    const userLinksSection = document.getElementById('user-links-section'); // Added this line to get the section
     userLinksList.innerHTML = '';
+    
     if (userLinks && userLinks.length > 0) {
         userLinks.forEach(link => {
             const card = document.createElement('div');
@@ -2173,8 +2175,7 @@ const renderUserLinks = () => {
     } else {
         userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>';
     }
-
-	    if (filteredUserLinks.length === 0 && isAnonymous) {
+    if (userLinks.length === 0 && isAnonymous) {
       userLinksSection.classList.add('hidden');
     } else {
       userLinksSection.classList.remove('hidden');
