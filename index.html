@@ -2256,10 +2256,20 @@ const extractAndDisplayNumbers = () => {
     const inputTextareaFedex = document.getElementById('input-text-fedex');
     const trackingNumbersContainer = document.getElementById('tracking-numbers-container');
     const noNumbersMessage = document.getElementById('no-numbers-message');
+
+    // --- FIX: Add this check ---
+    // If any of these elements don't exist on the page when the function is called, just exit.
+    if (!inputTextareaFedex || !trackingNumbersContainer || !noNumbersMessage) {
+        return; 
+    }
+    // --- End of FIX ---
+
     const text = inputTextareaFedex.value;
     const matches = text.match(fedexRegex) || [];
     const uniqueMatches = [...new Set(matches)];
+    
     trackingNumbersContainer.innerHTML = '';
+    
     if (uniqueMatches.length > 0) {
         noNumbersMessage.classList.add('hidden');
         uniqueMatches.forEach(num => {
@@ -2276,6 +2286,7 @@ const extractAndDisplayNumbers = () => {
     } else {
         noNumbersMessage.classList.remove('hidden');
     }
+
     document.querySelectorAll('.copy-tracking-btn').forEach(button => {
         button.addEventListener('click', () => {
             const number = button.previousElementSibling.textContent;
