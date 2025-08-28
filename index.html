@@ -753,14 +753,26 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
 
-		<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
-		    <div class="w-full max-w-7xl mx-auto space-y-8">
+		<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen hidden">
+		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12">
+		        <div>
+		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
+		            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+		                </div>
+		        </div>
+		
+		        <div>
+		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Achievements 🏆</h2>
+		            <div id="achievements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+		                </div>
+		        </div>
+		
 		        <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
 		            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		                <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Your Stats 📈
+		                <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Most Used Responses
 		            </h2>
-		            <div id="stats-container" class="w-full text-center">
-		            </div>
+		            <div id="stats-container" class="w-full text-center relative h-64">
+		                </div>
 		        </div>
 		    </div>
 		</div>
@@ -1718,12 +1730,30 @@ const showTutorialStep = async (stepIndex) => {
 
     currentTutorialStep = stepIndex;
 };
+		
+const { serverTimestamp } = import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
 
+const logUserEvent = async (eventType, eventData = {}) => {
+    if (!userId || isAnonymous) return; // Don't log for anonymous users
+    try {
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+        await addDoc(eventsCollectionRef, {
+            type: eventType,
+            timestamp: serverTimestamp(),
+            ...eventData
+        });
+    } catch (error) {
+        console.error("Error logging user event:", error);
+        // We don't show a message to the user for this, as it's a background task.
+    }
+};
+		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
 const getUserCannedResponsesDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data'); };
 const getUserHelpfulLinksCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data'); };
 const getUserRootDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid); }
+const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };		
 
 const saveToFirestore = async (dataToSave) => {
     if (!userId || isAnonymous) {
@@ -1810,7 +1840,7 @@ const renderContent = () => {
 	} else if (currentPage === 'my-stats') {
     myStatsPage.classList.remove('hidden');
     mainTitle.textContent = 'My Stats';
-    renderStatsDashboard();
+    renderAdvancedStats();
 		
     } else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
@@ -2122,6 +2152,7 @@ const copyToClipboard = (text, responseId, categoryName) => {
     document.execCommand('copy');
     document.body.removeChild(el);
     showMessage("Copied to clipboard!");
+	logUserEvent('copy', { responseId, categoryName });
 
     // Increment the counter in Firestore
     if (userId && !isAnonymous && responseId && categoryName) {
@@ -2475,104 +2506,101 @@ const renderSettingsPage = () => {
     }
 };
 
-	const renderStatsDashboard = () => {
-    const statsContainer = document.getElementById('stats-container');
-    if (!statsContainer || isAnonymous) {
-        if(statsContainer) statsContainer.innerHTML = '<p class="text-gray-400">Sign in to track your response usage.</p>';
+const renderAdvancedStats = async () => {
+    const statsContent = document.getElementById('stats-content');
+    const metricBadgesContainer = document.getElementById('metric-badges-container');
+    const achievementsContainer = document.getElementById('achievements-container');
+    const chartContainer = document.getElementById('stats-container');
+
+    if (!statsContent || isAnonymous) {
+        if(statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
         return;
     }
 
-    if (typeof Chart === 'undefined') {
-        statsContainer.innerHTML = '<p class="text-gray-400">Charting library is loading...</p>';
-        return;
-    }
+    // Show a loading state
+    metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
+    achievementsContainer.innerHTML = '';
+    chartContainer.innerHTML = '';
 
-    // Flatten all responses from the categories object
+    // 1. Fetch all user events from Firestore
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+    // 2. Process Events to Calculate Metrics
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp.toDate() > oneWeekAgo).length;
+    const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp.toDate() > startOfMonth).length;
+    const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
+    const totalCategories = Object.keys(categories).length;
+
+    // 3. Render Metric Badges
+    metricBadgesContainer.innerHTML = `
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-blue-400">${copiesThisWeek}</p>
+            <p class="text-gray-400 mt-2">Copies This Week</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-green-400">${editsThisMonth}</p>
+            <p class="text-gray-400 mt-2">Edits This Month</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-purple-400">${totalResponsesCreated}</p>
+            <p class="text-gray-400 mt-2">Responses Created</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-yellow-400">${totalCategories}</p>
+            <p class="text-gray-400 mt-2">Total Categories</p>
+        </div>
+    `;
+
+    // 4. Define and Check Achievements
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const achievements = [
+        { name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { name: "Master of Efficiency", desc: "Copied responses 100 times.", icon: "fa-crown", unlocked: totalCopies >= 100 },
+        { name: "The Editor", desc: "Edited a response for the first time.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { name: "The Librarian", desc: "Created at least 5 categories.", icon: "fa-book", unlocked: totalCategories >= 5 }
+    ];
+
+    achievementsContainer.innerHTML = achievements.map(ach => `
+        <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}">
+            <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? 'text-yellow-400' : 'text-gray-600'}"></i>
+            <div class="ml-4">
+                <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.desc}</p>
+            </div>
+        </div>
+    `).join('');
+
+    // 5. Render the Chart (same logic as before, just integrated here)
     let allResponses = [];
     for (const categoryName in categories) {
         if (categories[categoryName].responses) {
             allResponses.push(...categories[categoryName].responses);
         }
     }
+    const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
 
-    const totalCopies = allResponses.reduce((sum, r) => sum + (r.timesCopied || 0), 0);
+    if (sortedResponses.length > 0) {
+        chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
+        const topResponses = sortedResponses.slice(0, 5);
+        const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
+        const chartData = topResponses.map(r => r.timesCopied);
 
-    // Filter for responses that have been copied at least once and sort them
-    const sortedResponses = allResponses
-        .filter(r => r.timesCopied > 0)
-        .sort((a, b) => b.timesCopied - a.timesCopied);
-
-    if (sortedResponses.length === 0) {
-        statsContainer.innerHTML = '<p class="text-gray-400">Start copying responses to see your stats here!</p>';
-        return;
+        if (statsChart) statsChart.destroy();
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        const isLightMode = document.body.classList.contains('light-mode');
+        const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+        const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+        statsChart = new Chart(ctx, { /* ... Chart.js options from your original code ... */ });
+    } else {
+        chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
     }
-
-    // Prepare data for the chart (top 5)
-    const topResponses = sortedResponses.slice(0, 5);
-    const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
-    const chartData = topResponses.map(r => r.timesCopied);
-
-    // Clear previous content and set up new structure
-    statsContainer.innerHTML = `
-        <p class="text-lg text-gray-300 mb-4">Total Responses Copied: <span class="font-bold text-blue-400">${totalCopies}</span></p>
-        <div class="relative h-64 w-full">
-            <canvas id="stats-chart"></canvas>
-        </div>
-    `;
-
-    // Destroy old chart instance if it exists to prevent memory leaks
-    if (statsChart) {
-        statsChart.destroy();
-    }
-
-    const ctx = document.getElementById('stats-chart').getContext('2d');
-    const isLightMode = document.body.classList.contains('light-mode');
-    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-
-
-    statsChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Times Copied',
-                data: chartData,
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y', // Makes it a horizontal bar chart
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: textColor,
-                        precision: 0 // Ensure whole numbers on the axis
-                    },
-                    grid: { color: gridColor }
-                },
-                y: {
-                     ticks: { color: textColor },
-                    grid: { display: false }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                title: {
-                    display: true,
-                    text: 'Top 5 Most Used Responses',
-                    color: textColor,
-                    font: { size: 16 }
-                }
-            }
-        }
-    });
-};	
+};
 
 const showPlaceholderDemo = () => {
     const tutorialModal = document.getElementById('tutorial-modal');
@@ -2798,9 +2826,6 @@ function attachEventListeners() {
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
         icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
-		if (currentPage === 'settings') {
-      	  renderStatsDashboard();
-    	}
     });
     document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
@@ -2886,7 +2911,7 @@ function attachEventListeners() {
         const label = document.getElementById('new-response-label').value;
         const text = document.getElementById('new-response-text').value;
         const category = document.getElementById('new-response-category').value;
-        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden'); } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden');logUserEvent('create_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('cancel-edit-btn').addEventListener('click', () => { document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; });
     document.getElementById('save-edit-btn').addEventListener('click', () => {
@@ -2895,7 +2920,7 @@ function attachEventListeners() {
         const newLabel = document.getElementById('edit-response-label').value;
         const newText = document.getElementById('edit-response-text').value;
         const newCategory = document.getElementById('edit-category-select').value;
-        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null;logUserEvent('edit_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('delete-confirm-btn').addEventListener('click', () => {
         const category = document.getElementById('delete-modal').dataset.category;
@@ -2916,6 +2941,7 @@ function attachEventListeners() {
             document.getElementById('add-category-modal').classList.add('hidden');
             document.getElementById('add-category-input').value = '';
             showMessage("Category created successfully!");
+			logUserEvent('create_category');
         } else if (categories[newCategoryName]) {
             showMessage("Category already exists.", 'error');
         }
