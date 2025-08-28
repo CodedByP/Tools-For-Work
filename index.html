@@ -1855,6 +1855,23 @@ const checkAndNotifyAchievements = async () => {
     const totalCategories = Object.keys(categories).length;
     const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+
+	 const getTier = (count, tiers) => {
+        let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
+        for (let i = tiers.length - 1; i >= 0; i--) {
+            if (count >= tiers[i].goal) {
+                let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
+                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
+                currentTier.desc = `Reach the next tier at ${nextGoal}!`
+                if (count >= nextGoal) currentTier.desc = "Max tier reached!";
+                break;
+            }
+        }
+         if (!currentTier.unlocked) {
+            currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
+        }
+        return currentTier;
+    };
     
     const achievements = [
         // Core Actions
@@ -2658,6 +2675,11 @@ const renderAdvancedStats = async () => {
     const metricBadgesContainer = document.getElementById('metric-badges-container');
     const achievementsContainer = document.getElementById('achievements-container');
     const chartContainer = document.getElementById('stats-container');
+
+	const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
 
     if (!statsContent || isAnonymous) {
         if(statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
