@@ -2840,67 +2840,79 @@ const renderActivityChart = (events) => {
 };		
 
 const renderAdvancedStats = async () => {
-    const statsContent = document.getElementById('stats-content');
-    const metricBadgesContainer = document.getElementById('metric-badges-container');
-    const achievementsContainer = document.getElementById('achievements-container');
-    const chartContainer = document.getElementById('stats-container');
+    const statsContent = document.getElementById('stats-content');
+    const metricBadgesContainer = document.getElementById('metric-badges-container');
+    const achievementsContainer = document.getElementById('achievements-container');
+    const chartContainer = document.getElementById('stats-container');
 
-	const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.exists() ? userDoc.data() : {};
-    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
     const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 
-    if (!statsContent || isAnonymous) {
-        if(statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
-        return;
-    }
+    if (!statsContent || isAnonymous) {
+        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
+        return;
+    }
 
-    metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
-    achievementsContainer.innerHTML = '';
-    chartContainer.innerHTML = '';
+    metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
+    achievementsContainer.innerHTML = '';
+    chartContainer.innerHTML = '';
 
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-	renderCategoryChart(events);
-    renderActivityChart(events);
+    renderCategoryChart(events);
+    renderActivityChart(events);
 
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > oneWeekAgo).length;
-    const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
-    const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
-    const totalCategories = Object.keys(categories).length;
+    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > oneWeekAgo).length;
+    const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
+    const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
+    const totalCategories = Object.keys(categories).length;
 
-    metricBadgesContainer.innerHTML = `
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-blue-400">${copiesThisWeek}</p>
-            <p class="text-gray-400 mt-2">Copies This Week</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-green-400">${editsThisMonth}</p>
-            <p class="text-gray-400 mt-2">Edits This Month</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-purple-400">${totalResponsesCreated}</p>
-            <p class="text-gray-400 mt-2">Responses Created</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-yellow-400">${totalCategories}</p>
-            <p class="text-gray-400 mt-2">Total Categories</p>
-        </div>
-    `;
-    
+    metricBadgesContainer.innerHTML = `
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-blue-400">${copiesThisWeek}</p>
+            <p class="text-gray-400 mt-2">Copies This Week</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-green-400">${editsThisMonth}</p>
+            <p class="text-gray-400 mt-2">Edits This Month</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-purple-400">${totalResponsesCreated}</p>
+            <p class="text-gray-400 mt-2">Responses Created</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-yellow-400">${totalCategories}</p>
+            <p class="text-gray-400 mt-2">Total Categories</p>
+        </div>
+    `;
+    
     // --- Achievement Calculations ---
-    const totalCopies = events.filter(e => e.type === 'copy').length;
-    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
 
-    // "The Perfect Day"
+    // Tier definitions
+    const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
+    ]);
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
+
+    // New achievement calculations
     const dailyActivity = events.reduce((acc, event) => {
         if (!event.timestamp) return acc;
         const date = event.timestamp.toDate().toISOString().split('T')[0];
@@ -2911,23 +2923,15 @@ const renderAdvancedStats = async () => {
         return acc;
     }, {});
     const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
-
-    // "The Living Library"
     const hasCreatedCategory = events.some(e => e.type === 'create_category');
     const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
     const hasPinnedResponse = events.some(e => e.type === 'pin_response');
     const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
-
-    // "The Scribe"
     const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
     const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
     const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-
-    // "The Historian"
     const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
     const hasHistorian = daysSinceSignIn >= 365;
-    
-    // "The Streak Breaker"
     const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
     const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
     let maxStreak = 0;
@@ -2937,11 +2941,9 @@ const renderAdvancedStats = async () => {
             const prevDate = new Date(usageDates[i - 1]);
             const currentDate = new Date(usageDates[i]);
             if (!isBusinessDay(currentDate)) continue;
-
             const diffTime = currentDate - prevDate;
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) { // It's the next day or a Monday after a Friday
+            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
                 currentStreak++;
             } else {
                 maxStreak = Math.max(maxStreak, currentStreak);
@@ -2951,13 +2953,31 @@ const renderAdvancedStats = async () => {
         maxStreak = Math.max(maxStreak, currentStreak);
     }
     const hasStreakBreaker = maxStreak >= 90;
-
-    // "The Clean Slate"
     const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
     const hasCleanSlate = deletedInLast5Mins >= 5;
-    
+
+    // --- Create a single, complete list of ALL achievements ---
     const allAchievements = [
-        // --- YOUR NEW ACHIEVEMENTS ---
+        // Core Actions
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        
+        // Organization & Management
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: hasPinnedResponse },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+
+        // Exploration & Discovery
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
+        
+        // New Advanced Achievements
         { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", unlocked: totalCopies >= 1000 },
         { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", unlocked: hasPerfectDay },
         { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", unlocked: hasLivingLibrary },
@@ -2968,72 +2988,59 @@ const renderAdvancedStats = async () => {
         { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", unlocked: hasCleanSlate },
         { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", unlocked: events.some(e => e.type === 'copy_purist') },
         { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", unlocked: events.some(e => e.type === 'add_placeholder') },
-        
-        // --- EXISTING ACHIEVEMENTS (for Grand Master check) ---
-        { id: 'first_responder', unlocked: totalCopies > 0 },
-        { id: 'the_creator', unlocked: events.some(e => e.type === 'create_response') },
-        { id: 'the_architect', unlocked: hasArchitectAchievement },
-        { id: 'the_editor', unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_curator', unlocked: events.some(e => e.type === 'pin_response') },
-        { id: 'the_color_coder', unlocked: events.some(e => e.type === 'change_color') },
-        { id: 'the_explorer', unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
-        { id: 'the_data_hoarder', unlocked: events.some(e => e.type === 'import_data') },
-        { id: 'the_personalizer', unlocked: events.some(e => e.type === 'add_link') },
-        { id: 'the_globetrotter', unlocked: events.some(e => e.type === 'globetrotter_milestone') },
-        { id: 'the_night_owl', unlocked: darkModeUsage.streak >= 5 },
-        // Tiered achievements
-        { id: 'copy_tiers_max', unlocked: totalCopies >= 100 },
-        { id: 'librarian_tiers_max', unlocked: totalCategories >= 25 },
     ];
-
-    // "The Grand Master" - unlocked if all others are unlocked
-    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
     
-    // The final list to be rendered
-    const achievementsToRender = [
-        ...allAchievements.filter(ach => ach.name), // Only render ones with names
-        { id: 'grand_master', name: "The Grand Master", desc: "Unlock all other achievements.", icon: "fa-trophy", unlocked: allOtherAchievementsUnlocked }
-    ];
+    // Check for "The Grand Master"
+    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
+    const grandMasterAchievement = { 
+        id: 'grand_master', 
+        name: "The Grand Master", 
+        desc: "Unlock all other achievements.", 
+        icon: "fa-trophy", 
+        unlocked: allOtherAchievementsUnlocked 
+    };
 
-	achievementsContainer.innerHTML = achievementsToRender.map(ach => `
-	    <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.unlocked ? ach.desc : 'This achievement is locked.'}">
-	        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
-	        <div class="ml-4">
-	            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-	            <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.desc}</p>
-	        </div>
-	    </div>
-	`).join('');
+    const achievementsToRender = [...allAchievements, grandMasterAchievement];
 
-    // ... (rest of the function for rendering the chart)
-    // --- THIS PART REMAINS THE SAME ---
-    let allResponses = [];
-    for (const categoryName in categories) {
-        if (categories[categoryName].responses) {
-            allResponses.push(...categories[categoryName].responses);
-        }
-    }
-    const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
+    // --- Render Achievements ---
+    achievementsContainer.innerHTML = achievementsToRender.map(ach => `
+        <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.unlocked ? ach.desc : 'This achievement is locked.'}">
+            <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+            <div class="ml-4">
+                <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.desc}</p>
+            </div>
+        </div>
+    `).join('');
 
-    if (sortedResponses.length > 0) {
-        chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
-        const topResponses = sortedResponses.slice(0, 5);
-        const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
-        const chartData = topResponses.map(r => r.timesCopied);
+    // --- Render Top 5 Chart ---
+    let allResponses = [];
+    for (const categoryName in categories) {
+        if (categories[categoryName].responses) {
+            allResponses.push(...categories[categoryName].responses);
+        }
+    }
+    const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
 
-        if (statsChart) statsChart.destroy();
-        const ctx = document.getElementById('stats-chart').getContext('2d');
-        const isLightMode = document.body.classList.contains('light-mode');
-        const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-        const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-        statsChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
-            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
-        });
-    } else {
-        chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
-    }
+    if (sortedResponses.length > 0) {
+        chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
+        const topResponses = sortedResponses.slice(0, 5);
+        const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
+        const chartData = topResponses.map(r => r.timesCopied);
+
+        if (statsChart) statsChart.destroy();
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        const isLightMode = document.body.classList.contains('light-mode');
+        const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+        const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+        statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
+        });
+    } else {
+        chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
+    }
 };
 
 const showPlaceholderDemo = () => {
