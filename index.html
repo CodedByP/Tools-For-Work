@@ -474,6 +474,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
 
+    <audio id="achievement-sound" src="https://www.myinstants.com/media/sounds/videogame-achievement-sound.mp3" preload="auto"></audio>
+
     <div id="tutorial-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[999]"></div>
 
     <div id="sidebar" class="sidebar flex flex-col">
@@ -1171,6 +1173,14 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 			</div>
         </div>
     </div>
+
+		</div> <div id="achievement-toast" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse text-gray-200 bg-gray-700 divide-x rtl:divide-x-reverse divide-gray-600 rounded-lg shadow-lg space-x opacity-0 translate-y-5 transition-all duration-500 ease-out z-[5000]">
+		    <div id="toast-icon" class="text-2xl text-yellow-400">🏆</div>
+		    <div class="ps-4 text-sm font-normal">
+		        <div class="font-bold">Achievement Unlocked!</div>
+		        <div id="toast-message"></div>
+		    </div>
+		</div>
 		
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1221,6 +1231,7 @@ let isTutorialActive = false;
 let currentResponseToCopyId = null; 
 let currentResponseToCopyCategory = null; 
 let statsChart = null; 	
+let shownAchievements = new Set();		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -1455,6 +1466,33 @@ const showMessage = (text, type = 'success') => {
         messageBox.className = 'message-box';
     }, 3000);
 };
+
+
+const showAchievementNotification = (achievement) => {
+    const toast = document.getElementById('achievement-toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    const sound = document.getElementById('achievement-sound');
+
+    if (!toast || !toastMessage || !toastIcon || !sound) return;
+
+    // Update content
+    toastIcon.innerHTML = `<i class="fas ${achievement.icon}"></i>`;
+    toastMessage.textContent = achievement.name;
+
+    // Play sound
+    sound.currentTime = 0; // Rewind to start
+    sound.play().catch(e => console.error("Audio play failed:", e));
+
+    // Show toast
+    toast.classList.remove('opacity-0', 'translate-y-5');
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-5');
+    }, 5000);
+};
+		
 
    const clearTutorialHighlights = () => {
     document.querySelectorAll('.highlight-target').forEach(el => {
@@ -2612,6 +2650,14 @@ const renderAdvancedStats = async () => {
         { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
 
     ];
+
+		achievements.forEach(ach => {
+		    // Check if the achievement is unlocked AND has not been shown before
+		    if (ach.unlocked && !shownAchievements.has(ach.id)) {
+		        showAchievementNotification(ach);
+		        shownAchievements.add(ach.id); // Add it to the set so we don't show it again
+		    }
+		});
 
     achievementsContainer.innerHTML = achievements.map(ach => `
         <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.desc}">
