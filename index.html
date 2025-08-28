@@ -2780,7 +2780,7 @@ const renderAdvancedStats = async () => {
 
 
 		achievementsContainer.innerHTML = achievements.map(ach => `
-		    <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.unlocked ? '' : ach.desc}">
+		    <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.unlocked ? ach.desc : 'This achievement is locked.'}">
 		        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
 		        <div class="ml-4">
 		            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
