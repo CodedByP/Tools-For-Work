@@ -2211,6 +2211,7 @@ const importData = (file) => {
                 saveToFirestore(categories);
                 showMessage("Data imported successfully!");
                 importExportModal.classList.add('hidden');
+				logUserEvent('import_data');
             } else {
                 throw new Error('Invalid JSON format.');
             }
@@ -2562,19 +2563,18 @@ const renderAdvancedStats = async () => {
 
     // Helper to get tier details
     const getTier = (count, tiers) => {
-        let currentTier = { name: '', icon: 'fa-question-circle', color: 'text-gray-600', unlocked: false, progress: 0, goal: tiers[0].goal };
+        let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
         for (let i = tiers.length - 1; i >= 0; i--) {
             if (count >= tiers[i].goal) {
-                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: tiers[i].goal };
-                // Check if there's a next tier
-                if (i + 1 < tiers.length) {
-                    currentTier.goal = tiers[i+1].goal;
-                }
+                let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
+                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
+                currentTier.desc = `Reach the next tier at ${nextGoal}!`
+                if (count >= nextGoal) currentTier.desc = "Max tier reached!";
                 break;
             }
         }
-        if (!currentTier.unlocked) {
-            currentTier.progress = count;
+         if (!currentTier.unlocked) {
+            currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
         }
         return currentTier;
     };
@@ -2590,20 +2590,27 @@ const renderAdvancedStats = async () => {
         { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
         { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
     ]);
+	
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
 
     const achievements = [
         // Core Actions
         { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
-        { id: 'copy_tiers', name: copyTiers.name, desc: `Copy ${copyTiers.goal} responses (${copyTiers.progress}/${copyTiers.goal})`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
         { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
         
-        // Organization
-        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Create ${librarianTiers.goal} categories (${librarianTiers.progress}/${librarianTiers.goal})`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        // Organization & Management
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
         { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
         { id: 'the_pinner', name: "The Pinner", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
 
-        // Exploration
+        // Exploration & Discovery
         { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+
     ];
 
     achievementsContainer.innerHTML = achievements.map(ach => `
@@ -2761,6 +2768,7 @@ function attachEventListeners() {
                 const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                 await addDoc(linksCollectionRef, { title, url, description, createdAt: new Date() });
                 showLinksStatus('Link added successfully!', 'text-green-400');
+				logUserEvent('add_link');
             }
             resetLinksForm();
         } catch (error) {
@@ -3087,6 +3095,7 @@ function attachEventListeners() {
             saveToFirestore(updatedCategories);
             document.getElementById('color-picker-modal').classList.add('hidden');
             showMessage("Color updated successfully!");
+			logUserEvent('change_color');
         }
     });
     document.getElementById('input-text-fedex').addEventListener('input', extractAndDisplayNumbers);
