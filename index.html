@@ -1779,12 +1779,63 @@ const logUserEvent = async (eventType, eventData = {}) => {
             timestamp: serverTimestamp(),
             ...eventData
         });
+
+        // --- Add Globetrotter Logic ---
+        if (eventType === 'copy' && eventData.categoryName) {
+            let categoriesUsed = JSON.parse(sessionStorage.getItem('categoriesUsedInSession') || '[]');
+            if (!categoriesUsed.includes(eventData.categoryName)) {
+                categoriesUsed.push(eventData.categoryName);
+                sessionStorage.setItem('categoriesUsedInSession', JSON.stringify(categoriesUsed));
+                // If this is the second unique category, log the milestone
+                if (categoriesUsed.length >= 2) {
+                    // Log a specific event for this so we only unlock it once
+                    const events = await getDocs(query(eventsCollectionRef));
+                    const hasMilestone = events.docs.some(doc => doc.data().type === 'globetrotter_milestone');
+                    if (!hasMilestone) {
+                         await addDoc(eventsCollectionRef, { type: 'globetrotter_milestone', timestamp: serverTimestamp() });
+                    }
+                }
+            }
+        }
+		
 		checkAndNotifyAchievements();
     } catch (error) {
         console.error("Error logging user event:", error);
         // We don't show a message to the user for this, as it's a background task.
     }
 };
+
+const updateDarkModeStreak = async () => {
+    if (isAnonymous || !userId || document.body.classList.contains('light-mode')) {
+        return; // Only run for signed-in users when in dark mode
+    }
+
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const today = new Date().toISOString().split('T')[0];
+    
+    const data = userDoc.exists() ? userDoc.data() : {};
+    const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
+
+    if (darkModeUsage.lastUsed === today) {
+        return; // Already counted for today
+    }
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (darkModeUsage.lastUsed === yesterdayStr) {
+        darkModeUsage.streak++; // It's a consecutive day, increment!
+    } else {
+        darkModeUsage.streak = 1; // Not consecutive, reset to 1
+    }
+    darkModeUsage.lastUsed = today;
+    
+    await setDoc(userDocRef, { darkModeUsage }, { merge: true });
+    logUserEvent('used_dark_mode'); // Log this to trigger the achievement check
+};
+		
 
 const checkAndNotifyAchievements = async () => {
     if (!userId || isAnonymous) return;
@@ -1796,7 +1847,9 @@ const checkAndNotifyAchievements = async () => {
     
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
+	const userData = userDoc.exists() ? userDoc.data() : {};
     const notifiedAchievements = userDoc.exists() ? userDoc.data().notifiedAchievements || [] : [];
+	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
 
     const totalCopies = events.filter(e => e.type === 'copy').length;
     const totalCategories = Object.keys(categories).length;
@@ -1804,16 +1857,24 @@ const checkAndNotifyAchievements = async () => {
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
     
     const achievements = [
-        // Add all your achievement definitions here, just like in renderAdvancedStats
+        // Core Actions
         { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
         { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
-        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_pinner', name: "The Pinner", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
-        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+        
+        // Organization & Management
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
         { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+
+        // Exploration & Discovery
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
         { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
         { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
-        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') }
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
     ];
 
     let newAchievementsToNotify = [];
@@ -2689,13 +2750,15 @@ const renderAdvancedStats = async () => {
         { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
         { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
         { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_pinner', name: "The Pinner", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
         { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
 
         // Exploration & Discovery
         { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
         { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
         { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+		{ id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
 
     ];
 
@@ -2998,6 +3061,7 @@ function attachEventListeners() {
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
         icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
+		updateDarkModeStreak();
     });
     document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
@@ -3452,6 +3516,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
                 }
                 renderContent();
+				updateDarkModeStreak();
             }, (error) => {
                 console.error("Error with onSnapshot listener:", error);
                 showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
