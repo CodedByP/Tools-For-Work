@@ -1779,11 +1779,59 @@ const logUserEvent = async (eventType, eventData = {}) => {
             timestamp: serverTimestamp(),
             ...eventData
         });
+		checkAndNotifyAchievements();
     } catch (error) {
         console.error("Error logging user event:", error);
         // We don't show a message to the user for this, as it's a background task.
     }
 };
+
+const checkAndNotifyAchievements = async () => {
+    if (!userId || isAnonymous) return;
+
+    // Get the latest events and user data
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => doc.data());
+    
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const notifiedAchievements = userDoc.exists() ? userDoc.data().notifiedAchievements || [] : [];
+
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const totalCategories = Object.keys(categories).length;
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+    
+    const achievements = [
+        // Add all your achievement definitions here, just like in renderAdvancedStats
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_pinner', name: "The Pinner", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') }
+    ];
+
+    let newAchievementsToNotify = [];
+
+    achievements.forEach(ach => {
+        // If it's unlocked and NOT in the notified list
+        if (ach.unlocked && !notifiedAchievements.includes(ach.id)) {
+            showAchievementNotification(ach);
+            newAchievementsToNotify.push(ach.id);
+        }
+    });
+
+    // If we have new achievements to notify, update Firestore
+    if (newAchievementsToNotify.length > 0) {
+        const updatedNotifiedList = [...notifiedAchievements, ...newAchievementsToNotify];
+        await setDoc(userDocRef, { notifiedAchievements: updatedNotifiedList }, { merge: true });
+    }
+};		
 		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
@@ -2651,13 +2699,6 @@ const renderAdvancedStats = async () => {
 
     ];
 
-		achievements.forEach(ach => {
-		    // Check if the achievement is unlocked AND has not been shown before
-		    if (ach.unlocked && !shownAchievements.has(ach.id)) {
-		        showAchievementNotification(ach);
-		        shownAchievements.add(ach.id); // Add it to the set so we don't show it again
-		    }
-		});
 
     achievementsContainer.innerHTML = achievements.map(ach => `
         <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.desc}">
