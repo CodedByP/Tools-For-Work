@@ -2556,27 +2556,68 @@ const renderAdvancedStats = async () => {
             <p class="text-gray-400 mt-2">Total Categories</p>
         </div>
     `;
-
-    // 4. Define and Check Achievements
+    
+    // 4. Define and Check Achievements with Tiers
     const totalCopies = events.filter(e => e.type === 'copy').length;
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+
+    // Helper to get tier details
+    const getTier = (count, tiers) => {
+        let currentTier = { name: '', icon: 'fa-question-circle', color: 'text-gray-600', unlocked: false, progress: 0, goal: tiers[0].goal };
+        for (let i = tiers.length - 1; i >= 0; i--) {
+            if (count >= tiers[i].goal) {
+                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: tiers[i].goal };
+                // Check if there's a next tier
+                if (i + 1 < tiers.length) {
+                    currentTier.goal = tiers[i+1].goal;
+                }
+                break;
+            }
+        }
+        if (!currentTier.unlocked) {
+            currentTier.progress = count;
+        }
+        return currentTier;
+    };
+
+    const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" }, // Bronze
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" }, // Silver
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" } // Gold
+    ]);
+    
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
+
     const achievements = [
-        { name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
-        { name: "Master of Efficiency", desc: "Copied responses 100 times.", icon: "fa-crown", unlocked: totalCopies >= 100 },
-        { name: "The Editor", desc: "Edited a response for the first time.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
-        { name: "The Librarian", desc: "Created at least 5 categories.", icon: "fa-book", unlocked: totalCategories >= 5 }
+        // Core Actions
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copy ${copyTiers.goal} responses (${copyTiers.progress}/${copyTiers.goal})`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        
+        // Organization
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Create ${librarianTiers.goal} categories (${librarianTiers.progress}/${librarianTiers.goal})`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_pinner', name: "The Pinner", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+
+        // Exploration
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
     ];
 
     achievementsContainer.innerHTML = achievements.map(ach => `
-        <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}">
-            <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? 'text-yellow-400' : 'text-gray-600'}"></i>
+        <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.desc}">
+            <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
             <div class="ml-4">
                 <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.desc}</p>
+                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.unlocked ? 'Unlocked!' : 'Locked'}</p>
             </div>
         </div>
     `).join('');
 
-    // 5. Render the Chart (same logic as before, just integrated here)
+    // 5. Render the Chart
     let allResponses = [];
     for (const categoryName in categories) {
         if (categories[categoryName].responses) {
@@ -2596,7 +2637,39 @@ const renderAdvancedStats = async () => {
         const isLightMode = document.body.classList.contains('light-mode');
         const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
         const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-        statsChart = new Chart(ctx, { /* ... Chart.js options from your original code ... */ });
+        statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Times Copied',
+                    data: chartData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { color: textColor, precision: 0 },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                }
+            }
+        });
     } else {
         chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
     }
@@ -2637,30 +2710,35 @@ function attachEventListeners() {
         currentPage = 'canned-responses';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
         currentPage = 'fedex-tracker';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     document.getElementById('nav-helpful-links').addEventListener('click', () => {
         currentPage = 'helpful-links';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     document.getElementById('nav-my-stats').addEventListener('click', () => {
         currentPage = 'my-stats';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });	
 
     document.getElementById('nav-settings').addEventListener('click', () => {
         currentPage = 'settings';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     // Other one-time listeners
@@ -2887,6 +2965,9 @@ function attachEventListeners() {
             const responseData = categories[category].responses.find(r => r.id === id);
             if (responseData) {
                 responseData.isPinned = !responseData.isPinned;
+		        if (responseData.isPinned) {
+		            logUserEvent('pin_response', { responseId: id }); // <-- ADD THIS LINE
+		        }
                 saveToFirestore(categories);
             }
         }
@@ -2926,6 +3007,7 @@ function attachEventListeners() {
         const category = document.getElementById('delete-modal').dataset.category;
         deleteResponse(responseToDeleteId, category);
         document.getElementById('delete-modal').classList.add('hidden');
+		logUserEvent('delete_response');
     });
     document.getElementById('delete-cancel-btn').addEventListener('click', () => { document.getElementById('delete-modal').classList.add('hidden'); responseToDeleteId = null; });
     document.getElementById('search-input').addEventListener('input', () => { renderResponses(document.getElementById('search-input').value); });
