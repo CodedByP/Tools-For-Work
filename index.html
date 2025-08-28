@@ -2611,7 +2611,7 @@ const renderAdvancedStats = async () => {
             <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
             <div class="ml-4">
                 <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.unlocked ? 'Unlocked!' : 'Locked'}</p>
+                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.unlocked ? ach.desc : 'Locked'}</p>
             </div>
         </div>
     `).join('');
