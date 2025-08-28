@@ -1152,7 +1152,29 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     </h4>
                     <p class="text-gray-400">This saves you from copying each number one by one and pasting them into the FedEx website, streamlining your workflow.</p>
                 </div>
-            </div>		
+            </div>
+
+			<div id="tutorial-step-13" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Helpful Links Page 🔗</h3>
+                <p class="text-lg text-gray-300">This page is a curated collection of useful links. You can search through the default links and, when signed in, add your own personal links for quick access.</p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-search-plus text-teal-400 mr-3"></i> Quick Tip
+                    </h4>
+                    <p class="text-gray-400">Use the search bar at the top to instantly filter both the default and your personal links.</p>
+                </div>
+            </div>
+
+            <div id="tutorial-step-14" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">My Stats Page 📊</h3>
+                <p class="text-lg text-gray-300">Track your productivity here! This page visualizes your usage, showing your most copied responses, category breakdowns, and achievements you've unlocked.</p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-trophy text-yellow-400 mr-3"></i> Gamify Your Work
+                    </h4>
+                    <p class="text-gray-400">Unlock achievements by using different features of the application. See how many you can collect!</p>
+                </div>
+            </div>
 
             <div id="copy-success-modal" class="modal hidden">
                 <div class="modal-content">
@@ -1336,7 +1358,9 @@ const tutorialSteps = [
     document.getElementById('tutorial-step-9'),
     document.getElementById('tutorial-step-10'),
     document.getElementById('tutorial-step-11'),
-    document.getElementById('tutorial-step-12'),   	
+    document.getElementById('tutorial-step-12'),
+	document.getElementById('tutorial-step-13'),
+	document.getElementById('tutorial-step-14'),
 ];
 
 const highlightedElements = [
@@ -1352,6 +1376,8 @@ const highlightedElements = [
 	document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
     document.getElementById('input-text-fedex'), // Step 11
     document.getElementById('copy-button-fedex'), // Step 12: New highlight
+	null,
+	null,
 ];
  
 const tutorialPages = [
@@ -1366,7 +1392,9 @@ const tutorialPages = [
     'canned-responses', //step 9
 	'canned-responses', //step 10
     'fedex-tracker', // Step 11: Change page to FedEx tracker
-    'fedex-tracker', // Step 12: Change page to FedEx tracker   
+    'fedex-tracker', // Step 12: Change page to FedEx tracker
+	'helpful-links',    //  Step 13
+    'my-stats',         //  Step 14
 ];
 
 // An array to map each step to the modal's target position
@@ -1382,7 +1410,9 @@ const modalPositions = [
     'show-modal', //Step 9
 	'top-left',
     'left-response', // Step 10: New position
-    'on-tracker-page' // Step 11: Position on the tracker page   
+    'on-tracker-page' // Step 11: Position on the tracker page
+	'show-modal',
+	'show-modal',
 ];
 
 // --- Master Blueprint Data for Initialization ---
@@ -1648,6 +1678,8 @@ const showTutorialStep = async (stepIndex) => {
 		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
         document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
         document.getElementById('copy-button-fedex'), // Step 12: New highlight
+		null,
+		null,
     ];
     
     const positionClasses = [
@@ -1662,7 +1694,10 @@ const showTutorialStep = async (stepIndex) => {
         'show-modal', // Step 8: Placeholder demo
 		'top-left',
         'on-tracker-page', // Step 10: New position
-        'on-tracker-page' // Step 11: Position on the tracker page
+        'on-tracker-page', // Step 11: Position on the tracker page
+		'helpful-links',
+		'my-stats',
+		
     ];
 
     const tutorialModal = document.getElementById('tutorial-modal');
