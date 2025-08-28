@@ -768,6 +768,25 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		            <div id="achievements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 		                </div>
 		        </div>
+
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+		            <div class="floating-card p-6 sm:p-8">
+		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
+		                </h2>
+		                <div id="category-chart-container" class="relative h-80">
+		                    <canvas id="categoryChart"></canvas>
+		                </div>
+		            </div>
+		            <div class="floating-card p-6 sm:p-8">
+		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+		                </h2>
+		                <div id="activity-chart-container" class="relative h-80">
+		                    <canvas id="activityChart"></canvas>
+		                </div>
+		            </div>
+		        </div>
 		
 		        <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
 		            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
@@ -1231,7 +1250,9 @@ let isTutorialActive = false;
 let currentResponseToCopyId = null; 
 let currentResponseToCopyCategory = null; 
 let statsChart = null; 	
-let shownAchievements = new Set();		
+let shownAchievements = new Set();	
+let categoryChartInstance = null;
+let activityChartInstance = null;		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -2682,6 +2703,126 @@ const renderSettingsPage = () => {
     }
 };
 
+const renderCategoryChart = (events) => {
+    const container = document.getElementById('category-chart-container');
+    if (!container) return;
+
+    // Clear previous chart and messages
+    container.innerHTML = '<canvas id="categoryChart"></canvas>';
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+
+    if (categoryChartInstance) {
+        categoryChartInstance.destroy();
+    }
+
+    const copyEvents = events.filter(e => e.type === 'copy' && e.categoryName);
+    if (copyEvents.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your category breakdown!</p>';
+        return;
+    }
+
+    const categoryCounts = copyEvents.reduce((acc, event) => {
+        acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
+        return acc;
+    }, {});
+
+    const labels = Object.keys(categoryCounts);
+    const data = Object.values(categoryCounts);
+    
+    // Use your existing category colors for the chart
+    const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
+
+    const isLightMode = document.body.classList.contains('light-mode');
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Copies per Category',
+                data: data,
+                backgroundColor: backgroundColors,
+                borderColor: isLightMode ? '#f3f4f6' : '#111827',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        padding: 20,
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+};
+
+const renderActivityChart = (events) => {
+    const container = document.getElementById('activity-chart-container');
+    if (!container) return;
+
+    // Clear previous chart and messages
+    container.innerHTML = '<canvas id="activityChart"></canvas>';
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    if (activityChartInstance) {
+        activityChartInstance.destroy();
+    }
+
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
+    if (copyEvents.length < 2) { // Need at least 2 data points for a line chart
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Not enough copy activity to show a trend.</p>';
+        return;
+    }
+
+    // Group copy events by day
+    const activityByDay = copyEvents.reduce((acc, event) => {
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+    }, {});
+
+    const sortedDates = Object.keys(activityByDay).sort();
+    const labels = sortedDates;
+    const data = sortedDates.map(date => activityByDay[date]);
+    
+    const isLightMode = document.body.classList.contains('light-mode');
+    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    activityChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Copies per Day',
+                data: data,
+                fill: true,
+                backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                borderColor: 'rgba(74, 222, 128, 1)',
+                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { color: gridColor } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+};		
+
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
     const metricBadgesContainer = document.getElementById('metric-badges-container');
@@ -2707,6 +2848,9 @@ const renderAdvancedStats = async () => {
     const eventsCollectionRef = getUserEventsCollectionRef(userId);
     const snapshot = await getDocs(query(eventsCollectionRef));
     const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+	renderCategoryChart(events);
+    renderActivityChart(events);
 
     // 2. Process Events to Calculate Metrics
     const now = new Date();
@@ -3078,6 +3222,9 @@ function attachEventListeners() {
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
         icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
 		updateDarkModeStreak();
+		if (currentPage === 'my-stats') {
+            renderAdvancedStats();
+        }
     });
     document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
