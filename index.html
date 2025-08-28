@@ -1466,7 +1466,23 @@ const showMessage = (text, type = 'success') => {
         messageBox.className = 'message-box';
     }, 3000);
 };
-
+		
+const getTier = (count, tiers) => {
+    let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
+    for (let i = tiers.length - 1; i >= 0; i--) {
+        if (count >= tiers[i].goal) {
+            let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
+            currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
+            currentTier.desc = `Reach the next tier at ${nextGoal}!`
+            if (count >= nextGoal) currentTier.desc = "Max tier reached!";
+            break;
+        }
+    }
+     if (!currentTier.unlocked) {
+        currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
+    }
+    return currentTier;
+};
 
 const showAchievementNotification = (achievement) => {
     const toast = document.getElementById('achievement-toast');
@@ -1856,22 +1872,6 @@ const checkAndNotifyAchievements = async () => {
     const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
 
-	 const getTier = (count, tiers) => {
-        let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
-        for (let i = tiers.length - 1; i >= 0; i--) {
-            if (count >= tiers[i].goal) {
-                let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
-                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
-                currentTier.desc = `Reach the next tier at ${nextGoal}!`
-                if (count >= nextGoal) currentTier.desc = "Max tier reached!";
-                break;
-            }
-        }
-         if (!currentTier.unlocked) {
-            currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
-        }
-        return currentTier;
-    };
 
 	const copyTiers = getTier(totalCopies, [
         { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
@@ -2742,24 +2742,6 @@ const renderAdvancedStats = async () => {
     const totalCopies = events.filter(e => e.type === 'copy').length;
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
 
-    // Helper to get tier details
-    const getTier = (count, tiers) => {
-        let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
-        for (let i = tiers.length - 1; i >= 0; i--) {
-            if (count >= tiers[i].goal) {
-                let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
-                currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
-                currentTier.desc = `Reach the next tier at ${nextGoal}!`
-                if (count >= nextGoal) currentTier.desc = "Max tier reached!";
-                break;
-            }
-        }
-         if (!currentTier.unlocked) {
-            currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
-        }
-        return currentTier;
-    };
-
     const copyTiers = getTier(totalCopies, [
         { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" }, // Bronze
         { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" }, // Silver
@@ -2797,15 +2779,15 @@ const renderAdvancedStats = async () => {
     ];
 
 
-    achievementsContainer.innerHTML = achievements.map(ach => `
-        <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.desc}">
-            <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
-            <div class="ml-4">
-                <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-                <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.unlocked ? ach.desc : 'Locked'}</p>
-            </div>
-        </div>
-    `).join('');
+		achievementsContainer.innerHTML = achievements.map(ach => `
+		    <div class="floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100' : 'opacity-40'}" title="${ach.unlocked ? '' : ach.desc}">
+		        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+		        <div class="ml-4">
+		            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+		            <p class="text-sm ${ach.unlocked ? 'text-gray-400' : 'text-gray-600'}">${ach.unlocked ? ach.desc : 'Locked'}</p>
+		        </div>
+		    </div>
+		`).join('');
 
     // 5. Render the Chart
     let allResponses = [];
