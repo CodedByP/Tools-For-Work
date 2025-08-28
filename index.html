@@ -1851,9 +1851,9 @@ if (!isAnonymous && categoryNames.length > 0) {
         // Set the border color to match the button background color when not active
         button.style.borderColor = categoryColor;
     }
-    
-    button.textContent = name;
-    button.dataset.category = name;
+    const responseCount = categories[name]?.responses?.length || 0;
+	button.textContent = `${name} (${responseCount})`;
+	button.dataset.category = name;
 
     categoryList.appendChild(button);
     });
@@ -1907,12 +1907,18 @@ const renderResponses = (searchQuery = '') => {
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
 			           
 			const count = responsesToRender.length;
-            headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">${count}</span>`;
+			headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
         } else {
             responsesToRender = [];
             headingText = 'No Active Category';
         }
     }
+	
+    if (responsesToRender.length > 0 || query) {
+        const count = responsesToRender.length;
+        const label = query ? 'Results Found' : 'Saved Replies';
+        headingText = `${query ? 'Search Results' : activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} ${label})</span>`;
+    }	
     
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
