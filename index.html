@@ -1872,6 +1872,18 @@ const checkAndNotifyAchievements = async () => {
         }
         return currentTier;
     };
+
+	const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
+    ]);
+    
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
     
     const achievements = [
         // Core Actions
