@@ -2196,7 +2196,7 @@ const logUserEvent = async (eventType, eventData = {}) => {
             }
         }
 		
-		checkAndNotifyAchievements();
+		checkAndNotifyAchievements(firstSignIn);
     } catch (error) {
         console.error("Error logging user event:", error);
         // We don't show a message to the user for this, as it's a background task.
@@ -2264,7 +2264,7 @@ const getTier = (count, tiers) => {
     return currentTier;
 };		
 
-const checkAndNotifyAchievements = async () => {
+const checkAndNotifyAchievements = async (firstSignIn) => {
     if (!userId || isAnonymous) return;
 
     // Get the latest events and user data
@@ -2275,9 +2275,9 @@ const checkAndNotifyAchievements = async () => {
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
 	const userData = userDoc.exists() ? userDoc.data() : {};
-
 	const userAchievements = userData.achievementsData || {};
 	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
+	const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 
     const totalCopies = events.filter(e => e.type === 'copy').length;
     const totalCategories = Object.keys(categories).length;
@@ -2301,6 +2301,7 @@ const checkAndNotifyAchievements = async () => {
 	const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
 	const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
 	const hasTheScribe = uniqueCategoriesIn30Min >= 5;
+	const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
 	const hasHistorian = daysSinceSignIn >= 365;
 	const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
