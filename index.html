@@ -769,6 +769,12 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </div>
 		        </div>
 
+				<div>
+				    <h2 class="text-3xl font-bold text-gray-200 mb-6">Personal Bests ⭐</h2>
+				    <div id="personal-bests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+				        </div>
+				</div>
+
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
 		            <div class="floating-card p-6 sm:p-8">
 		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
@@ -1517,6 +1523,119 @@ const showMessage = (text, type = 'success') => {
         messageBox.className = 'message-box';
     }, 3000);
 };
+
+// --- NEW Local Storage Tracking & Sync Function ---
+const trackDailyAction = async (actionType) => {
+    if (isAnonymous) return; // Don't track for anonymous users
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    let dailyStats;
+
+    try {
+        const storedStats = localStorage.getItem(`dailyStats_${userId}`);
+        dailyStats = storedStats ? JSON.parse(storedStats) : {};
+    } catch (e) {
+        dailyStats = {};
+    }
+
+    // --- SYNC LOGIC ---
+    // If the date in storage is from a PREVIOUS day, check for new records
+    if (dailyStats.date && dailyStats.date !== today) {
+        console.log(`New day detected. Checking personal bests for ${dailyStats.date}...`);
+        
+        const userDocRef = getUserRootDocRef(userId);
+        let hasNewBest = false;
+        try {
+            const userDoc = await getDoc(userDocRef);
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const personalBests = userData.personal_bests || {
+                most_responses_copied_in_day: { count: 0, date: null },
+                most_categories_created_in_day: { count: 0, date: null }
+            };
+
+            if (dailyStats.copied_responses > personalBests.most_responses_copied_in_day.count) {
+                personalBests.most_responses_copied_in_day = {
+                    count: dailyStats.copied_responses,
+                    date: dailyStats.date
+                };
+                hasNewBest = true;
+            }
+
+            if (dailyStats.created_categories > personalBests.most_categories_created_in_day.count) {
+                personalBests.most_categories_created_in_day = {
+                    count: dailyStats.created_categories,
+                    date: dailyStats.date
+                };
+                hasNewBest = true;
+            }
+
+            if (hasNewBest) {
+                await setDoc(userDocRef, { personal_bests: personalBests }, { merge: true });
+                showMessage("You've set a new personal best!", 'success');
+            }
+        } catch (error) {
+            console.error("Error updating personal bests:", error);
+        }
+        
+        // After checking, reset for the new day
+        dailyStats = { date: today, copied_responses: 0, created_categories: 0 };
+
+    } else if (!dailyStats.date || dailyStats.date !== today) {
+        // If there are no stats or it's the first action of the day, initialize
+         dailyStats = { date: today, copied_responses: 0, created_categories: 0 };
+    }
+
+    // --- TRACKING LOGIC ---
+    if (actionType === 'copied_responses') {
+        dailyStats.copied_responses = (dailyStats.copied_responses || 0) + 1;
+    } else if (actionType === 'created_categories') {
+        dailyStats.created_categories = (dailyStats.created_categories || 0) + 1;
+    }
+
+    localStorage.setItem(`dailyStats_${userId}`, JSON.stringify(dailyStats));
+};
+
+// --- NEW RENDER FUNCTION FOR PERSONAL BESTS ---
+const renderPersonalBests = (personalBestsData) => {
+    const container = document.getElementById('personal-bests-container');
+    if (!container) return;
+
+    const bests = [
+        {
+            id: 'most_responses_copied_in_day',
+            title: 'Most Copies in a Day',
+            icon: 'fa-copy',
+            color: 'text-teal-400'
+        },
+        {
+            id: 'most_categories_created_in_day',
+            title: 'Most Categories Created',
+            icon: 'fa-folder-plus',
+            color: 'text-orange-400'
+        }
+    ];
+
+    let content = '';
+    bests.forEach(best => {
+        const data = personalBestsData[best.id];
+        const count = data?.count || 0;
+        const date = data?.date ? new Date(data.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+        const unlocked = count > 0;
+
+        content += `
+            <div class="floating-card p-4 flex items-center transition-all duration-300 ${unlocked ? 'opacity-100' : 'opacity-40'}" title="${unlocked ? `Set on ${date}` : 'No record yet.'}">
+                <i class="fas ${best.icon} text-3xl w-12 text-center ${unlocked ? best.color : 'text-gray-600'}"></i>
+                <div class="ml-4">
+                    <p class="font-bold ${unlocked ? 'text-gray-100' : 'text-gray-500'}">${best.title}</p>
+                    <p class="text-2xl font-bold ${unlocked ? 'text-white' : 'text-gray-500'}">${count}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = content || '<p class="text-gray-400 col-span-full">Track your actions to set personal bests!</p>';
+};
+		
 		
 const getTier = (count, tiers) => {
     let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
@@ -2387,7 +2506,7 @@ const deleteResponse = (id, categoryName) => {
     saveToFirestore(updatedCategories);
     showMessage("Response deleted successfully!");
 };
-const copyToClipboard = (text, responseId, categoryName) => {
+const copyToClipboard = async (text, responseId, categoryName) => {
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
@@ -2395,6 +2514,7 @@ const copyToClipboard = (text, responseId, categoryName) => {
     document.execCommand('copy');
     document.body.removeChild(el);
     showMessage("Copied to clipboard!");
+	await trackDailyAction('copied_responses');
     const placeholderRegex = /\[([^\]]+)\]/g;
     if (!placeholderRegex.test(text)) {
         logUserEvent('copy_purist');
@@ -2879,10 +2999,12 @@ const renderAdvancedStats = async () => {
     const metricBadgesContainer = document.getElementById('metric-badges-container');
     const achievementsContainer = document.getElementById('achievements-container');
     const chartContainer = document.getElementById('stats-container');
+	const personalBestsContainer = document.getElementById('personal-bests-container');
 
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
     const userData = userDoc.exists() ? userDoc.data() : {};
+	const personalBestsData = userData.personal_bests || {};
     const darkModeUsage = userData.darkModeUsage || { streak: 0 };
     const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 
@@ -2894,6 +3016,7 @@ const renderAdvancedStats = async () => {
     metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
     achievementsContainer.innerHTML = '';
     chartContainer.innerHTML = '';
+	personalBestsContainer.innerHTML = '';
 
     const eventsCollectionRef = getUserEventsCollectionRef(userId);
     const snapshot = await getDocs(query(eventsCollectionRef));
@@ -2901,6 +3024,7 @@ const renderAdvancedStats = async () => {
 
     renderCategoryChart(events);
     renderActivityChart(events);
+	renderPersonalBests(personalBestsData);
 
     const now = new Date();
     const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
@@ -3421,7 +3545,7 @@ function attachEventListeners() {
     document.getElementById('search-input').addEventListener('input', () => { renderResponses(document.getElementById('search-input').value); });
     document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.remove('hidden'); document.getElementById('add-category-input').focus(); });
     document.getElementById('cancel-add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.add('hidden'); document.getElementById('add-category-input').value = ''; });
-    document.getElementById('confirm-add-category-btn').addEventListener('click', () => {
+    document.getElementById('confirm-add-category-btn').addEventListener('click', async () => {
         const newCategoryName = document.getElementById('add-category-input').value.trim();
         if (newCategoryName && !categories[newCategoryName]) {
             const updatedCategories = JSON.parse(JSON.stringify(categories));
@@ -3432,6 +3556,7 @@ function attachEventListeners() {
             document.getElementById('add-category-input').value = '';
             showMessage("Category created successfully!");
 			logUserEvent('create_category');
+			await trackDailyAction('created_categories');
         } else if (categories[newCategoryName]) {
             showMessage("Category already exists.", 'error');
         }
