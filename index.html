@@ -53,6 +53,29 @@
                 box-shadow: 0 0 0 0 rgba(100, 160, 255, 0);
             }
         }
+
+
+			@keyframes unlock-animation {
+			    0% {
+			        transform: scale(0.9);
+			        opacity: 0.8;
+			    }
+			    50% {
+			        transform: scale(1.1);
+			        opacity: 1;
+			        filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.7)); /* A golden glow */
+			    }
+			    100% {
+			        transform: scale(1);
+			        opacity: 1;
+			        filter: none;
+			    }
+			}
+			
+			.newly-unlocked {
+			    animation: unlock-animation 0.7s ease-out forwards;
+			}
+		
         .message-box {
             position: fixed;
             top: 20px;
@@ -1680,6 +1703,7 @@ const showAchievementNotification = (achievement) => {
 
     // Update content
     toastIcon.innerHTML = `<i class="fas ${achievement.icon}"></i>`;
+	toastIcon.className = `text-2xl ${achievement.color || 'text-yellow-400'}`;
     toastMessage.textContent = achievement.name;
 
     // Play sound
@@ -1693,6 +1717,16 @@ const showAchievementNotification = (achievement) => {
     setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-5');
     }, 5000);
+    setTimeout(() => {
+        const badgeOnPage = document.querySelector(`.achievement-badge[data-id="${achievement.id}"]`);
+        if (badgeOnPage) {
+            badgeOnPage.classList.add('newly-unlocked');
+            // Remove the class after the animation finishes so it doesn't replay
+            setTimeout(() => {
+                badgeOnPage.classList.remove('newly-unlocked');
+            }, 700); // Must match the animation duration in CSS
+        }
+    }, 100);
 };
 		
 
@@ -2042,7 +2076,36 @@ const updateDarkModeStreak = async () => {
     await setDoc(userDocRef, { darkModeUsage }, { merge: true });
     logUserEvent('used_dark_mode'); // Log this to trigger the achievement check
 };
-		
+
+const getTier = (count, tiers) => {
+    // Start with the default "locked" state
+    let currentTier = {
+        name: tiers[0].name,
+        desc: `Reach the first tier at ${tiers[0].goal}!`,
+        icon: 'fa-lock', // A locked icon by default
+        color: 'text-gray-600',
+        unlocked: false,
+        progress: count,
+        goal: tiers[0].goal
+    };
+
+    // Loop backward through the tiers to find the highest one the user has achieved
+    for (let i = tiers.length - 1; i >= 0; i--) {
+        if (count >= tiers[i].goal) {
+            const nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
+            currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
+
+            // Update the description based on progress to the next tier
+            if (count >= nextGoal && i === tiers.length - 1) {
+                currentTier.desc = "Max tier reached!";
+            } else {
+                currentTier.desc = `Reach the next tier at ${nextGoal}!`;
+            }
+            break; // Found the correct tier, no need to check lower ones
+        }
+    }
+    return currentTier;
+};		
 
 const checkAndNotifyAchievements = async () => {
     if (!userId || isAnonymous) return;
@@ -2057,7 +2120,6 @@ const checkAndNotifyAchievements = async () => {
 	const userData = userDoc.exists() ? userDoc.data() : {};
 
 	const userAchievements = userData.achievementsData || {};
-    
 	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
 
     const totalCopies = events.filter(e => e.type === 'copy').length;
@@ -2080,23 +2142,23 @@ const checkAndNotifyAchievements = async () => {
     
     const achievements = [
         // Core Actions
-        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
         { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
-        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
         
         // Organization & Management
         { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
-        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
-        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
-        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
 
         // Exploration & Discovery
-        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
-        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
-        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
-        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
-        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
     ];
 
     const newAchievementsToSave = {};
@@ -3186,6 +3248,7 @@ achievementsContainer.innerHTML = achievementsToRender.map(ach => {
 
     return `
     <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
+         data-id="${ach.id}"
          data-name="${ach.name}" 
          data-desc="${sanitizedDesc}" 
          data-icon="${ach.icon}" 
@@ -3193,12 +3256,12 @@ achievementsContainer.innerHTML = achievementsToRender.map(ach => {
          data-unlocked="${ach.unlocked}"
          data-unlocked-date="${unlockedDate || ''}" 
          title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
-        
-        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
-        <div class="ml-4">
-            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
-        </div>
+      
+      <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+      <div class="ml-4">
+          <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+          ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
+      </div>
     </div>
     `;
 }).join('');
