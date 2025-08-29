@@ -2283,7 +2283,6 @@ const checkAndNotifyAchievements = async () => {
     const totalCategories = Object.keys(categories).length;
     const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-	const hasPinnedResponse = events.some(e => e.type === 'pin_response');
 
 	const dailyActivity = events.reduce((acc, event) => {
 	    if (!event.timestamp) return acc;
