@@ -161,6 +161,59 @@
 }
 .achievement-icon-locked i {
   color: rgba(0, 0, 0, 0.4);
+}
+/* Additional Tier Colors */
+.achievement-icon-blue {
+  background: linear-gradient(145deg, #93c5fd, #3b82f6);
+  border-color: #2563eb;
+}
+.achievement-icon-green {
+  background: linear-gradient(145deg, #86efac, #22c55e);
+  border-color: #16a34a;
+}
+.achievement-icon-teal {
+  background: linear-gradient(145deg, #5eead4, #14b8a6);
+  border-color: #0d9488;
+}
+.achievement-icon-indigo {
+  background: linear-gradient(145deg, #a5b4fc, #6366f1);
+  border-color: #4f46e5;
+}
+.achievement-icon-white {
+  background: linear-gradient(145deg, #ffffff, #e5e5e5);
+  border-color: #d4d4d4;
+}
+.achievement-icon-pink {
+  background: linear-gradient(145deg, #f9a8d4, #ec4899);
+  border-color: #db2777;
+}
+.achievement-icon-orange {
+  background: linear-gradient(145deg, #fdba74, #f97316);
+  border-color: #ea580c;
+}
+.achievement-icon-sky {
+  background: linear-gradient(145deg, #7dd3fc, #0ea5e9);
+  border-color: #0284c7;
+}
+.achievement-icon-lime {
+  background: linear-gradient(145deg, #bef264, #84cc16);
+  border-color: #65a30d;
+}
+.achievement-icon-cyan {
+  background: linear-gradient(145deg, #67e8f9, #06b6d4);
+  border-color: #0891b2;
+}
+.achievement-icon-purple {
+  background: linear-gradient(145deg, #d8b4fe, #a855f7);
+  border-color: #9333ea;
+}
+.achievement-icon-violet {
+    background: linear-gradient(145deg, #c4b5fd, #8b5cf6);
+    border-color: #7c3aed;
+}
+.achievement-icon-red {
+    background: linear-gradient(145deg, #fca5a5, #ef4444);
+    border-color: #dc2626;
 }		
         
 /* Update the main modal container to be a full-screen overlay */
@@ -1633,20 +1686,55 @@ const showMessage = (text, type = 'success') => {
 
 const getAchievementClassFromColor = (colorClass) => {
     switch (colorClass) {
+        // Gold Tier
         case 'text-yellow-400':
         case 'text-yellow-300':
             return 'achievement-icon-gold';
+        // Silver Tier
         case 'text-slate-400':
+        case 'text-slate-300':
         case 'text-gray-300':
             return 'achievement-icon-silver';
+        // Bronze Tier
         case 'text-amber-500':
         case 'text-amber-600':
             return 'achievement-icon-bronze';
+        // Unique Colors
+        case 'text-blue-400':
+        case 'text-blue-500':
+            return 'achievement-icon-blue';
+        case 'text-green-400':
+        case 'text-green-600':
+            return 'achievement-icon-green';
+        case 'text-teal-400':
+            return 'achievement-icon-teal';
+        case 'text-indigo-400':
+            return 'achievement-icon-indigo';
+        case 'text-white':
+            return 'achievement-icon-white';
+        case 'text-pink-400':
+            return 'achievement-icon-pink';
+        case 'text-orange-400':
+            return 'achievement-icon-orange';
+        case 'text-sky-400':
+            return 'achievement-icon-sky';
+        case 'text-lime-400':
+            return 'achievement-icon-lime';
+        case 'text-cyan-400':
+        case 'text-cyan-500':
+            return 'achievement-icon-cyan';
+        case 'text-purple-400':
+            return 'achievement-icon-purple';
+        case 'text-violet-500':
+            return 'achievement-icon-violet';
+        case 'text-red-400':
+        case 'text-red-500':
+            return 'achievement-icon-red';
+        // Fallback
         default:
-            return 'achievement-icon-default'; // A nice default blue
+            return 'achievement-icon-default';
     }
-};
-		
+};	
 
 // --- NEW Local Storage Tracking & Sync Function ---
 const trackDailyAction = async (actionType) => {
