@@ -2195,8 +2195,6 @@ const logUserEvent = async (eventType, eventData = {}) => {
                 }
             }
         }
-		
-		checkAndNotifyAchievements(firstSignIn);
     } catch (error) {
         console.error("Error logging user event:", error);
         // We don't show a message to the user for this, as it's a background task.
@@ -2277,7 +2275,7 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
 	const userData = userDoc.exists() ? userDoc.data() : {};
 	const userAchievements = userData.achievementsData || {};
 	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
-	const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
+	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
 
     const totalCopies = events.filter(e => e.type === 'copy').length;
     const totalCategories = Object.keys(categories).length;
@@ -2301,7 +2299,6 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
 	const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
 	const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
 	const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-	const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
 	const hasHistorian = daysSinceSignIn >= 365;
 	const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
@@ -2755,7 +2752,7 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
         return;
     }
     if (newCategory && newCategory !== oldCategory) {
-		logUserEvent('move_response');
+		logUserEvent('move_response', {}, firstSignIn);
         const index = oldResponsesList.findIndex(r => r.id === id);
         if (index > -1) {
             oldResponsesList.splice(index, 1);
@@ -2779,7 +2776,7 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
     const hadPlaceholder = placeholderRegex.test(originalText);
     const hasPlaceholderNow = placeholderRegex.test(newText);
     if (!hadPlaceholder && hasPlaceholderNow) {
-        logUserEvent('add_placeholder');
+        logUserEvent('add_placeholder', {}, firstSignIn);
     }
 	
     saveToFirestore(updatedCategories);
@@ -2808,9 +2805,9 @@ const copyToClipboard = async (text, responseId, categoryName) => {
 	await trackDailyAction('copied_responses');
     const placeholderRegex = /\[([^\]]+)\]/g;
     if (!placeholderRegex.test(text)) {
-        logUserEvent('copy_purist');
+        logUserEvent('copy_purist', {}, firstSignIn);
     }
-    logUserEvent('copy', { responseId, categoryName, text });
+    logUserEvent('copy', { responseId, categoryName, text }, firstSignIn);
 
     // Increment the counter in Firestore
     if (userId && !isAnonymous && responseId && categoryName) {
@@ -2870,7 +2867,7 @@ const importData = (file) => {
                 saveToFirestore(categories);
                 showMessage("Data imported successfully!");
                 importExportModal.classList.add('hidden');
-				logUserEvent('import_data');
+				logUserEvent('import_data', {}, firstSignIn);
             } else {
                 throw new Error('Invalid JSON format.');
             }
@@ -3649,7 +3646,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
                 const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                 await addDoc(linksCollectionRef, { title, url, description, createdAt: new Date() });
                 showLinksStatus('Link added successfully!', 'text-green-400');
-				logUserEvent('add_link');
+				logUserEvent('add_link', {}, firstSignIn);
             }
             resetLinksForm();
         } catch (error) {
@@ -3858,7 +3855,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
             if (responseData) {
                 responseData.isPinned = !responseData.isPinned;
 		        if (responseData.isPinned) {
-		            logUserEvent('pin_response', { responseId: id }); // <-- ADD THIS LINE
+		            logUserEvent('pin_response', { responseId: id }, firstSignIn); // <-- ADD THIS LINE
 		        }
                 saveToFirestore(categories);
             }
@@ -3893,13 +3890,13 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
         const newLabel = document.getElementById('edit-response-label').value;
         const newText = document.getElementById('edit-response-text').value;
         const newCategory = document.getElementById('edit-category-select').value;
-        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null;logUserEvent('edit_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null;logUserEvent('edit_response', {}, firstSignIn); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('delete-confirm-btn').addEventListener('click', () => {
         const category = document.getElementById('delete-modal').dataset.category;
         deleteResponse(responseToDeleteId, category);
         document.getElementById('delete-modal').classList.add('hidden');
-		logUserEvent('delete_response');
+		logUserEvent('delete_response', {}, firstSignIn);
     });
     document.getElementById('delete-cancel-btn').addEventListener('click', () => { document.getElementById('delete-modal').classList.add('hidden'); responseToDeleteId = null; });
     document.getElementById('search-input').addEventListener('input', () => { renderResponses(document.getElementById('search-input').value); });
@@ -3915,7 +3912,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
             document.getElementById('add-category-modal').classList.add('hidden');
             document.getElementById('add-category-input').value = '';
             showMessage("Category created successfully!");
-			logUserEvent('create_category');
+			logUserEvent('create_category', {}, firstSignIn);
 			await trackDailyAction('created_categories');
         } else if (categories[newCategoryName]) {
             showMessage("Category already exists.", 'error');
@@ -3981,7 +3978,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
             saveToFirestore(updatedCategories);
             document.getElementById('color-picker-modal').classList.add('hidden');
             showMessage("Color updated successfully!");
-			logUserEvent('change_color');
+			logUserEvent('change_color', {}, firstSignIn);
         }
     });
     document.getElementById('input-text-fedex').addEventListener('input', extractAndDisplayNumbers);
@@ -3996,7 +3993,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
         const matches = text.match(fedexRegex) || [];
         if (matches.length > 0) {
             const uniqueNumbers = [...new Set(matches)];
-			logUserEvent('extract_tracking', { count: uniqueNumbers.length });
+			logUserEvent('extract_tracking', { count: uniqueNumbers.length }, firstSignIn);
             const numbersToCopy = uniqueNumbers.join('\t');
             copyToClipboard(numbersToCopy);
             const numbersForUrl = uniqueNumbers.join(',');
@@ -4236,6 +4233,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
             const userDoc = await getDoc(userDocRef);
+			const firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
 			if (!userDoc.exists() || !userDoc.data().firstSignIn) {
                 // Set the first sign-in timestamp for new users
                 await setDoc(userDocRef, { firstSignIn: serverTimestamp() }, { merge: true });
@@ -4257,6 +4255,7 @@ onAuthStateChanged(auth, async (user) => {
                 }
                 renderContent();
 				updateDarkModeStreak();
+				checkAndNotifyAchievements(firstSignIn); 
             }, (error) => {
                 console.error("Error with onSnapshot listener:", error);
                 showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
