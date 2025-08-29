@@ -3558,28 +3558,28 @@ function attachEventListeners() {
         currentPage = 'fedex-tracker';
         renderContent();
         closeSidebar();
-		logUserEvent('visit_page', { page: 'canned-responses' });
+		logUserEvent('visit_page', { page: 'fedex-tracker' });
     });
 
     document.getElementById('nav-helpful-links').addEventListener('click', () => {
         currentPage = 'helpful-links';
         renderContent();
         closeSidebar();
-		logUserEvent('visit_page', { page: 'canned-responses' });
+		logUserEvent('visit_page', { page: 'helpful-links' });
     });
 
     document.getElementById('nav-my-stats').addEventListener('click', () => {
         currentPage = 'my-stats';
         renderContent();
         closeSidebar();
-		logUserEvent('visit_page', { page: 'canned-responses' });
+		logUserEvent('visit_page', { page: 'my-stats' });
     });	
 
     document.getElementById('nav-settings').addEventListener('click', () => {
         currentPage = 'settings';
         renderContent();
         closeSidebar();
-		logUserEvent('visit_page', { page: 'canned-responses' });
+		logUserEvent('visit_page', { page: 'settings' });
     });
 
 // Listener for clicking on an achievement badge
