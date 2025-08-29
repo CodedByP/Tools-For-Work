@@ -2299,7 +2299,6 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
 	const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
 	const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
 	const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
 	const hasHistorian = daysSinceSignIn >= 365;
 	const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
 	const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
