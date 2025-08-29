@@ -3241,7 +3241,14 @@ const renderAdvancedStats = async () => {
 const userAchievements = userData.achievementsData || {}; // Get the achievement data
 achievementsContainer.innerHTML = achievementsToRender.map(ach => {
     const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
-    const unlockedDate = ach.unlocked ? userAchievements[ach.id]?.date : null;
+    let unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || null) : null;
+    if (ach.unlocked && !unlockedDate) {
+        // If the date isn't in achievementsData, find the first event that unlocked it
+        const unlockingEvent = events.find(e => e.type === `${ach.id}_milestone` || e.type === `copy_purist` || e.type === `add_placeholder`);
+        if (unlockingEvent && unlockingEvent.timestamp) {
+            unlockedDate = unlockingEvent.timestamp.toDate().toISOString();
+        }
+    }
 
     return `
     <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
