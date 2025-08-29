@@ -2285,6 +2285,49 @@ const checkAndNotifyAchievements = async () => {
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
 	const hasPinnedResponse = events.some(e => e.type === 'pin_response');
 
+	const dailyActivity = events.reduce((acc, event) => {
+	    if (!event.timestamp) return acc;
+	    const date = event.timestamp.toDate().toISOString().split('T')[0];
+	    if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
+	    if (event.type === 'copy') acc[date].copies++;
+	    if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
+	    if (event.type === 'add_link') acc[date].links++;
+	    return acc;
+	}, {});
+	const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
+	const hasCreatedCategory = events.some(e => e.type === 'create_category');
+	const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
+	const hasPinnedResponse = events.some(e => e.type === 'pin_response');
+	const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
+	const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
+	const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
+	const hasTheScribe = uniqueCategoriesIn30Min >= 5;
+	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
+	const hasHistorian = daysSinceSignIn >= 365;
+	const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
+	const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
+	let maxStreak = 0;
+	if (usageDates.length > 0) {
+	    let currentStreak = 1;
+	    for (let i = 1; i < usageDates.length; i++) {
+	        const prevDate = new Date(usageDates[i - 1]);
+	        const currentDate = new Date(usageDates[i]);
+	        if (!isBusinessDay(currentDate)) continue;
+	        const diffTime = currentDate - prevDate;
+	        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+	        if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
+	            currentStreak++;
+	        } else {
+	            maxStreak = Math.max(maxStreak, currentStreak);
+	            currentStreak = 1;
+	        }
+	    }
+	    maxStreak = Math.max(maxStreak, currentStreak);
+	}
+	const hasStreakBreaker = maxStreak >= 90;
+	const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
+	const hasCleanSlate = deletedInLast5Mins >= 5;	
+
 
 	const copyTiers = getTier(totalCopies, [
         { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
