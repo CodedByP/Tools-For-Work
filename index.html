@@ -2055,7 +2055,9 @@ const checkAndNotifyAchievements = async () => {
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
 	const userData = userDoc.exists() ? userDoc.data() : {};
-    const notifiedAchievements = userDoc.exists() ? userDoc.data().notifiedAchievements || [] : [];
+
+	const userAchievements = userData.achievementsData || {};
+    
 	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
 
     const totalCopies = events.filter(e => e.type === 'copy').length;
@@ -2097,22 +2099,20 @@ const checkAndNotifyAchievements = async () => {
         { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
     ];
 
-    let newAchievementsToNotify = [];
+    const newAchievementsToSave = {};
 
-    achievements.forEach(ach => {
-        // If it's unlocked and NOT in the notified list
-        if (ach.unlocked && !notifiedAchievements.includes(ach.id)) {
-            showAchievementNotification(ach);
-            newAchievementsToNotify.push(ach.id);
-        }
-    });
+    achievements.forEach(ach => {
+        if (ach.unlocked && !userAchievements[ach.id]) {
+            showAchievementNotification(ach);
+            newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
+        }
+    });
 
     // If we have new achievements to notify, update Firestore
-    if (newAchievementsToNotify.length > 0) {
-        const updatedNotifiedList = [...notifiedAchievements, ...newAchievementsToNotify];
-        await setDoc(userDocRef, { notifiedAchievements: updatedNotifiedList }, { merge: true });
-    }
-};		
+    if (Object.keys(newAchievementsToSave).length > 0) {
+        await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
+    }
+};	
 		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
@@ -3177,26 +3177,31 @@ const renderAdvancedStats = async () => {
 
     const achievementsToRender = [...allAchievements, grandMasterAchievement];
 
-    // --- Render Achievements ---
-achievementsContainer.innerHTML = achievementsToRender.map(ach => {
-    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
 
-    return `
-    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
-         data-name="${ach.name}" 
-         data-desc="${sanitizedDesc}" 
-         data-icon="${ach.icon}" 
-         data-color="${ach.color || 'text-yellow-400'}" 
-         data-unlocked="${ach.unlocked}"
-         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
-        
-        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
-        <div class="ml-4">
-            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
-        </div>
-    </div>
-    `;
+const userAchievements = userData.achievementsData || {}; // Get the achievement data
+achievementsContainer.innerHTML = achievementsToRender.map(ach => {
+    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
+    // MODIFICATION: Get the unlock date for this specific achievement.
+    const unlockedDate = ach.unlocked ? userAchievements[ach.id]?.date : null;
+
+    return `
+    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
+         data-name="${ach.name}" 
+         data-desc="${sanitizedDesc}" 
+         data-icon="${ach.icon}" 
+         data-color="${ach.color || 'text-yellow-400'}" 
+         data-unlocked="${ach.unlocked}"
+         // MODIFICATION: Add the date as a data attribute.
+         data-unlocked-date="${unlockedDate || ''}" 
+         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
+        
+        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+        <div class="ml-4">
+            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
+        </div>
+    </div>
+    `;
 }).join('');
 
     // --- Render Top 5 Chart ---
@@ -3295,31 +3300,36 @@ function attachEventListeners() {
 		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
-	// Listener for clicking on an achievement badge
-		document.getElementById('achievements-container').addEventListener('click', (e) => {
-		    const badge = e.target.closest('.achievement-badge');
-		    
-		    // Only proceed if a badge was clicked and it's unlocked
-		    if (badge && badge.dataset.unlocked === 'true') {
-		        const modalIcon = document.getElementById('modal-achievement-icon');
-		        const modalTitle = document.getElementById('modal-achievement-title');
-		        const modalDesc = document.getElementById('modal-achievement-desc');
-		        const modalDate = document.getElementById('modal-achievement-date');
-		        const modal = document.getElementById('achievement-details-modal');
-		
-		        const { name, desc, icon, color } = badge.dataset;
-		
-		        // Populate the modal with data from the badge
-		        modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
-		        modalIcon.className = `text-6xl mb-4 ${color}`;
-		        modalTitle.textContent = name;
-		        modalDesc.textContent = desc;
-		        modalDate.textContent = 'Unlocked!'; // You can enhance this later to show the actual date
-		
-		        // Show the modal
-		        modal.classList.remove('hidden');
-		    }
-		});
+// Listener for clicking on an achievement badge
+document.getElementById('achievements-container').addEventListener('click', (e) => {
+    const badge = e.target.closest('.achievement-badge');
+    
+    if (badge && badge.dataset.unlocked === 'true') {
+        const modalIcon = document.getElementById('modal-achievement-icon');
+        const modalTitle = document.getElementById('modal-achievement-title');
+        const modalDesc = document.getElementById('modal-achievement-desc');
+        const modalDateEl = document.getElementById('modal-achievement-date'); // Changed variable name
+        const modal = document.getElementById('achievement-details-modal');
+
+        // MODIFICATION: Get the date from the data attribute.
+        const { name, desc, icon, color, unlockedDate } = badge.dataset;
+
+        modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+        modalIcon.className = `text-6xl mb-4 ${color}`;
+        modalTitle.textContent = name;
+        modalDesc.textContent = desc;
+        
+        // MODIFICATION: Format and display the date.
+        if (unlockedDate) {
+            const date = new Date(unlockedDate);
+            modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        } else {
+            modalDateEl.textContent = 'Unlocked!'; // Fallback
+        }
+
+        modal.classList.remove('hidden');
+    }
+});
 
 // Listener for the modal's close button
 document.getElementById('close-achievement-modal-btn').addEventListener('click', () => {
