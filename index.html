@@ -2173,6 +2173,12 @@ const logUserEvent = async (eventType, eventData = {}) => {
     if (!userId || isAnonymous) return; // Don't log for anonymous users
     try {
         const eventsCollectionRef = getUserEventsCollectionRef(userId);
+	    const cleanedEventData = {};
+	    for (const key in eventData) {
+	        if (eventData[key] !== undefined) {
+	            cleanedEventData[key] = eventData[key];
+	        }
+        }	
         await addDoc(eventsCollectionRef, {
             type: eventType,
             timestamp: serverTimestamp(),
@@ -2282,6 +2288,16 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
     const totalCategories = Object.keys(categories).length;
     const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+
+	const copyEvents = events.filter(e => e.type === 'copy');
+    const categoriesUsedInSession = new Set();
+    const sessionStartTime = new Date(Date.now() - 30 * 60 * 1000); // last 30 minutes
+    copyEvents.forEach(event => {
+        if (event.timestamp?.toDate() > sessionStartTime && event.categoryName) {
+            categoriesUsedInSession.add(event.categoryName);
+        }
+    });
+    const hasGlobetrotter = categoriesUsedInSession.size >= 2;
 
 	const dailyActivity = events.reduce((acc, event) => {
 	    if (!event.timestamp) return acc;
@@ -2803,8 +2819,6 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
     document.body.removeChild(el);
     showMessage("Copied to clipboard!");
 
-    // This block of code will only execute if responseId and categoryName are defined.
-    // This prevents the error when copying FedEx numbers.
     if (responseId && categoryName) {
         await trackDailyAction('copied_responses');
         const placeholderRegex = /\[([^\]]+)\]/g;
@@ -4236,12 +4250,17 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
             const userDoc = await getDoc(userDocRef);
+			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-			if (!userDoc.exists() || !userDoc.data().firstSignIn) {
-                // Set the first sign-in timestamp for new users
-                await setDoc(userDocRef, { firstSignIn: serverTimestamp() }, { merge: true });
-				firstSignIn = new Date();
-			}
+           if (!userData.firstSignIn) {
+                const creationTime = user.metadata.creationTime; 
+                firstSignIn = new Date(creationTime); // Use the creation date
+                await setDoc(userDocRef, { firstSignIn: firstSignIn }, { merge: true });
+                console.log(`Backfilled 'firstSignIn' for user ${userId}`);
+            } else {
+                // If it already exists, just use that value.
+                firstSignIn = userData.firstSignIn.toDate();
+            }
             const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
                 document.getElementById('tutorial-modal').classList.remove('hidden');
