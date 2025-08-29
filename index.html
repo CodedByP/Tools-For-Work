@@ -1440,7 +1440,8 @@ let currentResponseToCopyCategory = null;
 let statsChart = null; 	
 let shownAchievements = new Set();	
 let categoryChartInstance = null;
-let activityChartInstance = null;		
+let activityChartInstance = null;
+let firstSignIn = null; 		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -4232,10 +4233,11 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
             const userDoc = await getDoc(userDocRef);
-			const firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
+            firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
 			if (!userDoc.exists() || !userDoc.data().firstSignIn) {
                 // Set the first sign-in timestamp for new users
                 await setDoc(userDocRef, { firstSignIn: serverTimestamp() }, { merge: true });
+				firstSignIn = new Date();
 			}
             const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
