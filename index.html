@@ -1318,7 +1318,14 @@ let currentResponseToCopyCategory = null;
 let statsChart = null; 	
 let shownAchievements = new Set();	
 let categoryChartInstance = null;
-let activityChartInstance = null;		
+let activityChartInstance = null;	
+
+const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
+const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
+const getUserCannedResponsesDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data'); };
+const getUserHelpfulLinksCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data'); };
+const getUserRootDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid); }
+const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -2276,12 +2283,6 @@ const updateDarkModeStreak = async () => {
         await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
     }
 		
-const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
-const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
-const getUserCannedResponsesDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data'); };
-const getUserHelpfulLinksCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data'); };
-const getUserRootDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid); }
-const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };		
 
 const saveToFirestore = async (dataToSave) => {
     if (!userId || isAnonymous) {
