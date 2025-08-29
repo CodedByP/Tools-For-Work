@@ -3178,30 +3178,29 @@ const renderAdvancedStats = async () => {
     const achievementsToRender = [...allAchievements, grandMasterAchievement];
 
 
+// --- Render Achievements ---
 const userAchievements = userData.achievementsData || {}; // Get the achievement data
 achievementsContainer.innerHTML = achievementsToRender.map(ach => {
-    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
-    // MODIFICATION: Get the unlock date for this specific achievement.
-    const unlockedDate = ach.unlocked ? userAchievements[ach.id]?.date : null;
+    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
+    const unlockedDate = ach.unlocked ? userAchievements[ach.id]?.date : null;
 
-    return `
-    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
-         data-name="${ach.name}" 
-         data-desc="${sanitizedDesc}" 
-         data-icon="${ach.icon}" 
-         data-color="${ach.color || 'text-yellow-400'}" 
-         data-unlocked="${ach.unlocked}"
-         // MODIFICATION: Add the date as a data attribute.
-         data-unlocked-date="${unlockedDate || ''}" 
-         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
-        
-        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
-        <div class="ml-4">
-            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
-        </div>
-    </div>
-    `;
+    return `
+    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
+         data-name="${ach.name}" 
+         data-desc="${sanitizedDesc}" 
+         data-icon="${ach.icon}" 
+         data-color="${ach.color || 'text-yellow-400'}" 
+         data-unlocked="${ach.unlocked}"
+         data-unlocked-date="${unlockedDate || ''}" 
+         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
+        
+        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+        <div class="ml-4">
+            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
+        </div>
+    </div>
+    `;
 }).join('');
 
     // --- Render Top 5 Chart ---
