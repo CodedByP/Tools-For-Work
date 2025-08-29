@@ -2794,7 +2794,7 @@ const deleteResponse = (id, categoryName) => {
     saveToFirestore(updatedCategories);
     showMessage("Response deleted successfully!");
 };
-const copyToClipboard = async (text, responseId, categoryName) => {
+const copyToClipboard = async (text, responseId = null, categoryName = null) => {
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
@@ -2802,30 +2802,31 @@ const copyToClipboard = async (text, responseId, categoryName) => {
     document.execCommand('copy');
     document.body.removeChild(el);
     showMessage("Copied to clipboard!");
-	await trackDailyAction('copied_responses');
-    const placeholderRegex = /\[([^\]]+)\]/g;
-    if (!placeholderRegex.test(text)) {
-        logUserEvent('copy_purist', {}, firstSignIn);
-    }
-    logUserEvent('copy', { responseId, categoryName, text }, firstSignIn);
 
-    // Increment the counter in Firestore
-    if (userId && !isAnonymous && responseId && categoryName) {
-        try {
-            // Find the response in the local state
-            const category = categories[categoryName];
-            if (category && category.responses) {
-                const response = category.responses.find(r => r.id === responseId);
-                if (response) {
-                    // Increment the count or initialize it to 1
-                    response.timesCopied = (response.timesCopied || 0) + 1;
-                    // Save the entire updated categories object back to Firestore
-                    saveToFirestore(categories); // This will trigger a re-render
+    // This block of code will only execute if responseId and categoryName are defined.
+    // This prevents the error when copying FedEx numbers.
+    if (responseId && categoryName) {
+        await trackDailyAction('copied_responses');
+        const placeholderRegex = /\[([^\]]+)\]/g;
+        if (!placeholderRegex.test(text)) {
+            logUserEvent('copy_purist');
+        }
+        logUserEvent('copy', { responseId, categoryName, text });
+
+        // Increment the counter in Firestore
+        if (userId && !isAnonymous) {
+            try {
+                const category = categories[categoryName];
+                if (category && category.responses) {
+                    const response = category.responses.find(r => r.id === responseId);
+                    if (response) {
+                        response.timesCopied = (response.timesCopied || 0) + 1;
+                        saveToFirestore(categories);
+                    }
                 }
+            } catch (error) {
+                console.error("Error updating copy count:", error);
             }
-        } catch (error) {
-            console.error("Error updating copy count:", error);
-            // Don't bother the user with this error, it's a non-critical background task
         }
     }
 };
@@ -3987,23 +3988,25 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
         extractAndDisplayNumbers();
         showMessage('Input cleared!', 'success');
     });
-    document.getElementById('copy-button-fedex').addEventListener('click', () => {
-        const text = document.getElementById('input-text-fedex').value;
-        const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
-        const matches = text.match(fedexRegex) || [];
-        if (matches.length > 0) {
-            const uniqueNumbers = [...new Set(matches)];
-			logUserEvent('extract_tracking', { count: uniqueNumbers.length }, firstSignIn);
-            const numbersToCopy = uniqueNumbers.join('\t');
-            copyToClipboard(numbersToCopy);
-            const numbersForUrl = uniqueNumbers.join(',');
-            const encodedNumbers = encodeURIComponent(numbersForUrl);
-            const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-            window.open(fedexUrl, '_blank');
-        } else {
-            showMessage('No tracking numbers to copy.', 'error');
-        }
-    });
+document.getElementById('copy-button-fedex').addEventListener('click', async () => {
+    const text = document.getElementById('input-text-fedex').value;
+    const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
+    const matches = text.match(fedexRegex) || [];
+    if (matches.length > 0) {
+        const uniqueNumbers = [...new Set(matches)];
+        
+        await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
+        const numbersToCopy = uniqueNumbers.join('\t');
+        copyToClipboard(numbersToCopy);
+
+        const numbersForUrl = uniqueNumbers.join(',');
+        const encodedNumbers = encodeURIComponent(numbersForUrl);
+        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
+        window.open(fedexUrl, '_blank');
+    } else {
+        showMessage('No tracking numbers to copy.', 'error');
+    }
+});
     document.getElementById('import-export-btn-settings').addEventListener('click', () => { document.getElementById('import-export-modal').classList.remove('hidden'); });
     document.getElementById('close-import-export-modal-btn').addEventListener('click', () => { document.getElementById('import-export-modal').classList.add('hidden'); });
     document.getElementById('export-btn').addEventListener('click', () => { exportData(); });
