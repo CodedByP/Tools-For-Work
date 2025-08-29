@@ -2275,7 +2275,6 @@ const updateDarkModeStreak = async () => {
     if (Object.keys(newAchievementsToSave).length > 0) {
         await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
     }
-};	
 		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
