@@ -1442,6 +1442,7 @@ let shownAchievements = new Set();
 let categoryChartInstance = null;
 let activityChartInstance = null;
 let firstSignIn = null; 		
+let audioUnlocked = false; 		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -3556,6 +3557,22 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+	
+    const unlockAudio = () => {
+        if (!audioUnlocked) {
+            const sound = document.getElementById('achievement-sound');
+            if (sound) {
+                sound.play().catch(() => {}); // Attempt to play
+                sound.pause(); // Immediately pause it
+                audioUnlocked = true;
+                // Remove the listener after it has run once
+                document.body.removeEventListener('click', unlockAudio);
+                console.log('Audio has been unlocked by user interaction.');
+            }
+        }
+    };
+    document.body.addEventListener('click', unlockAudio);
+	
     // Navigation Listeners
     document.getElementById('hamburger-menu-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
     document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
