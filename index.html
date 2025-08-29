@@ -6,6 +6,7 @@
     <title>Tools For Work</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;600&display=swap');
@@ -473,6 +474,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
 
+    <audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
+
     <div id="tutorial-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[999]"></div>
 
     <div id="sidebar" class="sidebar flex flex-col">
@@ -487,6 +490,11 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             <button id="nav-helpful-links" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-link mr-3"></i> Helpful Links
             </button>
+			
+		    <button id="nav-my-stats" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+		        <i class="fas fa-chart-line mr-3"></i> My Stats
+		    </button>
+			
             <button id="nav-settings" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-cog mr-3"></i> Settings
             </button>
@@ -745,6 +753,56 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
     </div>
+
+
+		<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
+		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12">
+		        <div>
+		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
+		            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+		                </div>
+		        </div>
+		
+		        <div>
+		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Achievements 🏆</h2>
+		            <div id="achievements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+		                </div>
+		        </div>
+
+				<div>
+				    <h2 class="text-3xl font-bold text-gray-200 mb-6">Personal Bests ⭐</h2>
+				    <div id="personal-bests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+				        </div>
+				</div>
+
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+		            <div class="floating-card p-6 sm:p-8">
+		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
+		                </h2>
+		                <div id="category-chart-container" class="relative h-80">
+		                    <canvas id="categoryChart"></canvas>
+		                </div>
+		            </div>
+		            <div class="floating-card p-6 sm:p-8">
+		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+		                </h2>
+		                <div id="activity-chart-container" class="relative h-80">
+		                    <canvas id="activityChart"></canvas>
+		                </div>
+		            </div>
+		        </div>
+		
+		        <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
+		            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		                <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Most Used Responses
+		            </h2>
+		            <div id="stats-container" class="w-full text-center relative h-64">
+		                </div>
+		        </div>
+		    </div>
+		</div>
 
     <div id="placeholder-modal" class="modal hidden">
         <div class="modal-content">
@@ -1100,7 +1158,29 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     </h4>
                     <p class="text-gray-400">This saves you from copying each number one by one and pasting them into the FedEx website, streamlining your workflow.</p>
                 </div>
-            </div>		
+            </div>
+
+			<div id="tutorial-step-13" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Helpful Links Page 🔗</h3>
+                <p class="text-lg text-gray-300">This page is a curated collection of useful links. You can search through the default links and, when signed in, add your own personal links for quick access.</p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-search-plus text-teal-400 mr-3"></i> Quick Tip
+                    </h4>
+                    <p class="text-gray-400">Use the search bar at the top to instantly filter both the default and your personal links.</p>
+                </div>
+            </div>
+
+            <div id="tutorial-step-14" class="tutorial-step space-y-6 hidden">
+                <h3 class="text-3xl font-extrabold text-blue-400 text-center">My Stats Page 📊</h3>
+                <p class="text-lg text-gray-300">Track your productivity here! This page visualizes your usage, showing your most copied responses, category breakdowns, and achievements you've unlocked.</p>
+                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
+                        <i class="fas fa-trophy text-yellow-400 mr-3"></i> Gamify Your Work
+                    </h4>
+                    <p class="text-gray-400">Unlock achievements by using different features of the application. See how many you can collect!</p>
+                </div>
+            </div>
 
             <div id="copy-success-modal" class="modal hidden">
                 <div class="modal-content">
@@ -1140,11 +1220,35 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 			</div>
         </div>
     </div>
+
+		</div> <div id="achievement-toast" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse text-gray-200 bg-gray-700 divide-x rtl:divide-x-reverse divide-gray-600 rounded-lg shadow-lg space-x opacity-0 translate-y-5 transition-all duration-500 ease-out z-[5000]">
+		    <div id="toast-icon" class="text-2xl text-yellow-400">🏆</div>
+		    <div class="ps-4 text-sm font-normal">
+		        <div class="font-bold">Achievement Unlocked!</div>
+		        <div id="toast-message"></div>
+		    </div>
+		</div>
+
+		<div id="achievement-details-modal" class="modal hidden">
+		    <div class="modal-content text-center">
+		        <div id="modal-achievement-icon" class="text-6xl mb-4"></div>
+		        
+		        <h3 id="modal-achievement-title" class="text-3xl font-bold text-gray-100 mb-2"></h3>
+		        
+		        <p id="modal-achievement-desc" class="text-gray-400 text-lg mb-6"></p>
+		        
+		        <p id="modal-achievement-date" class="text-sm text-gray-500 mb-6"></p>
+		        
+		        <button id="close-achievement-modal-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
+		            Close
+		        </button>
+		    </div>
+		</div>
 		
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
@@ -1187,6 +1291,12 @@ let userLinks = [];
 let renderedStaticLinks = false;
 let isSubmittingLink = false;
 let isTutorialActive = false;	
+let currentResponseToCopyId = null; 
+let currentResponseToCopyCategory = null; 
+let statsChart = null; 	
+let shownAchievements = new Set();	
+let categoryChartInstance = null;
+let activityChartInstance = null;		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -1270,7 +1380,9 @@ const tutorialSteps = [
     document.getElementById('tutorial-step-9'),
     document.getElementById('tutorial-step-10'),
     document.getElementById('tutorial-step-11'),
-    document.getElementById('tutorial-step-12'),   	
+    document.getElementById('tutorial-step-12'),
+	document.getElementById('tutorial-step-13'),
+	document.getElementById('tutorial-step-14'),
 ];
 
 const highlightedElements = [
@@ -1286,6 +1398,8 @@ const highlightedElements = [
 	document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
     document.getElementById('input-text-fedex'), // Step 11
     document.getElementById('copy-button-fedex'), // Step 12: New highlight
+	null,
+	null,
 ];
  
 const tutorialPages = [
@@ -1300,7 +1414,9 @@ const tutorialPages = [
     'canned-responses', //step 9
 	'canned-responses', //step 10
     'fedex-tracker', // Step 11: Change page to FedEx tracker
-    'fedex-tracker', // Step 12: Change page to FedEx tracker   
+    'fedex-tracker', // Step 12: Change page to FedEx tracker
+	'helpful-links',    //  Step 13
+    'my-stats',         //  Step 14
 ];
 
 // An array to map each step to the modal's target position
@@ -1316,7 +1432,9 @@ const modalPositions = [
     'show-modal', //Step 9
 	'top-left',
     'left-response', // Step 10: New position
-    'on-tracker-page' // Step 11: Position on the tracker page   
+    'on-tracker-page', // Step 11: Position on the tracker page
+	'show-modal',
+	'show-modal',
 ];
 
 // --- Master Blueprint Data for Initialization ---
@@ -1421,6 +1539,162 @@ const showMessage = (text, type = 'success') => {
         messageBox.className = 'message-box';
     }, 3000);
 };
+
+// --- NEW Local Storage Tracking & Sync Function ---
+const trackDailyAction = async (actionType) => {
+    if (isAnonymous) return; // Don't track for anonymous users
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    let dailyStats;
+
+    try {
+        const storedStats = localStorage.getItem(`dailyStats_${userId}`);
+        dailyStats = storedStats ? JSON.parse(storedStats) : {};
+    } catch (e) {
+        dailyStats = {};
+    }
+
+    // --- SYNC LOGIC ---
+    // If the date in storage is from a PREVIOUS day, check for new records
+    if (dailyStats.date && dailyStats.date !== today) {
+        console.log(`New day detected. Checking personal bests for ${dailyStats.date}...`);
+        
+        const userDocRef = getUserRootDocRef(userId);
+        let hasNewBest = false;
+        try {
+            const userDoc = await getDoc(userDocRef);
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const personalBests = userData.personal_bests || {
+                most_responses_copied_in_day: { count: 0, date: null },
+                most_categories_created_in_day: { count: 0, date: null }
+            };
+
+            if (dailyStats.copied_responses > personalBests.most_responses_copied_in_day.count) {
+                personalBests.most_responses_copied_in_day = {
+                    count: dailyStats.copied_responses,
+                    date: dailyStats.date
+                };
+                hasNewBest = true;
+            }
+
+            if (dailyStats.created_categories > personalBests.most_categories_created_in_day.count) {
+                personalBests.most_categories_created_in_day = {
+                    count: dailyStats.created_categories,
+                    date: dailyStats.date
+                };
+                hasNewBest = true;
+            }
+
+            if (hasNewBest) {
+                await setDoc(userDocRef, { personal_bests: personalBests }, { merge: true });
+                showMessage("You've set a new personal best!", 'success');
+            }
+        } catch (error) {
+            console.error("Error updating personal bests:", error);
+        }
+        
+        // After checking, reset for the new day
+        dailyStats = { date: today, copied_responses: 0, created_categories: 0 };
+
+    } else if (!dailyStats.date || dailyStats.date !== today) {
+        // If there are no stats or it's the first action of the day, initialize
+         dailyStats = { date: today, copied_responses: 0, created_categories: 0 };
+    }
+
+    // --- TRACKING LOGIC ---
+    if (actionType === 'copied_responses') {
+        dailyStats.copied_responses = (dailyStats.copied_responses || 0) + 1;
+    } else if (actionType === 'created_categories') {
+        dailyStats.created_categories = (dailyStats.created_categories || 0) + 1;
+    }
+
+    localStorage.setItem(`dailyStats_${userId}`, JSON.stringify(dailyStats));
+};
+
+// --- NEW RENDER FUNCTION FOR PERSONAL BESTS ---
+const renderPersonalBests = (personalBestsData) => {
+    const container = document.getElementById('personal-bests-container');
+    if (!container) return;
+
+    const bests = [
+        {
+            id: 'most_responses_copied_in_day',
+            title: 'Most Copies in a Day',
+            icon: 'fa-copy',
+            color: 'text-teal-400'
+        },
+        {
+            id: 'most_categories_created_in_day',
+            title: 'Most Categories Created',
+            icon: 'fa-folder-plus',
+            color: 'text-orange-400'
+        }
+    ];
+
+    let content = '';
+    bests.forEach(best => {
+        const data = personalBestsData[best.id];
+        const count = data?.count || 0;
+        const date = data?.date ? new Date(data.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+        const unlocked = count > 0;
+
+        content += `
+            <div class="floating-card p-4 flex items-center transition-all duration-300 ${unlocked ? 'opacity-100' : 'opacity-40'}" title="${unlocked ? `Set on ${date}` : 'No record yet.'}">
+                <i class="fas ${best.icon} text-3xl w-12 text-center ${unlocked ? best.color : 'text-gray-600'}"></i>
+                <div class="ml-4">
+                    <p class="font-bold ${unlocked ? 'text-gray-100' : 'text-gray-500'}">${best.title}</p>
+                    <p class="text-2xl font-bold ${unlocked ? 'text-white' : 'text-gray-500'}">${count}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = content || '<p class="text-gray-400 col-span-full">Track your actions to set personal bests!</p>';
+};
+		
+		
+const getTier = (count, tiers) => {
+    let currentTier = { name: tiers[0].name, desc: `???`, icon: tiers[0].icon, color: 'text-gray-600', unlocked: false, progress: count, goal: tiers[0].goal };
+    for (let i = tiers.length - 1; i >= 0; i--) {
+        if (count >= tiers[i].goal) {
+            let nextGoal = (i + 1 < tiers.length) ? tiers[i+1].goal : tiers[i].goal;
+            currentTier = { ...tiers[i], unlocked: true, progress: count, goal: nextGoal };
+            currentTier.desc = `Reach the next tier at ${nextGoal}!`
+            if (count >= nextGoal) currentTier.desc = "Max tier reached!";
+            break;
+        }
+    }
+     if (!currentTier.unlocked) {
+        currentTier.desc = `Reach the first tier at ${tiers[0].goal}!`;
+    }
+    return currentTier;
+};
+
+const showAchievementNotification = (achievement) => {
+    const toast = document.getElementById('achievement-toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    const sound = document.getElementById('achievement-sound');
+
+    if (!toast || !toastMessage || !toastIcon || !sound) return;
+
+    // Update content
+    toastIcon.innerHTML = `<i class="fas ${achievement.icon}"></i>`;
+    toastMessage.textContent = achievement.name;
+
+    // Play sound
+    sound.currentTime = 0; // Rewind to start
+    sound.play().catch(e => console.error("Audio play failed:", e));
+
+    // Show toast
+    toast.classList.remove('opacity-0', 'translate-y-5');
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-5');
+    }, 5000);
+};
+		
 
    const clearTutorialHighlights = () => {
     document.querySelectorAll('.highlight-target').forEach(el => {
@@ -1539,6 +1813,8 @@ const showTutorialStep = async (stepIndex) => {
 		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
         document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
         document.getElementById('copy-button-fedex'), // Step 12: New highlight
+		null,
+		null,
     ];
     
     const positionClasses = [
@@ -1553,7 +1829,10 @@ const showTutorialStep = async (stepIndex) => {
         'show-modal', // Step 8: Placeholder demo
 		'top-left',
         'on-tracker-page', // Step 10: New position
-        'on-tracker-page' // Step 11: Position on the tracker page
+        'on-tracker-page', // Step 11: Position on the tracker page
+		'show-modal',
+		'show-modal',
+		
     ];
 
     const tutorialModal = document.getElementById('tutorial-modal');
@@ -1696,12 +1975,151 @@ const showTutorialStep = async (stepIndex) => {
 
     currentTutorialStep = stepIndex;
 };
+		
 
+const logUserEvent = async (eventType, eventData = {}) => {
+    if (!userId || isAnonymous) return; // Don't log for anonymous users
+    try {
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+        await addDoc(eventsCollectionRef, {
+            type: eventType,
+            timestamp: serverTimestamp(),
+            ...eventData
+        });
+
+        // --- Add Globetrotter Logic ---
+        if (eventType === 'copy' && eventData.categoryName) {
+            let categoriesUsed = JSON.parse(sessionStorage.getItem('categoriesUsedInSession') || '[]');
+            if (!categoriesUsed.includes(eventData.categoryName)) {
+                categoriesUsed.push(eventData.categoryName);
+                sessionStorage.setItem('categoriesUsedInSession', JSON.stringify(categoriesUsed));
+                // If this is the second unique category, log the milestone
+                if (categoriesUsed.length >= 2) {
+                    // Log a specific event for this so we only unlock it once
+                    const events = await getDocs(query(eventsCollectionRef));
+                    const hasMilestone = events.docs.some(doc => doc.data().type === 'globetrotter_milestone');
+                    if (!hasMilestone) {
+                         await addDoc(eventsCollectionRef, { type: 'globetrotter_milestone', timestamp: serverTimestamp() });
+                    }
+                }
+            }
+        }
+		
+		checkAndNotifyAchievements();
+    } catch (error) {
+        console.error("Error logging user event:", error);
+        // We don't show a message to the user for this, as it's a background task.
+    }
+};
+
+const updateDarkModeStreak = async () => {
+    if (isAnonymous || !userId || document.body.classList.contains('light-mode')) {
+        return; // Only run for signed-in users when in dark mode
+    }
+
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const today = new Date().toISOString().split('T')[0];
+    
+    const data = userDoc.exists() ? userDoc.data() : {};
+    const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
+
+    if (darkModeUsage.lastUsed === today) {
+        return; // Already counted for today
+    }
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (darkModeUsage.lastUsed === yesterdayStr) {
+        darkModeUsage.streak++; // It's a consecutive day, increment!
+    } else {
+        darkModeUsage.streak = 1; // Not consecutive, reset to 1
+    }
+    darkModeUsage.lastUsed = today;
+    
+    await setDoc(userDocRef, { darkModeUsage }, { merge: true });
+    logUserEvent('used_dark_mode'); // Log this to trigger the achievement check
+};
+		
+
+const checkAndNotifyAchievements = async () => {
+    if (!userId || isAnonymous) return;
+
+    // Get the latest events and user data
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => doc.data());
+    
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+	const userData = userDoc.exists() ? userDoc.data() : {};
+
+	const userAchievements = userData.achievementsData || {};
+    
+	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
+
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const totalCategories = Object.keys(categories).length;
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+
+
+	const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
+    ]);
+    
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
+    
+    const achievements = [
+        // Core Actions
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        
+        // Organization & Management
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: events.some(e => e.type === 'pin_response') },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+
+        // Exploration & Discovery
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
+    ];
+
+    const newAchievementsToSave = {};
+
+    achievements.forEach(ach => {
+        if (ach.unlocked && !userAchievements[ach.id]) {
+            showAchievementNotification(ach);
+            newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
+        }
+    });
+
+    // If we have new achievements to notify, update Firestore
+    if (Object.keys(newAchievementsToSave).length > 0) {
+        await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
+    }
+};	
+		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
 const getUserCannedResponsesDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data'); };
 const getUserHelpfulLinksCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data'); };
 const getUserRootDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid); }
+const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };		
 
 const saveToFirestore = async (dataToSave) => {
     if (!userId || isAnonymous) {
@@ -1729,6 +2147,7 @@ const renderContent = () => {
     const cannedResponsesApp = document.getElementById('canned-responses-app');
     const fedexTrackerApp = document.getElementById('fedex-tracker-app');
     const helpfulLinksApp = document.getElementById('helpful-links-app');
+	const myStatsPage = document.getElementById('my-stats-page');
     const settingsPage = document.getElementById('settings-page');
     const categoryBar = document.getElementById('category-bar');
     const mainTitle = document.getElementById('main-title');
@@ -1747,6 +2166,7 @@ const renderContent = () => {
     if (cannedResponsesApp) cannedResponsesApp.classList.add('hidden');
     if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
+	if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
 
@@ -1774,8 +2194,7 @@ const renderContent = () => {
     } else if (currentPage === 'helpful-links') {
         helpfulLinksApp.classList.remove('hidden');
         mainTitle.textContent = 'Helpful Links';
-
-        renderLinks();
+		renderLinks();
 
         if (isAnonymous) {
             userLinksSection.classList.add('hidden');
@@ -1784,6 +2203,11 @@ const renderContent = () => {
             userLinksSection.classList.remove('hidden');
             addLinkSection.classList.remove('hidden');
         }
+	} else if (currentPage === 'my-stats') {
+    myStatsPage.classList.remove('hidden');
+    mainTitle.textContent = 'My Stats';
+    renderAdvancedStats();
+		
     } else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
         mainTitle.textContent = 'Settings';
@@ -1952,49 +2376,56 @@ const renderResponses = (searchQuery = '') => {
             `;
             const responsesInSection = labelSection.querySelector('div');
 
-            groupedResponses[label].forEach(response => {
-                let displayText = response.text;
-                if (query) {
-                    const regex = new RegExp(query, 'gi');
-                    displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
-                }
-                
-                const responseEl = document.createElement('div');
-				let categoryColor = categories[response.category].color || '#60a5fa';
 
-                // Check the current theme and adjust the color
-                if (document.body.classList.contains('light-mode')) {
-                    categoryColor = lightenColor(categoryColor);
-                }
+			groupedResponses[label].forEach(response => {
+   				 let displayText = response.text;
+   				 if (query) {
+       				 const regex = new RegExp(query, 'gi');
+       				 displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
+  				  }
 
-                responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
-                responseEl.style.backgroundColor = categoryColor;
-                responseEl.style.borderColor = categoryColor;
-                responseEl.dataset.id = response.id;
-                responseEl.dataset.category = response.category;
-                responseEl.innerHTML = `
-                    <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
-                        <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
-                    </button>
-                    <div class="flex-grow display-mode space-y-2 w-full pt-8 sm:pt-0">
-                        <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
-                    </div>
-                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
-                        <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                        <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
-                            <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
-                                <i class="fas fa-pencil-alt"></i> Edit
-                            </button>
-                            <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-                responsesInSection.appendChild(responseEl);
-            });
+   					 const responseEl = document.createElement('div');
+   					 let categoryColor = categories[response.category].color || '#60a5fa';
+
+   					 if (document.body.classList.contains('light-mode')) {
+      					  categoryColor = lightenColor(categoryColor);
+				    }
+    
+  					  const timesCopied = response.timesCopied || 0; // Get the count
+
+    				responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
+  					responseEl.style.backgroundColor = categoryColor;
+   					 responseEl.style.borderColor = categoryColor;
+ 				   	responseEl.dataset.id = response.id;
+					responseEl.dataset.category = response.category;
+   					 responseEl.innerHTML = `
+			        <div class="absolute top-3 left-3 flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-60 px-2 py-1 rounded-full z-10" title="${timesCopied} times copied">
+			            <i class="fas fa-copy mr-2"></i>
+			            <span>${timesCopied}</span>
+			        </div>
+			        
+			        <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
+			            <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
+			        </button>
+			        <div class="flex-grow display-mode space-y-2 w-full pt-8 sm:pt-8">
+			            <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
+			        </div>
+			        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
+			            <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+			                <i class="fas fa-copy"></i> Copy
+			            </button>
+			            <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
+			                <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
+			                    <i class="fas fa-pencil-alt"></i> Edit
+			                </button>
+			                <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
+			                    <i class="fas fa-trash"></i> Delete
+			                </button>
+			            </div>
+			        </div>
+			    `;
+			    responsesInSection.appendChild(responseEl);
+			});
             responsesList.appendChild(labelSection);
         }
         if (currentTutorialStep === 5 || currentTutorialStep === 6) {
@@ -2042,11 +2473,14 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
     const updatedCategories = JSON.parse(JSON.stringify(categories));
     const oldResponsesList = updatedCategories[oldCategory]?.responses || [];
     const responseToUpdate = oldResponsesList.find(r => r.id === id);
+	const originalText = categories[oldCategory]?.responses.find(r => r.id === id)?.text || '';
+	
     if (!responseToUpdate) {
         showMessage("Error: The response no longer exists in its original category.", 'error');
         return;
     }
     if (newCategory && newCategory !== oldCategory) {
+		logUserEvent('move_response');
         const index = oldResponsesList.findIndex(r => r.id === id);
         if (index > -1) {
             oldResponsesList.splice(index, 1);
@@ -2065,6 +2499,14 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
         responseToUpdate.text = newText;
         responseToUpdate.label = newLabel || '';
     }
+
+    const placeholderRegex = /\[([^\]]+)\]/g;
+    const hadPlaceholder = placeholderRegex.test(originalText);
+    const hasPlaceholderNow = placeholderRegex.test(newText);
+    if (!hadPlaceholder && hasPlaceholderNow) {
+        logUserEvent('add_placeholder');
+    }
+	
     saveToFirestore(updatedCategories);
     showMessage("Response updated successfully!");
 };
@@ -2076,10 +2518,11 @@ const deleteResponse = (id, categoryName) => {
     if (!categoryName || !categories[categoryName] || !categories[categoryName].responses) return;
     const updatedCategories = JSON.parse(JSON.stringify(categories));
     updatedCategories[categoryName].responses = updatedCategories[categoryName].responses.filter(r => r.id !== id);
+	logUserEvent('delete_response_single');
     saveToFirestore(updatedCategories);
     showMessage("Response deleted successfully!");
 };
-const copyToClipboard = (text) => {
+const copyToClipboard = async (text, responseId, categoryName) => {
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
@@ -2087,7 +2530,34 @@ const copyToClipboard = (text) => {
     document.execCommand('copy');
     document.body.removeChild(el);
     showMessage("Copied to clipboard!");
+	await trackDailyAction('copied_responses');
+    const placeholderRegex = /\[([^\]]+)\]/g;
+    if (!placeholderRegex.test(text)) {
+        logUserEvent('copy_purist');
+    }
+    logUserEvent('copy', { responseId, categoryName, text });
+
+    // Increment the counter in Firestore
+    if (userId && !isAnonymous && responseId && categoryName) {
+        try {
+            // Find the response in the local state
+            const category = categories[categoryName];
+            if (category && category.responses) {
+                const response = category.responses.find(r => r.id === responseId);
+                if (response) {
+                    // Increment the count or initialize it to 1
+                    response.timesCopied = (response.timesCopied || 0) + 1;
+                    // Save the entire updated categories object back to Firestore
+                    saveToFirestore(categories); // This will trigger a re-render
+                }
+            }
+        } catch (error) {
+            console.error("Error updating copy count:", error);
+            // Don't bother the user with this error, it's a non-critical background task
+        }
+    }
 };
+		
 const exportData = () => {
     if (isAnonymous) {
         showMessage("Please sign in to export data.", 'error');
@@ -2125,6 +2595,7 @@ const importData = (file) => {
                 saveToFirestore(categories);
                 showMessage("Data imported successfully!");
                 importExportModal.classList.add('hidden');
+				logUserEvent('import_data');
             } else {
                 throw new Error('Invalid JSON format.');
             }
@@ -2135,10 +2606,15 @@ const importData = (file) => {
     reader.readAsText(file);
 };
 const placeholderRegex = /\[([^\]]+)\]/g;
-const processAndCopy = (text) => {
+const processAndCopy = (text, responseId, categoryName) => {
     const placeholderInputsContainer = document.getElementById('placeholder-inputs');
     const placeholderModal = document.getElementById('placeholder-modal');
     currentTextToCopy = text;
+
+    // Store the ID and category for later use
+    currentResponseToCopyId = responseId;
+    currentResponseToCopyCategory = categoryName;
+
     const matches = text.match(placeholderRegex);
     const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
     if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
@@ -2172,7 +2648,8 @@ const processAndCopy = (text) => {
         document.querySelector('#placeholder-inputs input')?.focus();
     } else {
         const finalContent = replacePlaceholders(currentTextToCopy, {});
-        copyToClipboard(finalContent);
+        // Pass the ID and category along
+        copyToClipboard(finalContent, responseId, categoryName);
     }
 };
 const replacePlaceholders = (text, userValues) => {
@@ -2413,6 +2890,349 @@ const renderSettingsPage = () => {
     }
 };
 
+const renderCategoryChart = (events) => {
+    const container = document.getElementById('category-chart-container');
+    if (!container) return;
+
+    // Clear previous chart and messages
+    container.innerHTML = '<canvas id="categoryChart"></canvas>';
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+
+    if (categoryChartInstance) {
+        categoryChartInstance.destroy();
+    }
+
+    const copyEvents = events.filter(e => e.type === 'copy' && e.categoryName);
+    if (copyEvents.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your category breakdown!</p>';
+        return;
+    }
+
+    const categoryCounts = copyEvents.reduce((acc, event) => {
+        acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
+        return acc;
+    }, {});
+
+    const labels = Object.keys(categoryCounts);
+    const data = Object.values(categoryCounts);
+    
+    // Use your existing category colors for the chart
+    const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
+
+    const isLightMode = document.body.classList.contains('light-mode');
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Copies per Category',
+                data: data,
+                backgroundColor: backgroundColors,
+                borderColor: isLightMode ? '#f3f4f6' : '#111827',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        padding: 20,
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+};
+
+const renderActivityChart = (events) => {
+    const container = document.getElementById('activity-chart-container');
+    if (!container) return;
+
+    // Clear previous chart and messages
+    container.innerHTML = '<canvas id="activityChart"></canvas>';
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    if (activityChartInstance) {
+        activityChartInstance.destroy();
+    }
+
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
+    if (copyEvents.length < 2) { // Need at least 2 data points for a line chart
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Not enough copy activity to show a trend.</p>';
+        return;
+    }
+
+    // Group copy events by day
+    const activityByDay = copyEvents.reduce((acc, event) => {
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+    }, {});
+
+    const sortedDates = Object.keys(activityByDay).sort();
+    const labels = sortedDates;
+    const data = sortedDates.map(date => activityByDay[date]);
+    
+    const isLightMode = document.body.classList.contains('light-mode');
+    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    activityChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Copies per Day',
+                data: data,
+                fill: true,
+                backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                borderColor: 'rgba(74, 222, 128, 1)',
+                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { color: gridColor } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+};		
+
+const renderAdvancedStats = async () => {
+    const statsContent = document.getElementById('stats-content');
+    const metricBadgesContainer = document.getElementById('metric-badges-container');
+    const achievementsContainer = document.getElementById('achievements-container');
+    const chartContainer = document.getElementById('stats-container');
+	const personalBestsContainer = document.getElementById('personal-bests-container');
+
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+	const personalBestsData = userData.personal_bests || {};
+    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
+    const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
+
+    if (!statsContent || isAnonymous) {
+        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
+        return;
+    }
+
+    metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
+    achievementsContainer.innerHTML = '';
+    chartContainer.innerHTML = '';
+	personalBestsContainer.innerHTML = '';
+
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+    renderCategoryChart(events);
+    renderActivityChart(events);
+	renderPersonalBests(personalBestsData);
+
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > oneWeekAgo).length;
+    const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
+    const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
+    const totalCategories = Object.keys(categories).length;
+
+    metricBadgesContainer.innerHTML = `
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-blue-400">${copiesThisWeek}</p>
+            <p class="text-gray-400 mt-2">Copies This Week</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-green-400">${editsThisMonth}</p>
+            <p class="text-gray-400 mt-2">Edits This Month</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-purple-400">${totalResponsesCreated}</p>
+            <p class="text-gray-400 mt-2">Responses Created</p>
+        </div>
+        <div class="floating-card p-6 text-center">
+            <p class="text-4xl font-bold text-yellow-400">${totalCategories}</p>
+            <p class="text-gray-400 mt-2">Total Categories</p>
+        </div>
+    `;
+    
+    // --- Achievement Calculations ---
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+
+    // Tier definitions
+    const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
+    ]);
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
+
+    // New achievement calculations
+    const dailyActivity = events.reduce((acc, event) => {
+        if (!event.timestamp) return acc;
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
+        if (event.type === 'copy') acc[date].copies++;
+        if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
+        if (event.type === 'add_link') acc[date].links++;
+        return acc;
+    }, {});
+    const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
+    const hasCreatedCategory = events.some(e => e.type === 'create_category');
+    const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
+    const hasPinnedResponse = events.some(e => e.type === 'pin_response');
+    const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
+    const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
+    const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
+    const hasTheScribe = uniqueCategoriesIn30Min >= 5;
+    const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
+    const hasHistorian = daysSinceSignIn >= 365;
+    const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
+    const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
+    let maxStreak = 0;
+    if (usageDates.length > 0) {
+        let currentStreak = 1;
+        for (let i = 1; i < usageDates.length; i++) {
+            const prevDate = new Date(usageDates[i - 1]);
+            const currentDate = new Date(usageDates[i]);
+            if (!isBusinessDay(currentDate)) continue;
+            const diffTime = currentDate - prevDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
+                currentStreak++;
+            } else {
+                maxStreak = Math.max(maxStreak, currentStreak);
+                currentStreak = 1;
+            }
+        }
+        maxStreak = Math.max(maxStreak, currentStreak);
+    }
+    const hasStreakBreaker = maxStreak >= 90;
+    const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
+    const hasCleanSlate = deletedInLast5Mins >= 5;
+
+    // --- Create a single, complete list of ALL achievements ---
+    const allAchievements = [
+        // Core Actions
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", unlocked: events.some(e => e.type === 'create_response') },
+        
+        // Organization & Management
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", unlocked: hasPinnedResponse },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", unlocked: events.some(e => e.type === 'change_color') },
+
+        // Exploration & Discovery
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", unlocked: darkModeUsage.streak >= 5 },
+        
+        // New Advanced Achievements
+        { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", unlocked: totalCopies >= 1000 },
+        { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", unlocked: hasPerfectDay },
+        { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", unlocked: hasLivingLibrary },
+        { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", unlocked: hasTheScribe },
+        { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", unlocked: hasHistorian },
+        { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", unlocked: hasStreakBreaker },
+        { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", unlocked: events.some(e => e.type === 'move_response') },
+        { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", unlocked: hasCleanSlate },
+        { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", unlocked: events.some(e => e.type === 'copy_purist') },
+        { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", unlocked: events.some(e => e.type === 'add_placeholder') },
+    ];
+    
+    // Check for "The Grand Master"
+    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
+    const grandMasterAchievement = { 
+        id: 'grand_master', 
+        name: "The Grand Master", 
+        desc: "Unlock all other achievements.", 
+        icon: "fa-trophy", 
+        unlocked: allOtherAchievementsUnlocked 
+    };
+
+    const achievementsToRender = [...allAchievements, grandMasterAchievement];
+
+
+// --- Render Achievements ---
+const userAchievements = userData.achievementsData || {}; // Get the achievement data
+achievementsContainer.innerHTML = achievementsToRender.map(ach => {
+    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
+    const unlockedDate = ach.unlocked ? userAchievements[ach.id]?.date : null;
+
+    return `
+    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
+         data-name="${ach.name}" 
+         data-desc="${sanitizedDesc}" 
+         data-icon="${ach.icon}" 
+         data-color="${ach.color || 'text-yellow-400'}" 
+         data-unlocked="${ach.unlocked}"
+         data-unlocked-date="${unlockedDate || ''}" 
+         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
+        
+        <i class="fas ${ach.icon} text-3xl w-12 text-center ${ach.unlocked ? (ach.color || 'text-yellow-400') : 'text-gray-600'}"></i>
+        <div class="ml-4">
+            <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
+            ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
+        </div>
+    </div>
+    `;
+}).join('');
+
+    // --- Render Top 5 Chart ---
+    let allResponses = [];
+    for (const categoryName in categories) {
+        if (categories[categoryName].responses) {
+            allResponses.push(...categories[categoryName].responses);
+        }
+    }
+    const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
+
+    if (sortedResponses.length > 0) {
+        chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
+        const topResponses = sortedResponses.slice(0, 5);
+        const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
+        const chartData = topResponses.map(r => r.timesCopied);
+
+        if (statsChart) statsChart.destroy();
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        const isLightMode = document.body.classList.contains('light-mode');
+        const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+        const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+        statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
+        });
+    } else {
+        chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
+    }
+};
+
 const showPlaceholderDemo = () => {
     const tutorialModal = document.getElementById('tutorial-modal');
     const tutorialOverlay = document.getElementById('tutorial-overlay');
@@ -2448,25 +3268,80 @@ function attachEventListeners() {
         currentPage = 'canned-responses';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
         currentPage = 'fedex-tracker';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
 
     document.getElementById('nav-helpful-links').addEventListener('click', () => {
         currentPage = 'helpful-links';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
+
+    document.getElementById('nav-my-stats').addEventListener('click', () => {
+        currentPage = 'my-stats';
+        renderContent();
+        closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
+    });	
 
     document.getElementById('nav-settings').addEventListener('click', () => {
         currentPage = 'settings';
         renderContent();
         closeSidebar();
+		logUserEvent('visit_page', { page: 'canned-responses' });
     });
+
+// Listener for clicking on an achievement badge
+document.getElementById('achievements-container').addEventListener('click', (e) => {
+    const badge = e.target.closest('.achievement-badge');
+    
+    if (badge && badge.dataset.unlocked === 'true') {
+        const modalIcon = document.getElementById('modal-achievement-icon');
+        const modalTitle = document.getElementById('modal-achievement-title');
+        const modalDesc = document.getElementById('modal-achievement-desc');
+        const modalDateEl = document.getElementById('modal-achievement-date'); // Changed variable name
+        const modal = document.getElementById('achievement-details-modal');
+
+        // MODIFICATION: Get the date from the data attribute.
+        const { name, desc, icon, color, unlockedDate } = badge.dataset;
+
+        modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+        modalIcon.className = `text-6xl mb-4 ${color}`;
+        modalTitle.textContent = name;
+        modalDesc.textContent = desc;
+        
+        // MODIFICATION: Format and display the date.
+        if (unlockedDate) {
+            const date = new Date(unlockedDate);
+            modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        } else {
+            modalDateEl.textContent = 'Unlocked!'; // Fallback
+        }
+
+        modal.classList.remove('hidden');
+    }
+});
+
+// Listener for the modal's close button
+document.getElementById('close-achievement-modal-btn').addEventListener('click', () => {
+    document.getElementById('achievement-details-modal').classList.add('hidden');
+});
+
+// Listener to close the modal by clicking on the background overlay
+document.getElementById('achievement-details-modal').addEventListener('click', (e) => {
+    // If the click is on the modal background itself, hide it
+    if (e.target.id === 'achievement-details-modal') {
+        e.target.classList.add('hidden');
+    }
+});
 
     // Other one-time listeners
     document.getElementById('add-link-form').addEventListener('submit', async (e) => {
@@ -2489,6 +3364,7 @@ function attachEventListeners() {
                 const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                 await addDoc(linksCollectionRef, { title, url, description, createdAt: new Date() });
                 showLinksStatus('Link added successfully!', 'text-green-400');
+				logUserEvent('add_link');
             }
             resetLinksForm();
         } catch (error) {
@@ -2631,6 +3507,10 @@ function attachEventListeners() {
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
         icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
+		updateDarkModeStreak();
+		if (currentPage === 'my-stats') {
+            renderAdvancedStats();
+        }
     });
     document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
@@ -2650,8 +3530,11 @@ function attachEventListeners() {
         if (copyBtn) {
             const responseItem = copyBtn.closest('.response-item');
             const textToCopy = responseItem.querySelector('.response-text-display').textContent;
-            processAndCopy(textToCopy);
-        }
+			const responseId = responseItem.dataset.id;
+		    const categoryName = responseItem.dataset.category;
+		    processAndCopy(textToCopy, responseId, categoryName);
+		
+		}
         if (editBtn) {
             const responseItem = editBtn.closest('.response-item');
             const id = responseItem.dataset.id;
@@ -2689,6 +3572,9 @@ function attachEventListeners() {
             const responseData = categories[category].responses.find(r => r.id === id);
             if (responseData) {
                 responseData.isPinned = !responseData.isPinned;
+		        if (responseData.isPinned) {
+		            logUserEvent('pin_response', { responseId: id }); // <-- ADD THIS LINE
+		        }
                 saveToFirestore(categories);
             }
         }
@@ -2713,7 +3599,7 @@ function attachEventListeners() {
         const label = document.getElementById('new-response-label').value;
         const text = document.getElementById('new-response-text').value;
         const category = document.getElementById('new-response-category').value;
-        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden'); } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden');logUserEvent('create_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('cancel-edit-btn').addEventListener('click', () => { document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; });
     document.getElementById('save-edit-btn').addEventListener('click', () => {
@@ -2722,18 +3608,19 @@ function attachEventListeners() {
         const newLabel = document.getElementById('edit-response-label').value;
         const newText = document.getElementById('edit-response-text').value;
         const newCategory = document.getElementById('edit-category-select').value;
-        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null;logUserEvent('edit_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('delete-confirm-btn').addEventListener('click', () => {
         const category = document.getElementById('delete-modal').dataset.category;
         deleteResponse(responseToDeleteId, category);
         document.getElementById('delete-modal').classList.add('hidden');
+		logUserEvent('delete_response');
     });
     document.getElementById('delete-cancel-btn').addEventListener('click', () => { document.getElementById('delete-modal').classList.add('hidden'); responseToDeleteId = null; });
     document.getElementById('search-input').addEventListener('input', () => { renderResponses(document.getElementById('search-input').value); });
     document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.remove('hidden'); document.getElementById('add-category-input').focus(); });
     document.getElementById('cancel-add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.add('hidden'); document.getElementById('add-category-input').value = ''; });
-    document.getElementById('confirm-add-category-btn').addEventListener('click', () => {
+    document.getElementById('confirm-add-category-btn').addEventListener('click', async () => {
         const newCategoryName = document.getElementById('add-category-input').value.trim();
         if (newCategoryName && !categories[newCategoryName]) {
             const updatedCategories = JSON.parse(JSON.stringify(categories));
@@ -2743,6 +3630,8 @@ function attachEventListeners() {
             document.getElementById('add-category-modal').classList.add('hidden');
             document.getElementById('add-category-input').value = '';
             showMessage("Category created successfully!");
+			logUserEvent('create_category');
+			await trackDailyAction('created_categories');
         } else if (categories[newCategoryName]) {
             showMessage("Category already exists.", 'error');
         }
@@ -2807,6 +3696,7 @@ function attachEventListeners() {
             saveToFirestore(updatedCategories);
             document.getElementById('color-picker-modal').classList.add('hidden');
             showMessage("Color updated successfully!");
+			logUserEvent('change_color');
         }
     });
     document.getElementById('input-text-fedex').addEventListener('input', extractAndDisplayNumbers);
@@ -2821,6 +3711,7 @@ function attachEventListeners() {
         const matches = text.match(fedexRegex) || [];
         if (matches.length > 0) {
             const uniqueNumbers = [...new Set(matches)];
+			logUserEvent('extract_tracking', { count: uniqueNumbers.length });
             const numbersToCopy = uniqueNumbers.join('\t');
             copyToClipboard(numbersToCopy);
             const numbersForUrl = uniqueNumbers.join(',');
@@ -2838,36 +3729,27 @@ function attachEventListeners() {
         const file = e.target.files[0];
         if (file) importData(file);
     });
+
 document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-    // 1. Get user input from placeholders
     const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
     const userValues = {};
-    inputs.forEach(input => { 
-        const key = input.dataset.placeholder; 
-        userValues[key] = input.value; 
+    inputs.forEach(input => {
+        const key = input.dataset.placeholder;
+        userValues[key] = input.value;
     });
-    
-    // 2. Process and copy the final text
+
     const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-    copyToClipboard(finalContent);
-    
-    // 3. Hide the placeholder modal
+    // Pass the stored ID and category to the final copy function
+    copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
+
     document.getElementById('placeholder-modal').classList.add('hidden');
-    
-    // 4. Update the copied text display in the success modal
     document.getElementById('copied-text-display').textContent = finalContent;
-    
-    // 5. Check the tutorial state and handle logic accordingly
+
     if (isTutorialActive) {
-        // If tutorial is active, show the copy success modal and then advance the tutorial.
         document.getElementById('copy-success-modal').classList.remove('hidden');
-        
-        // This is a crucial change: we now advance the step AFTER showing the modal.
-        // It's also important to update the tutorial overlay.
         currentTutorialStep++;
         showTutorialStep(currentTutorialStep);
     } else {
-        // If not in a tutorial, just show the copy success modal as a simple confirmation.
         document.getElementById('copy-success-modal').classList.remove('hidden');
     }
 });
@@ -3069,6 +3951,10 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
             const userDoc = await getDoc(userDocRef);
+			if (!userDoc.exists() || !userDoc.data().firstSignIn) {
+                // Set the first sign-in timestamp for new users
+                await setDoc(userDocRef, { firstSignIn: serverTimestamp() }, { merge: true });
+			}
             const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
                 document.getElementById('tutorial-modal').classList.remove('hidden');
@@ -3085,6 +3971,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
                 }
                 renderContent();
+				updateDarkModeStreak();
             }, (error) => {
                 console.error("Error with onSnapshot listener:", error);
                 showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
