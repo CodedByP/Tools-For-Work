@@ -618,6 +618,13 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </head>
 <body class="flex flex-col min-h-screen bg-gray-900 relative">
 
+	<div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-[9999]">
+        <svg class="animate-spin h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
     <audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
 
     <div id="tutorial-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[999]"></div>
@@ -1446,7 +1453,12 @@ let shownAchievements = new Set();
 let categoryChartInstance = null;
 let activityChartInstance = null;
 let firstSignIn = null; 		
-let audioUnlocked = false; 		
+let audioUnlocked = false; 	
+
+const savedPage = localStorage.getItem('lastVisitedPage');
+if (savedPage) {
+    currentPage = savedPage;
+}		
 
 const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
@@ -3597,6 +3609,7 @@ function attachEventListeners() {
     // Updated navigation event listeners with a small delay for closing the sidebar
     document.getElementById('nav-canned-responses').addEventListener('click', () => {
         currentPage = 'canned-responses';
+		localStorage.setItem('lastVisitedPage', currentPage);
         renderContent();
         closeSidebar();
 		logUserEvent('visit_page', { page: 'canned-responses' });
@@ -3604,6 +3617,7 @@ function attachEventListeners() {
 
     document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
         currentPage = 'fedex-tracker';
+		localStorage.setItem('lastVisitedPage', currentPage);
         renderContent();
         closeSidebar();
 		logUserEvent('visit_page', { page: 'fedex-tracker' });
@@ -3611,6 +3625,7 @@ function attachEventListeners() {
 
     document.getElementById('nav-helpful-links').addEventListener('click', () => {
         currentPage = 'helpful-links';
+		localStorage.setItem('lastVisitedPage', currentPage);
         renderContent();
         closeSidebar();
 		logUserEvent('visit_page', { page: 'helpful-links' });
@@ -3618,6 +3633,7 @@ function attachEventListeners() {
 
     document.getElementById('nav-my-stats').addEventListener('click', () => {
         currentPage = 'my-stats';
+		localStorage.setItem('lastVisitedPage', currentPage);
         renderContent();
         closeSidebar();
 		logUserEvent('visit_page', { page: 'my-stats' });
@@ -3625,6 +3641,7 @@ function attachEventListeners() {
 
     document.getElementById('nav-settings').addEventListener('click', () => {
         currentPage = 'settings';
+		localStorage.setItem('lastVisitedPage', currentPage);
         renderContent();
         closeSidebar();
 		logUserEvent('visit_page', { page: 'settings' });
@@ -4321,6 +4338,10 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         try { await signInAnonymously(auth); } catch (error) { console.error("Anonymous sign-in failed", error); }
     }
+    const loader = document.getElementById('full-page-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }	
 });
 
 attachEventListeners();
