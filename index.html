@@ -900,8 +900,14 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 
 
 		<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
-		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12">
-		        <div>
+		    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
+		        <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+		            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+		            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+		        </svg>
+		    </div>
+		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12 hidden">
+		        </div>
 		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
 		            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 		                </div>
@@ -3300,10 +3306,27 @@ const renderActivityChart = (events) => {
 
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
+	const statsLoader = document.getElementById('stats-loader');
     const metricBadgesContainer = document.getElementById('metric-badges-container');
     const achievementsContainer = document.getElementById('achievements-container');
     const chartContainer = document.getElementById('stats-container');
 	const personalBestsContainer = document.getElementById('personal-bests-container');
+
+    if (statsLoader) statsLoader.classList.remove('hidden');
+    if (statsContent) statsContent.classList.add('hidden');
+
+    if (!statsContent || isAnonymous) {
+        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400 text-center py-16">Sign in to track your achievements and usage stats.</p>';
+        if (statsLoader) statsLoader.classList.add('hidden'); 
+        if (statsContent) statsContent.classList.remove('hidden'); 
+        return;
+    }
+
+    try {
+        metricBadgesContainer.innerHTML = ''; 
+        achievementsContainer.innerHTML = '';
+        chartContainer.innerHTML = '';
+        personalBestsContainer.innerHTML = '';
 
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
@@ -3311,16 +3334,6 @@ const renderAdvancedStats = async () => {
 	const personalBestsData = userData.personal_bests || {};
     const darkModeUsage = userData.darkModeUsage || { streak: 0 };
     const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
-
-    if (!statsContent || isAnonymous) {
-        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400">Sign in to track your achievements and usage stats.</p>';
-        return;
-    }
-
-    metricBadgesContainer.innerHTML = '<p class="text-gray-400 col-span-full">Calculating your stats...</p>';
-    achievementsContainer.innerHTML = '';
-    chartContainer.innerHTML = '';
-	personalBestsContainer.innerHTML = '';
 
     const eventsCollectionRef = getUserEventsCollectionRef(userId);
     const snapshot = await getDocs(query(eventsCollectionRef));
@@ -3419,7 +3432,6 @@ const renderAdvancedStats = async () => {
     const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
     const hasCleanSlate = deletedInLast5Mins >= 5;
 
-// --- Create a single, complete list of ALL achievements ---
     const allAchievements = [
         // Core Actions
         { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
@@ -3529,6 +3541,13 @@ achievementsContainer.innerHTML = achievementsToRender.map(ach => {
     } else {
         chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
     }
+		
+ } finally {
+        // --- Step 3: Hide the loader and show the content ---
+        if (statsLoader) statsLoader.classList.add('hidden');
+        if (statsContent) statsContent.classList.remove('hidden');
+    }
+		
 };
 
 const showPlaceholderDemo = () => {
