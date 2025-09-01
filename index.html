@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;600&display=swap');
@@ -1754,6 +1755,29 @@ const getAchievementClassFromColor = (colorClass) => {
     }
 };	
 
+const triggerCelebration = () => {
+    // A fun confetti burst from both sides of the screen for 3 seconds
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+        const particleCount = 50 * (timeLeft / duration);
+        // Launch from the left
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        // Launch from the right
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+};		
+
 // --- NEW Local Storage Tracking & Sync Function ---
 const trackDailyAction = async (actionType) => {
     if (isAnonymous) return; // Don't track for anonymous users
@@ -2288,7 +2312,15 @@ const getTier = (count, tiers) => {
 
 const checkAndNotifyAchievements = async (firstSignIn) => {
     if (!userId || isAnonymous) return;
-
+	
+    const milestoneAchievements = [
+        'copy_tiers',        // For unlocking any "Wordsmith" or "Master" tier
+        'librarian_tiers',   // For unlocking any "Head Archivist" or "Chief" tier
+        'endless_scroll',    // A very big milestone!
+        'the_historian',     // A long-term achievement
+        'streak_breaker',    // Rewarding consistency
+        'grand_master'       // The ultimate achievement!
+    ];
     // Get the latest events and user data
     const eventsCollectionRef = getUserEventsCollectionRef(userId);
     const snapshot = await getDocs(query(eventsCollectionRef));
@@ -2410,6 +2442,11 @@ const achievements = [
         if (ach.unlocked && !userAchievements[ach.id]) {
             showAchievementNotification(ach);
             newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
+			
+			if (milestoneAchievements.includes(ach.id)) {
+                triggerCelebration();
+            }
+
         }
     });
 
