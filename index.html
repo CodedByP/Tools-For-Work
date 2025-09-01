@@ -1776,6 +1776,54 @@ const triggerCelebration = () => {
         // Launch from the right
         confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
     }, 250);
+};	
+
+// --- NEW FUNCTION TO SYNC PERSONAL BESTS ---
+const syncAndCheckPersonalBests = async () => {
+    if (isAnonymous || !userId) return; // Exit if not a logged-in user
+
+    const userDocRef = getUserRootDocRef(userId);
+    let hasNewBest = false;
+
+    try {
+        // 1. Get the latest daily stats from local storage
+        const storedStats = localStorage.getItem(`dailyStats_${userId}`);
+        const dailyStats = storedStats ? JSON.parse(storedStats) : { copied_responses: 0, created_categories: 0 };
+
+        // 2. Get the current personal bests from Firestore
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const personalBests = userData.personal_bests || {
+            most_responses_copied_in_day: { count: 0, date: null },
+            most_categories_created_in_day: { count: 0, date: null }
+        };
+
+        // 3. Compare today's stats with the stored bests
+        if (dailyStats.copied_responses > personalBests.most_responses_copied_in_day.count) {
+            personalBests.most_responses_copied_in_day = {
+                count: dailyStats.copied_responses,
+                date: dailyStats.date || new Date().toISOString().split('T')[0]
+            };
+            hasNewBest = true;
+        }
+
+        if (dailyStats.created_categories > personalBests.most_categories_created_in_day.count) {
+            personalBests.most_categories_created_in_day = {
+                count: dailyStats.created_categories,
+                date: dailyStats.date || new Date().toISOString().split('T')[0]
+            };
+            hasNewBest = true;
+        }
+
+        // 4. If a new best was found, update Firestore
+        if (hasNewBest) {
+            await setDoc(userDocRef, { personal_bests: personalBests }, { merge: true });
+            console.log("New personal best detected and synced to Firestore.");
+            showMessage("You've just set a new personal best! 🎉", 'success');
+        }
+    } catch (error) {
+        console.error("Error during immediate personal best sync:", error);
+    }
 };		
 
 // --- NEW Local Storage Tracking & Sync Function ---
@@ -3370,6 +3418,7 @@ const renderAdvancedStats = async () => {
     }
 
     try {
+		await syncAndCheckPersonalBests();
         metricBadgesContainer.innerHTML = ''; 
         achievementsContainer.innerHTML = '';
         chartContainer.innerHTML = '';
