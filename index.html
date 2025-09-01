@@ -930,33 +930,34 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
 
-		<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
-		    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
-		        <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
-		    </div>
-
-			<div id="leveling-section" class="floating-card p-6 sm:p-8 col-span-full flex flex-col md:flex-row items-center gap-6">
-			    <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex items-center justify-center text-gray-400">
-			        <i class="fas fa-seedling"></i>
-			    </div>
-			    <div class="flex-grow w-full text-center md:text-left">
-			        <div class="flex items-center justify-center md:justify-start gap-4">
-			            <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
-			            <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
-			        </div>
-			        <div class="xp-bar-container">
-			            <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
-			        </div>
-			        <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
-			    </div>
-			</div>
-		
-		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12 hidden">
-		        <div>
-		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
-		            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-		                </div>
-		        </div>
+	<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
+	    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
+	        <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
+	    </div>
+	
+	    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12 hidden">
+	        
+	        <div id="leveling-section" class="floating-card p-6 sm:p-8 col-span-full flex flex-col md:flex-row items-center gap-6">
+	            <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex items-center justify-center text-gray-400">
+	                <i class="fas fa-seedling"></i>
+	            </div>
+	            <div class="flex-grow w-full text-center md:text-left">
+	                <div class="flex items-center justify-center md:justify-start gap-4">
+	                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
+	                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
+	                </div>
+	                <div class="xp-bar-container">
+	                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
+	                </div>
+	                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
+	            </div>
+	        </div>
+	
+	        <div>
+	            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
+	            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+	            </div>
+	        </div>
 		
 		        <div>
 		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Achievements 🏆</h2>
