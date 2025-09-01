@@ -96,6 +96,29 @@
             transform: translateX(-50%) translateY(0);
         }
 
+/* --- Leveling System Styles --- */
+.xp-bar-container {
+    background-color: #374151; /* A darker gray for the bar background */
+    border-radius: 9999px;
+    height: 1rem;
+    margin-top: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+.xp-bar {
+    background-color: #3b82f6; /* Blue for the progress fill */
+    height: 1rem;
+    border-radius: 9999px;
+    transition: width 0.5s ease-in-out;
+}
+.level-up-animation {
+    animation: level-up-glow 1.5s ease-out;
+}
+@keyframes level-up-glow {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+    50% { transform: scale(1.2); box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}		
+
 
 /* --- Shiny 3D Achievement Icon Styles --- */
 .achievement-icon-wrapper {
@@ -911,6 +934,22 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
 		        <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
 		    </div>
+
+			<div id="leveling-section" class="floating-card p-6 sm:p-8 col-span-full flex flex-col md:flex-row items-center gap-6">
+			    <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex items-center justify-center text-gray-400">
+			        <i class="fas fa-seedling"></i>
+			    </div>
+			    <div class="flex-grow w-full text-center md:text-left">
+			        <div class="flex items-center justify-center md:justify-start gap-4">
+			            <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
+			            <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
+			        </div>
+			        <div class="xp-bar-container">
+			            <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
+			        </div>
+			        <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
+			    </div>
+			</div>
 		
 		    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12 hidden">
 		        <div>
@@ -1448,7 +1487,32 @@ let shownAchievements = new Set();
 let categoryChartInstance = null;
 let activityChartInstance = null;
 let firstSignIn = null; 		
-let audioUnlocked = false; 	
+let audioUnlocked = false;
+let userLevelData = { level: 0, xp: 0 };	
+
+// --- NEW: Leveling System Configuration ---		
+const XP_VALUES = {
+    COPY_RESPONSE: 10,
+    CREATE_RESPONSE: 50,
+    CREATE_CATEGORY: 100,
+    UNLOCK_ACHIEVEMENT: 500,
+};
+
+const BASE_XP = 100; // XP needed for level 1
+const XP_INCREASE_FACTOR = 1.2; // Every other level needs 20% more XP
+
+const LEVEL_RANKS = [
+    { level: 0, name: "Newbie", icon: "fa-seedling" },
+    { level: 5, name: "Apprentice", icon: "fa-book-reader" },
+    { level: 10, name: "Journeyman", icon: "fa-pencil-ruler" },
+    { level: 15, name: "Artisan", icon: "fa-hammer" },
+    { level: 20, name: "Expert", icon: "fa-star" },
+    { level: 25, name: "Master", icon: "fa-trophy" },
+    { level: 30, name: "Grandmaster", icon: "fa-crown" },
+    { level: 50, name: "Legend", icon: "fa-dragon" },
+    { level: 75, name: "Demigod", icon: "fa-meteor" },
+    { level: 100, name: "Deity", icon: "fa-sun" }
+];		
 
 const savedPage = localStorage.getItem('lastVisitedPage');
 if (savedPage) {
@@ -1770,7 +1834,67 @@ const triggerCelebration = () => {
         // Launch from the right
         confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
     }, 250);
-};	
+};
+
+// --- NEW: Leveling System Functions ---
+const calculateXpForLevel = (level) => {
+    if (level <= 1) return BASE_XP;
+    // Apply the increase factor for every 2 levels
+    const effectiveLevel = Math.floor((level - 1) / 2);
+    return Math.floor(BASE_XP * Math.pow(XP_INCREASE_FACTOR, effectiveLevel));
+};
+
+const calculateLevelInfo = (totalXp) => {
+    let level = 1;
+    let xpForNextLevel = calculateXpForLevel(level);
+    let xpTowardsNextLevel = totalXp;
+
+    while (xpTowardsNextLevel >= xpForNextLevel) {
+        xpTowardsNextLevel -= xpForNextLevel;
+        level++;
+        xpForNextLevel = calculateXpForLevel(level);
+    }
+
+    const rank = LEVEL_RANKS.slice().reverse().find(r => level >= r.level) || LEVEL_RANKS[0];
+
+    return {
+        level: level,
+        rankName: rank.name,
+        rankIcon: rank.icon,
+        xpForNextLevel: xpForNextLevel,
+        xpProgress: xpTowardsNextLevel,
+        totalXp: totalXp
+    };
+};
+
+const awardXP = async (amount) => {
+    if (!userId || isAnonymous) return;
+
+    const userDocRef = getUserRootDocRef(userId);
+    try {
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : { xp: 0 };
+        const oldXp = userData.xp || 0;
+        const newXp = oldXp + amount;
+
+        const oldLevelInfo = calculateLevelInfo(oldXp);
+        const newLevelInfo = calculateLevelInfo(newXp);
+
+        await setDoc(userDocRef, { xp: newXp }, { merge: true });
+
+        if (newLevelInfo.level > oldLevelInfo.level) {
+            showMessage(`You've reached Level ${newLevelInfo.level}!`, 'success');
+            triggerCelebration();
+            const levelDisplay = document.getElementById('level-display');
+            if (levelDisplay) {
+                levelDisplay.classList.add('level-up-animation');
+                setTimeout(() => levelDisplay.classList.remove('level-up-animation'), 1500);
+            }
+        }
+    } catch (error) {
+        console.error("Error awarding XP:", error);
+    }
+};		
 
 		
 const showAchievementNotification = (achievement) => {
@@ -2323,6 +2447,7 @@ const achievements = [
         if (ach.unlocked && !userAchievements[ach.id]) {
             showAchievementNotification(ach);
             newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
+			awardXP(XP_VALUES.UNLOCK_ACHIEVEMENT);
 			
 			if (milestoneAchievements.includes(ach.id)) {
                 triggerCelebration();
@@ -2759,6 +2884,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
         if (!placeholderRegex.test(text)) {
             logUserEvent('copy_purist');
         }
+		await awardXP(XP_VALUES.COPY_RESPONSE);
         logUserEvent('copy', { responseId, categoryName, text });
 
         // Increment the counter in Firestore
@@ -3229,6 +3355,19 @@ const renderActivityChart = (events) => {
             plugins: { legend: { display: false } }
         }
     });
+};
+
+const renderLevelingSystem = (userData) => {
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+
+    document.getElementById('rank-icon-container').innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+    document.getElementById('rank-name').textContent = levelInfo.rankName;
+    document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
+
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+    document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
 };		
 
 const renderAdvancedStats = async () => {
@@ -3256,6 +3395,7 @@ const renderAdvancedStats = async () => {
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
     const userData = userDoc.exists() ? userDoc.data() : {};
+	renderLevelingSystem(userData);
     const darkModeUsage = userData.darkModeUsage || { streak: 0 };
     const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
 
@@ -3860,7 +4000,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
         const label = document.getElementById('new-response-label').value;
         const text = document.getElementById('new-response-text').value;
         const category = document.getElementById('new-response-category').value;
-        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden');logUserEvent('create_response'); } else { showMessage("Response text cannot be empty.", 'error'); }
+        if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden');logUserEvent('create_response'); awardXP(XP_VALUES.CREATE_RESPONSE); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
     document.getElementById('cancel-edit-btn').addEventListener('click', () => { document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; });
     document.getElementById('save-edit-btn').addEventListener('click', () => {
@@ -3892,6 +4032,7 @@ document.getElementById('achievement-details-modal').addEventListener('click', (
             document.getElementById('add-category-input').value = '';
             showMessage("Category created successfully!");
 			logUserEvent('create_category', {}, firstSignIn);
+			awardXP(XP_VALUES.CREATE_CATEGORY);
         } else if (categories[newCategoryName]) {
             showMessage("Category already exists.", 'error');
         }
@@ -4215,19 +4356,41 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-           if (!userData.firstSignIn) {
+            
+            if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
-                firstSignIn = new Date(creationTime); // Use the creation date
-                await setDoc(userDocRef, { firstSignIn: firstSignIn }, { merge: true });
-                console.log(`Backfilled 'firstSignIn' for user ${userId}`);
+                firstSignIn = new Date(creationTime);
+                await setDoc(userDocRef, { firstSignIn: firstSignIn, xp: 0 }, { merge: true });
+                console.log(`Initialized 'firstSignIn' and 'xp' for user ${userId}`);
             } else {
-                // If it already exists, just use that value.
                 firstSignIn = userData.firstSignIn.toDate();
             }
+
+            // --- NEW: One-Time XP Backfilling Script ---
+            if (userData && userData.achievementsData && !userData.xpMigrated) {
+                const unlockedAchievementsCount = Object.keys(userData.achievementsData).length;
+                if (unlockedAchievementsCount > 0) {
+                    const earnedXp = unlockedAchievementsCount * XP_VALUES.UNLOCK_ACHIEVEMENT;
+                    const currentXp = userData.xp || 0;
+                    const newTotalXp = currentXp + earnedXp;
+
+                    await setDoc(userDocRef, {
+                        xp: newTotalXp,
+                        xpMigrated: true // Set the flag to prevent this from running again
+                    }, { merge: true });
+                    
+                    console.log(`Migrated ${earnedXp} XP for ${unlockedAchievementsCount} past achievements for user ${userId}.`);
+                    showMessage("Your past achievements have been credited with XP!", "success");
+                } else {
+                     await setDoc(userDocRef, { xpMigrated: true }, { merge: true });
+                }
+            }
+            // --- END of New Script ---
+
             const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
                 document.getElementById('tutorial-modal').classList.remove('hidden');
-                showTutorialStep(0); // Start the tutorial at the beginning
+                showTutorialStep(0);
             } else {
                 document.getElementById('tutorial-modal').classList.add('hidden');
             }
