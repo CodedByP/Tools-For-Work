@@ -119,107 +119,248 @@
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }		
 
-/* --- NEW: Leveling System Icon Styles --- */
+/* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 80px;  /* Increased size slightly for better visibility */
+    width: 80px;
     height: 80px;
     border-radius: 50%;
     box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.4), /* Inner top highlight */
-        inset 0 -2px 4px rgba(0, 0, 0, 0.3),     /* Inner bottom shadow */
-        0 4px 8px rgba(0, 0, 0, 0.5);           /* Outer drop shadow */
-    overflow: hidden; /* Crucial for the glare effect */
-    transition: transform 0.2s ease-in-out, filter 0.3s ease;
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, filter 0.3s ease, box-shadow 0.5s ease-in-out;
     border: 2px solid;
+    cursor: pointer;
+    background-size: 200% 200%;
+    background-position: 50% 50%;
 }
 
 .level-badge-wrapper:hover {
-    transform: scale(1.05);
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)); /* A subtle white glow on hover */
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
+/* --- Rank Colors & Base Icons --- */
+.level-badge-newbie { background: linear-gradient(145deg, #a3b18a, #588157); border-color: #3a5a40; }
+.level-badge-apprentice { background: linear-gradient(145deg, #d7a98c, #a05d2d); border-color: #8c582c; }
+.level-badge-journeyman { background: linear-gradient(145deg, #afb7c5, #7d8491); border-color: #555c63; }
+.level-badge-artisan { background: linear-gradient(145deg, #93c5fd, #3b82f6); border-color: #2563eb; }
+.level-badge-expert { background: linear-gradient(145deg, #a5b4fc, #6366f1); border-color: #4f46e5; }
+
+/* --- Higher Tier Colors & Glow Variables --- */
+.level-badge-master { background: linear-gradient(145deg, #ffd700, #ffb800); border-color: #e6a700; --glow-color: #ffd700; --gem-color: #ffd700;}
+.level-badge-grandmaster { background: linear-gradient(145deg, #d8b4fe, #a855f7); border-color: #9333ea; --glow-color: #a855f7; --gem-color: #d8b4fe;}
+.level-badge-legend { background: linear-gradient(145deg, #fb923c, #ef4444, #b91c1c); border-color: #991b1b; --glow-color: #ef4444; --gem-color: #fca5a5; }
+.level-badge-demigod { background: linear-gradient(145deg, #7dd3fc, #0284c7); border-color: #0369a1; --glow-color: #38bdf8; --gem-color: #7dd3fc;}
+.level-badge-deity { background: radial-gradient(ellipse at center, #f1f5f9 0%, #94a3b8 50%, #020617 100%); border-color: #cbd5e1; --glow-color: #f8fafc; --gem-color: #ffffff; }
+
+/* --- Font Awesome Icon Styling (Gradient Fill) --- */
 .level-badge-wrapper i {
-    font-size: 2.5rem; /* 40px */
-    color: rgba(255, 255, 255, 0.9);
+    color: transparent;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem;
+    position: relative;
+    z-index: 20;
 }
 
-/* The Glare Effect */
-.level-badge-wrapper::after {
+/* First 5 icons set to solid white */
+.level-badge-newbie i,
+.level-badge-apprentice i,
+.level-badge-journeyman i,
+.level-badge-artisan i,
+.level-badge-expert i { 
+    background-image: none;
+    -webkit-text-stroke: 0;
+    color: white;
+    -webkit-text-fill-color: white;
+}
+
+.level-badge-master i { background-image: linear-gradient(to bottom, #fcebb8, #ffd700); -webkit-text-stroke: 1px #e6a700; }
+.level-badge-grandmaster i { background-image: linear-gradient(to bottom, #e7c8ff, #d8b4fe); -webkit-text-stroke: 1px #a855f7; }
+.level-badge-legend i { background-image: linear-gradient(to bottom, #fdd2d2, #fca5a5); -webkit-text-stroke: 1px #ef4444; }
+.level-badge-demigod i { background-image: linear-gradient(to bottom, #bae6fd, #7dd3fc); -webkit-text-stroke: 1px #0ea5e9; }
+
+/* --- Decorative Elements & Layers --- */
+.beveled-edge::after {
     content: '';
     position: absolute;
-    top: -15px;
-    left: -30px;
-    width: 35px;
-    height: 110px;
-    background: linear-gradient(to bottom, 
-        rgba(255, 255, 255, 0.5) 0%, 
-        rgba(255, 255, 255, 0.15) 50%, 
-        rgba(255, 255, 255, 0) 100%
-    );
-    transform: rotate(25deg);
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+    z-index: 10;
 }
 
-/* Rank Colors */
-.level-badge-newbie {
-    background: linear-gradient(145deg, #a3b18a, #588157);
-    border-color: #3a5a40;
-}
-.level-badge-apprentice {
-    background: linear-gradient(145deg, #d7a98c, #a05d2d);
-    border-color: #8c582c;
-}
-.level-badge-journeyman {
-    background: linear-gradient(145deg, #e0e0e0, #b0b0b0);
-    border-color: #a0a0a0;
-}
-.level-badge-artisan {
-    background: linear-gradient(145deg, #93c5fd, #3b82f6);
-    border-color: #2563eb;
-}
-.level-badge-expert {
-    background: linear-gradient(145deg, #a5b4fc, #6366f1);
-    border-color: #4f46e5;
-}
-.level-badge-master {
-    background: linear-gradient(145deg, #fceabb, #f8b500);
-    border-color: #e6a700;
-}
-.level-badge-grandmaster {
-    background: linear-gradient(145deg, #d8b4fe, #a855f7);
-    border-color: #9333ea;
-}
-.level-badge-legend {
-    background: linear-gradient(145deg, #fca5a5, #ef4444);
-    border-color: #dc2626;
-}
-.level-badge-demigod {
-    background: linear-gradient(145deg, #7dd3fc, #0284c7);
-    border-color: #0369a1;
-}
-.level-badge-deity {
-    background: linear-gradient(145deg, #fde68a, #fbbf24, #d97706);
-    border-color: #b45309;
+.inner-ring::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+    z-index: 1;
 }
 
-/* Rank Up Animation */
+.emblem-ring-gem::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, white 0%, var(--gem-color) 80%);
+    box-shadow: 0 0 5px 2px var(--gem-color);
+    z-index: 20;
+}
+
+.layered-emblem::after {
+    content: '\f005'; /* Font Awesome star */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.1);
+    z-index: 5;
+    text-shadow: none;
+}
+
+/* --- Animation & Effects --- */
+.master-shine-effect::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(255, 255, 255, 0.4) 10%, transparent 25%);
+    animation: rotate-shine 4s linear infinite;
+    z-index: 6;
+}
+@keyframes rotate-shine {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.master-shine-effect i {
+    animation: master-pulse 2s ease-in-out infinite;
+}
+@keyframes master-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #fff); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 5px #fff); }
+}
+
+.grandmaster-crystal-pulse {
+    animation: grandmaster-bg-pulse 3s ease-in-out infinite;
+}
+@keyframes grandmaster-bg-pulse {
+    0%, 100% {
+        box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.5), 0 0 15px var(--glow-color);
+    }
+    50% {
+        box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.5), 0 0 25px var(--glow-color), 0 0 10px #fff;
+    }
+}
+.grandmaster-crystal-pulse::after { /* Targets the layered-emblem star */
+    animation: star-flare 3s ease-in-out infinite;
+}
+@keyframes star-flare {
+    0%, 100% { opacity: 0.5; transform: scale(1) rotate(0deg); color: rgba(255, 255, 255, 0.1); }
+    50% { opacity: 0.8; transform: scale(1.1) rotate(10deg); color: rgba(255, 255, 255, 0.4); }
+}
+.grandmaster-crystal-pulse i {
+    animation: crown-pulse 3s ease-in-out infinite;
+}
+@keyframes crown-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px #fff); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 8px #fff); }
+}
+
+.legend-molten-core {
+    background-size: 300% 300%;
+    animation: molten-flow 4s ease-in-out infinite;
+    overflow: visible;
+}
+@keyframes molten-flow {
+    0% { background-position: 50% 0%; box-shadow: 0 0 15px var(--glow-color), 0 0 20px #dc2626, inset 0 0 10px rgba(255, 255, 255, 0.2); }
+    50% { background-position: 50% 100%; box-shadow: 0 0 25px var(--glow-color), 0 0 35px #dc2626, inset 0 0 10px rgba(255, 255, 255, 0.2); }
+    100% { background-position: 50% 0%; box-shadow: 0 0 15px var(--glow-color), 0 0 20px #dc2626, inset 0 0 10px rgba(255, 255, 255, 0.2); }
+}
+.legend-molten-core i {
+    animation: dragon-heat 2s infinite ease-in-out;
+}
+@keyframes dragon-heat {
+    0%, 100% { filter: drop-shadow(0 0 2px #fef08a); }
+    50% { filter: drop-shadow(0 0 6px #fef08a); }
+}
+
+.flame { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle, #fef08a 0%, #fb923c 50%, transparent 70%); box-shadow: 0 0 5px #ef4444; opacity: 0; pointer-events: none; }
+.flame.f1 { animation: erupt-1 2.2s ease-out infinite; animation-delay: 0s; }
+.flame.f2 { width: 5px; height: 5px; animation: erupt-2 2.5s ease-out infinite; animation-delay: 0.6s; }
+.flame.f3 { width: 7px; height: 7px; animation: erupt-3 2s ease-out infinite; animation-delay: 1.3s; }
+@keyframes erupt-1 { 0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; } 100% { transform: translate(-90px, -70px) scale(0); opacity: 0; } }
+@keyframes erupt-2 { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(80px, 100px) scale(0); opacity: 0; } }
+@keyframes erupt-3 { 0% { transform: translate(-50%, -50%) scale(0.7); opacity: 1; } 100% { transform: translate(30px, -110px) scale(0); opacity: 0; } }
+
+.demigod-power-surge { overflow: visible; }
+.demigod-power-surge::before,
+.demigod-power-surge::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; z-index: 0; animation: power-surge-flicker 1.2s infinite linear; }
+.demigod-power-surge::after { animation-delay: -0.6s; }
+@keyframes power-surge-flicker {
+    0% { box-shadow: 0 0 6px 2px var(--glow-color), 0 0 8px 4px #7dd3fc, 0 0 10px 6px #fff; opacity: 1; }
+    50% { box-shadow: 0 0 10px 4px var(--glow-color), 0 0 14px 8px #7dd3fc, 0 0 18px 10px #fff; opacity: 0.7; }
+    100% { box-shadow: 0 0 6px 2px var(--glow-color), 0 0 8px 4px #7dd3fc, 0 0 10px 6px #fff; opacity: 1; }
+}
+.demigod-power-surge i { animation: bolt-pulse 1.2s infinite ease-in-out; }
+@keyframes bolt-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px #fff); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 8px #fff); }
+}
+
+.divine-radiance { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+.divine-radiance::before,
+.divine-radiance::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.divine-radiance::before { width: 100%; height: 100%; box-shadow: 0 0 10px 2px #f8fafc, 0 0 20px 8px rgba(203, 213, 225, 0.5); animation: breathing-aura 4s ease-in-out infinite; z-index: -1; }
+@keyframes breathing-aura {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+.divine-radiance::after { width: 100%; height: 100%; box-shadow: 0 0 0 0px #ffffff; animation: energy-burst 5s ease-out infinite; z-index: -2; animation-delay: 1s; }
+@keyframes energy-burst {
+    0% { transform: translate(-50%, -50%) scale(0.8); box-shadow: 0 0 5px 2px #ffffff; opacity: 1; }
+    15% { transform: translate(-50%, -50%) scale(1.8); box-shadow: 0 0 20px 10px #ffffff; opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+.deity-particles { overflow: visible; }
+.particle { position: absolute; background: var(--glow-color); border-radius: 50%; animation: orbit 6s linear infinite; }
+.p1 { width: 3px; height: 3px; animation-delay: -1s; }
+.p2 { width: 2px; height: 2px; animation-delay: -2s; }
+.p3 { width: 4px; height: 4px; animation-delay: -3.5s; }
+@keyframes orbit {
+    0% { transform: rotate(0deg) translateX(55px) rotate(0deg) scale(1); opacity: 1;}
+    50% { opacity: 0.8; }
+    100% { transform: rotate(360deg) translateX(55px) rotate(-360deg) scale(0.8); opacity: 1;}
+}
+
+.gleam-container { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; z-index: 15; }
+.gleam-container::after { content: ''; position: absolute; top: -10%; left: -150%; width: 50%; height: 120%; background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%); transform: rotate(-35deg); animation: celestial-gleam 5s ease-in-out infinite; animation-delay: 1.5s; }
+@keyframes celestial-gleam { 0% { left: -150%; } 25% { left: 150%; } 100% { left: 150%; } }
+
+.deity-glyph { width: 3.8rem; height: 3.8rem; position: relative; z-index: 20; animation: glyph-rotate 20s linear infinite; }
+@keyframes glyph-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Kept your rank up glow for the level-up event */
 .rank-up-glow {
     animation: rank-up-animation 1.5s ease-out;
 }
-
 @keyframes rank-up-animation {
     0% { transform: scale(0.9); opacity: 0.8; }
-    50% { 
-        transform: scale(1.1); 
-        opacity: 1; 
-        filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)); 
-    }
+    50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)); }
     100% { transform: scale(1); opacity: 1; filter: none; }
-}		
+}	
 
 
 /* --- Shiny 3D Achievement Icon Styles --- */
@@ -1604,18 +1745,17 @@ const XP_VALUES = {
 const BASE_XP = 100; // XP needed for level 1
 const XP_INCREASE_FACTOR = 1.2; // Every other level needs 20% more XP
 
-const LEVEL_RANKS = [
-    { level: 0, name: "Newbie", icon: "fa-seedling" },
-    { level: 5, name: "Apprentice", icon: "fa-book-reader" },
-    { level: 10, name: "Journeyman", icon: "fa-pencil-ruler" },
-    { level: 15, name: "Artisan", icon: "fa-hammer" },
-    { level: 20, name: "Expert", icon: "fa-star" },
-    { level: 25, name: "Master", icon: "fa-trophy" },
-    { level: 30, name: "Grandmaster", icon: "fa-crown" },
-    { level: 50, name: "Legend", icon: "fa-dragon" },
-    { level: 75, name: "Demigod", icon: "fa-meteor" },
-    { level: 100, name: "Deity", icon: "fa-sun" }
-];		
+    { level: 0, name: "Newbie", icon: "fa-seedling" },
+    { level: 5, name: "Apprentice", icon: "fa-book-reader" },
+    { level: 10, name: "Journeyman", icon: "fa-pencil-ruler" },
+    { level: 15, name: "Artisan", icon: "fa-hammer" },
+    { level: 20, name: "Expert", icon: "fa-star" },
+    { level: 25, name: "Master", icon: "fa-trophy" },
+    { level: 30, name: "Grandmaster", icon: "fa-crown" },
+    { level: 50, name: "Legend", icon: "fa-dragon" },
+    { level: 75, name: "Demigod", icon: "fa-bolt" },
+    { level: 100, name: "Deity", icon: "fa-sun" } 
+];
 
 const savedPage = localStorage.getItem('lastVisitedPage');
 if (savedPage) {
@@ -3472,24 +3612,98 @@ const renderActivityChart = (events) => {
 };
 
 const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    const rankIconContainer = document.getElementById('rank-icon-container');
 
-    const rankClass = `level-badge-${levelInfo.rankName.toLowerCase().replace(' ', '-')}`;
+    // Base classes for all wrappers
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
 
-    document.getElementById('rank-icon-container').innerHTML = `
-        <div class="level-badge-wrapper ${rankClass}">
-            <i class="fas ${levelInfo.rankIcon}"></i>
-        </div>
-    `;
+    // Add classes and inner HTML based on the rank
+    switch(rankName) {
+        case "Newbie":
+        case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman":
+        case "Artisan":
+        case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `
+                <div class="flame f1"></div>
+                <div class="flame f2"></div>
+                <div class="flame f3"></div>
+                <i class="fas ${levelInfo.rankIcon}"></i>
+            `;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `
+                <div class="divine-radiance"></div>
+                <div class="gleam-container"></div>
+                <div class="particle p1"></div>
+                <div class="particle p2"></div>
+                <div class="particle p3"></div>
+                <svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ffffff;" />
+                            <stop offset="100%" style="stop-color:#e2e8f0;" />
+                        </linearGradient>
+                        <filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur">
+                                <animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" />
+                            </feGaussianBlur>
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <g filter="url(#deity-glow-filter)">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/>
+                        <circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>
+                        <path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" />
+                        <path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" />
+                        <path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/>
+                    </g>
+                </svg>
+            `;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+    }
 
-    document.getElementById('rank-name').textContent = levelInfo.rankName;
-    document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
+    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
 
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
-    document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
-};		
+    document.getElementById('rank-name').textContent = levelInfo.rankName;
+    document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
+
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+    document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+};	
 
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
