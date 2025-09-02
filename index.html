@@ -119,6 +119,108 @@
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }		
 
+/* --- NEW: Leveling System Icon Styles --- */
+.level-badge-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;  /* Increased size slightly for better visibility */
+    height: 80px;
+    border-radius: 50%;
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.4), /* Inner top highlight */
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),     /* Inner bottom shadow */
+        0 4px 8px rgba(0, 0, 0, 0.5);           /* Outer drop shadow */
+    overflow: hidden; /* Crucial for the glare effect */
+    transition: transform 0.2s ease-in-out, filter 0.3s ease;
+    border: 2px solid;
+}
+
+.level-badge-wrapper:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)); /* A subtle white glow on hover */
+}
+
+.level-badge-wrapper i {
+    font-size: 2.5rem; /* 40px */
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* The Glare Effect */
+.level-badge-wrapper::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -30px;
+    width: 35px;
+    height: 110px;
+    background: linear-gradient(to bottom, 
+        rgba(255, 255, 255, 0.5) 0%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+}
+
+/* Rank Colors */
+.level-badge-newbie {
+    background: linear-gradient(145deg, #a3b18a, #588157);
+    border-color: #3a5a40;
+}
+.level-badge-apprentice {
+    background: linear-gradient(145deg, #d7a98c, #a05d2d);
+    border-color: #8c582c;
+}
+.level-badge-journeyman {
+    background: linear-gradient(145deg, #e0e0e0, #b0b0b0);
+    border-color: #a0a0a0;
+}
+.level-badge-artisan {
+    background: linear-gradient(145deg, #93c5fd, #3b82f6);
+    border-color: #2563eb;
+}
+.level-badge-expert {
+    background: linear-gradient(145deg, #a5b4fc, #6366f1);
+    border-color: #4f46e5;
+}
+.level-badge-master {
+    background: linear-gradient(145deg, #fceabb, #f8b500);
+    border-color: #e6a700;
+}
+.level-badge-grandmaster {
+    background: linear-gradient(145deg, #d8b4fe, #a855f7);
+    border-color: #9333ea;
+}
+.level-badge-legend {
+    background: linear-gradient(145deg, #fca5a5, #ef4444);
+    border-color: #dc2626;
+}
+.level-badge-demigod {
+    background: linear-gradient(145deg, #7dd3fc, #0284c7);
+    border-color: #0369a1;
+}
+.level-badge-deity {
+    background: linear-gradient(145deg, #fde68a, #fbbf24, #d97706);
+    border-color: #b45309;
+}
+
+/* Rank Up Animation */
+.rank-up-glow {
+    animation: rank-up-animation 1.5s ease-out;
+}
+
+@keyframes rank-up-animation {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { 
+        transform: scale(1.1); 
+        opacity: 1; 
+        filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)); 
+    }
+    100% { transform: scale(1); opacity: 1; filter: none; }
+}		
+
 
 /* --- Shiny 3D Achievement Icon Styles --- */
 .achievement-icon-wrapper {
@@ -1883,19 +1985,30 @@ const awardXP = async (amount) => {
 
         await setDoc(userDocRef, { xp: newXp }, { merge: true });
 
+        // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
             showMessage(`You've reached Level ${newLevelInfo.level}!`, 'success');
-            triggerCelebration();
             const levelDisplay = document.getElementById('level-display');
             if (levelDisplay) {
                 levelDisplay.classList.add('level-up-animation');
                 setTimeout(() => levelDisplay.classList.remove('level-up-animation'), 1500);
             }
         }
+        
+        // NEW: Check for a RANK up to trigger the icon animation
+        if (newLevelInfo.rankName !== oldLevelInfo.rankName) {
+            triggerCelebration(); // It's a big deal!
+            const iconWrapper = document.querySelector('.level-badge-wrapper');
+            if (iconWrapper) {
+                iconWrapper.classList.add('rank-up-glow');
+                setTimeout(() => iconWrapper.classList.remove('rank-up-glow'), 1500);
+            }
+        }
+
     } catch (error) {
         console.error("Error awarding XP:", error);
     }
-};		
+};	
 
 		
 const showAchievementNotification = (achievement) => {
@@ -3362,7 +3475,14 @@ const renderLevelingSystem = (userData) => {
     const totalXp = userData.xp || 0;
     const levelInfo = calculateLevelInfo(totalXp);
 
-    document.getElementById('rank-icon-container').innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+    const rankClass = `level-badge-${levelInfo.rankName.toLowerCase().replace(' ', '-')}`;
+
+    document.getElementById('rank-icon-container').innerHTML = `
+        <div class="level-badge-wrapper ${rankClass}">
+            <i class="fas ${levelInfo.rankIcon}"></i>
+        </div>
+    `;
+
     document.getElementById('rank-name').textContent = levelInfo.rankName;
     document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
 
