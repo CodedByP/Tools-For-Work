@@ -96,6 +96,25 @@
             transform: translateX(-50%) translateY(0);
         }
 
+/* Add these styles for the level-up modal */
+#level-up-modal .modal-content {
+    background: radial-gradient(ellipse at top, #3b82f6, #1e3a8a);
+    border: 2px solid #60a5fa;
+    animation: level-up-pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+@keyframes level-up-pop-in {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+		
+
 /* --- Leveling System Styles --- */
 .xp-bar-container {
     background-color: #374151; /* A darker gray for the bar background */
@@ -1677,6 +1696,18 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        </button>
 		    </div>
 		</div>
+
+		<div id="level-up-modal" class="modal hidden">
+		    <div class="modal-content text-center">
+		        <div id="modal-level-up-icon" class="text-8xl mb-4"></div>
+		        <h3 class="text-4xl font-extrabold text-yellow-300 mb-2">LEVEL UP!</h3>
+		        <p id="modal-level-up-message" class="text-gray-300 text-xl mb-6"></p>
+		        <button id="close-level-up-modal-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition duration-300 shadow-lg">
+		            Awesome!
+		        </button>
+		    </div>
+		</div>
+	
 		
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1991,6 +2022,28 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+const showLevelUpNotification = (level, rankName, rankIcon) => {
+    const modal = document.getElementById('level-up-modal');
+    const iconContainer = document.getElementById('modal-level-up-icon');
+    const messageEl = document.getElementById('modal-level-up-message');
+
+    if (!modal || !iconContainer || !messageEl) return;
+
+    // Dynamically create the icon with the correct classes and styles for the modal
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    iconContainer.innerHTML = `
+        <div class="level-badge-wrapper ${rankClass}" style="width: 100px; height: 100px; margin: 0 auto; font-size: 3rem;">
+            <i class="fas ${rankIcon}"></i>
+        </div>
+    `;
+    // Update the message with the new level and rank
+    messageEl.innerHTML = `You have reached <span class="font-bold text-white">Level ${level}</span> and achieved the rank of <span class="font-bold text-white">${rankName}</span>!`;
+
+    // Show the modal
+    modal.classList.remove('hidden');
+};
+		
 const showMessage = (text, type = 'success') => {
     const messageBox = document.getElementById('message-box');
     messageBox.textContent = text;
@@ -2128,7 +2181,7 @@ const awardXP = async (amount) => {
 
         // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
-            showMessage(`You've reached Level ${newLevelInfo.level}!`, 'success');
+            showLevelUpNotification(newLevelInfo.level, newLevelInfo.rankName, newLevelInfo.rankIcon);
             const levelDisplay = document.getElementById('level-display');
             if (levelDisplay) {
                 levelDisplay.classList.add('level-up-animation');
@@ -4067,6 +4120,10 @@ document.getElementById('achievements-container').addEventListener('click', (e) 
     }
 });
 
+    document.getElementById('close-level-up-modal-btn').addEventListener('click', () => {
+        document.getElementById('level-up-modal').classList.add('hidden');
+    });
+	
 // Listener for the modal's close button
 document.getElementById('close-achievement-modal-btn').addEventListener('click', () => {
     document.getElementById('achievement-details-modal').classList.add('hidden');
