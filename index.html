@@ -1771,6 +1771,7 @@ const XP_VALUES = {
     CREATE_RESPONSE: 50,
     CREATE_CATEGORY: 100,
     UNLOCK_ACHIEVEMENT: 1000,
+	FEDEX_TRACKING: 50,
 };
 
 const BASE_XP = 100; // XP needed for level 1
@@ -4509,6 +4510,7 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
         const numbersToCopy = uniqueNumbers.join('\t');
         copyToClipboard(numbersToCopy);
+		await awardXP(XP_VALUES.FEDEX_TRACKING);
 
         const numbersForUrl = uniqueNumbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
