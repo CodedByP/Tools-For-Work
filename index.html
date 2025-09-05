@@ -98,6 +98,7 @@
 
 /* Add these styles for the level-up modal */
 #level-up-modal .modal-content {
+    position: relative; /* This is the key change to allow flexbox centering */
     background: radial-gradient(ellipse at top, #3b82f6, #1e3a8a);
     border: 2px solid #60a5fa;
     animation: level-up-pop-in 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
@@ -105,11 +106,11 @@
 
 @keyframes level-up-pop-in {
     0% {
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: scale(0.5); /* We remove the translate property */
         opacity: 0;
     }
     100% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: scale(1); /* Flexbox now handles the centering */
         opacity: 1;
     }
 }
@@ -911,7 +912,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
         </svg>
     </div>
 
-    <audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
+    <audio id="level-up-sound" src="level-up.mp3" preload="auto"></audio> <audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
 
     <div id="tutorial-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[999]"></div>
 
@@ -2165,6 +2166,21 @@ const calculateLevelInfo = (totalXp) => {
     };
 };
 
+<body class="flex flex-col min-h-screen bg-gray-900 relative">
+    
+    <audio id="level-up-sound" src="level-up.mp3" preload="auto"></audio> <audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
+
+    ```
+
+**Note:** Make sure you have a sound file named `level-up.mp3` in the same directory as your HTML file.
+
+#### Step 2: Update the `awardXP` JavaScript Function
+
+Now, navigate to your `<script>` block and find the `awardXP` function. We need to modify it to play the sound and trigger the confetti inside the `if (newLevelInfo.level > oldLevelInfo.level)` block.
+
+**Replace** your entire `awardXP` function with this updated version:
+
+```javascript
 const awardXP = async (amount) => {
     if (!userId || isAnonymous) return;
 
@@ -2183,6 +2199,14 @@ const awardXP = async (amount) => {
         // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
             showLevelUpNotification(newLevelInfo.level, newLevelInfo.rankName, newLevelInfo.rankIcon);
+
+            triggerCelebration(); // Trigger confetti on every level up!
+            const sound = document.getElementById('level-up-sound');
+            if (sound) {
+                sound.currentTime = 0; // Rewind to start
+                sound.play().catch(e => console.error("Level up audio play failed:", e));
+            }
+
             const levelDisplay = document.getElementById('level-display');
             if (levelDisplay) {
                 levelDisplay.classList.add('level-up-animation');
@@ -2190,9 +2214,8 @@ const awardXP = async (amount) => {
             }
         }
         
-        // NEW: Check for a RANK up to trigger the icon animation
+        // Check for a RANK up to trigger the icon animation
         if (newLevelInfo.rankName !== oldLevelInfo.rankName) {
-            triggerCelebration(); // It's a big deal!
             const iconWrapper = document.querySelector('.level-badge-wrapper');
             if (iconWrapper) {
                 iconWrapper.classList.add('rank-up-glow');
@@ -2203,7 +2226,7 @@ const awardXP = async (amount) => {
     } catch (error) {
         console.error("Error awarding XP:", error);
     }
-};	
+};
 
 		
 const showAchievementNotification = (achievement) => {
