@@ -2167,22 +2167,7 @@ const calculateLevelInfo = (totalXp) => {
     };
 };
 
-<body class="flex flex-col min-h-screen bg-gray-900 relative">
-    
-    <audio id="level-up-sound" src="level-up.mp3" preload="auto"></audio>
-	<audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
 
-    ```
-
-**Note:** Make sure you have a sound file named `level-up.mp3` in the same directory as your HTML file.
-
-#### Step 2: Update the `awardXP` JavaScript Function
-
-Now, navigate to your `<script>` block and find the `awardXP` function. We need to modify it to play the sound and trigger the confetti inside the `if (newLevelInfo.level > oldLevelInfo.level)` block.
-
-**Replace** your entire `awardXP` function with this updated version:
-
-```javascript
 const awardXP = async (amount) => {
     if (!userId || isAnonymous) return;
 
