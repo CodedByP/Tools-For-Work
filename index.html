@@ -502,6 +502,25 @@
     background: linear-gradient(145deg, #fca5a5, #ef4444);
     border-color: #dc2626;
 }		
+
+.update-indicator-pulse {
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}		
         
 /* Update the main modal container to be a full-screen overlay */
 /* Refined modal container for full-screen overlay */
@@ -936,6 +955,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 			
             <button id="nav-settings" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
                 <i class="fas fa-cog mr-3"></i> Settings
+				<span id="settings-update-indicator" class="hidden absolute top-3 right-3 h-3 w-3 rounded-full bg-red-500"></span>
             </button>
         </nav>
         <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
@@ -1169,6 +1189,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                         <span class="text-lg text-gray-300">Check for New Content</span>
                         <button id="check-updates-btn-settings" class="px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
                             <i class="fas fa-sync-alt mr-2"></i> Check for Updates
+							<span id="check-updates-indicator" class="hidden absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-gray-800"></span>
                         </button>
                     </div>
                 </div>
@@ -1765,7 +1786,8 @@ let categoryChartInstance = null;
 let activityChartInstance = null;
 let firstSignIn = null; 		
 let audioUnlocked = false;
-let userLevelData = { level: 0, xp: 0 };	
+let userLevelData = { level: 0, xp: 0 };
+let masterBlueprintVersion = 1;
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
@@ -2046,6 +2068,8 @@ const showLevelUpNotification = (level, rankName, rankIcon) => {
     // Show the modal
     modal.classList.remove('hidden');
 };
+
+const getAppControlDocRef = () => { return doc(db, 'artifacts', safeAppId, 'app_control', 'version_info'); };		
 		
 const showMessage = (text, type = 'success') => {
     const messageBox = document.getElementById('message-box');
@@ -2808,6 +2832,56 @@ const saveToFirestore = async (dataToSave) => {
         showMessage("Error saving data. Check your permissions.", 'error');
     }
 };
+
+const showUpdateNotification = (shouldShow) => {
+    const settingsIndicator = document.getElementById('settings-update-indicator');
+    const checkUpdatesIndicator = document.getElementById('check-updates-indicator');
+    if (settingsIndicator && checkUpdatesIndicator) {
+        if (shouldShow) {
+            settingsIndicator.classList.remove('hidden');
+            settingsIndicator.classList.add('update-indicator-pulse');
+            checkUpdatesIndicator.classList.remove('hidden');
+            checkUpdatesIndicator.classList.add('update-indicator-pulse');
+        } else {
+            settingsIndicator.classList.add('hidden');
+            settingsIndicator.classList.remove('update-indicator-pulse');
+            checkUpdatesIndicator.classList.add('hidden');
+            checkUpdatesIndicator.classList.remove('update-indicator-pulse');
+        }
+    }
+};
+
+const checkForUpdatesOnLoad = async () => {
+    if (!userId || isAnonymous) {
+        showUpdateNotification(false);
+        return;
+    }
+
+    try {
+        // Get master version from Firestore
+        const appControlDocRef = getAppControlDocRef();
+        const appControlDoc = await getDoc(appControlDocRef);
+        if (appControlDoc.exists()) {
+            masterBlueprintVersion = appControlDoc.data().blueprintVersion || 1;
+        }
+
+        // Get user's last synced version
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const userSyncedVersion = userData.syncedBlueprintVersion || 0; // Default to 0 if not present
+
+        // Compare and show notification if master version is newer
+        if (masterBlueprintVersion > userSyncedVersion) {
+            showUpdateNotification(true);
+        } else {
+            showUpdateNotification(false);
+        }
+    } catch (error) {
+        console.error("Error checking for updates on load:", error);
+        showUpdateNotification(false); // Hide on error
+    }
+};		
 
 // --- Rendering Functions ---
 const renderContent = () => {
@@ -4687,6 +4761,9 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
         // 4. If any changes were made, save the updated data to Firestore
         if (changesMade) {
             await saveToFirestore(updatedCategories);
+			const userDocRef = getUserRootDocRef(userId);
+            await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
+            showUpdateNotification(false);
             updateModalTitle.textContent = "Updates Applied! ✅";
             updateModalMessage.innerHTML = `
                 <p>Your data has been successfully updated.</p>
@@ -4697,6 +4774,9 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
                 </ul>
             `;
         } else {
+			const userDocRef = getUserRootDocRef(userId);
+            await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
+            showUpdateNotification(false);
             updateModalTitle.textContent = "You're Up to Date! 👍";
             updateModalMessage.textContent = "No new updates were found.";
         }
@@ -4799,6 +4879,7 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 document.getElementById('tutorial-modal').classList.add('hidden');
             }
+			await checkForUpdatesOnLoad();
             const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
             cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
                 if (doc.exists()) { categories = doc.data().categories || {}; } else { try { const blueprint = await getCannedResponsesBlueprint(); categories = JSON.parse(JSON.stringify(blueprint)); await setDoc(userCannedResponsesDocRef, { categories: categories }); console.log("Migrated default data to Firestore for new user."); } catch (error) { console.error("Error migrating data for new user:", error); } }
