@@ -115,6 +115,40 @@
     }
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.achievement-card-redesign {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+.achievement-card-redesign:hover {
+    transform: translateY(-4px);
+    background-color: rgba(31, 41, 55, 0.7);
+    border-color: #4b5563;
+}
+.achievement-card-redesign .achievement-icon-wrapper {
+    margin-bottom: 0.75rem;
+    flex-shrink: 0; /* Prevents icon from shrinking */
+}
+.achievement-card-redesign p {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+}
+/* Ensure icons don't get squished */
+.level-badge-wrapper, .achievement-icon-wrapper {
+    flex-shrink: 0;
+}		
+
 .challenge-progress-container {
     background-color: #374151; /* A darker gray for the bar background */
     border-radius: 9999px;
@@ -1260,81 +1294,106 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
 
-	<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
-	    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
-	        <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
-	    </div>
-	
-	    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-12 hidden">
-	        
-	        <div id="leveling-section" class="floating-card p-6 sm:p-8 col-span-full flex flex-col md:flex-row items-center gap-6">
-	            <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex items-center justify-center text-gray-400">
-	                <i class="fas fa-seedling"></i>
-	            </div>
-	            <div class="flex-grow w-full text-center md:text-left">
-	                <div class="flex items-center justify-center md:justify-start gap-4">
-	                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
-	                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
-	                </div>
-	                <div class="xp-bar-container">
-	                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
-	                </div>
-	                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
-	            </div>
-	        </div>
-			<div>
-	            <h2 class="text-3xl font-bold text-gray-200 mb-6">Active Challenges</h2>
-	            <div id="challenges-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-	                </div>
-	        </div>
-	
-	        <div>
-	            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
-	            <div id="metric-badges-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-	            </div>
-	        </div>
-		
-		        <div>
-		            <h2 class="text-3xl font-bold text-gray-200 mb-6">Achievements 🏆</h2>
-		            <div id="achievements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-		                </div>
-		        </div>
+<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100">
+    <div id="stats-loader" class="flex justify-center items-center h-full pt-24">
+        <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">    
-			        <div class="floating-card p-6 sm:p-8">
-			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			                <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
-			            </h2>
-			            <div id="category-chart-container" class="relative h-80">
-			                <canvas id="categoryChart"></canvas>
-			            </div>
-			        </div>
-			
-			        <div class="floating-card p-6 sm:p-8">
-			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			                <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-			            </h2>
-			            <div id="activity-chart-container" class="relative h-80">
-			                <canvas id="activityChart"></canvas>
-			            </div>
-			        </div>
-			        
-			        <div class="floating-card p-6 sm:p-8 lg:col-span-3">
-			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			                <i class="fas fa-trophy mr-3 text-3xl text-yellow-400"></i> Leaderboard
-			            </h2>
-			            <div id="leaderboard-container">
-			                <p class="text-gray-400">Loading leaderboard...</p>
-			            </div>
-			        </div>
-			
-			    </div> <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full mt-12">
-			        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			            <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Most Used Responses
-			        </h2>
-			        <div id="stats-container" class="w-full text-center relative h-64">
-			        </div>
-			    </div>
+    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
+        <div id="leveling-section" class="floating-card p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6">
+            <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex-shrink-0 flex items-center justify-center text-gray-400">
+                <i class="fas fa-seedling"></i>
+            </div>
+            <div class="flex-grow w-full text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-4">
+                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
+                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
+                </div>
+                <div class="xp-bar-container">
+                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
+                </div>
+                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
+            </div>
+        </div>
+
+        <div id="achievements-module" class="floating-card p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+                <h2 class="text-2xl font-bold text-gray-200 flex items-center">
+                    <i class="fas fa-trophy mr-3 text-3xl text-yellow-400"></i> Achievements
+                </h2>
+                <div class="flex items-center gap-4">
+                    <div id="achievement-tabs" class="flex gap-2 text-sm">
+                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white" data-filter="all">All</button>
+                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold text-gray-300 hover:bg-gray-700 transition" data-filter="unlocked">Unlocked</button>
+                    </div>
+                    <div class="text-right">
+                        <p id="ach-progress-text" class="text-lg font-semibold text-gray-300">0 / 0 Unlocked</p>
+                        <div class="w-24 h-2 bg-gray-700 rounded-full mt-1">
+                            <div id="ach-progress-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 overflow-y-auto max-h-[340px] p-2 scrollbar-hide">
+                </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-bolt mr-3 text-3xl text-yellow-400"></i> Activity Snapshot
+                </h2>
+                <div id="metric-badges-container" class="grid grid-cols-2 gap-4">
+                    </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-running mr-3 text-3xl text-pink-400"></i> Active Challenges
+                </h2>
+                <div id="challenges-container" class="space-y-4">
+                    </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-star mr-3 text-3xl text-blue-400"></i> Leaderboard
+                </h2>
+                <div id="leaderboard-container" class="space-y-2">
+                    </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="floating-card p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Responses
+                </h2>
+                <div id="stats-container" class="w-full relative h-64 sm:h-80">
+                    <canvas id="stats-chart"></canvas>
+                </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
+                </h2>
+                <div id="category-chart-container" class="relative h-64 sm:h-80">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="floating-card p-6 sm:p-8">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+            </h2>
+            <div id="activity-chart-container" class="relative h-64 sm:h-80">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
     <div id="placeholder-modal" class="modal hidden">
         <div class="modal-content">
@@ -1846,6 +1905,7 @@ let audioUnlocked = false;
 let userLevelData = { level: 0, xp: 0 };
 let masterBlueprintVersion = 1;
 let lastCopyTimestamps = {};
+let activeAchievementFilter = 'all';		
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -2130,6 +2190,155 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- Renders achievements based on the active filter ---
+const renderFilteredAchievements = (events, userData) => {
+    const userAchievements = userData.achievementsData || {};
+    const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
+    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
+    const totalCopies = events.filter(e => e.type === 'copy').length;
+    const totalCategories = Object.keys(categories).length;
+    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+    const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
+
+    const dailyActivity = events.reduce((acc, event) => {
+        if (!event.timestamp) return acc;
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
+        if (event.type === 'copy') acc[date].copies++;
+        if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
+        if (event.type === 'add_link') acc[date].links++;
+        return acc;
+    }, {});
+
+    const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
+    const hasCreatedCategory = events.some(e => e.type === 'create_category');
+    const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
+    const hasPinnedResponse = events.some(e => e.type === 'pin_response');
+    const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
+    const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
+    const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
+    const hasTheScribe = uniqueCategoriesIn30Min >= 5;
+    const hasHistorian = daysSinceSignIn >= 365;
+    const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
+    const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
+    let maxStreak = 0;
+    if (usageDates.length > 0) {
+        let currentStreak = 1;
+        for (let i = 1; i < usageDates.length; i++) {
+            const prevDate = new Date(usageDates[i - 1]);
+            const currentDate = new Date(usageDates[i]);
+            if (!isBusinessDay(currentDate)) continue;
+            const diffTime = currentDate - prevDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
+                currentStreak++;
+            } else {
+                maxStreak = Math.max(maxStreak, currentStreak);
+                currentStreak = 1;
+            }
+        }
+        maxStreak = Math.max(maxStreak, currentStreak);
+    }
+    const hasStreakBreaker = maxStreak >= 90;
+    const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
+    const hasCleanSlate = deletedInLast5Mins >= 5;
+
+    const copyTiers = getTier(totalCopies, [
+        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
+        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
+        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
+    ]);
+    const librarianTiers = getTier(totalCategories, [
+        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
+        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
+        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
+    ]);
+
+    const allAchievements = [
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: hasPinnedResponse },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
+        { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", color: "text-violet-500", unlocked: totalCopies >= 1000 },
+        { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", color: "text-yellow-300", unlocked: hasPerfectDay },
+        { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", color: "text-green-600", unlocked: hasLivingLibrary },
+        { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", color: "text-gray-300", unlocked: hasTheScribe },
+        { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", color: "text-red-400", unlocked: hasHistorian },
+        { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", color: "text-red-500", unlocked: hasStreakBreaker },
+        { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", color: "text-blue-500", unlocked: events.some(e => e.type === 'move_response') },
+        { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate },
+        { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
+        { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
+    ];
+    
+    const unlockedCount = allAchievements.filter(a => a.unlocked).length;
+    const totalCount = allAchievements.length;
+    const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
+    
+    document.getElementById('ach-progress-text').textContent = `${unlockedCount} / ${totalCount} Unlocked`;
+    document.getElementById('ach-progress-bar').style.width = `${progress}%`;
+    
+    const container = document.getElementById('achievements-container');
+    let filtered = activeAchievementFilter === 'unlocked' ? allAchievements.filter(a => a.unlocked) : allAchievements;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-400 col-span-full py-8">No achievements here yet!</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(ach => {
+        const badgeClass = ach.unlocked ? getAchievementClassFromColor(ach.color) : 'achievement-icon-locked';
+        const textColor = ach.unlocked ? 'text-gray-100' : 'text-gray-500';
+        const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
+        const unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || new Date().toISOString()) : '';
+        
+        return `
+            <div class="achievement-card-redesign floating-card ${ach.unlocked ? 'cursor-pointer' : 'cursor-default'}"
+                 data-id="${ach.id}" data-name="${ach.name}" data-desc="${sanitizedDesc}"
+                 data-icon="${ach.icon}" data-color="${ach.color || 'text-yellow-400'}"
+                 data-unlocked="${ach.unlocked}" data-unlocked-date="${unlockedDate}">
+                <div class="achievement-icon-wrapper ${badgeClass}">
+                    <i class="fas ${ach.icon}"></i>
+                </div>
+                <div>
+                    <p class="font-bold ${textColor}">${ach.name}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+// --- Sets up the click listeners for the achievement filter tabs ---
+const setupAchievementFiltering = () => {
+    const achievementTabs = document.getElementById('achievement-tabs');
+    if (achievementTabs) {
+        achievementTabs.addEventListener('click', (e) => {
+            const button = e.target.closest('.achievement-tab');
+            if (button && button.dataset.filter !== activeAchievementFilter) {
+                activeAchievementFilter = button.dataset.filter;
+                document.querySelectorAll('.achievement-tab').forEach(btn => {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('text-gray-300', 'hover:bg-gray-700');
+                });
+                button.classList.add('bg-blue-600', 'text-white');
+                button.classList.remove('text-gray-300', 'hover:bg-gray-700');
+                // Re-render the stats to apply the filter
+                renderAdvancedStats();
+            }
+        });
+    }
+};		
 
 // --- NEW: Challenge System Configuration ---
 const CHALLENGES_CONFIG = {
@@ -4142,254 +4351,98 @@ const renderLevelingSystem = (userData) => {
     document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
 };	
 
+// --- Renders all stats and achievement data for the page ---
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
-	const statsLoader = document.getElementById('stats-loader');
+    const statsLoader = document.getElementById('stats-loader');
     const metricBadgesContainer = document.getElementById('metric-badges-container');
     const achievementsContainer = document.getElementById('achievements-container');
     const chartContainer = document.getElementById('stats-container');
-	
+
     if (statsLoader) statsLoader.classList.remove('hidden');
     if (statsContent) statsContent.classList.add('hidden');
 
     if (!statsContent || isAnonymous) {
         if (statsContent) statsContent.innerHTML = '<p class="text-gray-400 text-center py-16">Sign in to track your achievements and usage stats.</p>';
-        if (statsLoader) statsLoader.classList.add('hidden'); 
-        if (statsContent) statsContent.classList.remove('hidden'); 
+        if (statsLoader) statsLoader.classList.add('hidden');
+        if (statsContent) statsContent.classList.remove('hidden');
         return;
     }
 
     try {
-        metricBadgesContainer.innerHTML = ''; 
-        achievementsContainer.innerHTML = '';
-        chartContainer.innerHTML = '';
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        renderLevelingSystem(userData);
 
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.exists() ? userDoc.data() : {};
-	renderLevelingSystem(userData);
-    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
-    const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        // Render all components
+        renderChallenges(events);
+        renderCategoryChart(events);
+        renderActivityChart(events);
+        renderLeaderboard();
 
-	renderChallenges(events);	
-    renderCategoryChart(events);
-    renderActivityChart(events);
-	renderLeaderboard();
+        // --- Metric Badges ---
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
-        
-    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - daysSinceMonday);
-    startOfWeek.setHours(0, 0, 0, 0); // Set to the beginning of Monday
-	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
-		
-    const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
-    const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
-    const totalCategories = Object.keys(categories).length;
+        const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
+        const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
+        const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
+        const totalCategories = Object.keys(categories).length;
 
-    metricBadgesContainer.innerHTML = `
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-blue-400">${copiesThisWeek}</p>
-            <p class="text-gray-400 mt-2">Copies This Week</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-green-400">${editsThisMonth}</p>
-            <p class="text-gray-400 mt-2">Edits This Month</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-purple-400">${totalResponsesCreated}</p>
-            <p class="text-gray-400 mt-2">Responses Created</p>
-        </div>
-        <div class="floating-card p-6 text-center">
-            <p class="text-4xl font-bold text-yellow-400">${totalCategories}</p>
-            <p class="text-gray-400 mt-2">Total Categories</p>
-        </div>
-    `;
-    
-    // --- Achievement Calculations ---
-    const totalCopies = events.filter(e => e.type === 'copy').length;
-    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
+        metricBadgesContainer.innerHTML = `
+            <div class="bg-gray-800 p-4 rounded-xl text-center"><p class="text-2xl font-bold text-blue-400">${copiesThisWeek}</p><p class="text-sm text-gray-400">Copies This Week</p></div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center"><p class="text-2xl font-bold text-green-400">${editsThisMonth}</p><p class="text-sm text-gray-400">Edits This Month</p></div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center"><p class="text-2xl font-bold text-purple-400">${totalResponsesCreated}</p><p class="text-sm text-gray-400">Responses Made</p></div>
+            <div class="bg-gray-800 p-4 rounded-xl text-center"><p class="text-2xl font-bold text-yellow-400">${totalCategories}</p><p class="text-sm text-gray-400">Total Categories</p></div>
+        `;
 
-    // Tier definitions
-    const copyTiers = getTier(totalCopies, [
-        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
-        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
-        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
-    ]);
-    const librarianTiers = getTier(totalCategories, [
-        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
-        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
-        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
-    ]);
+        // --- Achievements Rendering (Redesigned) ---
+        renderFilteredAchievements(events, userData);
 
-    // New achievement calculations
-    const dailyActivity = events.reduce((acc, event) => {
-        if (!event.timestamp) return acc;
-        const date = event.timestamp.toDate().toISOString().split('T')[0];
-        if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
-        if (event.type === 'copy') acc[date].copies++;
-        if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
-        if (event.type === 'add_link') acc[date].links++;
-        return acc;
-    }, {});
-    const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
-    const hasCreatedCategory = events.some(e => e.type === 'create_category');
-    const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
-    const hasPinnedResponse = events.some(e => e.type === 'pin_response');
-    const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
-    const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
-    const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
-    const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-    const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
-    const hasHistorian = daysSinceSignIn >= 365;
-    const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
-    const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
-    let maxStreak = 0;
-    if (usageDates.length > 0) {
-        let currentStreak = 1;
-        for (let i = 1; i < usageDates.length; i++) {
-            const prevDate = new Date(usageDates[i - 1]);
-            const currentDate = new Date(usageDates[i]);
-            if (!isBusinessDay(currentDate)) continue;
-            const diffTime = currentDate - prevDate;
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
-                currentStreak++;
-            } else {
-                maxStreak = Math.max(maxStreak, currentStreak);
-                currentStreak = 1;
+        // --- Top 5 Chart ---
+        let allResponses = [];
+        for (const categoryName in categories) {
+            if (categories[categoryName].responses) {
+                allResponses.push(...categories[categoryName].responses);
             }
         }
-        maxStreak = Math.max(maxStreak, currentStreak);
-    }
-    const hasStreakBreaker = maxStreak >= 90;
-    const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
-    const hasCleanSlate = deletedInLast5Mins >= 5;
+        const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
 
-    const allAchievements = [
-        // Core Actions
-        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
-        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
-        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
-        
-        // Organization & Management
-        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
-        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
-        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: hasPinnedResponse },
-        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
+        if (sortedResponses.length > 0) {
+            chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
+            const topResponses = sortedResponses.slice(0, 5);
+            const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
+            const chartData = topResponses.map(r => r.timesCopied);
 
-        // Exploration & Discovery
-        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
-        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
-        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
-        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
-        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
-        
-        // New Advanced Achievements
-        { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", color: "text-violet-500", unlocked: totalCopies >= 1000 },
-        { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", color: "text-yellow-300", unlocked: hasPerfectDay },
-        { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", color: "text-green-600", unlocked: hasLivingLibrary },
-        { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", color: "text-gray-300", unlocked: hasTheScribe },
-        { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", color: "text-red-400", unlocked: hasHistorian },
-        { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", color: "text-red-500", unlocked: hasStreakBreaker },
-        { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", color: "text-blue-500", unlocked: events.some(e => e.type === 'move_response') },
-        { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate },
-        { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
-        { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
-    ];
-    
-    // Check for "The Grand Master"
-    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
-    const grandMasterAchievement = { 
-        id: 'grand_master', 
-        name: "The Grand Master", 
-        desc: "Unlock all other achievements.", 
-        icon: "fa-trophy", 
-        unlocked: allOtherAchievementsUnlocked 
-    };
-
-    const achievementsToRender = [...allAchievements, grandMasterAchievement];
-
-
-// --- Render Achievements ---
-const userAchievements = userData.achievementsData || {}; // Get the achievement data
-achievementsContainer.innerHTML = achievementsToRender.map(ach => {
-    const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
-    let unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || null) : null;
-    if (ach.unlocked && !unlockedDate) {
-        // If the date isn't in achievementsData, find the first event that unlocked it
-        const unlockingEvent = events.find(e => e.type === `${ach.id}_milestone` || e.type === `copy_purist` || e.type === `add_placeholder`);
-        if (unlockingEvent && unlockingEvent.timestamp) {
-            unlockedDate = unlockingEvent.timestamp.toDate().toISOString();
+            if (statsChart) statsChart.destroy();
+            const ctx = document.getElementById('stats-chart').getContext('2d');
+            const isLightMode = document.body.classList.contains('light-mode');
+            const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+            const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            statsChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
+            });
+        } else {
+            chartContainer.innerHTML = '<p class="text-gray-400 text-center flex items-center justify-center h-full">Copy responses to see your top 5 here!</p>';
         }
-    }
 
-    return `
-    <div class="achievement-badge floating-card p-4 flex items-center transition-all duration-300 ${ach.unlocked ? 'opacity-100 cursor-pointer hover:scale-105' : 'opacity-40'}" 
-         data-id="${ach.id}"
-         data-name="${ach.name}" 
-         data-desc="${sanitizedDesc}" 
-         data-icon="${ach.icon}" 
-         data-color="${ach.color || 'text-yellow-400'}" 
-         data-unlocked="${ach.unlocked}"
-         data-unlocked-date="${unlockedDate || ''}" 
-         title="${ach.unlocked ? 'Click for details' : 'This achievement is locked.'}">
-		 
-		<div class="achievement-icon-wrapper ${ach.unlocked ? getAchievementClassFromColor(ach.color || 'text-blue-400') : 'achievement-icon-locked'}">
-		    <i class="fas ${ach.icon}"></i>
-		</div>   
-      <div class="ml-4">
-          <p class="font-bold ${ach.unlocked ? 'text-gray-100' : 'text-gray-500'}">${ach.name}</p>
-          ${ach.unlocked ? `<p class="text-sm text-gray-400">${ach.desc}</p>` : ''}
-      </div>
-    </div>
-    `;
-}).join('');
-
-    // --- Render Top 5 Chart ---
-    let allResponses = [];
-    for (const categoryName in categories) {
-        if (categories[categoryName].responses) {
-            allResponses.push(...categories[categoryName].responses);
-        }
-    }
-    const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
-
-    if (sortedResponses.length > 0) {
-        chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
-        const topResponses = sortedResponses.slice(0, 5);
-        const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
-        const chartData = topResponses.map(r => r.timesCopied);
-
-        if (statsChart) statsChart.destroy();
-        const ctx = document.getElementById('stats-chart').getContext('2d');
-        const isLightMode = document.body.classList.contains('light-mode');
-        const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-        const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-        statsChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
-            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
-        });
-    } else {
-        chartContainer.innerHTML = '<p class="text-gray-400">Copy responses to see your top 5 here!</p>';
-    }
-		
- } finally {
-        // --- Step 3: Hide the loader and show the content ---
+    } catch (error) {
+        console.error("Error rendering stats:", error);
+        if (statsContent) statsContent.innerHTML = `<p class="text-red-400 text-center py-16">Error loading stats: ${error.message}</p>`;
+    } finally {
         if (statsLoader) statsLoader.classList.add('hidden');
         if (statsContent) statsContent.classList.remove('hidden');
     }
-		
 };
 
 const showPlaceholderDemo = () => {
@@ -4433,7 +4486,7 @@ function attachEventListeners() {
         }
     };
     document.body.addEventListener('click', unlockAudio);
-	
+	setupAchievementFiltering(); 
     // Navigation Listeners
     document.getElementById('hamburger-menu-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
     document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
