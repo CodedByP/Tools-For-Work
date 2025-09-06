@@ -2094,29 +2094,15 @@ const CHALLENGES_CONFIG = {
         xp: 500,
         type: 'weekly',
         icon: 'fa-calendar-week',
-        // ▼▼▼ MODIFIED LOGIC TO COUNT MON-FRI ONLY ▼▼▼
         getProgress: async (events) => {
             const now = new Date();
             const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday...
-            
-            // Find the start of the current week (Monday at 00:00)
             const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
             const startOfWeek = new Date(now);
             startOfWeek.setDate(now.getDate() - daysSinceMonday);
             startOfWeek.setHours(0, 0, 0, 0);
 
-            // Find the end of the current work week (Friday at 23:59:59)
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 4); // Monday + 4 days = Friday
-            endOfWeek.setHours(23, 59, 59, 999);
-
-            // Filter events that fall within the Monday-Friday window
-            const weeklyCopies = events.filter(e => {
-                if (!e.timestamp) return false;
-                const eventDate = e.timestamp.toDate();
-                return eventDate >= startOfWeek && eventDate <= endOfWeek;
-            }).length;
-
+            const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
             return { current: weeklyCopies };
         }
     }
