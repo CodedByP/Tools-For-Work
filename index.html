@@ -1300,44 +1300,41 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </div>
 		        </div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-		            <div class="floating-card p-6 sm:p-8">
-		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
-		                </h2>
-		                <div id="category-chart-container" class="relative h-80">
-		                    <canvas id="categoryChart"></canvas>
-		                </div>
-		            </div>
-		            <div class="floating-card p-6 sm:p-8">
-		                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-		                </h2>
-		                <div id="activity-chart-container" class="relative h-80">
-		                    <canvas id="activityChart"></canvas>
-		                </div>
-		            </div>
-		        </div>
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">    
+			        <div class="floating-card p-6 sm:p-8">
+			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+			                <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
+			            </h2>
+			            <div id="category-chart-container" class="relative h-80">
+			                <canvas id="categoryChart"></canvas>
+			            </div>
+			        </div>
 			
-			<div class="floating-card p-6 sm:p-8 lg:col-span-2">
+			        <div class="floating-card p-6 sm:p-8">
+			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+			                <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+			            </h2>
+			            <div id="activity-chart-container" class="relative h-80">
+			                <canvas id="activityChart"></canvas>
+			            </div>
+			        </div>
+			        
+			        <div class="floating-card p-6 sm:p-8 lg:col-span-3">
+			            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+			                <i class="fas fa-trophy mr-3 text-3xl text-yellow-400"></i> Leaderboard
+			            </h2>
+			            <div id="leaderboard-container">
+			                <p class="text-gray-400">Loading leaderboard...</p>
+			            </div>
+			        </div>
+			
+			    </div> <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full mt-12">
 			        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			            <i class="fas fa-trophy mr-3 text-3xl text-yellow-400"></i> Leaderboard
+			            <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Most Used Responses
 			        </h2>
-			        <div id="leaderboard-container">
-			            <p class="text-gray-400">Loading leaderboard...</p>
+			        <div id="stats-container" class="w-full text-center relative h-64">
 			        </div>
 			    </div>
-			</div>
-		
-		        <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
-		            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		                <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Most Used Responses
-		            </h2>
-		            <div id="stats-container" class="w-full text-center relative h-64">
-		                </div>
-		        </div>
-		    </div>
-		</div>
 
     <div id="placeholder-modal" class="modal hidden">
         <div class="modal-content">
