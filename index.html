@@ -114,7 +114,20 @@
         opacity: 1;
     }
 }
-		
+
+.challenge-progress-container {
+    background-color: #374151; /* A darker gray for the bar background */
+    border-radius: 9999px;
+    height: 0.75rem; /* 12px */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+.challenge-progress-bar {
+    background-color: #34d399; /* A nice green for progress */
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s ease-in-out;
+}
 
 /* --- Leveling System Styles --- */
 .xp-bar-container {
@@ -1237,6 +1250,11 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 	                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
 	            </div>
 	        </div>
+			<div>
+	            <h2 class="text-3xl font-bold text-gray-200 mb-6">Active Challenges</h2>
+	            <div id="challenges-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+	                </div>
+	        </div>
 	
 	        <div>
 	            <h2 class="text-3xl font-bold text-gray-200 mb-6">Activity Snapshot</h2>
@@ -2048,6 +2066,46 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- NEW: Challenge System Configuration ---
+const CHALLENGES_CONFIG = {
+    dailyCopies: {
+        id: 'daily_copies',
+        title: 'Daily Clicks',
+        description: 'Copy 10 responses in a single day.',
+        goal: 10,
+        xp: 100,
+        type: 'daily',
+        icon: 'fa-sun',
+        // This function calculates the user's current progress for this challenge
+        getProgress: async (events) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStart = new Date(todayStr);
+            const todaysCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= todayStart).length;
+            return { current: todaysCopies };
+        }
+    },
+    weeklyCopies: {
+        id: 'weekly_copies',
+        title: 'Weekly Warrior',
+        description: 'Copy 50 responses in a single week.',
+        goal: 50,
+        xp: 500,
+        type: 'weekly',
+        icon: 'fa-calendar-week',
+        getProgress: async (events) => {
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday...
+            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - daysSinceMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
+            return { current: weeklyCopies };
+        }
+    }
+};
+		
 const getCurrentDateString = () => {
     return new Date().toISOString().split('T')[0];
 };
@@ -3102,6 +3160,47 @@ if (!isAnonymous && categoryNames.length > 0) {
     renderResponses();
 };
 
+
+const renderChallenges = async (events) => {
+    const container = document.getElementById('challenges-container');
+    if (!container) return;
+    container.innerHTML = ''; // Clear previous content
+
+    for (const challenge of Object.values(CHALLENGES_CONFIG)) {
+        const progressData = await challenge.getProgress(events);
+        const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
+        const isComplete = progressData.current >= challenge.goal;
+
+        const challengeCardHTML = `
+            <div class="floating-card p-6 flex flex-col justify-between ${isComplete ? 'border-2 border-green-400' : ''}">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-100">${challenge.title}</h4>
+                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+                        </div>
+                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between items-center text-sm mb-1">
+                        <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
+                            ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
+                        </span>
+                        <span class="font-bold text-yellow-400">+${challenge.xp} XP</span>
+                    </div>
+                    <div class="challenge-progress-container">
+                        <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += challengeCardHTML;
+    }
+};
+		
 const renderResponses = (searchQuery = '') => {
     const responsesList = document.getElementById('responses-list');
     const emptyState = document.getElementById('empty-state');
@@ -3951,6 +4050,7 @@ const renderAdvancedStats = async () => {
     const snapshot = await getDocs(query(eventsCollectionRef));
     const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
+	renderChallenges(events);	
     renderCategoryChart(events);
     renderActivityChart(events);
 
