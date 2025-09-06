@@ -1286,6 +1286,16 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </div>
 		            </div>
 		        </div>
+			
+			<div class="floating-card p-6 sm:p-8 lg:col-span-2">
+			        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+			            <i class="fas fa-trophy mr-3 text-3xl text-yellow-400"></i> Leaderboard
+			        </h2>
+			        <div id="leaderboard-container">
+			            <p class="text-gray-400">Loading leaderboard...</p>
+			        </div>
+			    </div>
+			</div>
 		
 		        <div class="floating-card p-6 sm:p-8 flex flex-col items-center md:w-full">
 		            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
@@ -1834,6 +1844,36 @@ const LEVEL_RANKS = [
     { level: 100, name: "Deity", icon: "fa-sun" } 
 ];
 
+// Add this new function anywhere in your script
+async function updateLeaderboardStats(userId) {
+    if (!userId || isAnonymous) return;
+
+    try {
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) return; // User has no data yet
+
+        const userData = userDoc.data();
+        const levelInfo = calculateLevelInfo(userData.xp || 0);
+        
+        const leaderboardData = {
+            displayName: userData.displayName || 'Anonymous User',
+            xp: userData.xp || 0,
+            level: levelInfo.level,
+            rankName: levelInfo.rankName,
+            rankIcon: levelInfo.rankIcon,
+            memberSince: userData.firstSignIn || serverTimestamp()
+        };
+
+        const leaderboardDocRef = doc(db, 'leaderboard', userId);
+        await setDoc(leaderboardDocRef, leaderboardData, { merge: true });
+
+    } catch (error) {
+        console.error("Failed to update leaderboard stats:", error);
+    }
+}
+		
 const savedPage = localStorage.getItem('lastVisitedPage');
 if (savedPage) {
     currentPage = savedPage;
@@ -2339,6 +2379,7 @@ const awardXP = async (amount) => {
         const newLevelInfo = calculateLevelInfo(newXp);
 
         await setDoc(userDocRef, { xp: newXp }, { merge: true });
+		await updateLeaderboardStats(userId);
 
         // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
@@ -3095,6 +3136,52 @@ const renderContent = () => {
         }
     }
 };
+
+const renderLeaderboard = async () => {
+    const container = document.getElementById('leaderboard-container');
+    if (!container) return;
+
+    // This query gets the top 10 users, ordered by XP
+    const q = query(collection(db, "leaderboard"), orderBy("xp", "desc"), limit(10));
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+        container.innerHTML = '<p class="text-gray-400">No users on the leaderboard yet.</p>';
+        return;
+    }
+
+    let leaderboardHTML = '<ol class="space-y-3">';
+    
+    querySnapshot.forEach((doc, index) => {
+        const user = doc.data();
+        const rank = index + 1;
+        const rankClass = `level-badge-${user.rankName.toLowerCase().replace(' ', '-')}`;
+        let memberSinceText = '';
+        if (user.memberSince && user.memberSince.toDate) {
+             memberSinceText = user.memberSince.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+
+        leaderboardHTML += `
+            <li class="floating-card p-3 rounded-lg flex items-center gap-4">
+                <div class="font-bold text-xl w-8 text-center text-gray-400">${rank}</div>
+                <div class="level-badge-wrapper ${rankClass}" style="width: 50px; height: 50px;">
+                    <i class="fas ${user.rankIcon}" style="font-size: 1.5rem;"></i>
+                </div>
+                <div class="flex-grow">
+                    <p class="font-bold text-lg text-gray-100">${user.displayName}</p>
+                    <p class="text-xs text-gray-400">Level ${user.level} · Member since ${memberSinceText}</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-lg text-blue-400">${user.xp.toLocaleString()} XP</p>
+                </div>
+            </li>
+        `;
+    });
+
+    leaderboardHTML += '</ol>';
+    container.innerHTML = leaderboardHTML;
+};		
 
 const renderCategories = () => {
     const categoryList = document.getElementById('category-list');
@@ -4064,6 +4151,7 @@ const renderAdvancedStats = async () => {
 	renderChallenges(events);	
     renderCategoryChart(events);
     renderActivityChart(events);
+	renderLeaderboard();
 
     const now = new Date();
     const dayOfWeek = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
