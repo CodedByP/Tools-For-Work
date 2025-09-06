@@ -2048,6 +2048,79 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const getCurrentDateString = () => {
+    return new Date().toISOString().split('T')[0];
+};
+
+// NEW: Gets a unique ID for the current week (e.g., '2024-36')
+const getCurrentWeekId = () => {
+    const now = new Date();
+    // Create a copy to avoid modifying the original date
+    const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    // Set to the nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    // Get first day of year
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    // Calculate full weeks to nearest Thursday
+    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    // Return year and week number
+    return `${date.getUTCFullYear()}-${weekNo}`;
+};	
+
+const checkAndAwardChallengeXP = async (userId) => {
+    if (!userId || isAnonymous) return;
+
+    try {
+        const todayStr = getCurrentDateString();
+        const weekId = getCurrentWeekId();
+
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+
+        // --- 1. Daily Challenge Check ---
+        const lastDailyCompletion = userData.lastDailyChallengeDate || '';
+        if (lastDailyCompletion !== todayStr) {
+            const todayStart = new Date(todayStr);
+            const querySnapshot = await getDocs(query(eventsCollectionRef));
+            const events = querySnapshot.docs.map(doc => doc.data());
+            const todaysCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= todayStart).length;
+
+            if (todaysCopies >= 10) {
+                await awardXP(100);
+                await setDoc(userDocRef, { lastDailyChallengeDate: todayStr }, { merge: true });
+                showMessage("Daily Challenge Complete! +100 XP", "success");
+            }
+        }
+
+        // --- 2. Weekly Challenge Check ---
+        const lastWeeklyCompletion = userData.lastWeeklyChallengeWeek || '';
+        if (lastWeeklyCompletion !== weekId) {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - daysSinceMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const querySnapshot = await getDocs(query(eventsCollectionRef));
+            const events = querySnapshot.docs.map(doc => doc.data());
+            const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
+
+            if (weeklyCopies >= 50) {
+                await awardXP(500);
+                await setDoc(userDocRef, { lastWeeklyChallengeWeek: weekId }, { merge: true });
+                showMessage("Weekly Challenge Complete! +500 XP", "success");
+            }
+        }
+    } catch (error) {
+        console.error("Error checking for challenge XP:", error);
+    }
+};		
+
 const showLevelUpNotification = (level, rankName, rankIcon) => {
     const modal = document.getElementById('level-up-modal');
     const iconContainer = document.getElementById('modal-level-up-icon');
@@ -3295,6 +3368,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                 console.error("Error updating copy count:", error);
             }
         }
+		 await checkAndAwardChallengeXP(userId);
     }
 };
 		
