@@ -3881,10 +3881,15 @@ const renderAdvancedStats = async () => {
     renderActivityChart(events);
 
     const now = new Date();
-    const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > oneWeekAgo).length;
+    const dayOfWeek = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+        
+    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - daysSinceMonday);
+    startOfWeek.setHours(0, 0, 0, 0); // Set to the beginning of Monday
+	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const copiesThisWeek = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
+		
     const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
     const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
     const totalCategories = Object.keys(categories).length;
