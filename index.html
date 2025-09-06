@@ -1806,6 +1806,8 @@ let firstSignIn = null;
 let audioUnlocked = false;
 let userLevelData = { level: 0, xp: 0 };
 let masterBlueprintVersion = 1;
+let lastCopyTimestamps = {};
+		
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
@@ -3449,7 +3451,9 @@ const deleteResponse = (id, categoryName) => {
     saveToFirestore(updatedCategories);
     showMessage("Response deleted successfully!");
 };
+
 const copyToClipboard = async (text, responseId = null, categoryName = null) => {
+    // This part always runs, so the user can always copy the text
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
@@ -3459,29 +3463,36 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
     showMessage("Copied to clipboard!");
 
     if (responseId && categoryName) {
-        const placeholderRegex = /\[([^\]]+)\]/g;
-        if (!placeholderRegex.test(text)) {
-            logUserEvent('copy_purist');
-        }
-		await awardXP(XP_VALUES.COPY_RESPONSE);
-        logUserEvent('copy', { responseId, categoryName, text });
+        const now = Date.now();
+        const lastCopyTime = lastCopyTimestamps[responseId] || 0; 
+        const COOLDOWN_PERIOD = 5000; 
 
-        // Increment the counter in Firestore
-        if (userId && !isAnonymous) {
-            try {
-                const category = categories[categoryName];
-                if (category && category.responses) {
-                    const response = category.responses.find(r => r.id === responseId);
-                    if (response) {
-                        response.timesCopied = (response.timesCopied || 0) + 1;
-                        saveToFirestore(categories);
-                    }
-                }
-            } catch (error) {
-                console.error("Error updating copy count:", error);
+        if (now - lastCopyTime > COOLDOWN_PERIOD) {
+            lastCopyTimestamps[responseId] = now; 
+
+            const placeholderRegex = /\[([^\]]+)\]/g;
+            if (!placeholderRegex.test(text)) {
+                logUserEvent('copy_purist');
             }
+            await awardXP(XP_VALUES.COPY_RESPONSE);
+            logUserEvent('copy', { responseId, categoryName, text });
+
+            if (userId && !isAnonymous) {
+                try {
+                    const category = categories[categoryName];
+                    if (category && category.responses) {
+                        const response = category.responses.find(r => r.id === responseId);
+                        if (response) {
+                            response.timesCopied = (response.timesCopied || 0) + 1;
+                            saveToFirestore(categories);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error updating copy count:", error);
+                }
+            }
+            await checkAndAwardChallengeXP(userId);
         }
-		 await checkAndAwardChallengeXP(userId);
     }
 };
 		
