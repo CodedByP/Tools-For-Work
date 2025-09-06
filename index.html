@@ -395,6 +395,38 @@
     100% { transform: scale(1); opacity: 1; filter: none; }
 }	
 
+/* Add these styles to your <style> block */
+.leaderboard-entry {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: rgba(31, 41, 55, 0.5); /* bg-gray-700 with opacity */
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+.leaderboard-entry:hover {
+    transform: scale(1.02);
+    background-color: rgba(55, 65, 81, 0.7); /* bg-gray-600 with opacity */
+}
+.leaderboard-rank {
+    font-size: 1.125rem;
+    font-weight: bold;
+    width: 2.5rem;
+    text-align: center;
+    color: #9ca3af; /* text-gray-400 */
+}
+.leaderboard-rank.top-1 { color: #fBBF24; } /* A golden color */
+.leaderboard-rank.top-2 { color: #d1d5db; } /* A silver color */
+.leaderboard-rank.top-3 { color: #d97706; } /* A bronze color */
+
+.leaderboard-details {
+    margin-left: 1rem;
+    flex-grow: 1;
+}
+.leaderboard-xp {
+    font-weight: bold;
+    color: #34d399; /* A nice green color */
+}
 
 /* --- Shiny 3D Achievement Icon Styles --- */
 .achievement-icon-wrapper {
@@ -1844,35 +1876,29 @@ const LEVEL_RANKS = [
     { level: 100, name: "Deity", icon: "fa-sun" } 
 ];
 
-// Add this new function anywhere in your script
-async function updateLeaderboardStats(userId) {
-    if (!userId || isAnonymous) return;
+// Add this new function to your helper functions section
+const updateLeaderboardData = async (uid, levelInfo) => {
+    if (!uid || isAnonymous) return; // Don't run for anonymous users
 
+    const leaderboardDocRef = doc(db, "leaderboard", uid);
     try {
-        const userDocRef = getUserRootDocRef(userId);
-        const userDoc = await getDoc(userDocRef);
+        const user = auth.currentUser;
+        if (!user) return;
 
-        if (!userDoc.exists()) return; // User has no data yet
-
-        const userData = userDoc.data();
-        const levelInfo = calculateLevelInfo(userData.xp || 0);
-        
-        const leaderboardData = {
-            displayName: userData.displayName || 'Anonymous User',
-            xp: userData.xp || 0,
+        const dataToSet = {
+            displayName: user.displayName || 'Anonymous User',
+            xp: levelInfo.totalXp,
             level: levelInfo.level,
             rankName: levelInfo.rankName,
             rankIcon: levelInfo.rankIcon,
-            memberSince: userData.firstSignIn || serverTimestamp()
+            memberSince: user.metadata.creationTime ? new Date(user.metadata.creationTime) : serverTimestamp()
         };
 
-        const leaderboardDocRef = doc(db, 'leaderboard', userId);
-        await setDoc(leaderboardDocRef, leaderboardData, { merge: true });
-
+        await setDoc(leaderboardDocRef, dataToSet, { merge: true });
     } catch (error) {
-        console.error("Failed to update leaderboard stats:", error);
+        console.error("Error updating leaderboard:", error);
     }
-}
+};
 		
 const savedPage = localStorage.getItem('lastVisitedPage');
 if (savedPage) {
@@ -2379,7 +2405,7 @@ const awardXP = async (amount) => {
         const newLevelInfo = calculateLevelInfo(newXp);
 
         await setDoc(userDocRef, { xp: newXp }, { merge: true });
-		await updateLeaderboardStats(userId);
+		await updateLeaderboardData(userId, newLevelInfo);
 
         // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
@@ -3137,50 +3163,54 @@ const renderContent = () => {
     }
 };
 
+// Add this new rendering function
 const renderLeaderboard = async () => {
     const container = document.getElementById('leaderboard-container');
     if (!container) return;
 
-    // This query gets the top 10 users, ordered by XP
-    const q = query(collection(db, "leaderboard"), orderBy("xp", "desc"), limit(10));
-    
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-        container.innerHTML = '<p class="text-gray-400">No users on the leaderboard yet.</p>';
-        return;
-    }
+    container.innerHTML = '<p class="text-gray-400">Loading leaderboard...</p>';
 
-    let leaderboardHTML = '<ol class="space-y-3">';
-    
-    querySnapshot.forEach((doc, index) => {
-        const user = doc.data();
-        const rank = index + 1;
-        const rankClass = `level-badge-${user.rankName.toLowerCase().replace(' ', '-')}`;
-        let memberSinceText = '';
-        if (user.memberSince && user.memberSince.toDate) {
-             memberSinceText = user.memberSince.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    try {
+        const leaderboardColRef = collection(db, "leaderboard");
+        // Query the top 10 users, ordered by XP
+        const q = query(leaderboardColRef, orderBy("xp", "desc"), limit(10));
+        
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            container.innerHTML = '<p class="text-gray-400">The leaderboard is empty. Start copying to get on the board!</p>';
+            return;
         }
 
-        leaderboardHTML += `
-            <li class="floating-card p-3 rounded-lg flex items-center gap-4">
-                <div class="font-bold text-xl w-8 text-center text-gray-400">${rank}</div>
-                <div class="level-badge-wrapper ${rankClass}" style="width: 50px; height: 50px;">
-                    <i class="fas ${user.rankIcon}" style="font-size: 1.5rem;"></i>
-                </div>
-                <div class="flex-grow">
-                    <p class="font-bold text-lg text-gray-100">${user.displayName}</p>
-                    <p class="text-xs text-gray-400">Level ${user.level} · Member since ${memberSinceText}</p>
-                </div>
-                <div class="text-right">
-                    <p class="font-bold text-lg text-blue-400">${user.xp.toLocaleString()} XP</p>
-                </div>
-            </li>
-        `;
-    });
+        let leaderboardHTML = '';
+        let rank = 1;
 
-    leaderboardHTML += '</ol>';
-    container.innerHTML = leaderboardHTML;
+        querySnapshot.forEach(doc => {
+            const userData = doc.data();
+            const rankClass = rank <= 3 ? `top-${rank}` : '';
+            
+            leaderboardHTML += `
+                <div class="leaderboard-entry">
+                    <span class="leaderboard-rank ${rankClass}">${rank}</span>
+                    <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
+                        <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
+                    </div>
+                    <div class="leaderboard-details">
+                        <p class="font-semibold text-gray-100">${userData.displayName}</p>
+                        <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
+                    </div>
+                    <span class="leaderboard-xp">${userData.xp.toLocaleString()} XP</span>
+                </div>
+            `;
+            rank++;
+        });
+
+        container.innerHTML = leaderboardHTML;
+
+    } catch (error) {
+        console.error("Error rendering leaderboard:", error);
+        container.innerHTML = '<p class="text-red-400">Could not load leaderboard data.</p>';
+    }
 };		
 
 const renderCategories = () => {
