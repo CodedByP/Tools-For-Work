@@ -4511,7 +4511,7 @@ function attachEventListeners() {
     const closeSidebarBtn = document.getElementById('close-sidebar-btn');
     if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
     
-    // --- NEW/UPDATED ACHIEVEMENT LISTENERS ---
+    // Achievement Listeners
     const achievementsContainer = document.getElementById('achievements-container');
     if(achievementsContainer) {
         achievementsContainer.addEventListener('click', (e) => {
@@ -4550,9 +4550,8 @@ function attachEventListeners() {
     }
     
     setupAchievementFiltering();
-}
-
-    // Other one-time listeners
+    
+    // --- All Other Event Listeners ---
     document.getElementById('add-link-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (isSubmittingLink) { console.warn("Preventing duplicate form submission."); return; }
@@ -4573,7 +4572,7 @@ function attachEventListeners() {
                 const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
                 await addDoc(linksCollectionRef, { title, url, description, createdAt: new Date() });
                 showLinksStatus('Link added successfully!', 'text-green-400');
-				logUserEvent('add_link', {}, firstSignIn);
+				logUserEvent('add_link');
             }
             resetLinksForm();
         } catch (error) {
@@ -4590,6 +4589,7 @@ function attachEventListeners() {
     });
 
     document.getElementById('cancel-button').addEventListener('click', () => { resetLinksForm(); });
+    
     document.getElementById('user-links-list').addEventListener('click', (event) => {
         if (isAnonymous) return;
         const button = event.target.closest('.meatballs-button');
@@ -4626,6 +4626,22 @@ function attachEventListeners() {
         }
     });
 
+    document.addEventListener('click', (event) => {
+        const categoryActionsMenu = document.getElementById('category-actions-menu');
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
+        const isClickInsideCategoryActions = categoryActionsBtn && (categoryActionsBtn.contains(event.target) || categoryActionsMenu.contains(event.target));
+        const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
+
+        if (!isClickInsideCategoryActions && categoryActionsMenu) {
+            categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
+            if(categoryActionsBtn) categoryActionsBtn.classList.remove('active');
+        }
+        if (!isClickInsideMeatballsMenu) {
+            document.querySelectorAll('.meatballs-menu').forEach(m => m.classList.add('hidden'));
+            openMenuId = null;
+        }
+    });
+}
     document.addEventListener('click', (event) => {
         const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
         const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
