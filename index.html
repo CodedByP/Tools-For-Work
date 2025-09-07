@@ -2191,77 +2191,40 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// Add this new function to your helper functions section
-// --- Helper Functions ---
-
-// REPLACE your old migrateExistingUsersToLeaderboard function with this one
-const migrateExistingUsersToLeaderboard = async () => {
-    // This check ensures the migration only runs once per session for the logged-in user.
-    if (sessionStorage.getItem('migrationAttempted')) {
-        return;
-    }
-    sessionStorage.setItem('migrationAttempted', 'true');
-    console.log("🚀 Starting one-time leaderboard data migration check...");
+const updateUserLeaderboardEntry = async () => {
+    if (!userId || isAnonymous) return; // Only run for signed-in users
 
     try {
-        // This script will now read from your specific user data path
-        const usersCollectionRef = collection(db, 'artifacts', safeAppId, 'users');
-        const userQuerySnapshot = await getDocs(usersCollectionRef);
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
 
-        if (userQuerySnapshot.empty) {
-            console.log("No user data found to migrate.");
-            return;
-        }
+        if (!userDoc.exists()) return; // User document doesn't exist yet
 
-        const batch = writeBatch(db);
-        let migratedCount = 0;
+        const userData = userDoc.data();
+        
+        // This is the key: we check if they are already on the leaderboard.
+        const leaderboardDocRef = doc(db, "leaderboard", userId);
+        const leaderboardDoc = await getDoc(leaderboardDocRef);
 
-        for (const userDoc of userQuerySnapshot.docs) {
-            const userData = userDoc.data();
-            const currentUserId = userDoc.id; // Corrected variable name
-
-            // Skip anonymous users and users already migrated
-            if (userData.isAnonymous || userData.migratedToLeaderboard) {
-                continue;
-            }
-
-            // Get the displayName directly from Firestore. If it's missing, use a default.
-            const displayName = userData.displayName || 'Anonymous User';
-
-            // Calculate level info based on existing XP
+        // If they aren't on the leaderboard, we add them.
+        if (!leaderboardDoc.exists()) {
+            console.log(`Adding user ${userId} to the leaderboard for the first time.`);
             const levelInfo = calculateLevelInfo(userData.xp || 0);
-
-            // Safely handle the memberSince date
-            const memberSince = userData.firstSignIn ? userData.firstSignIn : serverTimestamp();
-
+            
             const leaderboardData = {
-                displayName: displayName,
+                displayName: auth.currentUser.displayName || "Anonymous User",
                 xp: levelInfo.totalXp,
                 level: levelInfo.level,
                 rankName: levelInfo.rankName,
                 rankIcon: levelInfo.rankIcon,
-                memberSince: memberSince
+                memberSince: userData.firstSignIn || serverTimestamp()
             };
-            
-            const leaderboardDocRef = doc(db, "leaderboard", currentUserId);
-            batch.set(leaderboardDocRef, leaderboardData, { merge: true });
 
-            // Also update the original user document to mark it as migrated
-            batch.update(userDoc.ref, { migratedToLeaderboard: true });
-            migratedCount++;
+            await setDoc(leaderboardDocRef, leaderboardData);
+            showMessage("You've been added to the leaderboard!", "success");
         }
-
-        if (migratedCount > 0) {
-            await batch.commit();
-            console.log(`✅ Success! Migrated ${migratedCount} new users to the leaderboard.`);
-            showMessage(`Migrated ${migratedCount} users to the leaderboard!`, 'success');
-        } else {
-            console.log("All existing users are already on the leaderboard.");
-        }
-
     } catch (error) {
-        console.error("🔥 Error during leaderboard migration:", error);
-        showMessage("Failed to migrate users. Check console and Firebase Rules.", 'error');
+        console.error("Error updating user's leaderboard entry:", error);
     }
 };
 	
@@ -5257,10 +5220,10 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
+			await updateUserLeaderboardEntry();
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-			 await migrateExistingUsersToLeaderboard();
             
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
