@@ -3434,14 +3434,14 @@ const renderCategories = () => {
     categoryList.innerHTML = '';
     const categoryNames = Object.keys(categories).sort();
     
-if (!isAnonymous && categoryNames.length > 0) {
-    if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
-} else {
-    if (categoryActionsBtn) {
-        categoryActionsBtn.classList.add('hidden');
-        categoryActionsMenu.classList.add('hidden');
+    if (!isAnonymous && categoryNames.length > 0) {
+        if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
+    } else {
+        if (categoryActionsBtn) {
+            categoryActionsBtn.classList.add('hidden');
+            categoryActionsMenu.classList.add('hidden');
+        }
     }
-}
 
     if (!isAnonymous) {
         addResponseSection.classList.remove('hidden');
@@ -3450,38 +3450,37 @@ if (!isAnonymous && categoryNames.length > 0) {
     
     categoryNames.forEach(name => {
         const button = document.createElement('button');
-		
-         // Determine the border color based on the theme
-        const activeClass = name === activeCategory ? 
-            (document.body.classList.contains('light-mode') ? 'border-2 border-gray-900' : 'border-2 border-white') : 
+        
+        // Determine the text color based on the theme
+        const textColorClass = document.body.classList.contains('light-mode') ? 'text-gray-900' : 'text-white';
+        
+        // Determine the border color based on the theme
+        const activeClass = name === activeCategory ?
+            (document.body.classList.contains('light-mode') ? 'border-2 border-gray-900' : 'border-2 border-white') :
             '';
 
-        button.className = `category-item font-bold py-2 px-4 rounded-lg shadow-md text-white transition-colors
+        button.className = `category-item font-bold py-2 px-4 rounded-lg shadow-md ${textColorClass} transition-colors
             ${activeClass}
             hover:scale-105 active:scale-95 transition-all duration-300`;
-        // Get the original color from the categories object
+            
         let categoryColor = categories[name].color || '#60a5fa';
 
-        // Add this conditional logic to check for light mode
         if (document.body.classList.contains('light-mode')) {
             categoryColor = lightenColor(categoryColor);
         }
 
-    // Apply the potentially modified color to the button background
-    button.style.backgroundColor = categoryColor;
+        button.style.backgroundColor = categoryColor;
 
-    // Corrected logic for setting the border color
-    if (name === activeCategory) {
-        button.style.borderColor = document.body.classList.contains('light-mode') ? '#111827' : '#FFFFFF';
-    } else {
-        // Set the border color to match the button background color when not active
-        button.style.borderColor = categoryColor;
-    }
-    const responseCount = categories[name]?.responses?.length || 0;
-	button.textContent = `${name} (${responseCount})`;
-	button.dataset.category = name;
+        if (name === activeCategory) {
+            button.style.borderColor = document.body.classList.contains('light-mode') ? '#111827' : '#FFFFFF';
+        } else {
+            button.style.borderColor = categoryColor;
+        }
 
-    categoryList.appendChild(button);
+        const responseCount = categories[name]?.responses?.length || 0;
+        button.textContent = `${name} (${responseCount})`;
+        button.dataset.category = name;
+        categoryList.appendChild(button);
     });
     
     if (!categories[activeCategory]) {
@@ -3489,7 +3488,6 @@ if (!isAnonymous && categoryNames.length > 0) {
     }
     renderResponses();
 };
-
 
 const renderChallenges = async (events) => {
     const container = document.getElementById('challenges-container');
