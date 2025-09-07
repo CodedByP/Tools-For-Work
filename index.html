@@ -1398,6 +1398,25 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 </div>
 
+<div id="profile-modal" class="modal hidden">
+    <div class="modal-content w-full max-w-lg text-center">
+        <div id="profile-modal-content">
+            <div class="flex justify-center items-center h-48">
+                <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="flex justify-end mt-6">
+            <button id="close-profile-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
     <div id="placeholder-modal" class="modal hidden">
         <div class="modal-content">
             <h3 class="text-2xl font-bold text-gray-200 mb-4">Customize Response</h3>
@@ -2193,6 +2212,66 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// ADD THIS NEW FUNCTION to your helper functions area
+const showUserProfile = async (profileUserId) => {
+    const modal = document.getElementById('profile-modal');
+    const modalContent = document.getElementById('profile-modal-content');
+
+    // Show modal with a loading spinner
+    modal.classList.remove('hidden');
+    modalContent.innerHTML = `
+        <div class="flex justify-center items-center h-48">
+            <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>`;
+
+    try {
+        // Fetch the user's data from the leaderboard collection (which is public)
+        const userProfileDocRef = doc(db, "leaderboard", profileUserId);
+        const userProfileDoc = await getDoc(userProfileDocRef);
+
+        if (!userProfileDoc.exists()) {
+            modalContent.innerHTML = '<p class="text-red-400">Could not find profile data for this user.</p>';
+            return;
+        }
+
+        const profileData = userProfileDoc.data();
+        const rankClass = `level-badge-${profileData.rankName.toLowerCase().replace(' ', '-')}`;
+        
+        // Format the "member since" date
+        const memberSinceDate = profileData.memberSince?.toDate ? profileData.memberSince.toDate() : new Date();
+        const formattedDate = memberSinceDate.toLocaleDateString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Populate the modal with the fetched data
+        modalContent.innerHTML = `
+            <div class="flex flex-col items-center">
+                <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
+                    <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-100">${profileData.displayName}</h3>
+                <p class="text-lg text-gray-400">${profileData.rankName}</p>
+                <div class="mt-4 w-full bg-gray-800 p-4 rounded-xl">
+                    <div class="flex justify-between items-center text-lg">
+                        <span class="text-blue-400 font-semibold">Level ${profileData.level}</span>
+                        <span class="text-green-400 font-bold">${profileData.xp.toLocaleString()} XP</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-500">
+                    Member since ${formattedDate}
+                </div>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        modalContent.innerHTML = '<p class="text-red-400">An error occurred while fetching the profile.</p>';
+    }
+};		
 
 const updateUserLeaderboardEntry = async () => {
     if (!userId || isAnonymous) return; // Only run for signed-in users
@@ -3441,19 +3520,19 @@ const renderLeaderboard = async () => {
             const userData = doc.data();
             const rankClass = rank <= 3 ? `top-${rank}` : '';
             
-            leaderboardHTML += `
-                <div class="leaderboard-entry">
-                    <span class="leaderboard-rank ${rankClass}">${rank}</span>
-                    <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
-                        <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
-                    </div>
-                    <div class="leaderboard-details">
-                        <p class="font-semibold text-gray-100">${userData.displayName}</p>
-                        <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
-                    </div>
-                    <span class="leaderboard-xp">${userData.xp.toLocaleString()} XP</span>
-                </div>
-            `;
+			leaderboardHTML += `
+			    <div class="leaderboard-entry cursor-pointer" data-userid="${doc.id}">
+			        <span class="leaderboard-rank ${rankClass}">${rank}</span>
+			        <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
+			            <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
+			        </div>
+			        <div class="leaderboard-details">
+			            <p class="font-semibold text-gray-100">${userData.displayName}</p>
+			            <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
+			        </div>
+			        <span class="leaderboard-xp">${userData.xp.toLocaleString()} XP</span>
+			    </div>
+			`;
             rank++;
         });
 
@@ -5177,6 +5256,17 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
 });
     document.getElementById('close-update-btn').addEventListener('click', () => { document.getElementById('update-modal').classList.add('hidden'); });
     document.getElementById('show-placeholder-example-btn').addEventListener('click', showPlaceholderDemo);
+
+	document.getElementById('leaderboard-container').addEventListener('click', (e) => {
+        const entry = e.target.closest('.leaderboard-entry');
+        if (entry && entry.dataset.userid) {
+            showUserProfile(entry.dataset.userid);
+        }
+    });
+
+    document.getElementById('close-profile-modal-btn').addEventListener('click', () => {
+        document.getElementById('profile-modal').classList.add('hidden');
+    });	
 
 
 
