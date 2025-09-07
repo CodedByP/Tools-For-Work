@@ -1400,14 +1400,24 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 
 <div id="profile-modal" class="modal hidden">
     <div class="modal-content w-full max-w-lg text-center">
-        <div id="profile-modal-content">
-            <div class="flex justify-center items-center h-48">
-                <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
-        </div>
+		<div id="profile-modal-content" class="w-full">
+		    <div id="profile-header-container" class="flex flex-col items-center">
+		        </div>
+		    
+		    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
+		        <div class="floating-card p-4">
+		            <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
+		            <div class="relative h-48">
+		                <canvas id="profile-category-chart"></canvas>
+		            </div>
+		        </div>
+		        <div class="floating-card p-4">
+		            <h4 class="font-bold text-gray-300 mb-2">Recent Achievements</h4>
+		            <div id="profile-achievements-container" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-48 scrollbar-hide">
+		                </div>
+		        </div>
+		    </div>
+		</div>
 
         <div class="flex justify-end mt-6">
             <button id="close-profile-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
@@ -1873,7 +1883,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
@@ -1928,6 +1938,7 @@ let userLevelData = { level: 0, xp: 0 };
 let masterBlueprintVersion = 1;
 let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
+let profileChartInstance = null;		
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -2213,63 +2224,161 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// Renders the achievement icons inside the profile modal
+const renderProfileAchievements = (unlockedAchievements) => {
+    const container = document.getElementById('profile-achievements-container');
+    if (!container) return;
+
+    if (!unlockedAchievements || unlockedAchievements.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center col-span-4 pt-16">No achievements unlocked.</p>';
+        return;
+    }
+
+    // This is the complete master list of all achievements
+    const allAchievementsMasterList = [
+        { id: 'first_responder', name: 'First Responder', icon: "fa-rocket", color: "text-blue-400" },
+        { id: 'copy_tiers', name: 'Copycat / Wordsmith', icon: "fa-clipboard", color: "text-yellow-400" },
+        { id: 'the_creator', name: 'The Creator', icon: "fa-plus-circle", color: "text-green-400" },
+        { id: 'librarian_tiers', name: 'The Librarian', icon: "fa-book-open", color: "text-yellow-400" },
+        { id: 'the_architect', name: 'The Architect', icon: "fa-drafting-compass", color: "text-teal-400" },
+        { id: 'the_editor', name: 'The Editor', icon: "fa-pencil-alt", color: "text-indigo-400" },
+        { id: 'the_curator', name: 'The Curator', icon: "fa-thumbtack", color: "text-white" },
+        { id: 'the_color_coder', name: 'The Color Coder', icon: "fa-palette", color: "text-pink-400" },
+        { id: 'the_explorer', name: 'The Explorer', icon: "fa-compass", color: "text-orange-400" },
+        { id: 'the_data_hoarder', name: 'The Data Hoarder', icon: "fa-cloud-download-alt", color: "text-sky-400" },
+        { id: 'the_personalizer', name: 'The Personalizer', icon: "fa-link", color: "text-lime-400" },
+        { id: 'the_globetrotter', name: 'The Globetrotter', icon: "fa-globe-americas", color: "text-cyan-400" },
+        { id: 'the_night_owl', name: 'The Night Owl', icon: "fa-moon", color: "text-purple-400" },
+        { id: 'endless_scroll', name: 'The Endless Scroll', icon: "fa-infinity", color: "text-violet-500" },
+        { id: 'perfect_day', name: 'The Perfect Day', icon: "fa-sun", color: "text-yellow-300" },
+        { id: 'living_library', name: 'The Living Library', icon: "fa-book-dead", color: "text-green-600" },
+        { id: 'the_scribe', name: 'The Scribe', icon: "fa-feather-alt", color: "text-gray-300" },
+        { id: 'the_historian', name: 'The Historian', icon: "fa-calendar-alt", color: "text-red-400" },
+        { id: 'streak_breaker', name: 'The Streak Breaker', icon: "fa-fire", color: "text-red-500" },
+        { id: 'meticulous_mover', name: 'The Meticulous Mover', icon: "fa-truck-moving", color: "text-blue-500" },
+        { id: 'clean_slate', name: 'The Clean Slate', icon: "fa-broom", color: "text-amber-600" },
+        { id: 'the_purist', name: 'The Purist', icon: "fa-file-alt", color: "text-slate-300" },
+        { id: 'the_improviser', name: 'The Improviser', icon: "fa-cogs", color: "text-cyan-500" },
+        { id: 'grand_master', name: 'The Grand Master', icon: "fa-trophy", color: "text-yellow-400" }
+    ];
+
+    let html = '';
+    unlockedAchievements.forEach(achId => {
+        const achDetails = allAchievementsMasterList.find(a => a.id === achId);
+        if (achDetails) {
+            const badgeClass = getAchievementClassFromColor(achDetails.color);
+            html += `
+                <div class="flex justify-center items-center" title="${achDetails.name}">
+                    <div class="achievement-icon-wrapper ${badgeClass}" style="width: 40px; height: 40px;">
+                        <i class="fas ${achDetails.icon}" style="font-size: 1rem;"></i>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    container.innerHTML = html;
+};		
+
+// Renders the category chart inside the profile modal
+const renderProfileCategoryChart = (categoryCounts) => {
+    const ctx = document.getElementById('profile-category-chart')?.getContext('2d');
+    if (!ctx) return;
+
+    if (profileChartInstance) {
+        profileChartInstance.destroy();
+    }
+
+    if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
+        // Optional: Display a message if there's no data
+        document.getElementById('profile-category-chart').parentElement.innerHTML = '<p class="text-gray-500 text-center pt-16">No category data yet.</p>';
+        return;
+    }
+
+    const labels = Object.keys(categoryCounts);
+    const data = Object.values(categoryCounts);
+    const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
+
+    profileChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+                borderColor: '#1f2937', // Modal background color
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // Hide legend for a cleaner look in the small modal
+                }
+            }
+        }
+    });
+};
+		
 // ADD THIS NEW FUNCTION to your helper functions area
 const showUserProfile = async (profileUserId) => {
     const modal = document.getElementById('profile-modal');
     const modalContent = document.getElementById('profile-modal-content');
+    const headerContainer = document.getElementById('profile-header-container');
 
-    // Show modal with a loading spinner
+    // Show modal and clear previous content
     modal.classList.remove('hidden');
-    modalContent.innerHTML = `
+    headerContainer.innerHTML = `
         <div class="flex justify-center items-center h-48">
-            <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
         </div>`;
+    // Clear the stats sections
+    document.getElementById('profile-achievements-container').innerHTML = '';
+    document.getElementById('profile-category-chart').parentElement.innerHTML = '<canvas id="profile-category-chart"></canvas>';
+
 
     try {
-        // Fetch the user's data from the leaderboard collection (which is public)
         const userProfileDocRef = doc(db, "leaderboard", profileUserId);
         const userProfileDoc = await getDoc(userProfileDocRef);
 
         if (!userProfileDoc.exists()) {
-            modalContent.innerHTML = '<p class="text-red-400">Could not find profile data for this user.</p>';
+            headerContainer.innerHTML = '<p class="text-red-400">Could not find profile data for this user.</p>';
             return;
         }
 
         const profileData = userProfileDoc.data();
         const rankClass = `level-badge-${profileData.rankName.toLowerCase().replace(' ', '-')}`;
-        
-        // Format the "member since" date
         const memberSinceDate = profileData.memberSince?.toDate ? profileData.memberSince.toDate() : new Date();
         const formattedDate = memberSinceDate.toLocaleDateString(undefined, {
             year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        // Populate the modal with the fetched data
-        modalContent.innerHTML = `
-            <div class="flex flex-col items-center">
-                <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
-                    <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
-                </div>
-                <h3 class="text-3xl font-bold text-gray-100">${profileData.displayName}</h3>
-                <p class="text-lg text-gray-400">${profileData.rankName}</p>
-                <div class="mt-4 w-full bg-gray-800 p-4 rounded-xl">
-                    <div class="flex justify-between items-center text-lg">
-                        <span class="text-blue-400 font-semibold">Level ${profileData.level}</span>
-                        <span class="text-green-400 font-bold">${profileData.xp.toLocaleString()} XP</span>
-                    </div>
-                </div>
-                <div class="mt-2 text-sm text-gray-500">
-                    Member since ${formattedDate}
+        // Populate the HEADER of the modal
+        headerContainer.innerHTML = `
+            <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
+                <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-100">${profileData.displayName}</h3>
+            <p class="text-lg text-gray-400">${profileData.rankName}</p>
+            <div class="mt-4 w-full bg-gray-800 p-4 rounded-xl">
+                <div class="flex justify-between items-center text-lg">
+                    <span class="text-blue-400 font-semibold">Level ${profileData.level}</span>
+                    <span class="text-green-400 font-bold">${profileData.xp.toLocaleString()} XP</span>
                 </div>
             </div>
-        `;
+            <div class="mt-2 text-sm text-gray-500">
+                Member since ${formattedDate}
+            </div>`;
+        
+        // NOW, RENDER THE DETAILED STATS
+        // NOTE: For achievements and category counts to show up, users need to perform actions AFTER this code is live.
+        renderProfileCategoryChart(profileData.categoryCounts || {});
+        renderProfileAchievements(profileData.unlockedAchievements || []);
 
     } catch (error) {
         console.error("Error fetching user profile:", error);
-        modalContent.innerHTML = '<p class="text-red-400">An error occurred while fetching the profile.</p>';
+        headerContainer.innerHTML = '<p class="text-red-400">An error occurred while fetching the profile.</p>';
     }
 };		
 
@@ -3919,6 +4028,13 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                             saveToFirestore(categories);
                         }
                     }
+	                const leaderboardDocRef = doc(db, "leaderboard", userId);
+	                const categoryCountField = `categoryCounts.${categoryName}`; // Use dot notation for map fields
+	                await updateDoc(leaderboardDocRef, {
+	                    totalCopies: increment(1),
+	                    [categoryCountField]: increment(1)
+	                });
+					
                 } catch (error) {
                     console.error("Error updating copy count:", error);
                 }
