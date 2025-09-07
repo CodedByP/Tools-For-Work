@@ -2281,7 +2281,12 @@ const renderFilteredAchievements = (events, userData) => {
         { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
         { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
     ];
+
+    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
+    const grandMasterAchievement = { id: 'grand_master', name: "The Grand Master", desc: "Unlock all other achievements.", icon: "fa-trophy", color: "text-yellow-400", unlocked: allOtherAchievementsUnlocked };
     
+    const achievementsToRender = [...allAchievements, grandMasterAchievement];
+	
     const unlockedCount = allAchievements.filter(a => a.unlocked).length;
     const totalCount = allAchievements.length;
     const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
@@ -4469,6 +4474,7 @@ const showPlaceholderDemo = () => {
 };
 
 
+// PASTE THIS ENTIRE BLOCK
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 	
@@ -4476,109 +4482,75 @@ function attachEventListeners() {
         if (!audioUnlocked) {
             const sound = document.getElementById('achievement-sound');
             if (sound) {
-                sound.play().catch(() => {}); // Attempt to play
-                sound.pause(); // Immediately pause it
+                sound.play().catch(() => {});
+                sound.pause();
                 audioUnlocked = true;
-                // Remove the listener after it has run once
                 document.body.removeEventListener('click', unlockAudio);
                 console.log('Audio has been unlocked by user interaction.');
             }
         }
     };
     document.body.addEventListener('click', unlockAudio);
-	setupAchievementFiltering(); 
-    // Navigation Listeners
-    document.getElementById('hamburger-menu-btn').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
-    document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
-
-    // Updated navigation event listeners with a small delay for closing the sidebar
-    document.getElementById('nav-canned-responses').addEventListener('click', () => {
-        currentPage = 'canned-responses';
-		localStorage.setItem('lastVisitedPage', currentPage);
-        renderContent();
-        closeSidebar();
-		logUserEvent('visit_page', { page: 'canned-responses' });
-    });
-
-    document.getElementById('nav-fedex-tracker').addEventListener('click', () => {
-        currentPage = 'fedex-tracker';
-		localStorage.setItem('lastVisitedPage', currentPage);
-        renderContent();
-        closeSidebar();
-		logUserEvent('visit_page', { page: 'fedex-tracker' });
-    });
-
-    document.getElementById('nav-helpful-links').addEventListener('click', () => {
-        currentPage = 'helpful-links';
-		localStorage.setItem('lastVisitedPage', currentPage);
-        renderContent();
-        closeSidebar();
-		logUserEvent('visit_page', { page: 'helpful-links' });
-    });
-
-    document.getElementById('nav-my-stats').addEventListener('click', () => {
-        currentPage = 'my-stats';
-		localStorage.setItem('lastVisitedPage', currentPage);
-        renderContent();
-        closeSidebar();
-		logUserEvent('visit_page', { page: 'my-stats' });
-    });	
-
-    document.getElementById('nav-settings').addEventListener('click', () => {
-        currentPage = 'settings';
-		localStorage.setItem('lastVisitedPage', currentPage);
-        renderContent();
-        closeSidebar();
-		logUserEvent('visit_page', { page: 'settings' });
-    });
-
-// Listener for clicking on an achievement badge
-document.getElementById('achievements-container').addEventListener('click', (e) => {
-    const badge = e.target.closest('.achievement-badge');
-    
-    if (badge && badge.dataset.unlocked === 'true') {
-        const modalIcon = document.getElementById('modal-achievement-icon');
-        const modalTitle = document.getElementById('modal-achievement-title');
-        const modalDesc = document.getElementById('modal-achievement-desc');
-        const modalDateEl = document.getElementById('modal-achievement-date'); // Changed variable name
-        const modal = document.getElementById('achievement-details-modal');
-
-        // MODIFICATION: Get the date from the data attribute.
-        const { name, desc, icon, color, unlockedDate } = badge.dataset;
-
-        modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
-        modalIcon.className = `text-6xl mb-4 ${color}`;
-        modalTitle.textContent = name;
-        modalDesc.textContent = desc;
-        
-        // MODIFICATION: Format and display the date.
-        if (unlockedDate) {
-            const date = new Date(unlockedDate);
-            modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
-        } else {
-            modalDateEl.textContent = 'Unlocked!'; // Fallback
-        }
-
-        modal.classList.remove('hidden');
-    }
-});
-
-    document.getElementById('close-level-up-modal-btn').addEventListener('click', () => {
-        document.getElementById('level-up-modal').classList.add('hidden');
-    });
 	
-// Listener for the modal's close button
-document.getElementById('close-achievement-modal-btn').addEventListener('click', () => {
-    document.getElementById('achievement-details-modal').classList.add('hidden');
-});
+    // Navigation Listeners
+    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings'];
+    navButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if(btn) btn.addEventListener('click', () => {
+            currentPage = id.replace('nav-', '');
+            localStorage.setItem('lastVisitedPage', currentPage);
+            renderContent();
+            closeSidebar();
+            logUserEvent('visit_page', { page: currentPage });
+        });
+    });
 
-// Listener to close the modal by clicking on the background overlay
-document.getElementById('achievement-details-modal').addEventListener('click', (e) => {
-    // If the click is on the modal background itself, hide it
-    if (e.target.id === 'achievement-details-modal') {
-        e.target.classList.add('hidden');
+    // Sidebar Listeners
+    const hamburgerBtn = document.getElementById('hamburger-menu-btn');
+    if(hamburgerBtn) hamburgerBtn.addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('open'); });
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+    
+    // --- NEW/UPDATED ACHIEVEMENT LISTENERS ---
+    const achievementsContainer = document.getElementById('achievements-container');
+    if(achievementsContainer) {
+        achievementsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.achievement-card-redesign');
+            if (card && card.dataset.unlocked === 'true') {
+                const modal = document.getElementById('achievement-details-modal');
+                const modalIcon = document.getElementById('modal-achievement-icon');
+                const modalTitle = document.getElementById('modal-achievement-title');
+                const modalDesc = document.getElementById('modal-achievement-desc');
+                const modalDateEl = document.getElementById('modal-achievement-date');
+                
+                const { name, desc, icon, color, unlockedDate } = card.dataset;
+                
+                modalIcon.className = `text-6xl mb-4 ${color}`;
+                modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+                modalTitle.textContent = name;
+                modalDesc.textContent = desc;
+                
+                if (unlockedDate) {
+                    const date = new Date(unlockedDate);
+                    modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
+                } else {
+                    modalDateEl.textContent = 'Unlocked!';
+                }
+
+                modal.classList.remove('hidden');
+            }
+        });
     }
-});
+
+    const closeAchievementModalBtn = document.getElementById('close-achievement-modal-btn');
+    if(closeAchievementModalBtn) {
+        closeAchievementModalBtn.addEventListener('click', () => {
+            document.getElementById('achievement-details-modal').classList.add('hidden');
+        });
+    }
+    
+    setupAchievementFiltering();
+}
 
     // Other one-time listeners
     document.getElementById('add-link-form').addEventListener('submit', async (e) => {
