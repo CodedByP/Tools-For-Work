@@ -2192,74 +2192,70 @@ const defaultHelpfulLinksBlueprint = [
 // --- Helper Functions ---
 
 // Add this new function to your helper functions section
-const migrateExistingUsersToLeaderboard = async () => {
-    console.log("Starting leaderboard data migration...");
-    try {
-        // Get all user documents. This requires a query on the top-level 'users' collection.
-        const usersCollectionRef = collection(db, 'artifacts', safeAppId, 'users');
-        const userQuerySnapshot = await getDocs(usersCollectionRef);
+    const migrateExistingUsersToLeaderboard = async () => {
+        console.log("Starting leaderboard data migration...");
+        try {
+            // Fetch all user documents under the main 'users' collection
+            const usersCollectionRef = collection(db, 'artifacts', safeAppId, 'users');
+            const userQuerySnapshot = await getDocs(usersCollectionRef);
 
-        if (userQuerySnapshot.empty) {
-            console.log("No user data found to migrate.");
-            return;
-        }
+            if (userQuerySnapshot.empty) {
+                console.log("No user data found to migrate.");
+                return;
+            }
 
-        const batch = writeBatch(db);
-        let migratedCount = 0;
+            const batch = writeBatch(db);
+            let migratedCount = 0;
 
-        for (const userDoc of userQuerySnapshot.docs) {
-            const userData = userDoc.data();
-            const userId = userDoc.id;
+            for (const userDoc of userQuerySnapshot.docs) {
+                const userData = userDoc.data();
+                const userId = userDoc.id;
 
-            // Check if the user is an anonymous user
-            if (userData.isAnonymous || userId.startsWith('anonymous')) {
-                continue;
-            }
+                // Skip if the user is anonymous or has already been migrated
+                if (userData.isAnonymous || userData.migratedToLeaderboard) {
+                    continue;
+                }
 
-            // Skip if this user has already been migrated
-            if (userData.migratedToLeaderboard) {
-                continue;
-            }
+                // Get the user's display name from the user document itself.
+                // This replaces the server-side `getAuth().getUser()` call.
+                const displayName = userData.displayName || 'Unknown User';
 
-            // Get the latest level info
-            const levelInfo = calculateLevelInfo(userData.xp || 0);
+                // Calculate the user's current level info
+                const levelInfo = calculateLevelInfo(userData.xp || 0);
 
-            // Get user's display name from their auth data (if available)
-            const userAuth = await getAuth().getUser(userId);
-            const displayName = userAuth.displayName || userData.displayName || 'Unknown User';
+                // Prepare the data for the leaderboard document
+                const leaderboardData = {
+                    displayName: displayName,
+                    xp: levelInfo.totalXp,
+                    level: levelInfo.level,
+                    rankName: levelInfo.rankName,
+                    rankIcon: levelInfo.rankIcon,
+                    memberSince: userData.firstSignIn
+                };
+                
+                // Add the new leaderboard document to the batch
+                const leaderboardDocRef = doc(db, "leaderboard", userId);
+                batch.set(leaderboardDocRef, leaderboardData, { merge: true });
 
-            // Prepare the data for the leaderboard document
-            const leaderboardData = {
-                displayName: displayName,
-                xp: levelInfo.totalXp,
-                level: levelInfo.level,
-                rankName: levelInfo.rankName,
-                rankIcon: levelInfo.rankIcon,
-                memberSince: userData.firstSignIn
-            };
-            
-            // Add the new leaderboard document to the batch
-            const leaderboardDocRef = doc(db, "leaderboard", userId);
-            batch.set(leaderboardDocRef, leaderboardData, { merge: true });
+                // Mark the user as migrated in their original document
+                batch.update(userDoc.ref, { migratedToLeaderboard: true });
+                migratedCount++;
+            }
 
-            // Mark the user as migrated in their original document to prevent future runs
-            batch.update(userDoc.ref, { migratedToLeaderboard: true });
-            migratedCount++;
-        }
+            if (migratedCount > 0) {
+                await batch.commit();
+                console.log(`Successfully migrated ${migratedCount} users to the leaderboard.`);
+                showMessage(`Migrated ${migratedCount} users to the leaderboard!`, 'success');
+            } else {
+                console.log("All existing users are already on the leaderboard.");
+            }
 
-        if (migratedCount > 0) {
-            await batch.commit();
-            console.log(`Successfully migrated ${migratedCount} users to the leaderboard.`);
-            showMessage(`Migrated ${migratedCount} users to the leaderboard!`, 'success');
-        } else {
-            console.log("All existing users are already on the leaderboard.");
-        }
-
-    } catch (error) {
-        console.error("Error during leaderboard migration:", error);
-        showMessage("Failed to migrate some users to the leaderboard.", 'error');
-    }
-};		
+        } catch (error) {
+            console.error("Error during leaderboard migration:", error);
+            showMessage("Failed to migrate some users to the leaderboard. Check your Firebase rules.", 'error');
+        }
+    };
+	
 
 // --- Renders achievements based on the active filter ---
 const renderFilteredAchievements = (events, userData) => {
@@ -5252,10 +5248,10 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
-			await migrateExistingUsersToLeaderboard();
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
+			 await migrateExistingUsersToLeaderboard();
             
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
