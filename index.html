@@ -1405,12 +1405,12 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        </div>
 		    
 		    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
-		        <div class="floating-card p-4">
-		            <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
-		            <div class="relative h-48">
-		                <canvas id="profile-category-chart"></canvas>
-		            </div>
-		        </div>
+				<div class="floating-card p-4">
+				    <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
+				    <div id="profile-chart-wrapper" class="relative h-48">
+				        <canvas id="profile-category-chart"></canvas>
+				    </div>
+				</div>
 		        <div class="floating-card p-4">
 		            <h4 class="font-bold text-gray-300 mb-2">Unlocked Achievements</h4>
 		            <div id="profile-achievements-container" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-48 scrollbar-hide">
@@ -2281,16 +2281,22 @@ const renderProfileAchievements = (unlockedAchievements) => {
 
 // Renders the category chart inside the profile modal
 const renderProfileCategoryChart = (categoryCounts) => {
-    const ctx = document.getElementById('profile-category-chart')?.getContext('2d');
-    if (!ctx) return;
+    // Find the wrapper, not the canvas itself
+    const chartWrapper = document.getElementById('profile-chart-wrapper');
+    if (!chartWrapper) return;
 
+    // Clear previous chart instance if it exists
     if (profileChartInstance) {
         profileChartInstance.destroy();
     }
 
+    // Always reset the wrapper to contain the canvas element
+    chartWrapper.innerHTML = '<canvas id="profile-category-chart"></canvas>';
+    const ctx = document.getElementById('profile-category-chart').getContext('2d');
+
     if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
-        // Optional: Display a message if there's no data
-        document.getElementById('profile-category-chart').parentElement.innerHTML = '<p class="text-gray-500 text-center pt-16">No category data yet.</p>';
+        // ▼▼▼ THIS IS THE CORRECTED LINE ▼▼▼
+        chartWrapper.innerHTML = '<p class="text-gray-500 text-center pt-16">No category data yet.</p>';
         return;
     }
 
@@ -2305,7 +2311,7 @@ const renderProfileCategoryChart = (categoryCounts) => {
             datasets: [{
                 data: data,
                 backgroundColor: backgroundColors,
-                borderColor: '#1f2937', // Modal background color
+                borderColor: '#1f2937', 
                 borderWidth: 2
             }]
         },
@@ -2314,7 +2320,7 @@ const renderProfileCategoryChart = (categoryCounts) => {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false // Hide legend for a cleaner look in the small modal
+                    display: false
                 }
             }
         }
@@ -2324,19 +2330,24 @@ const renderProfileCategoryChart = (categoryCounts) => {
 // ADD THIS NEW FUNCTION to your helper functions area
 const showUserProfile = async (profileUserId) => {
     const modal = document.getElementById('profile-modal');
-    const modalContent = document.getElementById('profile-modal-content');
     const headerContainer = document.getElementById('profile-header-container');
 
-    // Show modal and clear previous content
+    // Find the new stable chart wrapper
+    const chartWrapper = document.getElementById('profile-chart-wrapper');
+
     modal.classList.remove('hidden');
     headerContainer.innerHTML = `
         <div class="flex justify-center items-center h-48">
-            <svg class="animate-spin h-10 w-10 text-blue-400" ...></svg>
+            <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
         </div>`;
-    // Clear the stats sections
-    document.getElementById('profile-achievements-container').innerHTML = '';
-    document.getElementById('profile-category-chart').parentElement.innerHTML = '<canvas id="profile-category-chart"></canvas>';
 
+    // Clear the stats sections safely
+    document.getElementById('profile-achievements-container').innerHTML = '';
+    // ▼▼▼ THIS IS THE CORRECTED LINE ▼▼▼
+    chartWrapper.innerHTML = '<canvas id="profile-category-chart"></canvas>';
 
     try {
         const userProfileDocRef = doc(db, "leaderboard", profileUserId);
@@ -2354,7 +2365,6 @@ const showUserProfile = async (profileUserId) => {
             year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        // Populate the HEADER of the modal
         headerContainer.innerHTML = `
             <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
                 <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
@@ -2370,9 +2380,7 @@ const showUserProfile = async (profileUserId) => {
             <div class="mt-2 text-sm text-gray-500">
                 Member since ${formattedDate}
             </div>`;
-        
-        // NOW, RENDER THE DETAILED STATS
-        // NOTE: For achievements and category counts to show up, users need to perform actions AFTER this code is live.
+
         renderProfileCategoryChart(profileData.categoryCounts || {});
         renderProfileAchievements(profileData.unlockedAchievements || []);
 
@@ -2380,7 +2388,7 @@ const showUserProfile = async (profileUserId) => {
         console.error("Error fetching user profile:", error);
         headerContainer.innerHTML = '<p class="text-red-400">An error occurred while fetching the profile.</p>';
     }
-};		
+};
 
 const updateUserLeaderboardEntry = async () => {
     if (!userId || isAnonymous) return; // Only run for signed-in users
