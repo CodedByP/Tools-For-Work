@@ -1403,7 +1403,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		<div id="profile-modal-content" class="w-full">
 		    <div id="profile-header-container" class="flex flex-col items-center">
 		        </div>
-		    
+		
 		    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
 		        
 		        <div class="floating-card p-4 col-span-2 md:col-span-1">
@@ -1417,10 +1417,10 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                    <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
 		                    <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
 		                </div>
-		                 <div class="flex justify-between items-center">
-		                    <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
-		                    <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
-		                </div>
+					 <div class="flex justify-between items-center">
+			            <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
+			            <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
+			        </div>
 		            </div>
 		        </div>
 		        <div class="floating-card p-4 col-span-2 md:col-span-1">
@@ -2266,14 +2266,6 @@ const calculateCopiesPerDay = (totalCopies, startDate) => {
     const average = totalCopies / businessDays;
     return average.toFixed(1); // Return the average with one decimal place
 };
-
-const findFavoriteCategory = (categoryCounts) => {
-    if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
-        return "N/A";
-    }
-    // Find the category with the highest count
-    return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
-};
 		
 const findFavoriteCategory = (categoryCounts) => {
     if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
@@ -2440,7 +2432,7 @@ const showUserProfile = async (profileUserId) => {
     chartWrapper.innerHTML = '<canvas id="profile-category-chart"></canvas>';
     document.getElementById('profile-total-copies').textContent = '--';
     document.getElementById('profile-fav-category').textContent = '--';
-    document.getElementById('profile-cpd').textContent = '--';
+    document.getElementById('profile-cpd').textContent = '--'; // Clear the new stat
 
     try {
         const userProfileDocRef = doc(db, "leaderboard", profileUserId);
