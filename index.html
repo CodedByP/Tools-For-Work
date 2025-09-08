@@ -2224,6 +2224,46 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// ADD THIS NEW FUNCTION
+const backfillUserStats = async (uid) => {
+    console.log(`Checking if stats backfill is needed for user ${uid}...`);
+    try {
+        const userDocRef = getUserRootDocRef(uid);
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+
+        // 1. Fetch all of the user's past events
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
+
+        // 2. Calculate the all-time stats from their events
+        const totalCopies = events.filter(e => e.type === 'copy').length;
+        const categoryCounts = events
+            .filter(e => e.type === 'copy' && e.categoryName)
+            .reduce((acc, event) => {
+                acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
+                return acc;
+            }, {});
+
+        // 3. Prepare the data to be saved to the public leaderboard document
+        const statsToUpdate = {
+            totalCopies: totalCopies,
+            categoryCounts: categoryCounts
+        };
+
+        // 4. Update the public leaderboard document
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
+        await updateDoc(leaderboardDocRef, statsToUpdate);
+
+        // 5. CRITICAL: Set a flag so this function never runs for this user again
+        await updateDoc(userDocRef, { statsBackfilled: true });
+
+        console.log(`✅ Successfully backfilled stats for user ${uid}.`);
+
+    } catch (error) {
+        console.error("Error during stats backfill:", error);
+    }
+};
+		
 // Renders the achievement icons inside the profile modal
 const renderProfileAchievements = (unlockedAchievements) => {
     const container = document.getElementById('profile-achievements-container');
@@ -5441,7 +5481,11 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-            
+			
+		    if (!userData.statsBackfilled) {
+		        await backfillUserStats(userId);
+		    }
+			
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
                 firstSignIn = new Date(creationTime);
