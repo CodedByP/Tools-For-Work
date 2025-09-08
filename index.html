@@ -2360,17 +2360,19 @@ const findFavoriteCategory = (categoryCounts) => {
     return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
 };
 		
+// REPLACE your old backfillUserStats function with this new one
 const backfillUserStats = async (uid) => {
-    console.log(`Checking if stats backfill is needed for user ${uid}...`);
+    console.log(`Checking if full stats backfill is needed for user ${uid}...`);
     try {
         const userDocRef = getUserRootDocRef(uid);
         const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
 
         // 1. Fetch all of the user's past events
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => doc.data());
 
-        // 2. Calculate the all-time stats from their events
+        // 2. Calculate basic stats from events
         const totalCopies = events.filter(e => e.type === 'copy').length;
         const categoryCounts = events
             .filter(e => e.type === 'copy' && e.categoryName)
@@ -2379,23 +2381,50 @@ const backfillUserStats = async (uid) => {
                 return acc;
             }, {});
 
-        // 3. Prepare the data to be saved to the public leaderboard document
+        // 3. NEW: Calculate achievements based purely on the user's event history
+        const unlockedAchievementIds = new Set();
+        const totalCategoriesCreated = events.filter(e => e.type === 'create_category').length;
+        const responsesPerCategory = events
+            .filter(e => e.type === 'create_response' && e.category)
+            .reduce((acc, e) => {
+                acc[e.category] = (acc[e.category] || 0) + 1;
+                return acc;
+            }, {});
+
+        if (totalCopies > 0) unlockedAchievementIds.add('first_responder');
+        if (totalCopies >= 10) unlockedAchievementIds.add('copy_tiers');
+        if (events.some(e => e.type === 'create_response')) unlockedAchievementIds.add('the_creator');
+        if (totalCategoriesCreated >= 5) unlockedAchievementIds.add('librarian_tiers');
+        if (Object.values(responsesPerCategory).some(count => count >= 5)) unlockedAchievementIds.add('the_architect');
+        if (events.some(e => e.type === 'edit_response')) unlockedAchievementIds.add('the_editor');
+        if (events.some(e => e.type === 'pin_response')) unlockedAchievementIds.add('the_curator');
+        if (events.some(e => e.type === 'change_color')) unlockedAchievementIds.add('the_color_coder');
+        if (events.some(e => e.type === 'import_data')) unlockedAchievementIds.add('the_data_hoarder');
+        if (events.some(e => e.type === 'add_link')) unlockedAchievementIds.add('the_personalizer');
+        if (events.some(e => e.type === 'globetrotter_milestone')) unlockedAchievementIds.add('the_globetrotter');
+
+        const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+        if (visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links')) {
+            unlockedAchievementIds.add('the_explorer');
+        }
+        
+        // 4. Prepare the complete data object for the public leaderboard document
         const statsToUpdate = {
             totalCopies: totalCopies,
-            categoryCounts: categoryCounts
+            categoryCounts: categoryCounts,
+            unlockedAchievements: Array.from(unlockedAchievementIds) // The missing piece!
         };
 
-        // 4. Update the public leaderboard document
-        const leaderboardDocRef = doc(db, "leaderboard", uid);
-        await updateDoc(leaderboardDocRef, statsToUpdate);
+        // 5. Update the public leaderboard document with all the data
+        await setDoc(leaderboardDocRef, statsToUpdate, { merge: true });
 
-        // 5. CRITICAL: Set a flag so this function never runs for this user again
-        await updateDoc(userDocRef, { statsBackfilled: true });
+        // 6. Set the flag so this never runs again for this user
+        await setDoc(userDocRef, { statsBackfilled: true }, { merge: true });
 
-        console.log(`✅ Successfully backfilled stats for user ${uid}.`);
+        console.log(`✅ Successfully backfilled stats and ${unlockedAchievementIds.size} achievements for user ${uid}.`);
 
     } catch (error) {
-        console.error("Error during stats backfill:", error);
+        console.error(`Error during stats backfill for user ${uid}:`, error);
     }
 };
 		
