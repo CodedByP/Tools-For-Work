@@ -115,6 +115,29 @@
     }
 }
 
+/* Makes the main modal content overflow hidden for rounded corners */
+#profile-modal .modal-content {
+    padding: 0;
+    overflow: hidden;
+    background-color: #1f2937; /* bg-gray-800 */
+}
+
+/* Styles for the dynamic header */
+#profile-modal-header {
+    transition: background 0.5s ease-in-out;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Styles for the tab buttons */
+.profile-tab-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hides tab panels that are not active */
+.profile-tab-panel.hidden {
+    display: none;
+}
+		
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
@@ -1399,46 +1422,58 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </div>
 
 <div id="profile-modal" class="modal hidden">
-    <div class="modal-content w-full max-w-lg text-center">
-		<div id="profile-modal-content" class="w-full">
-		    <div id="profile-header-container" class="flex flex-col items-center">
-		        </div>
-		
-		    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
-		        
-		        <div class="floating-card p-4 col-span-2 md:col-span-1">
-		            <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
-		            <div class="space-y-3 text-sm">
-		                <div class="flex justify-between items-center">
-		                    <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
-		                    <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
-		                </div>
-		                <div class="flex justify-between items-center">
-		                    <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
-		                    <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
-		                </div>
-					 <div class="flex justify-between items-center">
-			            <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
-			            <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
-			        </div>
-		            </div>
-		        </div>
-		        <div class="floating-card p-4 col-span-2 md:col-span-1">
-		            <h4 class="font-bold text-gray-300 mb-2">Unlocked Achievements</h4>
-		            <div id="profile-achievements-container" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-24 scrollbar-hide">
-		                </div>
-		        </div>
-		    </div>
-		    
-		    <div class="floating-card p-4 mt-4">
-		        <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
-		        <div id="profile-chart-wrapper" class="relative h-48">
-		            <canvas id="profile-category-chart"></canvas>
-		        </div>
-		    </div>
-		</div>
+    <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-lg p-0 overflow-hidden">
+        
+        <div id="profile-modal-header" class="p-6 text-center text-white relative">
+            <div id="profile-header-container">
+                </div>
+        </div>
 
-        <div class="flex justify-end mt-6">
+        <div class="flex border-b border-gray-700 bg-gray-800">
+            <button id="stats-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-blue-500 text-white">
+                <i class="fas fa-chart-bar mr-2"></i> Statistics
+            </button>
+            <button id="achievements-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-transparent text-gray-400">
+                <i class="fas fa-trophy mr-2"></i> Trophy Case
+            </button>
+        </div>
+        
+        <div id="profile-modal-body" class="p-6 bg-gray-800">
+            <div id="stats-panel" class="profile-tab-panel">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-700 p-4 rounded-lg col-span-2">
+                        <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
+                                <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
+                                <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
+                                <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg col-span-2">
+                        <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
+                        <div id="profile-chart-wrapper" class="relative h-48">
+                            <canvas id="profile-category-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="achievements-panel" class="profile-tab-panel hidden">
+                <div id="profile-achievements-container" class="grid grid-cols-5 sm:grid-cols-6 gap-4 overflow-y-auto max-h-64 scrollbar-hide p-2">
+                    </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end p-4 bg-gray-800 border-t border-gray-700">
             <button id="close-profile-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
                 Close
             </button>
@@ -2451,11 +2486,16 @@ const renderProfileCategoryChart = (categoryCounts) => {
 // ADD THIS NEW FUNCTION to your helper functions area
 const showUserProfile = async (profileUserId) => {
     const modal = document.getElementById('profile-modal');
+	const header = document.getElementById('profile-modal-header');
     const headerContainer = document.getElementById('profile-header-container');
     const chartWrapper = document.getElementById('profile-chart-wrapper');
 
     // Show modal and clear previous content
     modal.classList.remove('hidden');
+    document.getElementById('stats-tab-btn').click(); 
+
+    // Show a loading state
+    header.style.background = '#1f2937';
     headerContainer.innerHTML = `<div class="flex justify-center items-center h-48"><svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
     
     // Clear the stats sections
@@ -2481,20 +2521,29 @@ const showUserProfile = async (profileUserId) => {
             year: 'numeric', month: 'long', day: 'numeric'
         });
 
+        // Dynamically get the rank gradient and apply it to the header
+        const tempRankIcon = document.createElement('div');
+        tempRankIcon.className = `level-badge-wrapper ${rankClass}`;
+        tempRankIcon.style.display = 'none';
+        document.body.appendChild(tempRankIcon);
+        const rankGradient = getComputedStyle(tempRankIcon).backgroundImage;
+        document.body.removeChild(tempRankIcon);
+        header.style.background = `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%), ${rankGradient}`;		
+
         // Populate the HEADER of the modal
         headerContainer.innerHTML = `
-            <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
+            <div class="${rankClass} level-badge-wrapper beveled-edge" style="width: 100px; height: 100px; margin: 0 auto 1rem auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
                 <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
             </div>
-            <h3 class="text-3xl font-bold text-gray-100">${profileData.displayName}</h3>
-            <p class="text-lg text-gray-400">${profileData.rankName}</p>
-            <div class="mt-4 w-full bg-gray-800 p-4 rounded-xl">
+            <h3 class="text-3xl font-bold text-white" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">${profileData.displayName}</h3>
+            <p class="text-lg text-gray-200" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">${profileData.rankName}</p>
+            <div class="mt-4 w-full bg-black bg-opacity-25 p-3 rounded-xl">
                 <div class="flex justify-between items-center text-lg">
-                    <span class="text-blue-400 font-semibold">Level ${profileData.level}</span>
-                    <span class="text-green-400 font-bold">${profileData.xp.toLocaleString()} XP</span>
+                    <span class="text-blue-300 font-semibold">Level ${profileData.level}</span>
+                    <span class="text-green-300 font-bold">${profileData.xp.toLocaleString()} XP</span>
                 </div>
             </div>
-            <div class="mt-2 text-sm text-gray-500">
+            <div class="mt-2 text-xs text-gray-300">
                 Member since ${formattedDate}
             </div>`;
         
@@ -5114,6 +5163,27 @@ function attachEventListeners() {
         }
     });
 
+
+document.getElementById('stats-tab-btn').addEventListener('click', (e) => {
+    document.getElementById('stats-panel').classList.remove('hidden');
+    document.getElementById('achievements-panel').classList.add('hidden');
+    
+    e.target.classList.add('text-white', 'border-blue-500');
+    e.target.classList.remove('text-gray-400', 'border-transparent');
+    document.getElementById('achievements-tab-btn').classList.add('text-gray-400', 'border-transparent');
+    document.getElementById('achievements-tab-btn').classList.remove('text-white', 'border-blue-500');
+});
+
+document.getElementById('achievements-tab-btn').addEventListener('click', (e) => {
+    document.getElementById('achievements-panel').classList.remove('hidden');
+    document.getElementById('stats-panel').classList.add('hidden');
+
+    e.target.classList.add('text-white', 'border-blue-500');
+    e.target.classList.remove('text-gray-400', 'border-transparent');
+    document.getElementById('stats-tab-btn').classList.add('text-gray-400', 'border-transparent');
+    document.getElementById('stats-tab-btn').classList.remove('text-white', 'border-blue-500');
+});
+		
     document.getElementById('show-tutorial-btn').addEventListener('click', async () => {
         if (userId && !isAnonymous) {
             const userDocRef = getUserRootDocRef(userId);
