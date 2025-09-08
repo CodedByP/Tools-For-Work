@@ -115,6 +115,25 @@
     }
 }
 
+
+/* This turns the modal content into a flexible column layout */
+.modal-scroll-fix {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* Set a max height (90% of viewport height) */
+}
+
+/* This allows the main body of the modal to scroll if it overflows */
+#profile-modal-body {
+    overflow-y: auto;
+}
+
+/* This ensures the header and footer don't shrink */
+#profile-modal-header,
+#profile-modal-content-wrapper > .flex { /* Targets the footer */
+    flex-shrink: 0;
+}		
+
 /* Makes the main modal content overflow hidden for rounded corners */
 #profile-modal .modal-content {
     padding: 0;
@@ -1422,8 +1441,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </div>
 
 <div id="profile-modal" class="modal hidden">
-    <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-lg p-0 overflow-hidden">
-        
+<div id="profile-modal-content-wrapper" class="modal-content w-full max-w-lg p-0 overflow-hidden modal-scroll-fix">
+	
         <div id="profile-modal-header" class="p-6 text-center text-white relative">
             <div id="profile-header-container">
                 </div>
