@@ -2243,28 +2243,59 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-const calculateCopiesPerDay = (totalCopies, startDate) => {
-    if (!totalCopies || totalCopies === 0) {
-        return 0;
-    }
-
-    let businessDays = 0;
-    const currentDate = new Date();
-    let iterDate = new Date(startDate);
-
-    // Loop through each day from the start date until today
-    while (iterDate <= currentDate) {
-        const dayOfWeek = iterDate.getDay(); // 0 = Sunday, 6 = Saturday
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            businessDays++;
+const backfillActiveDays = async (uid) => {
+    console.log(`Checking if active days backfill is needed for user ${uid}...`);
+    try {
+        const userDocRef = getUserRootDocRef(uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists() && userDoc.data().activeDaysBackfilled) {
+            console.log('Active days already backfilled. Skipping.');
+            return;
         }
-        iterDate.setDate(iterDate.getDate() + 1);
-    }
-    
-    if (businessDays === 0) return totalCopies; // Avoid division by zero, show total if less than a day
 
-    const average = totalCopies / businessDays;
-    return average.toFixed(1); // Return the average with one decimal place
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const copyEvents = snapshot.docs
+            .map(doc => doc.data())
+            .filter(e => e.type === 'copy' && e.timestamp);
+
+        if (copyEvents.length === 0) {
+             await updateDoc(userDocRef, { activeDaysBackfilled: true });
+             console.log('No copy events to backfill.');
+             return;
+        }
+
+        // Use a Set to get all unique dates
+        const uniqueDays = new Set(
+            copyEvents.map(e => e.timestamp.toDate().toISOString().split('T')[0])
+        );
+
+        // Use a batch to write all documents efficiently
+        const batch = writeBatch(db);
+        uniqueDays.forEach(dateStr => {
+            const activeDayDocRef = doc(db, "leaderboard", uid, "activeDays", dateStr);
+            batch.set(activeDayDocRef, { backfilled: true });
+        });
+        await batch.commit();
+
+        // CRITICAL: Set a flag so this function never runs for this user again
+        await updateDoc(userDocRef, { activeDaysBackfilled: true });
+
+        console.log(`✅ Successfully backfilled ${uniqueDays.size} active days for user ${uid}.`);
+
+    } catch (error) {
+        console.error("Error during active days backfill:", error);
+    }
+};
+		
+const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
+    // If there are no copies or no active days, the average is 0.
+    if (!totalCopies || totalCopies === 0 || !activeDaysCount || activeDaysCount === 0) {
+        return '0.0';
+    }
+    const average = totalCopies / activeDaysCount;
+    // Return the average with one decimal place.
+    return average.toFixed(1);
 };
 		
 const findFavoriteCategory = (categoryCounts) => {
@@ -2470,11 +2501,17 @@ const showUserProfile = async (profileUserId) => {
         // ▼▼▼ POPULATE THE ALL-TIME STATS ▼▼▼
         const totalCopies = profileData.totalCopies || 0;
         const favoriteCategory = findFavoriteCategory(profileData.categoryCounts);
-        const copiesPerDay = calculateCopiesPerDay(totalCopies, memberSinceDate);
+        // 1. Fetch the count of active days from the new subcollection
+        const activeDaysColRef = collection(db, "leaderboard", profileUserId, "activeDays");
+        const activeDaysSnapshot = await getDocs(activeDaysColRef);
+        const numberOfActiveDays = activeDaysSnapshot.size;
+
+        // 2. Call the new calculation function with the correct data
+        const copiesPerDay = calculateAverageOnActiveDays(totalCopies, numberOfActiveDays);
 
         document.getElementById('profile-total-copies').textContent = totalCopies.toLocaleString();
         document.getElementById('profile-fav-category').textContent = favoriteCategory;
-        document.getElementById('profile-cpd').textContent = copiesPerDay;
+        document.getElementById('profile-cpd').textContent = copiesPerDay; // Display the new average
         
         // RENDER THE CHARTS AND ACHIEVEMENTS
         renderProfileCategoryChart(profileData.categoryCounts || {});
@@ -4153,10 +4190,18 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     }
 	                const leaderboardDocRef = doc(db, "leaderboard", userId);
 	                const categoryCountField = `categoryCounts.${categoryName}`; // Use dot notation for map fields
-	                await updateDoc(leaderboardDocRef, {
-	                    totalCopies: increment(1),
-	                    [categoryCountField]: increment(1)
-	                });
+                    const todayStr = new Date().toISOString().split('T')[0]; // e.g., "2025-09-08"
+                    const activeDayDocRef = doc(db, "leaderboard", userId, "activeDays", todayStr);
+                    
+                    const batch = writeBatch(db);
+                    
+                    batch.update(leaderboardDocRef, {
+                        totalCopies: increment(1),
+                        [categoryCountField]: increment(1)
+                    });
+   
+                    batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
+                    await batch.commit(); 
 					
                 } catch (error) {
                     console.error("Error updating copy count:", error);
@@ -5560,6 +5605,9 @@ onAuthStateChanged(auth, async (user) => {
 		    if (!userData.statsBackfilled) {
 		        await backfillUserStats(userId);
 		    }
+			if (!userData.activeDaysBackfilled) {
+           		 await backfillActiveDays(userId);
+       		}
 			
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
