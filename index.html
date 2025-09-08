@@ -1403,18 +1403,33 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		<div id="profile-modal-content" class="w-full">
 		    <div id="profile-header-container" class="flex flex-col items-center">
 		        </div>
-		    
+		
 		    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-left">
-				<div class="floating-card p-4">
-				    <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
-				    <div id="profile-chart-wrapper" class="relative h-48">
-				        <canvas id="profile-category-chart"></canvas>
-				    </div>
-				</div>
-		        <div class="floating-card p-4">
-		            <h4 class="font-bold text-gray-300 mb-2">Unlocked Achievements</h4>
-		            <div id="profile-achievements-container" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-48 scrollbar-hide">
+		        
+		        <div class="floating-card p-4 col-span-2 md:col-span-1">
+		            <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
+		            <div class="space-y-3 text-sm">
+		                <div class="flex justify-between items-center">
+		                    <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
+		                    <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
 		                </div>
+		                <div class="flex justify-between items-center">
+		                    <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
+		                    <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
+		                </div>
+		            </div>
+		        </div>
+		        <div class="floating-card p-4 col-span-2 md:col-span-1">
+		            <h4 class="font-bold text-gray-300 mb-2">Unlocked Achievements</h4>
+		            <div id="profile-achievements-container" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-24 scrollbar-hide">
+		                </div>
+		        </div>
+		    </div>
+		    
+		    <div class="floating-card p-4 mt-4">
+		        <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
+		        <div id="profile-chart-wrapper" class="relative h-48">
+		            <canvas id="profile-category-chart"></canvas>
 		        </div>
 		    </div>
 		</div>
@@ -2224,7 +2239,14 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// ADD THIS NEW FUNCTION
+const findFavoriteCategory = (categoryCounts) => {
+    if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
+        return "N/A";
+    }
+    // Find the category with the highest count
+    return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
+};
+		
 const backfillUserStats = async (uid) => {
     console.log(`Checking if stats backfill is needed for user ${uid}...`);
     try {
@@ -2371,23 +2393,19 @@ const renderProfileCategoryChart = (categoryCounts) => {
 const showUserProfile = async (profileUserId) => {
     const modal = document.getElementById('profile-modal');
     const headerContainer = document.getElementById('profile-header-container');
-
-    // Find the new stable chart wrapper
     const chartWrapper = document.getElementById('profile-chart-wrapper');
 
+    // Show modal and clear previous content
     modal.classList.remove('hidden');
-    headerContainer.innerHTML = `
-        <div class="flex justify-center items-center h-48">
-            <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-        </div>`;
-
-    // Clear the stats sections safely
+    headerContainer.innerHTML = `<div class="flex justify-center items-center h-48"><svg class="animate-spin h-10 w-10 text-blue-400" ...></svg></div>`;
+    
+    // Clear the stats sections
     document.getElementById('profile-achievements-container').innerHTML = '';
-    // ▼▼▼ THIS IS THE CORRECTED LINE ▼▼▼
     chartWrapper.innerHTML = '<canvas id="profile-category-chart"></canvas>';
+    
+    // Clear the new stats fields
+    document.getElementById('profile-total-copies').textContent = '--';
+    document.getElementById('profile-fav-category').textContent = '--';
 
     try {
         const userProfileDocRef = doc(db, "leaderboard", profileUserId);
@@ -2405,6 +2423,7 @@ const showUserProfile = async (profileUserId) => {
             year: 'numeric', month: 'long', day: 'numeric'
         });
 
+        // Populate the HEADER of the modal
         headerContainer.innerHTML = `
             <div class="${rankClass} level-badge-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
                 <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
@@ -2420,7 +2439,19 @@ const showUserProfile = async (profileUserId) => {
             <div class="mt-2 text-sm text-gray-500">
                 Member since ${formattedDate}
             </div>`;
+        
+        // ▼▼▼ POPULATE THE NEW ALL-TIME STATS ▼▼▼
+        const totalCopies = profileData.totalCopies || 0;
+        const favoriteCategory = findFavoriteCategory(profileData.categoryCounts);
+        const totalAchievements = profileData.unlockedAchievements ? profileData.unlockedAchievements.length : 0;
 
+        document.getElementById('profile-total-copies').textContent = totalCopies.toLocaleString();
+        document.getElementById('profile-fav-category').textContent = favoriteCategory;
+        
+        // You can uncomment the line below if you add a placeholder for total achievements
+        // document.getElementById('profile-total-achievements').textContent = `${totalAchievements} Unlocked`;
+        
+        // RENDER THE CHARTS AND ACHIEVEMENTS
         renderProfileCategoryChart(profileData.categoryCounts || {});
         renderProfileAchievements(profileData.unlockedAchievements || []);
 
