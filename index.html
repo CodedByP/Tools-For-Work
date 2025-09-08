@@ -3490,6 +3490,25 @@ const achievements = [
     // If we have new achievements to notify, update Firestore
     if (Object.keys(newAchievementsToSave).length > 0) {
         await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
+		try {
+	        const leaderboardDocRef = doc(db, "leaderboard", userId);
+	        const leaderboardDoc = await getDoc(leaderboardDocRef);
+	        
+	        // Get the list of already unlocked achievements from the leaderboard
+	        const existingAchievements = leaderboardDoc.exists() ? leaderboardDoc.data().unlockedAchievements || [] : [];
+	        
+	        // Get the IDs of the newly unlocked achievements
+	        const newAchievementIds = Object.keys(newAchievementsToSave);
+	
+	        // Combine the old and new lists, ensuring no duplicates
+	        const allAchievements = [...new Set([...existingAchievements, ...newAchievementIds])];
+	
+	        // Save the complete list back to the leaderboard
+	        await updateDoc(leaderboardDocRef, { unlockedAchievements: allAchievements });
+	
+	    } catch(error) {
+	        console.error("Failed to update achievements on leaderboard:", error);
+	    }
     }
 };	
 		
