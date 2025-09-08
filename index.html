@@ -1417,6 +1417,10 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                    <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
 		                    <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
 		                </div>
+					 <div class="flex justify-between items-center">
+			            <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
+			            <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
+			        </div>
 		            </div>
 		        </div>
 		        <div class="floating-card p-4 col-span-2 md:col-span-1">
@@ -2239,6 +2243,30 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const calculateCopiesPerDay = (totalCopies, startDate) => {
+    if (!totalCopies || totalCopies === 0) {
+        return 0;
+    }
+
+    let businessDays = 0;
+    const currentDate = new Date();
+    let iterDate = new Date(startDate);
+
+    // Loop through each day from the start date until today
+    while (iterDate <= currentDate) {
+        const dayOfWeek = iterDate.getDay(); // 0 = Sunday, 6 = Saturday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            businessDays++;
+        }
+        iterDate.setDate(iterDate.getDate() + 1);
+    }
+    
+    if (businessDays === 0) return totalCopies; // Avoid division by zero, show total if less than a day
+
+    const average = totalCopies / businessDays;
+    return average.toFixed(1); // Return the average with one decimal place
+};
+		
 const findFavoriteCategory = (categoryCounts) => {
     if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
         return "N/A";
@@ -2397,22 +2425,21 @@ const showUserProfile = async (profileUserId) => {
 
     // Show modal and clear previous content
     modal.classList.remove('hidden');
-    headerContainer.innerHTML = `<div class="flex justify-center items-center h-48"><svg class="animate-spin h-10 w-10 text-blue-400" ...></svg></div>`;
+    headerContainer.innerHTML = `<div class="flex justify-center items-center h-48"><svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
     
     // Clear the stats sections
     document.getElementById('profile-achievements-container').innerHTML = '';
     chartWrapper.innerHTML = '<canvas id="profile-category-chart"></canvas>';
-    
-    // Clear the new stats fields
     document.getElementById('profile-total-copies').textContent = '--';
     document.getElementById('profile-fav-category').textContent = '--';
+    document.getElementById('profile-cpd').textContent = '--'; // Clear the new stat
 
     try {
         const userProfileDocRef = doc(db, "leaderboard", profileUserId);
         const userProfileDoc = await getDoc(userProfileDocRef);
 
         if (!userProfileDoc.exists()) {
-            headerContainer.innerHTML = '<p class="text-red-400">Could not find profile data for this user.</p>';
+            headerContainer.innerHTML = '<p class="text-red-400">Could not find profile data.</p>';
             return;
         }
 
@@ -2440,16 +2467,14 @@ const showUserProfile = async (profileUserId) => {
                 Member since ${formattedDate}
             </div>`;
         
-        // ▼▼▼ POPULATE THE NEW ALL-TIME STATS ▼▼▼
+        // ▼▼▼ POPULATE THE ALL-TIME STATS ▼▼▼
         const totalCopies = profileData.totalCopies || 0;
         const favoriteCategory = findFavoriteCategory(profileData.categoryCounts);
-        const totalAchievements = profileData.unlockedAchievements ? profileData.unlockedAchievements.length : 0;
+        const copiesPerDay = calculateCopiesPerDay(totalCopies, memberSinceDate);
 
         document.getElementById('profile-total-copies').textContent = totalCopies.toLocaleString();
         document.getElementById('profile-fav-category').textContent = favoriteCategory;
-        
-        // You can uncomment the line below if you add a placeholder for total achievements
-        // document.getElementById('profile-total-achievements').textContent = `${totalAchievements} Unlocked`;
+        document.getElementById('profile-cpd').textContent = copiesPerDay;
         
         // RENDER THE CHARTS AND ACHIEVEMENTS
         renderProfileCategoryChart(profileData.categoryCounts || {});
