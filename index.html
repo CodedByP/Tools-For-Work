@@ -5047,6 +5047,16 @@ function attachEventListeners() {
             document.getElementById('achievement-details-modal').classList.add('hidden');
         });
     }
+
+	 const closeLevelUpBtn = document.getElementById('close-level-up-modal-btn');
+        if (closeLevelUpBtn) {
+            closeLevelUpBtn.addEventListener('click', () => {
+                const modal = document.getElementById('level-up-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
     
     setupAchievementFiltering();
     
