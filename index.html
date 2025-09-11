@@ -2917,7 +2917,7 @@ const checkAndAwardChallengeXP = async (userId) => {
             if (weeklyCopies >= 50) {
                 await awardXP(500);
                 await setDoc(userDocRef, { lastWeeklyChallengeWeek: weekId }, { merge: true });
-                showMessage("Weekly Challenge Complete! +500 XP", "success");
+                showMessage("Weekly Challenge Complete! 2x XP is now active for the week!", "success");
             }
         }
     } catch (error) {
@@ -3071,6 +3071,18 @@ const calculateLevelInfo = (totalXp) => {
 
 const awardXP = async (amount) => {
     if (!userId || isAnonymous) return;
+
+    // Check if the weekly challenge is completed to activate Double XP
+    const userDocRefForChallenge = getUserRootDocRef(userId);
+    const userDocForChallenge = await getDoc(userDocRefForChallenge);
+    const userDataForChallenge = userDocForChallenge.exists() ? userDocForChallenge.data() : {};
+    const weekId = getCurrentWeekId();
+    const isWeeklyChallengeDone = userDataForChallenge.lastWeeklyChallengeWeek === weekId;
+
+    // Apply Double XP if the weekly challenge is complete
+    if (isWeeklyChallengeDone) {
+        amount *= 2; 
+    }	
 
     const userDocRef = getUserRootDocRef(userId);
     try {
@@ -4258,9 +4270,23 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    showMessage("Copied to clipboard!");
 
     if (responseId && categoryName) {
+        const userDocRef = getUserRootDocRef(userId);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const weekId = getCurrentWeekId();
+        const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+        
+        let xpGained = XP_VALUES.COPY_RESPONSE;
+        let message = "Copied to clipboard!";
+
+        if (isDoubleXpActive) {
+            xpGained *= 2;
+            message = `Copied! +${xpGained} XP (2x Bonus!)`;
+        }
+        
+        showMessage(message, 'success');
         const now = Date.now();
         const lastCopyTime = lastCopyTimestamps[responseId] || 0; 
         const COOLDOWN_PERIOD = 5000; 
@@ -4306,6 +4332,10 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
             }
             await checkAndAwardChallengeXP(userId);
         }
+    }
+    else {
+        // This is for copies without an associated response, like from the FedEx page
+        showMessage("Copied to clipboard!");
     }
 };
 		
@@ -4767,6 +4797,15 @@ const renderLevelingSystem = (userData) => {
     const rankName = levelInfo.rankName;
     const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
     const rankIconContainer = document.getElementById('rank-icon-container');
+
+    // Check if the Double XP buff is active for this week
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+    
+    // Create the HTML for the 2x XP badge if it's active
+    const doubleXpBadge = isDoubleXpActive 
+        ? `<span class="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full ml-3 animate-pulse">2x XP ACTIVE</span>` 
+        : '';	
 
     // Base classes for all wrappers
     let wrapperClasses = `level-badge-wrapper ${rankClass}`;
