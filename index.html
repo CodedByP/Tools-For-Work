@@ -4396,53 +4396,104 @@ const processAndCopy = (text, responseId, categoryName) => {
     const placeholderInputsContainer = document.getElementById('placeholder-inputs');
     const placeholderModal = document.getElementById('placeholder-modal');
     currentTextToCopy = text;
-
-    // Store the ID and category for later use
     currentResponseToCopyId = responseId;
     currentResponseToCopyCategory = categoryName;
 
     const matches = text.match(placeholderRegex);
     const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
+
     if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
         placeholderInputsContainer.innerHTML = '';
         
-        // Get today's date and format it with the month spelled out
-        const today = new Date();
-        const formattedDate = today.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }); // This produces "September 12, 2025"
-
         placeholders.forEach(placeholder => {
             if (placeholder !== 'Name') {
                 const inputGroup = document.createElement('div');
-                inputGroup.className = 'flex flex-col';
                 const label = document.createElement('label');
                 label.className = 'block text-sm font-medium text-gray-400 mb-1';
                 label.textContent = placeholder;
-                let input;
-                if (placeholder.toLowerCase().includes('date')) {
-                    input = document.createElement('input');
-                    input.type = 'text'; // Changed from 'date' to 'text'
-                    input.value = formattedDate; // Use the newly formatted date
-                } else {
-                    input = document.createElement('input');
-                    input.type = 'text';
-                }
-                input.dataset.placeholder = placeholder;
-                input.id = `placeholder-${placeholder.replace(/\s/g, '-')}`;
-                input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
                 inputGroup.appendChild(label);
-                inputGroup.appendChild(input);
+
+                // If the placeholder is for a date, create the special dual-input
+                if (placeholder.toLowerCase().includes('date')) {
+                    const dateWrapper = document.createElement('div');
+                    dateWrapper.className = 'relative';
+
+                    const today = new Date();
+                    const formattedDate = today.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // 1. The visible text input
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.value = formattedDate;
+                    textInput.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg pr-10'; // Added padding for the icon
+                    textInput.dataset.placeholder = placeholder;
+
+                    // 2. The hidden date input
+                    const dateInput = document.createElement('input');
+                    dateInput.type = 'date';
+                    dateInput.value = today.toISOString().split('T')[0]; // Set its value to YYYY-MM-DD
+                    dateInput.className = 'opacity-0 absolute top-0 left-0 w-full h-full pointer-events-none'; // Make it invisible and non-interactive
+
+                    // 3. The clickable calendar icon
+                    const calendarIcon = document.createElement('i');
+                    calendarIcon.className = 'fas fa-calendar-alt absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-white';
+                    
+                    dateWrapper.appendChild(textInput);
+                    dateWrapper.appendChild(dateInput);
+                    dateWrapper.appendChild(calendarIcon);
+                    inputGroup.appendChild(dateWrapper);
+
+                } else {
+                    // For all other (non-date) placeholders
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.dataset.placeholder = placeholder;
+                    input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
+                    inputGroup.appendChild(input);
+                }
                 placeholderInputsContainer.appendChild(inputGroup);
             }
         });
+
+        // Event listener for the calendar icons
+        placeholderInputsContainer.querySelectorAll('.fa-calendar-alt').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const dateInput = icon.previousElementSibling; // The hidden date input
+                try {
+                    dateInput.showPicker(); // Modern way to open date picker
+                } catch (error) {
+                    dateInput.click(); // Fallback for older browsers
+                }
+            });
+        });
+
+        // Event listener for when a date is changed
+        placeholderInputsContainer.querySelectorAll('input[type="date"]').forEach(dateInput => {
+            dateInput.addEventListener('change', (e) => {
+                const textInput = e.target.previousElementSibling; // The visible text input
+                const dateValue = e.target.value; // e.g., "2025-09-12"
+                
+                // Create a date object correctly to avoid timezone issues
+                const dateParts = dateValue.split('-');
+                const selectedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+                // Format the new date and update the visible input
+                textInput.value = selectedDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            });
+        });
+
         placeholderModal.classList.remove('hidden');
         document.querySelector('#placeholder-inputs input')?.focus();
     } else {
         const finalContent = replacePlaceholders(currentTextToCopy, {});
-        // Pass the ID and category along
         copyToClipboard(finalContent, responseId, categoryName);
     }
 };
