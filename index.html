@@ -1073,10 +1073,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        <button id="nav-my-stats" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
 		            <i class="fas fa-chart-line mr-3"></i> My Stats
 		        </button>
-			    <button id="nav-workload-management" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
-			        <i class="fas fa-tasks mr-3"></i> WorkLoad
-			    </button>
-			    </nav>
+		        </nav>
 		
 		    <div class="mt-auto flex justify-end p-2">
 		        <button id="nav-settings" class="relative p-3 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Settings">
@@ -1175,43 +1172,6 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
 
-		<div id="workload-management-app" class="w-full hidden">
-		    <div class="flex justify-between items-center mb-4 px-2 flex-wrap gap-4">
-		        <h2 class="text-2xl font-bold text-gray-200">
-		            Technician WorkLoad Management
-		        </h2>
-		        
-		        <div class="flex items-center gap-2">
-		            <button id="zoom-out-btn" class="bg-gray-700 text-white font-bold w-10 h-10 rounded-lg hover:bg-gray-600 transition-transform duration-200 active:scale-95" title="Zoom Out">
-		                <i class="fas fa-search-minus"></i>
-		            </button>
-		            <span id="zoom-level-display" class="text-lg font-bold text-gray-300 w-16 text-center">100%</span>
-		            <button id="zoom-in-btn" class="bg-gray-700 text-white font-bold w-10 h-10 rounded-lg hover:bg-gray-600 transition-transform duration-200 active:scale-95" title="Zoom In">
-		                <i class="fas fa-search-plus"></i>
-		            </button>
-		            <button id="zoom-reset-btn" class="bg-gray-700 text-white font-bold w-10 h-10 rounded-lg hover:bg-gray-600 transition-transform duration-200 active:scale-95 ml-4" title="Reset Zoom">
-		                <i class="fas fa-expand"></i>
-		            </button>
-		            
-		            <button id="refresh-workload-btn" class="bg-blue-600 text-white font-bold w-10 h-10 rounded-lg hover:bg-blue-700 transition-transform duration-200 active:scale-95 ml-4" title="Refresh Report">
-		                <i class="fas fa-sync-alt"></i>
-		            </button>
-		        </div>
-		    </div>
-		
-			<div class="w-full h-[85vh] rounded-lg overflow-hidden border-2 border-gray-700">
-			    <iframe
-			        id="workload-iframe"
-			        src="https://lookerstudio.google.com:/embed/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd"
-			        
-			        style="transform-origin: top left;" 
-			
-			        frameborder="0"
-			        allowfullscreen
-			        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
-			    </iframe>
-			</div>
-		
         <div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
             <div class="main-card p-8 w-full max-w-2xl mx-auto">
                 <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
@@ -2052,8 +2012,7 @@ let masterBlueprintVersion = 1;
 let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
 let profileChartInstance = null;		
-let currentWorkloadZoom = 1.0; 
-const ZOOM_STEP = 0.05; 
+		
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
@@ -2337,23 +2296,6 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
-
-const updateIframeZoom = () => {
-    const iframe = document.getElementById('workload-iframe');
-    const display = document.getElementById('zoom-level-display');
-    if (!iframe || !display) return;
-
-    // The trick: Calculate the inverse scale to make the iframe bigger
-    const inverseScale = 1 / currentWorkloadZoom;
-
-    // Apply the new styles
-    iframe.style.transform = `scale(${currentWorkloadZoom})`;
-    iframe.style.width = `calc(100% * ${inverseScale})`;
-    iframe.style.height = `calc(100% * ${inverseScale})`;
-
-    // Update the percentage display
-    display.textContent = `${Math.round(currentWorkloadZoom * 100)}%`;
-};		
 
 const backfillActiveDays = async (uid) => {
     console.log(`Checking if active days backfill is needed for user ${uid}...`);
@@ -3857,7 +3799,6 @@ const renderContent = () => {
     const helpfulLinksApp = document.getElementById('helpful-links-app');
 	const myStatsPage = document.getElementById('my-stats-page');
     const settingsPage = document.getElementById('settings-page');
-    const workloadApp = document.getElementById('workload-management-app'); // <<< THIS LINE WAS LIKELY MISSED
     const categoryBar = document.getElementById('category-bar');
     const mainTitle = document.getElementById('main-title');
     const categoryActionsBtn = document.getElementById('category-actions-btn');
@@ -3877,7 +3818,6 @@ const renderContent = () => {
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
 	if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
-    if (workloadApp) workloadApp.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
@@ -3918,13 +3858,7 @@ const renderContent = () => {
     mainTitle.textContent = 'My Stats';
     renderAdvancedStats();
 		
-    } 
-    else if (currentPage === 'workload-management') {
-        workloadApp.classList.remove('hidden');
-        mainTitle.textContent = 'WorkLoad Management';
-		updateIframeZoom();
-    } 
-    else if (currentPage === 'settings') {
+    } else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
         mainTitle.textContent = 'Settings';
         renderSettingsPage();
@@ -5095,43 +5029,9 @@ function attachEventListeners() {
         }
     };
     document.body.addEventListener('click', unlockAudio);
-
-    const zoomInBtn = document.getElementById('zoom-in-btn');
-    const zoomOutBtn = document.getElementById('zoom-out-btn');
-    const zoomResetBtn = document.getElementById('zoom-reset-btn');
-
-    if(zoomOutBtn) {
-        zoomOutBtn.addEventListener('click', () => {
-            currentWorkloadZoom = Math.max(0.5, currentWorkloadZoom - ZOOM_STEP); // Limit zoom out to 50%
-            updateIframeZoom();
-        });
-    }
-    if(zoomInBtn) {
-        zoomInBtn.addEventListener('click', () => {
-            currentWorkloadZoom = Math.min(1.0, currentWorkloadZoom + ZOOM_STEP); // Limit zoom in to 100%
-            updateIframeZoom();
-        });
-    }
-    if(zoomResetBtn) {
-        zoomResetBtn.addEventListener('click', () => {
-            currentWorkloadZoom = 1.0;
-            updateIframeZoom();
-        });
-    }	
-
-    const refreshWorkloadBtn = document.getElementById('refresh-workload-btn');
-    if (refreshWorkloadBtn) {
-        refreshWorkloadBtn.addEventListener('click', () => {
-            const iframe = document.getElementById('workload-iframe');
-            if (iframe) {
-                iframe.src = iframe.src; // This is the simplest way to reload an iframe
-                showMessage("Report has been refreshed!", "success");
-            }
-        });
-    }	
 	
     // Navigation Listeners
-    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings', 'nav-workload-management'];
+    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings'];
     navButtons.forEach(id => {
         const btn = document.getElementById(id);
         if(btn) btn.addEventListener('click', () => {
