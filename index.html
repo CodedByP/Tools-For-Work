@@ -3494,7 +3494,12 @@ const updateDarkModeStreak = async () => {
 
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+	const formattedDate = today.toLocaleDateString('en-US', {
+	    year: 'numeric',
+	    month: 'long',
+	    day: 'numeric'
+	});
     
     const data = userDoc.exists() ? userDoc.data() : {};
     const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
@@ -4400,7 +4405,15 @@ const processAndCopy = (text, responseId, categoryName) => {
     const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
     if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
         placeholderInputsContainer.innerHTML = '';
-        const today = new Date().toISOString().split('T')[0];
+        
+        // Get today's date and format it with the month spelled out
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }); // This produces "September 12, 2025"
+
         placeholders.forEach(placeholder => {
             if (placeholder !== 'Name') {
                 const inputGroup = document.createElement('div');
@@ -4411,8 +4424,8 @@ const processAndCopy = (text, responseId, categoryName) => {
                 let input;
                 if (placeholder.toLowerCase().includes('date')) {
                     input = document.createElement('input');
-                    input.type = 'date';
-                    input.value = today;
+                    input.type = 'text'; // Changed from 'date' to 'text'
+                    input.value = formattedDate; // Use the newly formatted date
                 } else {
                     input = document.createElement('input');
                     input.type = 'text';
