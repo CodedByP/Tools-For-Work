@@ -3817,6 +3817,7 @@ const renderContent = () => {
     const helpfulLinksApp = document.getElementById('helpful-links-app');
 	const myStatsPage = document.getElementById('my-stats-page');
     const settingsPage = document.getElementById('settings-page');
+    const workloadApp = document.getElementById('workload-management-app'); // <<< THIS LINE WAS LIKELY MISSED
     const categoryBar = document.getElementById('category-bar');
     const mainTitle = document.getElementById('main-title');
     const categoryActionsBtn = document.getElementById('category-actions-btn');
@@ -3836,7 +3837,7 @@ const renderContent = () => {
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
 	if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
-	if (workloadApp) workloadApp.classList.add('hidden');
+    if (workloadApp) workloadApp.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
@@ -3876,12 +3877,13 @@ const renderContent = () => {
     myStatsPage.classList.remove('hidden');
     mainTitle.textContent = 'My Stats';
     renderAdvancedStats();
-	}	
+		
+    } 
     else if (currentPage === 'workload-management') {
         workloadApp.classList.remove('hidden');
-        mainTitle.textContent = 'WorkLoad Management'; 		
-		
-    } else if (currentPage === 'settings') {
+        mainTitle.textContent = 'WorkLoad Management';
+    } 
+    else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
         mainTitle.textContent = 'Settings';
         renderSettingsPage();
