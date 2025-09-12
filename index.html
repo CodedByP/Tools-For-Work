@@ -1175,27 +1175,25 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
 
-		<div id="workload-management-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
-		    <div class="floating-card p-6 sm:p-8 w-full">
-		        
-		        <div class="flex justify-between items-center mb-4">
-		            <h2 class="text-2xl font-bold text-gray-200">
-		                Technician WorkLoad Management
-		            </h2>
-		            <button id="refresh-workload-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-transform duration-200 active:scale-95" title="Refresh Report">
-		                <i class="fas fa-sync-alt"></i>
-		            </button>
-		        </div>
-		        <div class="w-full flex justify-center items-center rounded-lg overflow-hidden border-2 border-gray-700">
-		            <iframe
-		                id="workload-iframe" src="https://lookerstudio.google.com:/embed/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd"
-		                class="w-full rounded-lg"
-		                height="800"
-		                frameborder="0"
-		                allowfullscreen
-		                sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
-		            </iframe>
-		        </div>
+		<div id="workload-management-app" class="w-full hidden">
+		    <div class="flex justify-between items-center mb-4 px-2">
+		        <h2 class="text-2xl font-bold text-gray-200">
+		            Technician WorkLoad Management
+		        </h2>
+		        <button id="refresh-workload-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-transform duration-200 active:scale-95" title="Refresh Report">
+		            <i class="fas fa-sync-alt"></i>
+		        </button>
+		    </div>
+		
+		    <div class="w-full h-[85vh] rounded-lg overflow-hidden border-2 border-gray-700">
+		        <iframe
+		            id="workload-iframe"
+		            src="https://lookerstudio.google.com:/embed/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd"
+		            class="w-full h-full"
+		            frameborder="0"
+		            allowfullscreen
+		            sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+		        </iframe>
 		    </div>
 		</div>
 		
