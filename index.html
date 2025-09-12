@@ -2849,6 +2849,41 @@ const CHALLENGES_CONFIG = {
             const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
             return { current: weeklyCopies };
         }
+    },
+    monthlyMarathon: {
+        id: 'monthly_marathon',
+        title: 'Monthly Marathon',
+        description: 'Copy 200 responses in a single month.',
+        goal: 200,
+        xp: 1500,
+        type: 'monthly',
+        icon: 'fa-calendar-alt',
+        getProgress: async (events) => {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthlyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfMonth).length;
+            return { current: monthlyCopies };
+        }
+    },
+    logisticsExpert: {
+        id: 'logistics_expert',
+        title: 'Logistics Expert',
+        description: 'Use the FedEx tracker 5 times in one week.',
+        goal: 5,
+        xp: 250,
+        type: 'weekly',
+        icon: 'fa-truck-fast',
+        getProgress: async (events) => {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - daysSinceMonday);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const weeklyTrackingEvents = events.filter(e => e.type === 'extract_tracking' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
+            return { current: weeklyTrackingEvents };
+        }
     }
 };
 		
