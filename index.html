@@ -1073,7 +1073,10 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        <button id="nav-my-stats" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
 		            <i class="fas fa-chart-line mr-3"></i> My Stats
 		        </button>
-		        </nav>
+			    <button id="nav-workload-management" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+			        <i class="fas fa-tasks mr-3"></i> WorkLoad
+			    </button>
+			    </nav>
 		
 		    <div class="mt-auto flex justify-end p-2">
 		        <button id="nav-settings" class="relative p-3 rounded-full hover:bg-gray-700 transition duration-300" aria-label="Settings">
@@ -1172,6 +1175,21 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
 
+		<div id="workload-management-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 hidden">
+		    <div class="floating-card p-6 sm:p-8 w-full">
+		        <div class="w-full flex justify-center items-center rounded-lg overflow-hidden border-2 border-gray-700">
+		            <iframe
+		                src="https://lookerstudio.google.com:/embed/reporting/462c770f-51f7-42e4-811d-b3fb3daf09eb/page/p_6a7jcz4nsd"
+		                class="w-full rounded-lg"
+		                height="800"
+		                frameborder="0"
+		                allowfullscreen
+		                sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+		            </iframe>
+		        </div>
+		    </div>
+		</div>
+		
         <div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
             <div class="main-card p-8 w-full max-w-2xl mx-auto">
                 <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
@@ -3818,6 +3836,7 @@ const renderContent = () => {
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
 	if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
+	if (workloadApp) workloadApp.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
@@ -3857,6 +3876,10 @@ const renderContent = () => {
     myStatsPage.classList.remove('hidden');
     mainTitle.textContent = 'My Stats';
     renderAdvancedStats();
+	}	
+    else if (currentPage === 'workload-management') {
+        workloadApp.classList.remove('hidden');
+        mainTitle.textContent = 'WorkLoad Management'; 		
 		
     } else if (currentPage === 'settings') {
         settingsPage.classList.remove('hidden');
@@ -5031,7 +5054,7 @@ function attachEventListeners() {
     document.body.addEventListener('click', unlockAudio);
 	
     // Navigation Listeners
-    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings'];
+    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings', 'nav-workload-management'];
     navButtons.forEach(id => {
         const btn = document.getElementById(id);
         if(btn) btn.addEventListener('click', () => {
