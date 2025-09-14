@@ -533,7 +533,6 @@
 }
 .leaderboard-xp {
     font-weight: bold;
-    color: #34d399;      /* This brings back the green color */
     margin-left: auto;    /* This pushes the element to the far right */
     padding-left: 1rem;   /* This ensures a nice gap from the name */
 }
@@ -3986,7 +3985,7 @@ const renderLeaderboard = async () => {
 			            <p class="font-semibold text-gray-100">${userData.displayName}</p>
 			            <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
 			        </div>
-			        <span class="leaderboard-xp">${userData.xp.toLocaleString()} XP</span>
+			       <span class="leaderboard-xp text-emerald-400">${userData.xp.toLocaleString()} XP</span>
 			    </div>
 			`;
             rank++;
