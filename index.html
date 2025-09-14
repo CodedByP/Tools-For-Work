@@ -239,17 +239,18 @@
 
 /* --- Leveling System Styles --- */
 .xp-bar-container {
-    background-color: #374151; /* A darker gray for the bar background */
-    border-radius: 9999px;
-    height: 1rem;
-    margin-top: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    background-color: #374151;
+    border-radius: 9999px;
+    height: 1rem;
+    margin-top: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    overflow: hidden; /* Add this to contain the child's corners */
 }
 .xp-bar {
-    background-color: #3b82f6; /* Blue for the progress fill */
-    height: 1rem;
-    border-radius: 9999px;
-    transition: width 0.5s ease-in-out;
+    background-color: #3b82f6;
+    height: 100%; /* Change height from '1rem' to '100%' */
+    border-radius: 9999px;
+    transition: width 0.5s ease-in-out;
 }
 .level-up-animation {
     animation: level-up-glow 1.5s ease-out;
