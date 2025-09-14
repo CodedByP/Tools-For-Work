@@ -5062,7 +5062,7 @@ const renderLevelingSystem = (userData) => {
 
     if (nextRank && nextRankTextContainer) {
         const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
-        nextRankTextContainer.innerHTML = `Next: <span class="font-bold text-gray-300">${nextRank.name}</span> in ${xpToGo.toLocaleString()} XP`;
+		nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
         nextRankTextContainer.classList.remove('hidden');
     } else if (nextRankTextContainer) {
         // Hide it if the user is at the max rank
