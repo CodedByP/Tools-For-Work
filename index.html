@@ -238,18 +238,62 @@
 }
 
 /* --- Leveling System Styles --- */
-.xp-bar-container {
-    background-color: #374151; /* A darker gray for the bar background */
-    border-radius: 9999px;
-    height: 1rem;
-    margin-top: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+/* --- Redesigned Leveling Section Styles --- */
+.level-header-bg {
+    /* A subtle gradient to give the header depth */
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.xp-bar {
-    background-color: #3b82f6; /* Blue for the progress fill */
-    height: 1rem;
+
+.xp-bar-container-redesigned {
+    background-color: #1f2937; /* bg-gray-800 */
     border-radius: 9999px;
-    transition: width 0.5s ease-in-out;
+    height: 2rem; /* 32px - a thicker, more prominent bar */
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+    padding: 4px; /* Creates a nice inset effect */
+    position: relative;
+    overflow: hidden;
+}
+
+.xp-bar-redesigned {
+    /* A vibrant gradient for the fill */
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+    height: 100%;
+    border-radius: 9999px;
+    /* A smoother, more satisfying animation */
+    transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Shine animation for the XP bar */
+.xp-bar-redesigned::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+    opacity: 0.5;
+    transform: skewX(-25deg);
+    animation: xp-shine 2s infinite;
+}
+
+@keyframes xp-shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.xp-bar-text {
+    /* Puts the text directly inside the bar */
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem; /* 14px */
+    z-index: 10;
 }
 .level-up-animation {
     animation: level-up-glow 1.5s ease-out;
@@ -1381,21 +1425,33 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
     <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-        <div id="leveling-section" class="floating-card p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6">
-            <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex-shrink-0 flex items-center justify-center text-gray-400">
-                <i class="fas fa-seedling"></i>
-            </div>
-            <div class="flex-grow w-full text-center md:text-left">
-                <div class="flex items-center justify-center md:justify-start gap-4">
-                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
-                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
-                </div>
-                <div class="xp-bar-container">
-                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
-                </div>
-                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
-            </div>
-        </div>
+		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl">
+		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative">
+		        <div id="rank-icon-container-redesigned" class="flex-shrink-0">
+		            </div>
+		        <div class="flex-grow w-full text-center md:text-left">
+		            <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+		                </h3>
+		            <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
+		                </p>
+		        </div>		
+		        <div id="next-rank-preview" class="hidden md:flex flex-col items-center text-center p-4 bg-black bg-opacity-20 rounded-lg border border-gray-700">
+		            <p class="text-sm text-gray-400">NEXT RANK</p>
+		            <p id="next-rank-name" class="font-bold text-lg text-yellow-300">
+		                </p>
+		            <p id="next-rank-level" class="text-xs text-gray-300">
+		                </p>
+		        </div>
+		    </div>	    
+		    <div class="p-6 bg-gray-800/50">
+		        <div class="xp-bar-container-redesigned" title="Experience Points Progress">
+		            <div id="xp-bar-redesigned" class="xp-bar-redesigned">
+		                <span id="xp-progress-text-redesigned" class="xp-bar-text">
+		                    </span>
+		            </div>
+		        </div>
+		    </div>
+		</div>
 
         <div id="achievements-module" class="floating-card p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
@@ -4941,108 +4997,85 @@ const renderActivityChart = (events) => {
 };
 
 const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
+    // --- Existing Calculations (no changes here) ---
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
     const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
-    const rankIconContainer = document.getElementById('rank-icon-container');
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
 
-    // Check if the Double XP buff is active for this week
-    const weekId = getCurrentWeekId();
-    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
-    
-    // Create the HTML for the 2x XP badge if it's active
-    const doubleXpBadge = isDoubleXpActive 
-        ? `<span class="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full ml-3 animate-pulse">2x XP ACTIVE</span>` 
-        : '';	
+    // --- NEW: Find the next rank for the preview ---
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    // Base classes for all wrappers
+    // --- NEW: Get all the new element IDs ---
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
+    const nextRankPreview = document.getElementById('next-rank-preview');
+    const nextRankNameEl = document.getElementById('next-rank-name');
+    const nextRankLevelEl = document.getElementById('next-rank-level');
+
+    // --- Populate the Icon (with all your fancy effects) ---
+    // (This code is copied from your original function and just targets the new container)
     let wrapperClasses = `level-badge-wrapper ${rankClass}`;
     let innerHTML = '';
-
-    // Add classes and inner HTML based on the rank
+    // (Your existing switch statement for icon effects goes here...)
     switch(rankName) {
-        case "Newbie":
-        case "Apprentice":
-            wrapperClasses += ' beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Journeyman":
-        case "Artisan":
-        case "Expert":
-            wrapperClasses += ' inner-ring beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Master":
-            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Grandmaster":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Legend":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
-            innerHTML = `
-                <div class="flame f1"></div>
-                <div class="flame f2"></div>
-                <div class="flame f3"></div>
-                <i class="fas ${levelInfo.rankIcon}"></i>
-            `;
-            break;
-        case "Demigod":
-            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Deity":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
-            innerHTML = `
-                <div class="divine-radiance"></div>
-                <div class="gleam-container"></div>
-                <div class="particle p1"></div>
-                <div class="particle p2"></div>
-                <div class="particle p3"></div>
-                <svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#ffffff;" />
-                            <stop offset="100%" style="stop-color:#e2e8f0;" />
-                        </linearGradient>
-                        <filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur">
-                                <animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" />
-                            </feGaussianBlur>
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                    </defs>
-                    <g filter="url(#deity-glow-filter)">
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/>
-                        <circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>
-                        <path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" />
-                        <path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" />
-                        <path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/>
-                    </g>
-                </svg>
-            `;
-            break;
-        default:
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
+        case "Newbie": case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman": case "Artisan": case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
     }
-
     rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
 
-    document.getElementById('rank-name').textContent = levelInfo.rankName;
-    document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
+    // --- Populate Text Content ---
+    rankNameEl.textContent = levelInfo.rankName;
+    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
 
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
-    document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
-};	
+    // --- Populate XP Bar ---
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    xpBarEl.style.width = `${progressPercent}%`;
+    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
 
+    // --- Populate and Show/Hide Next Rank Preview ---
+    if (nextRank) {
+        nextRankNameEl.textContent = nextRank.name;
+        nextRankLevelEl.textContent = `at Level ${nextRank.level}`;
+        nextRankPreview.classList.remove('hidden');
+    } else {
+        // Hide it if the user is at the max rank
+        nextRankPreview.classList.add('hidden');
+    }
+};
 // --- Renders all stats and achievement data for the page ---
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
