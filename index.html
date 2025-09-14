@@ -1429,12 +1429,10 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		    </div>
 		    
 			<div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-                 <div class="flex justify-between items-center mb-4">
-		            <h2 class="text-2xl font-bold text-gray-200 flex items-center">
-		                🏃 Active Challenges
-		            </h2>
-		            <span id="challenge-counter" class="text-sm font-semibold text-gray-400 bg-gray-700 px-3 py-1 rounded-full"></span>
-		        </div>
+					<h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
+					    <span>🏃 Active Challenges</span>
+					    <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
+					</h2>
                     <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
 		        </div>
 		    </div>
@@ -4114,7 +4112,7 @@ const renderChallenges = async (events) => {
     const totalChallenges = Object.values(CHALLENGES_CONFIG).length;
     const counterEl = document.getElementById('challenge-counter');
     if (counterEl) {
-        counterEl.textContent = `${completedCount} / ${totalChallenges} Complete`;
+        counterEl.textContent = `${completedCount}/${totalChallenges}`;
     }
 };
 		
