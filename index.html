@@ -1385,16 +1385,17 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             <div id="rank-icon-container" class="text-6xl md:text-8xl w-24 h-24 flex-shrink-0 flex items-center justify-center text-gray-400">
                 <i class="fas fa-seedling"></i>
             </div>
-            <div class="flex-grow w-full text-center md:text-left">
-                <div class="flex items-center justify-center md:justify-start gap-4">
-                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
-                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
-                </div>
-                <div class="xp-bar-container">
-                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
-                </div>
-                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
-            </div>
+			<div class="flex-grow w-full text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-4">
+                    <h3 id="rank-name" class="text-3xl font-bold text-gray-100">Newbie</h3>
+                    <span id="level-display" class="px-3 py-1 bg-blue-600 text-white text-lg font-bold rounded-full">Level 1</span>
+                </div>
+                <div class="xp-bar-container">
+                    <div id="xp-bar" class="xp-bar" style="width: 0%;"></div>
+                </div>
+                <p id="xp-progress-text" class="text-gray-400 mt-2 text-sm">0 / 100 XP</p>
+                	 <p id="next-rank-text" class="text-xs text-gray-500 mt-1 italic"></p>
+            </div>
         </div>
 
         <div id="achievements-module" class="floating-card p-6 sm:p-8">
@@ -5034,14 +5035,47 @@ const renderLevelingSystem = (userData) => {
     }
 
     rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
-
     document.getElementById('rank-name').textContent = levelInfo.rankName;
     document.getElementById('level-display').textContent = `Level ${levelInfo.level}`;
 
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    document.getElementById('xp-bar').style.width = `${progressPercent}%`;
-    document.getElementById('xp-progress-text').textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
-};	
+    const xpBar = document.getElementById('xp-bar');
+    const xpProgressText = document.getElementById('xp-progress-text');
+    const nextRankText = document.getElementById('next-rank-text');
+    const xpBarContainer = document.querySelector('.xp-bar-container');
+
+    // Suggestion 2: Animate the XP bar
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    if (xpBar) {
+        // Set initial width to 0% to ensure animation starts correctly
+        xpBar.style.width = '0%';
+        // Apply the final width after a short delay to trigger the CSS transition
+        setTimeout(() => {
+            xpBar.style.width = `${progressPercent}%`;
+        }, 100);
+    }
+    
+    xpProgressText.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+
+    // Suggestions 1 & 3: Next Rank Preview and Interactive Tooltip
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    
+    if (xpBarContainer && nextRankText) {
+        if (currentRankIndex < LEVEL_RANKS.length - 1) {
+            const nextRank = LEVEL_RANKS[currentRankIndex + 1];
+            const xpRemaining = levelInfo.xpForNextLevel - levelInfo.xpProgress;
+
+            // Suggestion 1: Set the "Next Rank" text
+            nextRankText.textContent = `Next Rank: ${nextRank.name} at Level ${nextRank.level}`;
+            
+            // Suggestion 3: Set the tooltip text for the XP bar container
+            xpBarContainer.title = `${xpRemaining.toLocaleString()} XP remaining until Level ${levelInfo.level + 1}`;
+        } else {
+            // Handle the case where the user is at the max rank
+            nextRankText.textContent = 'Max Rank Achieved!';
+            xpBarContainer.title = 'You are at the maximum rank!';
+        }
+    }
+};
 
 // --- Renders all stats and achievement data for the page ---
 const renderAdvancedStats = async () => {
