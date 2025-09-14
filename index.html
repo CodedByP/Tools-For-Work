@@ -115,6 +115,38 @@
     }
 }
 
+/* --- Custom Scrollbar Styles --- */
+/* This targets the scrollbar itself */
+#challenges-container::-webkit-scrollbar,
+#leaderboard-container::-webkit-scrollbar,
+#achievements-container::-webkit-scrollbar {
+    width: 8px; /* Makes the scrollbar thinner */
+}
+
+/* This targets the track (the area the scrollbar moves in) */
+#challenges-container::-webkit-scrollbar-track,
+#leaderboard-container::-webkit-scrollbar-track,
+#achievements-container::-webkit-scrollbar-track {
+    background: rgba(55, 65, 81, 0.3); /* A semi-transparent dark background */
+    border-radius: 10px;
+}
+
+/* This targets the thumb (the part you drag) */
+#challenges-container::-webkit-scrollbar-thumb,
+#leaderboard-container::-webkit-scrollbar-thumb,
+#achievements-container::-webkit-scrollbar-thumb {
+    background-color: #4b5563; /* A solid, slightly lighter gray */
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+/* Change color on hover for better feedback */
+#challenges-container::-webkit-scrollbar-thumb:hover,
+#leaderboard-container::-webkit-scrollbar-thumb:hover,
+#achievements-container::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280; 
+}		
 
 /* This turns the modal content into a flexible column layout */
 .modal-scroll-fix {
@@ -1400,11 +1432,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
 		            🏃 Active Challenges
 		        </h2>
-                        <div class="relative">
-		            <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto scrollbar-hide">
-		                            </div>
-                    <div class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-[#161B22] to-transparent pointer-events-none"></div>
-		        </div>
+		        <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto">
+		            </div>
 		    </div>
 		    
 		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
