@@ -5633,7 +5633,7 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     const userValues = {};
     inputs.forEach(input => {
         const key = input.dataset.placeholder;
-        userValues[key] = input.value;
+        userValues[key] = input.value.trim();
     });
 
     const finalContent = replacePlaceholders(currentTextToCopy, userValues);
