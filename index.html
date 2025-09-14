@@ -1434,15 +1434,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </h3>
 		            <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
 		                </p>
-		        </div>		
-		        <div id="next-rank-preview" class="hidden md:flex flex-col items-center text-center p-4 bg-black bg-opacity-20 rounded-lg border border-gray-700">
-		            <p class="text-sm text-gray-400">NEXT RANK</p>
-		            <p id="next-rank-name" class="font-bold text-lg text-yellow-300">
-		                </p>
-		            <p id="next-rank-level" class="text-xs text-gray-300">
-		                </p>
 		        </div>
-		    </div>	    
+		    </div>
 		    <div class="p-6 bg-gray-800/50">
 		        <div class="xp-bar-container-redesigned" title="Experience Points Progress">
 		            <div id="xp-bar-redesigned" class="xp-bar-redesigned">
@@ -1450,6 +1443,8 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                    </span>
 		            </div>
 		        </div>
+		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
+		            </div>
 		    </div>
 		</div>
 
@@ -5013,9 +5008,8 @@ const renderLevelingSystem = (userData) => {
     const levelDisplayEl = document.getElementById('level-display-redesigned');
     const xpBarEl = document.getElementById('xp-bar-redesigned');
     const xpTextEl = document.getElementById('xp-progress-text-redesigned');
-    const nextRankPreview = document.getElementById('next-rank-preview');
-    const nextRankNameEl = document.getElementById('next-rank-name');
-    const nextRankLevelEl = document.getElementById('next-rank-level');
+	const nextRankTextContainer = document.getElementById('next-rank-text-container');
+
 
     // --- Populate the Icon (with all your fancy effects) ---
     // (This code is copied from your original function and just targets the new container)
@@ -5066,14 +5060,13 @@ const renderLevelingSystem = (userData) => {
     xpBarEl.style.width = `${progressPercent}%`;
     xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
 
-    // --- Populate and Show/Hide Next Rank Preview ---
-    if (nextRank) {
-        nextRankNameEl.textContent = nextRank.name;
-        nextRankLevelEl.textContent = `at Level ${nextRank.level}`;
-        nextRankPreview.classList.remove('hidden');
-    } else {
+    if (nextRank && nextRankTextContainer) {
+        const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
+        nextRankTextContainer.innerHTML = `Next: <span class="font-bold text-gray-300">${nextRank.name}</span> in ${xpToGo.toLocaleString()} XP`;
+        nextRankTextContainer.classList.remove('hidden');
+    } else if (nextRankTextContainer) {
         // Hide it if the user is at the max rank
-        nextRankPreview.classList.add('hidden');
+        nextRankTextContainer.classList.add('hidden');
     }
 };
 // --- Renders all stats and achievement data for the page ---
