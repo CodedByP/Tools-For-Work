@@ -262,9 +262,6 @@
     border-radius: 9999px;
     /* A smoother, more satisfying animation */
     transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
 }
 
@@ -288,7 +285,16 @@
 }
 
 .xp-bar-text {
-    /* Puts the text directly inside the bar */
+    /* New styles for absolute centering */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Make text non-clickable */
     color: white;
     font-weight: bold;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
@@ -1445,11 +1451,12 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 				</div>
 		    </div>
 		    <div class="p-6 bg-gray-800/50">
-		        <div class="xp-bar-container-redesigned" title="Experience Points Progress">
-		            <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-		                <span id="xp-progress-text-redesigned" class="xp-bar-text">
-		                    </span>
-		            </div>
+					<div class="xp-bar-container-redesigned" title="Experience Points Progress">
+					    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
+					        </div>
+					    <span id="xp-progress-text-redesigned" class="xp-bar-text">
+					    </span>
+					</div>
 		        </div>
 		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
 		            </div>
