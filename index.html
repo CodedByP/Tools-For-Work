@@ -77,24 +77,10 @@
 			    animation: unlock-animation 0.7s ease-out forwards;
 			}
 		
-        .message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1-px rgba(0, 0, 0, 0.1), 0 2px 4px -1-px rgba(0, 0, 0, 0.06);
-            color: white;
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .message-box.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
+#copy-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Add these styles for the level-up modal */
 #level-up-modal .modal-content {
@@ -2035,6 +2021,11 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		    </div>
 		</div>
 
+		<div id="copy-toast" class="fixed top-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse text-gray-200 bg-gray-700 rounded-lg shadow-lg opacity-0 -translate-y-5 transition-all duration-500 ease-out z-[5000]">
+		    <div id="copy-toast-icon" class="text-xl"></div>
+		    <div id="copy-toast-message" class="text-sm font-semibold"></div>
+		</div>
+	
 		<div id="achievement-details-modal" class="modal hidden">
 		    <div class="modal-content text-center">
 		        <div id="modal-achievement-icon" class="text-6xl mb-4"></div>
@@ -2121,7 +2112,9 @@ let userLevelData = { level: 0, xp: 0 };
 let masterBlueprintVersion = 1;
 let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
-let profileChartInstance = null;		
+let profileChartInstance = null;	
+let messageTimeout = null;
+		
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -3094,16 +3087,33 @@ const showLevelUpNotification = (level, rankName, rankIcon) => {
 const getAppControlDocRef = () => { return doc(db, 'artifacts', safeAppId, 'app_control', 'version_info'); };		
 		
 const showMessage = (text, type = 'success') => {
-    const messageBox = document.getElementById('message-box');
-    messageBox.textContent = text;
-    messageBox.className = 'message-box show';
-    if (type === 'success') {
-        messageBox.style.backgroundColor = '#10B981';
-    } else if (type === 'error') {
-        messageBox.style.backgroundColor = '#EF4444';
+    const toast = document.getElementById('copy-toast');
+    const toastIcon = document.getElementById('copy-toast-icon');
+    const toastMessage = document.getElementById('copy-toast-message');
+
+    if (!toast || !toastIcon || !toastMessage) return;
+
+    // Clear any existing timer to prevent the toast from hiding prematurely
+    if (messageTimeout) {
+        clearTimeout(messageTimeout);
     }
-    setTimeout(() => {
-        messageBox.className = 'message-box';
+
+    // Set icon and color based on the message type
+    if (type === 'success') {
+        toastIcon.innerHTML = `<i class="fas fa-check-circle text-green-400"></i>`;
+        toast.style.borderColor = '#34d399'; // A green border
+    } else if (type === 'error') {
+        toastIcon.innerHTML = `<i class="fas fa-times-circle text-red-400"></i>`;
+        toast.style.borderColor = '#ef4444'; // A red border
+    }
+
+    // Update the message and show the toast
+    toastMessage.textContent = text;
+    toast.classList.add('show');
+
+    // Set a timer to hide the toast after 3 seconds
+    messageTimeout = setTimeout(() => {
+        toast.classList.remove('show');
     }, 3000);
 };
 
