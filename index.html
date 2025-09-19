@@ -1639,42 +1639,44 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
         </svg>
     </div>
 
-    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl relative">
-		    <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
-		
-		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
-		        <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
-		            <i class="fas fa-paint-brush mr-2"></i> Customize
-		        </button>
-		        <div id="rank-icon-container-redesigned" class="flex-shrink-0">
-		            </div>
-		        <div class="flex-grow w-full text-center md:text-left">
-		            <div class="flex items-center justify-center md:justify-start gap-3">
-		                <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
-		                </h3>
-		                <div id="double-xp-indicator" class="hidden relative group">
-		                    <i class="fas fa-bolt text-3xl text-yellow-400"></i>
-		                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-		                        2x XP Active!
-		                    </span>
-		                </div>
-		            </div>
-		            <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
-		            </p>
-		        </div>
-		    </div>
-		    <div class="p-6 bg-gray-800/50 relative z-10">
-		        <div class="xp-bar-container-redesigned" title="Experience Points Progress">
-		            <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-		            </div>
-		            <span id="xp-progress-text-redesigned" class="xp-bar-text">
-		            </span>
-		        </div>
-		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
-		        </div>
-		    </div>
-		</div>
+<div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
+    <div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl relative">
+        <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
+
+        <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
+            <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
+                <i class="fas fa-paint-brush mr-2"></i> Customize
+            </button>
+            <div id="rank-icon-container-redesigned" class="flex-shrink-0">
+                </div>
+            <div class="flex-grow w-full text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+                        </h3>
+                    <div id="double-xp-indicator" class="hidden relative group">
+                        <i class="fas fa-bolt text-3xl text-yellow-400"></i>
+                        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                            2x XP Active!
+                        </span>
+                    </div>
+                </div>
+                <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
+                    </p>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-800/50 relative z-10">
+            <div class="xp-bar-container-redesigned" title="Experience Points Progress">
+                <div id="xp-bar-redesigned" class="xp-bar-redesigned">
+                </div>
+                <span id="xp-progress-text-redesigned" class="xp-bar-text">
+                    </span>
+            </div>
+            <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
+                </div>
+        </div>
+    </div>
+    <div id="achievements-module" class="floating-card p-6 sm:p-8">
+        ```
 
 
         <div id="achievements-module" class="floating-card p-6 sm:p-8">
@@ -2711,6 +2713,36 @@ const backfillActiveDays = async (uid) => {
         console.error("Error during active days backfill:", error);
     }
 };
+
+const renderCallingCardSelection = async () => {
+    const grid = document.getElementById('calling-card-grid');
+    if (!grid) return;
+
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const currentCard = userData.callingCard || '';
+
+    grid.innerHTML = CALLING_CARDS.map(card => {
+        const isSelected = card.class === currentCard;
+        return `
+            <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
+                <div class="calling-card-bg ${card.class}" style="height: 150px;"></div>
+                <div class="preview-title">${card.title}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Now, inject JS-based elements after the grid is built
+    grid.querySelectorAll('.calling-card-preview').forEach(preview => {
+        const cardClass = preview.dataset.cardClass;
+        const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
+        if (cardConfig && cardConfig.needsJs) {
+            injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
+        }
+    });
+};		
 		
 const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
     // If there are no copies or no active days, the average is 0.
