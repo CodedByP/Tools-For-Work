@@ -2690,7 +2690,7 @@ const renderCallingCardSelection = async () => {
     const userData = userDoc.exists() ? userDoc.data() : {};
     const currentCard = userData.callingCard || '';
     
-    // Set the selected card for the first time
+    // Set the selected card for the first time when the modal opens
     selectedCardClass = currentCard;
 
     grid.innerHTML = CALLING_CARDS.map(card => {
@@ -2699,7 +2699,7 @@ const renderCallingCardSelection = async () => {
         return `
             <div class="flex flex-col">
                 <h4 class="text-lg font-semibold text-center text-gray-200 mb-2 truncate">${card.title}</h4>
-                <div class="calling-card-preview ${isSelected ? 'selected is-active' : ''}" data-card-class="${card.class}">
+                <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
                     <div class="calling-card-bg ${card.class}"></div>
                 </div>
             </div>
@@ -2715,9 +2715,10 @@ const renderCallingCardSelection = async () => {
         }
     });
 
-    // Make the initially selected card the active one
+    // Make the initially selected card the active one to preview it
     const initialActive = grid.querySelector('.calling-card-preview.selected');
     if (initialActive) {
+        initialActive.classList.add('is-active');
         activePreview = initialActive;
     }
 };
@@ -5622,8 +5623,7 @@ const showPlaceholderDemo = () => {
 // PASTE THIS ENTIRE BLOCK
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
-
-
+	
     const customizeCardBtn = document.getElementById('customize-card-btn');
     const callingCardModal = document.getElementById('calling-card-modal');
     const closeCallingCardModalBtn = document.getElementById('close-calling-card-modal-btn');
@@ -5654,7 +5654,7 @@ function attachEventListeners() {
             const selectedCardPreview = e.target.closest('.calling-card-preview');
             if (selectedCardPreview) {
                 // Handle the selection highlight
-                grid.querySelectorAll('.calling-card-preview').forEach(el => el.classList.remove('selected'));
+                callingCardGrid.querySelectorAll('.calling-card-preview').forEach(el => el.classList.remove('selected'));
                 selectedCardPreview.classList.add('selected');
                 selectedCardClass = selectedCardPreview.dataset.cardClass;
 
