@@ -5358,35 +5358,35 @@ const injectCallingCardJs = (cardClass, container) => {
     }
 };
 
-const renderCallingCardSelection = () => {
+const renderCallingCardSelection = async () => { // <-- Add async
     const grid = document.getElementById('calling-card-grid');
     if (!grid) return;
 
     const userDocRef = getUserRootDocRef(userId);
-    getDoc(userDocRef).then(userDoc => {
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        const currentCard = userData.callingCard || '';
+    const userDoc = await getDoc(userDocRef); // <-- Use await instead of .then()
+    
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const currentCard = userData.callingCard || '';
 
-        grid.innerHTML = CALLING_CARDS.map(card => {
-            const isSelected = card.class === currentCard;
-            return `
-                <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
-                    <div class="calling-card-bg ${card.class}" style="height: 150px;"></div>
-                    <div class="preview-title">${card.title}</div>
-                </div>
-            `;
-        }).join('');
+    grid.innerHTML = CALLING_CARDS.map(card => {
+        const isSelected = card.class === currentCard;
+        return `
+            <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
+                <div class="calling-card-bg ${card.class}" style="height: 150px;"></div>
+                <div class="preview-title">${card.title}</div>
+            </div>
+        `;
+    }).join('');
 
-        // Now, inject JS-based elements after the grid is built
-        grid.querySelectorAll('.calling-card-preview').forEach(preview => {
-            const cardClass = preview.dataset.cardClass;
-            const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
-            if (cardConfig && cardConfig.needsJs) {
-                injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
-            }
-        });
+    // Now, inject JS-based elements after the grid is built
+    grid.querySelectorAll('.calling-card-preview').forEach(preview => {
+        const cardClass = preview.dataset.cardClass;
+        const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
+        if (cardConfig && cardConfig.needsJs) {
+            injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
+        }
     });
-};		
+};
 
 const renderLevelingSystem = (userData) => {
     const totalXp = userData.xp || 0;
@@ -5641,8 +5641,8 @@ function attachEventListeners() {
 	const callingCardGrid = document.getElementById('calling-card-grid');
 	
 	if (customizeCardBtn) {
-	    customizeCardBtn.addEventListener('click', () => {
-	        renderCallingCardSelection();
+	    customizeCardBtn.addEventListener('click', async () => { // <-- Add async
+	        await renderCallingCardSelection();                  // <-- Add await
 	        callingCardModal.classList.remove('hidden');
 	    });
 	}
