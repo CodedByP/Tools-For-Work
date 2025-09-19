@@ -5390,6 +5390,7 @@ const renderActivityChart = (events) => {
     });
 };
 
+
 const renderLevelingSystem = (userData) => {
     const totalXp = userData.xp || 0;
     const levelInfo = calculateLevelInfo(totalXp);
@@ -5416,8 +5417,8 @@ const renderLevelingSystem = (userData) => {
         const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
         levelingSection.classList.remove(...cardClasses);
 
-        // 2. Clear any old JS-injected elements
-        levelingSection.querySelectorAll('.star, .datastream-col, .hud-corner, .hud-rec, .hud-scanline-2, .holo-grid-1, .holo-grid-2, .holo-scanline, .supernova-gas-1, .supernova-gas-2, .supernova-core, .lightning-bolt, .snow-particle, .haunting-wisp, .energy-arc, .heartbeat-line, .heartbeat-sweep, .heartbeat-line + svg').forEach(el => el.remove());
+        // 2. Clear any old JS-injected elements (THIS LINE IS THE FIX)
+        levelingSection.querySelectorAll('.star, .datastream-col, .hud-corner, .hud-rec, .hud-scanline-2, .holo-grid-1, .holo-grid-2, .holo-scanline, .supernova-gas-1, .supernova-gas-2, .supernova-core, .lightning-bolt, .snow-particle, .haunting-wisp, .energy-arc, .heartbeat-line, .heartbeat-sweep, svg').forEach(el => el.remove());
 
         // 3. Apply the user's selected card
         const userCardClass = userData.callingCard || '';
