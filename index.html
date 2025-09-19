@@ -2801,19 +2801,26 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-hyperspace' || cardClass === 'card-supernova') {
         let stars = '';
         for (let i = 0; i < 100; i++) {
-            let style = `left: ${Math.random()*100}%; top: ${Math.random()*100}%; animation-delay: ${Math.random()*1.5}s;`;
+            let style = `left: ${Math.random() * 100}%; top: ${Math.random() * 100}%; animation-delay: ${Math.random() * 1.5}s;`;
             let colorClass = 'star';
             const rand = Math.random();
             if (rand > 0.8) colorClass += ' star-blue';
             else if (rand > 0.7) colorClass += ' star-yellow';
             stars += `<div class="${colorClass}" style="${style}"></div>`;
         }
-        container.innerHTML += stars;
+        // For these cards, using innerHTML is fine as they are self-contained.
+        if (cardClass === 'card-supernova') {
+             container.insertAdjacentHTML('afterbegin', stars);
+        } else {
+             container.innerHTML += stars;
+        }
     }
     if (cardClass === 'card-datastream') {
+        let cols = '';
         for (let i = 0; i < 15; i++) {
-            container.innerHTML += `<div class="datastream-col" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
+            cols += `<div class="datastream-col" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
         }
+        container.innerHTML += cols;
     }
     if (cardClass === 'card-tactical-hud') {
         container.innerHTML += `<div class="hud-corner hud-corner-tl"></div><div class="hud-corner hud-corner-tr"></div><div class="hud-corner hud-corner-bl"></div><div class="hud-corner hud-corner-br"></div><div class="hud-rec">REC</div><div class="hud-scanline-2"></div>`;
@@ -2825,7 +2832,7 @@ const injectCallingCardJs = (cardClass, container) => {
         container.innerHTML += `<div class="lightning-bolt"></div><div class="lightning-bolt"></div><div class="lightning-bolt"></div>`;
     }
     if (cardClass === 'card-blizzard') {
-        // THIS FIXES THE 'width' TypeError
+        // THIS IS THE CORRECTED CODE THAT FIXES THE CRASH
         for (let i = 0; i < 50; i++) {
             const snow = document.createElement('div');
             const size = `${Math.random() * 3 + 1}px`;
