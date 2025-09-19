@@ -312,11 +312,12 @@
 }	
 
 /* --- CALLING CARD STYLES --- */
-/* This is the container on the main stats page that will have the background */
-#leveling-section-redesigned {
+#calling-card-bg-container {
     transition: all 0.3s ease-in-out;
     background-size: cover;
     background-position: center;
+    border-radius: 1rem; /* Match the parent's rounded corners */
+    overflow: hidden;
 }
 
 /* This is a helper class for the selection modal */
@@ -1639,39 +1640,42 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
     <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl">
-		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative">
-			    <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
-			        <i class="fas fa-paint-brush mr-2"></i> Customize
-			    </button>
+		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl relative">
+		    <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
+		
+		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
+		        <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
+		            <i class="fas fa-paint-brush mr-2"></i> Customize
+		        </button>
 		        <div id="rank-icon-container-redesigned" class="flex-shrink-0">
 		            </div>
-				<div class="flex-grow w-full text-center md:text-left">
-				    <div class="flex items-center justify-center md:justify-start gap-3">
-				        <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
-				        </h3>
-				        <div id="double-xp-indicator" class="hidden relative group">
-				            <i class="fas fa-bolt text-3xl text-yellow-400"></i>
-				            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-				                2x XP Active!
-				            </span>
-				        </div>
-				    </div>
-				    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
-				    </p>
-				</div>
-		    </div>
-		    <div class="p-6 bg-gray-800/50">
-					<div class="xp-bar-container-redesigned" title="Experience Points Progress">
-					    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-					        </div>
-					    <span id="xp-progress-text-redesigned" class="xp-bar-text">
-					    </span>
-					</div>
-		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
+		        <div class="flex-grow w-full text-center md:text-left">
+		            <div class="flex items-center justify-center md:justify-start gap-3">
+		                <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+		                </h3>
+		                <div id="double-xp-indicator" class="hidden relative group">
+		                    <i class="fas fa-bolt text-3xl text-yellow-400"></i>
+		                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+		                        2x XP Active!
+		                    </span>
+		                </div>
 		            </div>
+		            <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
+		            </p>
+		        </div>
+		    </div>
+		    <div class="p-6 bg-gray-800/50 relative z-10">
+		        <div class="xp-bar-container-redesigned" title="Experience Points Progress">
+		            <div id="xp-bar-redesigned" class="xp-bar-redesigned">
+		            </div>
+		            <span id="xp-progress-text-redesigned" class="xp-bar-text">
+		            </span>
+		        </div>
+		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
+		        </div>
 		    </div>
 		</div>
+
 
         <div id="achievements-module" class="floating-card p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
@@ -2794,21 +2798,22 @@ const backfillUserStats = async (uid) => {
     }
 };
 
+// ▼▼▼ REPLACE BOTH FUNCTIONS WITH THESE NEW VERSIONS ▼▼▼
+
 const injectCallingCardJs = (cardClass, container) => {
     if (!container) return; // Safety check
+    container.innerHTML = ''; // Clear previous elements
 
-    // This function injects dynamic elements for specific cards
     if (cardClass === 'card-hyperspace' || cardClass === 'card-supernova') {
         let stars = '';
         for (let i = 0; i < 100; i++) {
-            let style = `left: ${Math.random() * 100}%; top: ${Math.random() * 100}%; animation-delay: ${Math.random() * 1.5}s;`;
+            let style = `left: ${Math.random()*100}%; top: ${Math.random()*100}%; animation-delay: ${Math.random()*1.5}s;`;
             let colorClass = 'star';
             const rand = Math.random();
             if (rand > 0.8) colorClass += ' star-blue';
             else if (rand > 0.7) colorClass += ' star-yellow';
             stars += `<div class="${colorClass}" style="${style}"></div>`;
         }
-        // For these cards, using innerHTML is fine as they are self-contained.
         if (cardClass === 'card-supernova') {
              container.insertAdjacentHTML('afterbegin', stars);
         } else {
@@ -2832,7 +2837,6 @@ const injectCallingCardJs = (cardClass, container) => {
         container.innerHTML += `<div class="lightning-bolt"></div><div class="lightning-bolt"></div><div class="lightning-bolt"></div>`;
     }
     if (cardClass === 'card-blizzard') {
-        // THIS IS THE CORRECTED CODE THAT FIXES THE CRASH
         for (let i = 0; i < 50; i++) {
             const snow = document.createElement('div');
             const size = `${Math.random() * 3 + 1}px`;
@@ -2856,35 +2860,101 @@ const injectCallingCardJs = (cardClass, container) => {
     }
 };
 
-const renderCallingCardSelection = async () => {
-    const grid = document.getElementById('calling-card-grid');
-    if (!grid) return;
+const renderLevelingSystem = (userData) => {
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
+    const bgContainer = document.getElementById('calling-card-bg-container');
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
+    const nextRankTextContainer = document.getElementById('next-rank-text-container');
+    const doubleXpIndicator = document.getElementById('double-xp-indicator');
 
-    const userData = userDoc.exists() ? userDoc.data() : {};
-    const currentCard = userData.callingCard || '';
+    // --- NEW CALLING CARD LOGIC ---
+    if (bgContainer) {
+        // Remove all possible card classes to reset it
+        const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
+        bgContainer.classList.remove(...cardClasses);
+        bgContainer.innerHTML = ''; // Clear any old JS-injected elements
 
-    grid.innerHTML = CALLING_CARDS.map(card => {
-        const isSelected = card.class === currentCard;
-        return `
-            <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
-                <div class="calling-card-bg ${card.class}" style="height: 150px;"></div>
-                <div class="preview-title">${card.title}</div>
-            </div>
-        `;
-    }).join('');
-
-    // Now, inject JS-based elements after the grid is built
-    grid.querySelectorAll('.calling-card-preview').forEach(preview => {
-        const cardClass = preview.dataset.cardClass;
-        const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
-        if (cardConfig && cardConfig.needsJs) {
-            injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
+        // Apply the user's selected card
+        const userCardClass = userData.callingCard || '';
+        if (userCardClass) {
+            bgContainer.classList.add(userCardClass);
+            const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
+            if (cardConfig && cardConfig.needsJs) {
+                injectCallingCardJs(userCardClass, bgContainer);
+            }
         }
-    });
-};		
+    }
+
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
+
+    // (The entire switch statement for rank icons remains unchanged)
+    switch(rankName) {
+        case "Newbie": case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman": case "Artisan": case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+    }
+    
+    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+    rankNameEl.textContent = levelInfo.rankName;
+    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    xpBarEl.style.width = `${progressPercent}%`;
+    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+
+    if (isDoubleXpActive) {
+        doubleXpIndicator.classList.remove('hidden');
+    } else {
+        doubleXpIndicator.classList.add('hidden');
+    }
+
+    if (nextRank && nextRankTextContainer) {
+        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
+        nextRankTextContainer.classList.remove('hidden');
+    } else if (nextRankTextContainer) {
+        nextRankTextContainer.classList.add('hidden');
+    }
+};	
 		
 // Renders the achievement icons inside the profile modal
 const renderProfileAchievements = (unlockedAchievements) => {
