@@ -2884,7 +2884,7 @@ const renderLevelingSystem = (userData) => {
     const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
     const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    const levelingSection = document.getElementById('leveling-section-redesigned'); // <<< GET THE PARENT
+    const levelingSection = document.getElementById('leveling-section-redesigned');
     const bgContainer = document.getElementById('calling-card-bg-container');
     const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
     const rankNameEl = document.getElementById('rank-name-redesigned');
@@ -2894,18 +2894,19 @@ const renderLevelingSystem = (userData) => {
     const nextRankTextContainer = document.getElementById('next-rank-text-container');
     const doubleXpIndicator = document.getElementById('double-xp-indicator');
 
+    // --- CALLING CARD LOGIC ---
     if (bgContainer) {
         // Clear old elements first
         bgContainer.innerHTML = '';
         
         // Remove all possible card classes from the PARENT to reset it
         const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
-        levelingSection.classList.remove(...cardClasses); // <<< CHANGE: Target the parent
+        if (levelingSection) levelingSection.classList.remove(...cardClasses);
 
         const userCardClass = userData.callingCard || '';
-        if (userCardClass) {
+        if (userCardClass && levelingSection) {
             // Apply the new class to the PARENT container
-            levelingSection.classList.add(userCardClass); // <<< CHANGE: Target the parent
+            levelingSection.classList.add(userCardClass);
             
             // Inject dynamic elements INTO the background container
             const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
@@ -2915,7 +2916,10 @@ const renderLevelingSystem = (userData) => {
         }
     }
 
-    // (The entire switch statement for rank icons remains unchanged)
+    // --- RANK ICON & TEXT LOGIC ---
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
+    
     switch(rankName) {
         case "Newbie": case "Apprentice":
             wrapperClasses += ' beveled-edge';
@@ -2950,17 +2954,16 @@ const renderLevelingSystem = (userData) => {
             break;
     }
     
-    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
-    rankNameEl.textContent = levelInfo.rankName;
-    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    if (rankIconContainer) rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+    if (rankNameEl) rankNameEl.textContent = levelInfo.rankName;
+    if (levelDisplayEl) levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    
     const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    xpBarEl.style.width = `${progressPercent}%`;
-    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+    if (xpBarEl) xpBarEl.style.width = `${progressPercent}%`;
+    if (xpTextEl) xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
 
-    if (isDoubleXpActive) {
-        doubleXpIndicator.classList.remove('hidden');
-    } else {
-        doubleXpIndicator.classList.add('hidden');
+    if (doubleXpIndicator) {
+        doubleXpIndicator.classList.toggle('hidden', !isDoubleXpActive);
     }
 
     if (nextRank && nextRankTextContainer) {
