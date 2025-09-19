@@ -476,8 +476,11 @@
 .heartbeat-line svg { position: absolute; width: 100%; height: 100px; top: 50%; left: 0; transform: translateY(-50%); stroke: #f00; stroke-width: 3; fill: transparent; stroke-dasharray: 500; stroke-dashoffset: 500; animation: draw-heartbeat 2s linear infinite; will-change: stroke-dashoffset; }
 .heartbeat-sweep { position: absolute; top: 0; left: 0; height: 100%; width: 4px; background: #f00; box-shadow: 0 0 10px #f00; animation: sweep-heartbeat 2s linear infinite; will-change: transform; }
 @keyframes draw-heartbeat { 0% { stroke-dashoffset: 500; } 50% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
-@keyframes sweep-heartbeat { 0% { transform: translateX(0%); } 50% { transform: translateX(calc(100vw / 3)); } 100% { transform: translateX(calc(100vw / 3)); } }
-
+@keyframes sweep-heartbeat {
+    0% { transform: translateX(0%); }      /* <<< CHANGE THIS */
+    50% { transform: translateX(100%); }   /* <<< CHANGE THIS */
+    100% { transform: translateX(100%); }  /* <<< CHANGE THIS */
+}
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
     position: relative;
@@ -2878,13 +2881,13 @@ const renderLevelingSystem = (userData) => {
     const totalXp = userData.xp || 0;
     const levelInfo = calculateLevelInfo(totalXp);
     const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(" ", "-")}`;
     const weekId = getCurrentWeekId();
     const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
     const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
     const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    const levelingSection = document.getElementById('leveling-section-redesigned');
+    // Get all the DOM elements
     const bgContainer = document.getElementById('calling-card-bg-container');
     const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
     const rankNameEl = document.getElementById('rank-name-redesigned');
@@ -2894,21 +2897,21 @@ const renderLevelingSystem = (userData) => {
     const nextRankTextContainer = document.getElementById('next-rank-text-container');
     const doubleXpIndicator = document.getElementById('double-xp-indicator');
 
-    // --- CALLING CARD LOGIC ---
+    // --- CORRECTED CALLING CARD LOGIC ---
     if (bgContainer) {
-        // Clear old elements first
-        bgContainer.innerHTML = '';
-        
-        // Remove all possible card classes from the PARENT to reset it
+        // 1. Remove all possible card classes from the background container to reset it
         const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
-        if (levelingSection) levelingSection.classList.remove(...cardClasses);
+        bgContainer.classList.remove(...cardClasses);
+        
+        // 2. Clear any old JS-injected animation elements
+        bgContainer.innerHTML = ''; 
 
+        // 3. Apply the user's selected card class directly to the background container
         const userCardClass = userData.callingCard || '';
-        if (userCardClass && levelingSection) {
-            // Apply the new class to the PARENT container
-            levelingSection.classList.add(userCardClass);
+        if (userCardClass) {
+            bgContainer.classList.add(userCardClass);
             
-            // Inject dynamic elements INTO the background container
+            // 4. Inject new animation elements into the background container
             const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
             if (cardConfig && cardConfig.needsJs) {
                 injectCallingCardJs(userCardClass, bgContainer);
@@ -2916,7 +2919,7 @@ const renderLevelingSystem = (userData) => {
         }
     }
 
-    // --- RANK ICON & TEXT LOGIC ---
+    // --- The rest of the function (for rank icon, xp bar, etc.) remains the same ---
     let wrapperClasses = `level-badge-wrapper ${rankClass}`;
     let innerHTML = '';
     
