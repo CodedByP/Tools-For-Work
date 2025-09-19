@@ -5333,9 +5333,19 @@ const injectCallingCardJs = (cardClass, container) => {
          container.innerHTML += `<div class="lightning-bolt"></div><div class="lightning-bolt"></div><div class="lightning-bolt"></div>`;
     }
     if (cardClass === 'card-blizzard') {
-         for (let i = 0; i < 50; i++) {
-            container.innerHTML += `<div class="snow-particle" style="left:${Math.random()*100}%;width:${Math.random()*3+1}px;height:${this.width};animation-delay:${Math.random()*10}s;animation-duration:${Math.random()*5+5}s;"></div>`;
+        // ▼▼▼ THIS IS THE FIX ▼▼▼
+        for (let i = 0; i < 50; i++) {
+            const snow = document.createElement('div');
+            const size = `${Math.random() * 3 + 1}px`; // Generate size once
+            snow.className = 'snow-particle';
+            snow.style.left = `${Math.random() * 100}%`;
+            snow.style.width = size;
+            snow.style.height = size; // Use the same generated size for height
+            snow.style.animationDelay = `${Math.random() * 10}s`;
+            snow.style.animationDuration = `${Math.random() * 5 + 5}s`;
+            container.appendChild(snow); // Append the new element
         }
+        // ▲▲▲ END OF FIX ▲▲▲
     }
     if (cardClass === 'card-haunting') {
         container.innerHTML += `<div class="haunting-wisp"></div>`;
