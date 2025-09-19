@@ -337,11 +337,6 @@
     border-color: #00aaff;
     box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
 }
-.calling-card-preview .preview-title {
-    position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem;
-    background: rgba(0,0,0,0.6); text-align: center; font-weight: 600;
-    color: white; backdrop-filter: blur(2px);
-}
 
 /* Base style for ALL animated backgrounds */
 .calling-card-bg {
@@ -2692,21 +2687,26 @@ const renderCallingCardSelection = async () => {
 
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
-
     const userData = userDoc.exists() ? userDoc.data() : {};
     const currentCard = userData.callingCard || '';
+    
+    // Set the selected card for the first time
+    selectedCardClass = currentCard;
 
     grid.innerHTML = CALLING_CARDS.map(card => {
         const isSelected = card.class === currentCard;
+        // This new structure wraps each card with a title above it.
         return `
-            <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
-                <div class="calling-card-bg ${card.class}"></div>
-                <div class="preview-title">${card.title}</div>
+            <div class="flex flex-col">
+                <h4 class="text-lg font-semibold text-center text-gray-200 mb-2 truncate">${card.title}</h4>
+                <div class="calling-card-preview ${isSelected ? 'selected is-active' : ''}" data-card-class="${card.class}">
+                    <div class="calling-card-bg ${card.class}"></div>
+                </div>
             </div>
         `;
     }).join('');
 
-    // Now, inject JS-based elements after the grid is built
+    // Inject JS-based elements after the grid is built
     grid.querySelectorAll('.calling-card-preview').forEach(preview => {
         const cardClass = preview.dataset.cardClass;
         const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
@@ -2714,6 +2714,12 @@ const renderCallingCardSelection = async () => {
             injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
         }
     });
+
+    // Make the initially selected card the active one
+    const initialActive = grid.querySelector('.calling-card-preview.selected');
+    if (initialActive) {
+        activePreview = initialActive;
+    }
 };
 		
 const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
