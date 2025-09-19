@@ -6354,125 +6354,125 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
     });	
 
 
-
-// ▼▼▼ REPLACE THE OLD CODE WITH THIS ▼▼▼
-
-document.addEventListener('DOMContentLoaded', () => {
-
-    attachEventListeners();
-
-    // Then, set up the Firebase authentication listener to load user data.
-    onAuthStateChanged(auth, async (user) => {
-        if (cannedResponsesUnsubscribe) { cannedResponsesUnsubscribe(); cannedResponsesUnsubscribe = null; }
-        if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
-        if (user) {
-            userId = user.uid;
-            isAnonymous = user.isAnonymous;
-            const displayName = user.displayName || user.email || 'User';
-            userName = displayName.split(' ')[0].split('@')[0];
-            
-            defaultLinks = await getHelpfulLinksBlueprint();
-            renderStaticLinks();
-
-            if (!isAnonymous) {
-                const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
-                helpfulLinksUnsubscribe = onSnapshot(linksCollectionRef, (querySnapshot) => {
-                    userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderUserLinks();
-                }, (error) => {
-                    console.error("Error listening for user links:", error);
-                    showMessage("Error loading your links. Please check your Firebase permissions.", 'error');
-                });
+// --- Core Application Logic (Auth and Data Sync) ---
+onAuthStateChanged(auth, async (user) => {
+    if (cannedResponsesUnsubscribe) { cannedResponsesUnsubscribe(); cannedResponsesUnsubscribe = null; }
+    if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
+    if (user) {
+        userId = user.uid;
+        isAnonymous = user.isAnonymous;
+        const displayName = user.displayName || user.email || 'User';
+        userName = displayName.split(' ')[0].split('@')[0];
+        const linksUserInfo = document.getElementById('links-user-info');
+        if (linksUserInfo) linksUserInfo.textContent = `User ID: ${userId}`;
+        defaultLinks = await getHelpfulLinksBlueprint();
+        renderStaticLinks();
+        if (!isAnonymous) {
+            const linksCollectionRef = getUserHelpfulLinksCollectionRef(userId);
+            helpfulLinksUnsubscribe = onSnapshot(linksCollectionRef, (querySnapshot) => {
+                userLinks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUserLinks();
+            }, (error) => {
+                console.error("Error listening for user links:", error);
+                showMessage("Error loading your links. Please check your Firebase permissions.", 'error');
+            });
+        }
+        if (isAnonymous) {
+            const userDocRef = getUserRootDocRef(userId);
+            try {
+                const userDoc = await getDoc(userDocRef);
+                const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
+                if (!hasSeenPrompt) { document.getElementById('login-popup-modal').classList.remove('hidden'); setTimeout(() => { document.getElementById('login-popup-modal').classList.add('show'); }, 10); } else { document.getElementById('login-popup-modal').classList.add('hidden'); }
+            } catch (error) {
+                console.error("Error fetching user data for login prompt:", error);
+                document.getElementById('login-popup-modal').classList.remove('hidden');
+                setTimeout(() => { document.getElementById('login-popup-modal').classList.add('show'); }, 10);
+            }
+            categories = await getCannedResponsesBlueprint();
+            if (Object.keys(categories).length > 0) {
+                const existingCategoryNames = Object.keys(categories);
+                if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
+            }
+            renderContent();
+        } else {
+            document.getElementById('login-popup-modal').classList.add('hidden');
+            const userDocRef = getUserRootDocRef(userId);
+			await updateUserLeaderboardEntry();
+            const userDoc = await getDoc(userDocRef);
+			const userData = userDoc.exists() ? userDoc.data() : {};
+            firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
+			
+		    if (!userData.statsBackfilled) {
+		        await backfillUserStats(userId);
+		    }
+			if (!userData.activeDaysBackfilled) {
+           		 await backfillActiveDays(userId);
+       		}
+			
+            if (!userData.firstSignIn) {
+                const creationTime = user.metadata.creationTime; 
+                firstSignIn = new Date(creationTime);
+                await setDoc(userDocRef, { firstSignIn: firstSignIn, xp: 0 }, { merge: true });
+                console.log(`Initialized 'firstSignIn' and 'xp' for user ${userId}`);
+            } else {
+                firstSignIn = userData.firstSignIn.toDate();
             }
 
-            if (isAnonymous) {
-                const userDocRef = getUserRootDocRef(userId);
-                try {
-                    const userDoc = await getDoc(userDocRef);
-                    const hasSeenPrompt = userDoc.exists() && userDoc.data().hasSeenLoginPrompt;
-                    if (!hasSeenPrompt) { document.getElementById('login-popup-modal').classList.remove('hidden'); setTimeout(() => { document.getElementById('login-popup-modal').classList.add('show'); }, 10); } else { document.getElementById('login-popup-modal').classList.add('hidden'); }
-                } catch (error) {
-                    console.error("Error fetching user data for login prompt:", error);
-                    document.getElementById('login-popup-modal').classList.remove('hidden');
-                    setTimeout(() => { document.getElementById('login-popup-modal').classList.add('show'); }, 10);
+            // --- NEW: One-Time XP Backfilling Script ---
+            if (userData && userData.achievementsData && !userData.xpMigrated) {
+                const unlockedAchievementsCount = Object.keys(userData.achievementsData).length;
+                if (unlockedAchievementsCount > 0) {
+                    const earnedXp = unlockedAchievementsCount * XP_VALUES.UNLOCK_ACHIEVEMENT;
+                    const currentXp = userData.xp || 0;
+                    const newTotalXp = currentXp + earnedXp;
+
+                    await setDoc(userDocRef, {
+                        xp: newTotalXp,
+                        xpMigrated: true // Set the flag to prevent this from running again
+                    }, { merge: true });
+                    
+                    console.log(`Migrated ${earnedXp} XP for ${unlockedAchievementsCount} past achievements for user ${userId}.`);
+                    showMessage("Your past achievements have been credited with XP!", "success");
+                } else {
+                     await setDoc(userDocRef, { xpMigrated: true }, { merge: true });
                 }
-                categories = await getCannedResponsesBlueprint();
+            }
+            // --- END of New Script ---
+
+            const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
+            if (!tutorialSeen) {
+                document.getElementById('tutorial-modal').classList.remove('hidden');
+                showTutorialStep(0);
+            } else {
+                document.getElementById('tutorial-modal').classList.add('hidden');
+            }
+			await checkForUpdatesOnLoad();
+            const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
+            cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
+                if (doc.exists()) { categories = doc.data().categories || {}; } else { try { const blueprint = await getCannedResponsesBlueprint(); categories = JSON.parse(JSON.stringify(blueprint)); await setDoc(userCannedResponsesDocRef, { categories: categories }); console.log("Migrated default data to Firestore for new user."); } catch (error) { console.error("Error migrating data for new user:", error); } }
+                for (const key in categories) { if (!categories[key].responses) { categories[key].responses = []; } }
                 if (Object.keys(categories).length > 0) {
                     const existingCategoryNames = Object.keys(categories);
                     if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
                 }
                 renderContent();
-            } else {
-                document.getElementById('login-popup-modal').classList.add('hidden');
-                const userDocRef = getUserRootDocRef(userId);
-                await updateUserLeaderboardEntry();
-                const userDoc = await getDoc(userDocRef);
-                const userData = userDoc.exists() ? userDoc.data() : {};
-                firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-                
-                if (!userData.statsBackfilled) {
-                    await backfillUserStats(userId);
-                }
-                if (!userData.activeDaysBackfilled) {
-                    await backfillActiveDays(userId);
-                }
-                
-                if (!userData.firstSignIn) {
-                    const creationTime = user.metadata.creationTime; 
-                    firstSignIn = new Date(creationTime);
-                    await setDoc(userDocRef, { firstSignIn: firstSignIn, xp: 0 }, { merge: true });
-                    console.log(`Initialized 'firstSignIn' and 'xp' for user ${userId}`);
-                } else {
-                    firstSignIn = userData.firstSignIn.toDate();
-                }
-
-                if (userData && userData.achievementsData && !userData.xpMigrated) {
-                    const unlockedAchievementsCount = Object.keys(userData.achievementsData).length;
-                    if (unlockedAchievementsCount > 0) {
-                        const earnedXp = unlockedAchievementsCount * XP_VALUES.UNLOCK_ACHIEVEMENT;
-                        const currentXp = userData.xp || 0;
-                        const newTotalXp = currentXp + earnedXp;
-                        await setDoc(userDocRef, { xp: newTotalXp, xpMigrated: true }, { merge: true });
-                        console.log(`Migrated ${earnedXp} XP for ${unlockedAchievementsCount} past achievements for user ${userId}.`);
-                        showMessage("Your past achievements have been credited with XP!", "success");
-                    } else {
-                        await setDoc(userDocRef, { xpMigrated: true }, { merge: true });
-                    }
-                }
-
-                const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
-                if (!tutorialSeen) {
-                    document.getElementById('tutorial-modal').classList.remove('hidden');
-                    showTutorialStep(0);
-                } else {
-                    document.getElementById('tutorial-modal').classList.add('hidden');
-                }
-                await checkForUpdatesOnLoad();
-                const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
-                cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
-                    if (doc.exists()) { categories = doc.data().categories || {}; } else { try { const blueprint = await getCannedResponsesBlueprint(); categories = JSON.parse(JSON.stringify(blueprint)); await setDoc(userCannedResponsesDocRef, { categories: categories }); console.log("Migrated default data to Firestore for new user."); } catch (error) { console.error("Error migrating data for new user:", error); } }
-                    for (const key in categories) { if (!categories[key].responses) { categories[key].responses = []; } }
-                    if (Object.keys(categories).length > 0) {
-                        const existingCategoryNames = Object.keys(categories);
-                        if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
-                    }
-                    renderContent();
-                    updateDarkModeStreak();
-                    checkAndNotifyAchievements(firstSignIn); 
-                }, (error) => {
-                    console.error("Error with onSnapshot listener:", error);
-                    showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
-                });
-            }
-        } else {
-            try { await signInAnonymously(auth); } catch (error) { console.error("Anonymous sign-in failed", error); }
+				updateDarkModeStreak();
+				checkAndNotifyAchievements(firstSignIn); 
+            }, (error) => {
+                console.error("Error with onSnapshot listener:", error);
+                showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
+            });
         }
-        const loader = document.getElementById('full-page-loader');
-        if (loader) {
-            loader.classList.add('hidden');
-        }	
-    });
+    } else {
+        try { await signInAnonymously(auth); } catch (error) { console.error("Anonymous sign-in failed", error); }
+    }
+    const loader = document.getElementById('full-page-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }	
 });
+
+attachEventListeners();
 </script>
 </body>
 </html>
