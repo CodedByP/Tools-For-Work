@@ -76,11 +76,7 @@
 			.newly-unlocked {
 			    animation: unlock-animation 0.7s ease-out forwards;
 			}
-const getCurrentMonthId = () => {
-    const now = new Date();
-    // Returns a string like "2025-09"
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};		
+
 		
 #copy-toast.show {
     opacity: 1;
@@ -3022,6 +3018,12 @@ const getCurrentWeekId = () => {
     // Return year and week number
     return `${date.getUTCFullYear()}-${weekNo}`;
 };	
+
+const getCurrentMonthId = () => {
+    const now = new Date();
+    // Returns a string like "2025-09"
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};		
 
 const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
