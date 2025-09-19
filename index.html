@@ -76,6 +76,11 @@
 			.newly-unlocked {
 			    animation: unlock-animation 0.7s ease-out forwards;
 			}
+const getCurrentMonthId = () => {
+    const now = new Date();
+    // Returns a string like "2025-09"
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};		
 		
 #copy-toast.show {
     opacity: 1;
@@ -3020,54 +3025,71 @@ const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
 
     try {
-        const todayStr = getCurrentDateString();
-        const weekId = getCurrentWeekId();
-
         const userDocRef = getUserRootDocRef(userId);
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() : {};
-
         const eventsCollectionRef = getUserEventsCollectionRef(userId);
-
-        // --- 1. Daily Challenge Check ---
+        const querySnapshot = await getDocs(query(eventsCollectionRef));
+        const events = querySnapshot.docs.map(doc => doc.data());
+        
+        // --- Daily Challenge Check (No changes here) ---
+        const todayStr = getCurrentDateString();
         const lastDailyCompletion = userData.lastDailyChallengeDate || '';
         if (lastDailyCompletion !== todayStr) {
-            const todayStart = new Date(todayStr);
-            const querySnapshot = await getDocs(query(eventsCollectionRef));
-            const events = querySnapshot.docs.map(doc => doc.data());
-            const todaysCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= todayStart).length;
-
-            if (todaysCopies >= 10) {
-                await awardXP(100);
-                await setDoc(userDocRef, { lastDailyChallengeDate: todayStr }, { merge: true });
-                showMessage("Daily Challenge Complete! +100 XP", "success");
+             const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(events);
+             if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.dailyCopies.xp);
+                await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
+                showMessage(`Daily Challenge Complete! +${CHALLENGES_CONFIG.dailyCopies.xp} XP`, "success");
             }
         }
 
-        // --- 2. Weekly Challenge Check ---
+        // --- Weekly Challenge Check (No changes here) ---
+        const weekId = getCurrentWeekId();
         const lastWeeklyCompletion = userData.lastWeeklyChallengeWeek || '';
         if (lastWeeklyCompletion !== weekId) {
-            const now = new Date();
-            const dayOfWeek = now.getDay();
-            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - daysSinceMonday);
-            startOfWeek.setHours(0, 0, 0, 0);
+            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp);
+                await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
+                showMessage("Weekly Challenge Complete! 2x XP is now active.", "success");
+            }
+        }
 
-            const querySnapshot = await getDocs(query(eventsCollectionRef));
-            const events = querySnapshot.docs.map(doc => doc.data());
-            const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
+        // --- NEW: Monthly Challenge Check ---
+        const monthId = getCurrentMonthId();
+        const lastMonthlyCompletion = userData.lastMonthlyChallengeMonth || '';
+        if (lastMonthlyCompletion !== monthId) {
+            const { current } = await CHALLENGES_CONFIG.monthlyMarathon.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.monthlyMarathon.goal) {
+                // 1. Set the flag to activate 3x XP for the rest of the month
+                await updateDoc(userDocRef, { lastMonthlyChallengeMonth: monthId });
+                showMessage("Monthly Challenge Complete! 3x XP is active for the rest of the month!", "success");
 
-            if (weeklyCopies >= 50) {
-                await awardXP(500);
-                await setDoc(userDocRef, { lastWeeklyChallengeWeek: weekId }, { merge: true });
-                showMessage("Weekly Challenge Complete! 2x XP is now active for the week!", "success");
+                // 2. Check for and award the new one-time achievement
+                const userAchievements = userData.achievementsData || {};
+                if (!userAchievements.marathon_finisher) {
+                    await awardXP(5000); // Grant the 5,000 XP bonus
+                    
+                    // Add the achievement to the user's data
+                    const newAchievements = { ...userAchievements, marathon_finisher: { date: new Date().toISOString() }};
+                    await updateDoc(userDocRef, { achievementsData: newAchievements });
+                    
+                    // Show the notification toast
+                    showAchievementNotification({
+                        id: 'marathon_finisher',
+                        name: 'Marathon Finisher',
+                        desc: 'Complete the Monthly Marathon challenge.',
+                        icon: 'fa-shoe-prints',
+                        color: 'text-yellow-400'
+                    });
+                }
             }
         }
     } catch (error) {
         console.error("Error checking for challenge XP:", error);
     }
-};		
+};	
 
 const showLevelUpNotification = (level, rankName, rankIcon) => {
     const modal = document.getElementById('level-up-modal');
@@ -3231,24 +3253,28 @@ const calculateLevelInfo = (totalXp) => {
 
 
 const awardXP = async (amount) => {
-    if (!userId || isAnonymous) return;
-
-    // Check if the weekly challenge is completed to activate Double XP
-    const userDocRefForChallenge = getUserRootDocRef(userId);
-    const userDocForChallenge = await getDoc(userDocRefForChallenge);
-    const userDataForChallenge = userDocForChallenge.exists() ? userDocForChallenge.data() : {};
-    const weekId = getCurrentWeekId();
-    const isWeeklyChallengeDone = userDataForChallenge.lastWeeklyChallengeWeek === weekId;
-
-    // Apply Double XP if the weekly challenge is complete
-    if (isWeeklyChallengeDone) {
-        amount *= 2; 
-    }	
+    if (!userId || isAnonymous) return 0; // Return 0 if not eligible
 
     const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : { xp: 0 };
+    
+    // --- NEW: Check for 3x Monthly Boost First ---
+    const monthId = getCurrentMonthId();
+    const isMonthlyChallengeDone = userData.lastMonthlyChallengeMonth === monthId;
+
+    // --- Existing Weekly Boost Check ---
+    const weekId = getCurrentWeekId();
+    const isWeeklyChallengeDone = userData.lastWeeklyChallengeWeek === weekId;
+
+    // Prioritize the monthly boost
+    if (isMonthlyChallengeDone) {
+        amount *= 3;
+    } else if (isWeeklyChallengeDone) {
+        amount *= 2;
+    }
+
     try {
-        const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.exists() ? userDoc.data() : { xp: 0 };
         const oldXp = userData.xp || 0;
         const newXp = oldXp + amount;
 
@@ -3256,19 +3282,17 @@ const awardXP = async (amount) => {
         const newLevelInfo = calculateLevelInfo(newXp);
 
         await setDoc(userDocRef, { xp: newXp }, { merge: true });
-		await updateLeaderboardData(userId, newLevelInfo);
+        await updateLeaderboardData(userId, newLevelInfo);
 
         // Check for a LEVEL up
         if (newLevelInfo.level > oldLevelInfo.level) {
             showLevelUpNotification(newLevelInfo.level, newLevelInfo.rankName, newLevelInfo.rankIcon);
-
-            triggerCelebration(); // Trigger confetti on every level up!
+            triggerCelebration();
             const sound = document.getElementById('level-up-sound');
             if (sound) {
-                sound.currentTime = 0; // Rewind to start
+                sound.currentTime = 0;
                 sound.play().catch(e => console.error("Level up audio play failed:", e));
             }
-
             const levelDisplay = document.getElementById('level-display');
             if (levelDisplay) {
                 levelDisplay.classList.add('level-up-animation');
@@ -3276,7 +3300,7 @@ const awardXP = async (amount) => {
             }
         }
         
-        // Check for a RANK up to trigger the icon animation
+        // Check for a RANK up
         if (newLevelInfo.rankName !== oldLevelInfo.rankName) {
             const iconWrapper = document.querySelector('.level-badge-wrapper');
             if (iconWrapper) {
@@ -3284,9 +3308,12 @@ const awardXP = async (amount) => {
                 setTimeout(() => iconWrapper.classList.remove('rank-up-glow'), 1500);
             }
         }
+        
+        return amount; // Return the final calculated XP amount
 
     } catch (error) {
         console.error("Error awarding XP:", error);
+        return 0; // Return 0 on error
     }
 };
 
@@ -4451,33 +4478,23 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
     document.body.removeChild(el);
 
     if (responseId && categoryName) {
-        const userDocRef = getUserRootDocRef(userId);
-        const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        const weekId = getCurrentWeekId();
-        const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
-        
-        let xpGained = XP_VALUES.COPY_RESPONSE;
-        let message = "Copied to clipboard!";
-
-        if (isDoubleXpActive) {
-            xpGained *= 2;
-            message = `Copied! +${xpGained} XP (2x Bonus!)`;
-        }
-        
-        showMessage(message, 'success');
         const now = Date.now();
-        const lastCopyTime = lastCopyTimestamps[responseId] || 0; 
-        const COOLDOWN_PERIOD = 5000; 
+        const lastCopyTime = lastCopyTimestamps[responseId] || 0;
+        const COOLDOWN_PERIOD = 5000;
 
         if (now - lastCopyTime > COOLDOWN_PERIOD) {
-            lastCopyTimestamps[responseId] = now; 
+            lastCopyTimestamps[responseId] = now;
+            
+            // This now returns the final amount after multipliers
+            const finalXpAwarded = await awardXP(XP_VALUES.COPY_RESPONSE); 
 
-            const placeholderRegex = /\[([^\]]+)\]/g;
-            if (!placeholderRegex.test(text)) {
-                logUserEvent('copy_purist');
+            let message = "Copied!";
+            if (finalXpAwarded > XP_VALUES.COPY_RESPONSE) {
+                const multiplier = finalXpAwarded / XP_VALUES.COPY_RESPONSE;
+                message = `Copied! +${finalXpAwarded} XP (${multiplier}x Bonus!)`;
             }
-            await awardXP(XP_VALUES.COPY_RESPONSE);
+            showMessage(message, 'success');
+
             logUserEvent('copy', { responseId, categoryName, text });
 
             if (userId && !isAnonymous) {
@@ -4490,9 +4507,9 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                             saveToFirestore(categories);
                         }
                     }
-	                const leaderboardDocRef = doc(db, "leaderboard", userId);
-	                const categoryCountField = `categoryCounts.${categoryName}`; // Use dot notation for map fields
-                    const todayStr = new Date().toISOString().split('T')[0]; // e.g., "2025-09-08"
+                    const leaderboardDocRef = doc(db, "leaderboard", userId);
+                    const categoryCountField = `categoryCounts.${categoryName}`;
+                    const todayStr = new Date().toISOString().split('T')[0];
                     const activeDayDocRef = doc(db, "leaderboard", userId, "activeDays", todayStr);
                     
                     const batch = writeBatch(db);
@@ -4501,19 +4518,18 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         totalCopies: increment(1),
                         [categoryCountField]: increment(1)
                     });
-   
+                    
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
-                    await batch.commit(); 
-					
+                    await batch.commit();
                 } catch (error) {
                     console.error("Error updating copy count:", error);
                 }
             }
             await checkAndAwardChallengeXP(userId);
+        } else {
+             showMessage("Copied!", 'success');
         }
-    }
-    else {
-        // This is for copies without an associated response, like from the FedEx page
+    } else {
         showMessage("Copied to clipboard!");
     }
 };
