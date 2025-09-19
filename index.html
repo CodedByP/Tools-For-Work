@@ -2328,6 +2328,8 @@ let profileChartInstance = null;
 let messageTimeout = null;
 let selectedCardClass = null;
 let activePreview = null;
+let userRootUnsubscribe = null; 
+
 		
 const CALLING_CARDS = [
     { id: 'default', title: 'Default', class: '' },
@@ -6398,6 +6400,7 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
 onAuthStateChanged(auth, async (user) => {
     if (cannedResponsesUnsubscribe) { cannedResponsesUnsubscribe(); cannedResponsesUnsubscribe = null; }
     if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
+	if (userRootUnsubscribe) { userRootUnsubscribe(); userRootUnsubscribe = null; } 
     if (user) {
         userId = user.uid;
         isAnonymous = user.isAnonymous;
@@ -6437,6 +6440,16 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
+            userRootUnsubscribe = onSnapshot(userDocRef, (doc) => {
+                const userData = doc.exists() ? doc.data() : {};
+                
+                // If we are on the stats page, re-render the leveling system
+                if (currentPage === 'my-stats') {
+                    renderLevelingSystem(userData);
+                }
+
+                // You can also update other real-time elements here in the future
+            });
 			await updateUserLeaderboardEntry();
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
