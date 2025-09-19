@@ -324,6 +324,7 @@
 /* This is a helper class for the selection modal */
 .calling-card-preview {
     width: 100%;
+    aspect-ratio: 16 / 9; /* <<< ADD THIS LINE */
     border-radius: 0.75rem;
     overflow: hidden;
     position: relative;
@@ -2732,7 +2733,7 @@ const renderCallingCardSelection = async () => {
         const isSelected = card.class === currentCard;
         return `
             <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
-                <div class="calling-card-bg ${card.class}" style="height: 150px;"></div>
+                <div class="calling-card-bg ${card.class}"></div>
                 <div class="preview-title">${card.title}</div>
             </div>
         `;
@@ -2746,7 +2747,7 @@ const renderCallingCardSelection = async () => {
             injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
         }
     });
-};		
+};
 		
 const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
     // If there are no copies or no active days, the average is 0.
