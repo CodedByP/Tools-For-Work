@@ -313,10 +313,11 @@
 
 /* --- CALLING CARD STYLES (v3 - FINAL) --- */
 #calling-card-bg-container {
+    background-color: #1f2937; /* <<< ADD THIS LINE */
     transition: all 0.3s ease-in-out;
     background-size: cover;
     background-position: center;
-    border-radius: 1rem;
+    border-radius: 1rem; /* Match the parent's rounded corners */
     overflow: hidden;
 }
 
@@ -1598,7 +1599,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
 <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-    <div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl relative">
+    <div id="leveling-section-redesigned" class="p-0 overflow-hidden shadow-2xl relative rounded-2xl">
         <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
 
         <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
