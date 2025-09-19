@@ -311,20 +311,18 @@
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }	
 
-/* --- CALLING CARD STYLES (OPTIMIZED) --- */
-/* This is the container on the main stats page that will have the background */
+/* --- CALLING CARD STYLES (v3 - FINAL) --- */
 #calling-card-bg-container {
     transition: all 0.3s ease-in-out;
     background-size: cover;
     background-position: center;
-    border-radius: 1rem; /* Match the parent's rounded corners */
+    border-radius: 1rem;
     overflow: hidden;
 }
 
-/* This is a helper class for the selection modal */
 .calling-card-preview {
     width: 100%;
-    aspect-ratio: 16 / 9; /* <<< ADD THIS LINE */
+    aspect-ratio: 16 / 9;
     border-radius: 0.75rem;
     overflow: hidden;
     position: relative;
@@ -340,78 +338,53 @@
     box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
 }
 .calling-card-preview .preview-title {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0.5rem;
-    background: rgba(0,0,0,0.6);
-    text-align: center;
-    font-weight: 600;
-    color: white;
-    backdrop-filter: blur(2px);
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem;
+    background: rgba(0,0,0,0.6); text-align: center; font-weight: 600;
+    color: white; backdrop-filter: blur(2px);
 }
 
-/* Base style for animated backgrounds */
+/* Base style for ALL animated backgrounds */
 .calling-card-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background-color: #333;
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
+    position: absolute; inset: 0; z-index: 1; background-color: #333;
+    background-size: cover; background-position: center; overflow: hidden;
+}
+
+/* --- NEW: Click-to-Play Animation Logic --- */
+/* By default, all animations in the selection grid are PAUSED */
+#calling-card-grid .calling-card-bg,
+#calling-card-grid .calling-card-bg::before,
+#calling-card-grid .calling-card-bg::after,
+#calling-card-grid .calling-card-bg * {
+    animation-play-state: paused !important;
+}
+
+/* When a preview gets the 'is-active' class, its animations will RUN */
+#calling-card-grid .calling-card-preview.is-active .calling-card-bg,
+#calling-card-grid .calling-card-preview.is-active .calling-card-bg::before,
+#calling-card-grid .calling-card-preview.is-active .calling-card-bg::after,
+#calling-card-grid .calling-card-preview.is-active .calling-card-bg * {
     animation-play-state: running !important;
 }
 
+/* --- (All 20 card styles below are the same as before, but included for completeness) --- */
 /* --- 1. Circuit Pulse --- */
-.card-circuit {
-    background-color: #0d1b2a;
-    background-image:
-        linear-gradient(to right, rgba(0, 180, 216, 0.2) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 180, 216, 0.2) 1px, transparent 1px);
-    background-size: 20px 20px;
-}
-.card-circuit::before {
-    content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-    background: linear-gradient(to bottom, rgba(144, 224, 239, 0.3) 0%, transparent 30%, transparent 70%, rgba(144, 224, 239, 0.3) 100%);
-    animation: scan-line 4s infinite linear;
-    will-change: transform;
-}
+.card-circuit { background-color: #0d1b2a; background-image: linear-gradient(to right, rgba(0, 180, 216, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 180, 216, 0.2) 1px, transparent 1px); background-size: 20px 20px; }
+.card-circuit::before { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: linear-gradient(to bottom, rgba(144, 224, 239, 0.3) 0%, transparent 30%, transparent 70%, rgba(144, 224, 239, 0.3) 100%); animation: scan-line 4s infinite linear; will-change: transform; }
 @keyframes scan-line { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-
 /* --- 2. Hyperspace --- */
 .card-hyperspace { background: #000; perspective: 400px; }
 .star { position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; background: white; border-radius: 50%; transform-origin: center; animation: hyperspace-jump 1.5s linear infinite; will-change: transform, opacity; }
 .star.star-blue { background: #a9dffc; box-shadow: 0 0 5px #a9dffc; }
 .star.star-yellow { background: #fff0a9; box-shadow: 0 0 5px #fff0a9; }
 @keyframes hyperspace-jump { 0% { transform: translateZ(1px) scale(0.1); opacity: 0.1; } 100% { transform: translateZ(500px) scale(2.5); opacity: 0; } }
-
 /* --- 3. Hex Core Pulse --- */
-.card-hex-pulse {
-    background-color: #1a1a1a;
-    background-image: repeating-conic-gradient(from 30deg, #222 0deg 60deg, #333 60deg 120deg);
-    background-size: 40px 24px;
-}
-.card-hex-pulse::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(to right, transparent 0%, rgba(0, 255, 255, 0.3) 50%, transparent 100%);
-    width: 100%; height: 100%; opacity: 0.5;
-    animation: hex-pulse-sweep 3s infinite ease-in-out;
-    will-change: transform;
-}
+.card-hex-pulse { background-color: #1a1a1a; background-image: repeating-conic-gradient(from 30deg, #222 0deg 60deg, #333 60deg 120deg); background-size: 40px 24px; }
+.card-hex-pulse::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, transparent 0%, rgba(0, 255, 255, 0.3) 50%, transparent 100%); width: 100%; height: 100%; opacity: 0.5; animation: hex-pulse-sweep 3s infinite ease-in-out; will-change: transform; }
 @keyframes hex-pulse-sweep { 0% { transform: translateX(-100%); } 50% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-
 /* --- 4. Data Stream --- */
 .card-datastream { background: #020a02; }
-.datastream-col {
-    position: absolute; top: 0; height: 100%; width: 20px; color: #0f0; font-size: 10px; font-family: monospace;
-    writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; user-select: none;
-    text-shadow: 0 0 5px #0f0; animation: scroll-stream 3s linear infinite;
-    will-change: transform;
-}
+.datastream-col { position: absolute; top: 0; height: 100%; width: 20px; color: #0f0; font-size: 10px; font-family: monospace; writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; user-select: none; text-shadow: 0 0 5px #0f0; animation: scroll-stream 3s linear infinite; will-change: transform; }
 @keyframes scroll-stream { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
-
 /* --- 5. Tactical HUD --- */
 .card-tactical-hud { background: #0a111a; }
 .hud-corner { position: absolute; width: 25px; height: 25px; border: 3px solid rgba(0, 255, 255, 0.7); animation: hud-flicker 2.5s infinite steps(1); will-change: opacity; }
@@ -424,8 +397,7 @@
 .hud-scanline-2 { position: absolute; width: 100%; height: 1px; background: rgba(0, 255, 255, 0.4); animation: scan-hud-2 4s infinite linear; will-change: transform; }
 @keyframes hud-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 @keyframes hud-rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes scan-hud-2 { 0% { transform: translateY(0); } 50% { transform: translateY(200px); } 100% { transform: translateY(0); } } /* Adjusted for typical card height */
-
+@keyframes scan-hud-2 { 0% { transform: translateY(0); } 50% { transform: translateY(200px); } 100% { transform: translateY(0); } }
 /* --- 6. Holo-Grid --- */
 .card-holo-grid { background-color: #030a1c; perspective: 500px; animation: holo-flicker 2s infinite steps(1); will-change: opacity; }
 .holo-grid-1, .holo-grid-2 { position: absolute; width: 200%; height: 200%; left: -50%; top: 50%; transform: rotateX(75deg); will-change: transform; }
@@ -435,78 +407,65 @@
 .card-holo-grid::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 255, 255, 0.3) 0%, transparent 50%); opacity: 0.5; }
 @keyframes holo-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.95; } }
 @keyframes move-terrain { from { transform: rotateX(75deg) translateY(0px); } to { transform: rotateX(75deg) translateY(-50px); } }
-@keyframes scan-hud-holo { 0% { transform: translateY(20px); } 100% { transform: translateY(180px); } } /* Adjusted for typical card height */
-
+@keyframes scan-hud-holo { 0% { transform: translateY(20px); } 100% { transform: translateY(180px); } }
 /* --- 7. Supernova --- */
 .card-supernova { background: #0d0d1a; perspective: 400px; }
-.supernova-core { position: absolute; left: 50%; top: 50%; width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: radial-gradient(circle, #fff, rgba(255,200,100,0.5) 30%, transparent 70%); border-radius: 50%; animation: pulse-core 3s infinite ease-in-out; z-index: 3; will-change: transform, opacity; }
+.supernova-core { position: absolute; left: 50%; top: 50%; width: 100px; height: 100px; margin: -50px 0 0 -50px; background: radial-gradient(circle, #fff, rgba(255,200,100,0.5) 30%, transparent 70%); border-radius: 50%; animation: pulse-core 3s infinite ease-in-out; z-index: 3; will-change: transform, opacity; }
 .supernova-gas-1, .supernova-gas-2 { position: absolute; left: 50%; top: 50%; width: 800px; height: 800px; border-radius: 50%; opacity: 0.2; filter: blur(80px); z-index: 2; will-change: transform; }
-.supernova-gas-1 { background: radial-gradient(circle, #e0f, #0ff); margin-left: -400px; margin-top: -400px; animation: rotate-nebula-1 25s linear infinite; }
-.supernova-gas-2 { background: radial-gradient(circle, #ff8c00, #e73c7e); margin-left: -300px; margin-top: -500px; animation: rotate-nebula-2 30s linear infinite; }
+.supernova-gas-1 { background: radial-gradient(circle, #e0f, #0ff); margin: -400px 0 0 -400px; animation: rotate-nebula-1 25s linear infinite; }
+.supernova-gas-2 { background: radial-gradient(circle, #ff8c00, #e73c7e); margin: -500px 0 0 -300px; animation: rotate-nebula-2 30s linear infinite; }
 @keyframes pulse-core { 50% { transform: scale(1.3); opacity: 0.7; } }
 @keyframes rotate-nebula-1 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes rotate-nebula-2 { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-
 /* --- 8. Forged Ember --- */
 .card-ember { background: #111; background-image: radial-gradient(circle at 20% 30%, #ff8c00, transparent 40%), radial-gradient(circle at 80% 70%, #e63946, transparent 40%); }
 .card-ember::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 10 L100 10 M20 0 L20 100 M0 30 L100 30 M40 0 L40 100 M0 50 L100 50 M60 0 L60 100 M0 70 L100 70 M80 0 L80 100 M0 90 L100 90' stroke='rgba(0,0,0,0.3)' stroke-width='10'/%3E%3Cpath d='M10 0 L10 100 M0 20 L100 20 M30 0 L30 100 M0 40 L100 40 M50 0 L50 100 M0 60 L100 60 M70 0 L70 100 M0 80 L100 80 M90 0 L90 100' stroke='rgba(0,0,0,0.3)' stroke-width='10'/%3E%3C/svg%3E"); background-size: 50px 50px; opacity: 0.5; transform: rotate(45deg); }
 .card-ember::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle, #ff4800, transparent 70%); opacity: 0.8; animation: pulse-ember 4s infinite alternate; will-change: transform, opacity; }
 @keyframes pulse-ember { 0% { opacity: 0.3; transform: scale(1); } 100% { opacity: 0.6; transform: scale(1.2); } }
-
 /* --- 9. Lightning Storm --- */
 .card-lightning { background: linear-gradient(to bottom, #000428, #004e92); }
 .lightning-bolt { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #fff; box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #0ff; opacity: 0; animation: flash 4s linear infinite; will-change: transform, opacity; }
 .lightning-bolt:nth-child(2) { left: 30%; animation-delay: 0.5s; }
 .lightning-bolt:nth-child(3) { left: 70%; animation-delay: 1.2s; }
 @keyframes flash { 0%, 100% { opacity: 0; } 1%, 3% { opacity: 1; } 2% { transform: translateX(5px); } 4%, 50% { opacity: 0; } }
-
 /* --- 10. Blizzard --- */
 .card-blizzard { background: linear-gradient(to bottom, #0a192f, #4a6a8c); }
 .snow-particle { position: absolute; background: #fff; border-radius: 50%; opacity: 0.8; animation: snowfall 10s linear infinite; will-change: transform; }
 @keyframes snowfall { 0% { transform: translate(0, -20px) rotate(0deg); } 100% { transform: translate(-100px, 250px) rotate(360deg); } }
-
 /* --- 11. Haunting --- */
 .card-haunting { background-color: #1a1a2e; }
 .haunting-wisp { position: absolute; width: 100%; height: 100%; filter: url(#ghost-filter); will-change: filter; }
 .haunting-wisp::before, .haunting-wisp::after { content: ''; position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, #9e00ff 0%, transparent 60%); border-radius: 50%; animation: wisp-move 12s linear infinite; will-change: transform; }
 .haunting-wisp::after { background: radial-gradient(circle, #0ff 0%, transparent 60%); animation: wisp-move 10s linear infinite alternate; animation-delay: -3s; }
 @keyframes wisp-move { 0% { transform: translate(20%, 30%) scale(1); } 25% { transform: translate(40%, -10%) scale(1.2); } 50% { transform: translate(70%, 20%) scale(0.8); } 75% { transform: translate(30%, 80%) scale(1.1); } 100% { transform: translate(20%, 30%) scale(1); } }
-
 /* --- 12. Liquid Gold --- */
 .card-liquid-gold { background-color: #b8860b; background-image: linear-gradient(135deg, #ffd700 0%, #daa520 25%, #b8860b 50%, #ffd700 75%, #daa520 100%); background-size: 200% 200%; animation: liquid-metal 5s ease infinite; will-change: background-position; }
 @keyframes liquid-metal { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
 /* --- 13. Crystalline Shard --- */
 .card-crystalline { background-color: #00b4d8; background-image: linear-gradient(160deg, #ade8f4, #0077b6); }
 .card-crystalline::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpolygon points='0,0 100,0 50,50' fill='rgba(255,255,255,0.1)'/%3E%3Cpolygon points='0,100 100,100 50,50' fill='rgba(0,0,0,0.1)'/%3E%3Cpolygon points='0,0 0,100 50,50' fill='rgba(255,255,255,0.05)'/%3E%3Cpolygon points='100,0 100,100 50,50' fill='rgba(0,0,0,0.05)'/%3E%3C/svg%3E"); background-size: 100px 100px; opacity: 0.5; }
-.card-crystalline::after { content: ''; position: absolute; top: -50%; left: 0; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); transform: rotate(25deg); animation: shimmer-crystal 4s infinite; will-change: transform; }
+.card-crystalline::after { content: ''; position: absolute; top: -50%; left: 0; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); animation: shimmer-crystal 4s infinite; will-change: transform; }
 @keyframes shimmer-crystal { 0% { transform: rotate(25deg) translateX(-150%); } 100% { transform: rotate(25deg) translateX(150%); } }
-
 /* --- 14. Carbon Shimmer --- */
 .card-carbon { background-color: #222; background-image: linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%), linear-gradient(-45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%); background-size: 20px 20px; }
-.card-carbon::after { content: ''; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%); transform: skewX(-20deg); animation: shimmer-carbon 4s infinite linear; animation-delay: 1s; will-change: transform; }
+.card-carbon::after { content: ''; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%); animation: shimmer-carbon 4s infinite linear; animation-delay: 1s; will-change: transform; }
 @keyframes shimmer-carbon { 0% { transform: skewX(-20deg) translateX(-350%); } 100% { transform: skewX(-20deg) translateX(700%); } }
-
 /* --- 15. Brushed Steel --- */
 .card-brushed-steel { background-color: #6c757d; background-image: linear-gradient(90deg, #adb5bd, #6c757d, #adb5bd); }
-.card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); transform: skewX(-25deg); animation: shimmer-steel 5s infinite; will-change: transform; }
+.card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); animation: shimmer-steel 5s infinite; will-change: transform; }
 @keyframes shimmer-steel { 0% { transform: skewX(-25deg) translateX(-250%); } 100% { transform: skewX(-25deg) translateX(500%); } }
-
 /* --- 16. Topographic Scan --- */
 .card-topo-scan { background-color: #1a2a2a; background-image: repeating-radial-gradient(circle at 50% 50%, #4ae, #4ae 1px, transparent 1px, transparent 20px); background-size: 100% 100%; background-position: 50% 50%; animation: topo-scan 4s cubic-bezier(0.1, 0, 0.9, 1) infinite; will-change: transform, opacity; }
-@keyframes topo-scan { 0% { transform: scale(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } } /* Switched to transform */
-
+@keyframes topo-scan { 0% { transform: scale(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 /* --- 17. Digital Camo --- */
 .card-digicamo { background-color: #3d405b; background-image: linear-gradient(45deg, #81b29a 25%, transparent 25%), linear-gradient(-45deg, #81b29a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3d405b 75%), linear-gradient(-45deg, transparent 75%, #3d405b 75%); background-size:20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
 .card-digicamo::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.1); animation: static-flicker 3s infinite steps(1); will-change: opacity; }
 @keyframes static-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-
 /* --- 18. Sonar Sweep --- */
 .card-sonar { background: #021a02; background-image: linear-gradient(to right, rgba(0,255,0,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,0,0.1) 1px, transparent 1px); background-size: 30px 30px; }
-.card-sonar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin-left: -150px; margin-top: -150px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, rgba(0, 255, 0, 0.4) 30%, transparent 31%); animation: sonar-sweep 4s linear infinite; opacity: 0.7; will-change: transform; }
-.card-sonar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin-left: -150px; margin-top: -150px; border-radius: 50%; border: 1px solid rgba(0, 255, 0, 0.2); }
+.card-sonar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, rgba(0, 255, 0, 0.4) 30%, transparent 31%); animation: sonar-sweep 4s linear infinite; opacity: 0.7; will-change: transform; }
+.card-sonar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; border: 1px solid rgba(0, 255, 0, 0.2); }
 @keyframes sonar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
 /* --- 19. Unstable Energy --- */
 .card-unstable-energy { background-color: #0c0a1a; }
 .energy-arc { position: absolute; width: 2px; height: 150%; background: #fff; box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff; animation: arc-flicker 0.1s infinite alternate; will-change: opacity; }
@@ -515,14 +474,13 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-
 /* --- 20. Heartbeat Sensor --- */
 .card-heartbeat { background-color: #1a0a0a; }
 .heartbeat-line { position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: #f00; opacity: 0.2; }
 .heartbeat-line svg { position: absolute; width: 100%; height: 100px; top: 50%; left: 0; transform: translateY(-50%); stroke: #f00; stroke-width: 3; fill: transparent; stroke-dasharray: 500; stroke-dashoffset: 500; animation: draw-heartbeat 2s linear infinite; will-change: stroke-dashoffset; }
 .heartbeat-sweep { position: absolute; top: 0; left: 0; height: 100%; width: 4px; background: #f00; box-shadow: 0 0 10px #f00; animation: sweep-heartbeat 2s linear infinite; will-change: transform; }
 @keyframes draw-heartbeat { 0% { stroke-dashoffset: 500; } 50% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
-@keyframes sweep-heartbeat { 0% { transform: translateX(0%); } 50% { transform: translateX(calc(100vw / 3)); } 100% { transform: translateX(calc(100vw / 3)); } } /* Adjusted for typical width */
+@keyframes sweep-heartbeat { 0% { transform: translateX(0%); } 50% { transform: translateX(calc(100vw / 3)); } 100% { transform: translateX(calc(100vw / 3)); } }
 
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
@@ -2291,6 +2249,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </filter>
 		            </defs>
 		        </svg>
+		
 		        <div class="flex justify-between items-center p-6 border-b border-gray-700 flex-shrink-0">
 		            <h3 class="text-2xl font-bold text-gray-200">Select Your Calling Card</h3>
 		            <button id="close-calling-card-modal-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300">
@@ -2299,10 +2258,17 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		                </svg>
 		            </button>
 		        </div>
+		
 		        <div id="calling-card-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto p-6">
 		            </div>
+		        
+		        <div class="flex justify-end p-4 border-t border-gray-700 flex-shrink-0 bg-gray-800">
+		            <button id="save-calling-card-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
+		                Save Selection
+		            </button>
+		        </div>
 		    </div>
-		</div>	
+		</div>
 	
 		
     <script type="module">
@@ -2365,6 +2331,7 @@ let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
 let profileChartInstance = null;	
 let messageTimeout = null;
+let selectedCardClass = null;
 
 		
 const CALLING_CARDS = [
@@ -5650,13 +5617,20 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
+   let activePreview = null; // Variable to track the currently playing preview
+
     const customizeCardBtn = document.getElementById('customize-card-btn');
     const callingCardModal = document.getElementById('calling-card-modal');
     const closeCallingCardModalBtn = document.getElementById('close-calling-card-modal-btn');
     const callingCardGrid = document.getElementById('calling-card-grid');
+    const saveCallingCardBtn = document.getElementById('save-calling-card-btn');
 
     if (customizeCardBtn) {
         customizeCardBtn.addEventListener('click', async () => {
+            if (isAnonymous) {
+                showMessage("Please sign in to customize your calling card.", "error");
+                return;
+            }
             await renderCallingCardSelection();
             callingCardModal.classList.remove('hidden');
         });
@@ -5665,24 +5639,48 @@ function attachEventListeners() {
     if (closeCallingCardModalBtn) {
         closeCallingCardModalBtn.addEventListener('click', () => {
             callingCardModal.classList.add('hidden');
+            if(activePreview) activePreview.classList.remove('is-active'); // Stop animation on close
+            activePreview = null;
         });
     }
 
     if (callingCardGrid) {
-        callingCardGrid.addEventListener('click', async (e) => {
-            const selectedCard = e.target.closest('.calling-card-preview');
-            if (selectedCard && userId && !isAnonymous) {
-                const cardClass = selectedCard.dataset.cardClass;
+        callingCardGrid.addEventListener('click', (e) => {
+            const selectedCardPreview = e.target.closest('.calling-card-preview');
+            if (selectedCardPreview) {
+                // Handle the selection highlight
+                grid.querySelectorAll('.calling-card-preview').forEach(el => el.classList.remove('selected'));
+                selectedCardPreview.classList.add('selected');
+                selectedCardClass = selectedCardPreview.dataset.cardClass;
+
+                // Handle the click-to-play animation
+                if (activePreview) {
+                    activePreview.classList.remove('is-active');
+                }
+                selectedCardPreview.classList.add('is-active');
+                activePreview = selectedCardPreview;
+            }
+        });
+    }
+
+    if (saveCallingCardBtn) {
+        saveCallingCardBtn.addEventListener('click', async () => {
+            if (userId && !isAnonymous && selectedCardClass !== null) {
                 const userDocRef = getUserRootDocRef(userId);
                 try {
-                    await setDoc(userDocRef, { callingCard: cardClass }, { merge: true });
+                    await setDoc(userDocRef, { callingCard: selectedCardClass }, { merge: true });
                     showMessage("Calling Card saved!", "success");
                     callingCardModal.classList.add('hidden');
-                    // The onSnapshot listener will automatically re-render the stats page
+                    if(activePreview) activePreview.classList.remove('is-active');
+                    activePreview = null;
                 } catch (error) {
                     console.error("Error saving calling card:", error);
                     showMessage("Could not save selection.", "error");
                 }
+            } else if (isAnonymous) {
+                 showMessage("Please sign in to save your selection.", "error");
+            } else {
+                 showMessage("Please select a card first.", "error");
             }
         });
     }
