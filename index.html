@@ -1601,118 +1601,114 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
         </svg>
     </div>
 
-<div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
+    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
 
-    <div id="leveling-section-redesigned" class="p-0 overflow-hidden shadow-2xl relative rounded-2xl">
-        <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
-        <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
-            <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
-                <i class="fas fa-paint-brush mr-2"></i> Customize
-            </button>
-            <div id="rank-icon-container-redesigned" class="flex-shrink-0">
-            </div>
-            <div class="flex-grow w-full text-center md:text-left">
-                <div class="flex items-center justify-center md:justify-start gap-3">
-                    <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
-                    </h3>
-                    <div id="double-xp-indicator" class="hidden relative group">
-                        <i class="fas fa-bolt text-3xl text-yellow-400"></i>
-                        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-                            2x XP Active!
-                        </span>
+        <div id="leveling-section-redesigned" class="p-0 overflow-hidden shadow-2xl relative rounded-2xl">
+            <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
+            <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
+                <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
+                    <i class="fas fa-paint-brush mr-2"></i> Customize
+                </button>
+                <div id="rank-icon-container-redesigned" class="flex-shrink-0">
+                </div>
+                <div class="flex-grow w-full text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3">
+                        <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+                        </h3>
+                        <div id="double-xp-indicator" class="hidden relative group">
+                            <i class="fas fa-bolt text-3xl text-yellow-400"></i>
+                            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                2x XP Active!
+                            </span>
+                        </div>
                     </div>
+                    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
+                    </p>
                 </div>
-                <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
-                </p>
             </div>
-        </div>
-        <div class="p-6 bg-gray-800/50 relative z-10">
-            <div class="xp-bar-container-redesigned" title="Experience Points Progress">
-                <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-                </div>
-                <span id="xp-progress-text-redesigned" class="xp-bar-text">
-                </span>
-            </div>
-            <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
-            </div>
-        </div>
-    </div>
-
-    <div id="achievements-module" class="floating-card p-6 sm:p-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
-             <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                🏆 Achievements
-            </h2>
-            <div class="flex items-center gap-4">
-                <div id="achievement-tabs" class="flex gap-2 text-sm">
-                    <button class="achievement-tab px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white" data-filter="all">All</button>
-                    <button class="achievement-tab px-4 py-2 rounded-lg font-semibold text-gray-300 hover:bg-gray-700 transition" data-filter="unlocked">Unlocked</button>
-                </div>
-                <div class="text-right">
-                    <p id="ach-progress-text" class="text-lg font-semibold text-gray-300">0 / 0 Unlocked</p>
-                    <div class="w-24 h-2 bg-gray-700 rounded-full mt-1">
-                        <div id="ach-progress-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+            <div class="p-6 bg-gray-800/50 relative z-10">
+                <div class="xp-bar-container-redesigned" title="Experience Points Progress">
+                    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
                     </div>
+                    <span id="xp-progress-text-redesigned" class="xp-bar-text">
+                    </span>
+                </div>
+                <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
                 </div>
             </div>
         </div>
-        <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 overflow-y-auto max-h-[340px] p-2 scrollbar-hide">
-        </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                ⚡️ Activity Snapshot
-            </h2>
-            <div id="metric-badges-container" class="flex flex-col space-y-4">
-            </div>
-        </div>
-        <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
-                    <span>🏃 Active Challenges</span>
-                    <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
+        <div id="achievements-module" class="floating-card p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+                 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    🏆 Achievements
                 </h2>
-                <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
+                <div class="flex items-center gap-4">
+                    <div id="achievement-tabs" class="flex gap-2 text-sm">
+                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white" data-filter="all">All</button>
+                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold text-gray-300 hover:bg-gray-700 transition" data-filter="unlocked">Unlocked</button>
+                    </div>
+                    <div class="text-right">
+                        <p id="ach-progress-text" class="text-lg font-semibold text-gray-300">0 / 0 Unlocked</p>
+                        <div class="w-24 h-2 bg-gray-700 rounded-full mt-1">
+                            <div id="ach-progress-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
                 </div>
-        </div>
-        <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                ⭐ Leaderboard
-            </h2>
-             <div id="leaderboard-container" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-hide">
+            </div>
+            <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 overflow-y-auto max-h-[340px] p-2 scrollbar-hide">
             </div>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="floating-card p-6 sm:p-8">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Responses
-            </h2>
-            <div id="stats-container" class="w-full relative h-64 sm:h-80">
-                <canvas id="stats-chart"></canvas>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    ⚡️ Activity Snapshot
+                </h2>
+                <div id="metric-badges-container" class="flex flex-col space-y-4">
+                </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+                  <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
+                      <span>🏃 Active Challenges</span>
+                      <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
+                  </h2>
+                  <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
+                  </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    ⭐ Leaderboard
+                </h2>
+                 <div id="leaderboard-container" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-hide">
+                </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-2">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Responses
+                </h2>
+                <div id="stats-container" class="w-full relative h-64 sm:h-80">
+                    <canvas id="stats-chart"></canvas>
+                </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-1">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
+                </h2>
+                <div id="category-chart-container" class="relative h-64 sm:h-80">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="floating-card p-6 sm:p-8 lg:col-span-3">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+                </h2>
+                <div id="activity-chart-container" class="relative h-64 sm:h-80">
+                    <canvas id="activityChart"></canvas>
+                </div>
             </div>
         </div>
-        <div class="floating-card p-6 sm:p-8">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
-            </h2>
-            <div id="category-chart-container" class="relative h-64 sm:h-80">
-                <canvas id="categoryChart"></canvas>
-            </div>
         </div>
-    </div>
-
-    <div class="floating-card p-6 sm:p-8">
-        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-            <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-        </h2>
-        <div id="activity-chart-container" class="relative h-64 sm:h-80">
-            <canvas id="activityChart"></canvas>
-        </div>
-    </div>
-
 </div>
 
 <div id="profile-modal" class="modal hidden">
