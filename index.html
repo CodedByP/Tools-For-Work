@@ -371,31 +371,30 @@
 .card-circuit { background-color: #0d1b2a; background-image: linear-gradient(to right, rgba(0, 180, 216, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 180, 216, 0.2) 1px, transparent 1px); background-size: 20px 20px; }
 .card-circuit::before { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: linear-gradient(to bottom, rgba(144, 224, 239, 0.3) 0%, transparent 30%, transparent 70%, rgba(144, 224, 239, 0.3) 100%); animation: scan-line 4s infinite linear; will-change: transform; }
 @keyframes scan-line { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-/* --- 2. Hyperspace (Redesigned for Performance) --- */
+/* --- 2. Hyperspace (Redesigned with Dots) --- */
 .card-hyperspace {
-    background-color: #000411;
-    overflow: hidden;
+    background-color: #000411;
+    overflow: hidden;
 }
 .card-hyperspace::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: 
-        radial-gradient(circle at center, white, transparent 40%),
-        repeating-conic-gradient(from 0deg, white 0deg 1deg, transparent 1deg 10deg);
-    background-size: 1px 1px, 100% 100%;
-    background-position: center, center;
-    background-repeat: no-repeat, no-repeat;
-    animation: hyperspace-zoom 4s linear infinite;
+    content: '';
+    position: absolute;
+    inset: -50%; /* Make it larger to avoid edges during zoom */
+    background-image: repeating-radial-gradient(circle at center, #fff, #fff 1px, transparent 1px, transparent 20px);
+    background-size: 40px 40px; /* Controls the density of the dots */
+    animation: hyperspace-zoom 4s linear infinite;
     will-change: transform, opacity;
 }
 @keyframes hyperspace-zoom {
-    from { 
-        transform: scale(0.01); 
-        opacity: 1; 
+    from { 
+        transform: scale(0.1); 
+        opacity: 0; 
     }
-    to { 
-        transform: scale(2); 
+    50% {
+        opacity: 1;
+    }
+    to { 
+        transform: scale(1); 
         opacity: 0; 
     }
 }
@@ -430,50 +429,58 @@
 @keyframes holo-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.95; } }
 @keyframes move-terrain { from { transform: rotateX(75deg) translateY(0px); } to { transform: rotateX(75deg) translateY(-50px); } }
 @keyframes scan-hud-holo { 0% { transform: translateY(20px); } 100% { transform: translateY(180px); } }
-/* --- 7. Supernova (Redesigned for Performance) --- */
+/* --- 7. Supernova (Redesigned v2) --- */
 .card-supernova {
     background-color: #0d0d1a;
-    background-image:
-        radial-gradient(ellipse at 70% 80%, #e0f 0%, transparent 50%),
-        radial-gradient(ellipse at 30% 20%, #ff8c00 0%, transparent 40%);
-    background-size: 800px 800px, 600px 600px;
-    background-repeat: no-repeat;
-    animation: supernova-swirl 20s linear infinite alternate;
-    will-change: background-position;
+    background-image: radial-gradient(circle at center, #4a044e, #0d0d1a 70%);
 }
 .card-supernova::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background-image: radial-gradient(ellipse at 50% 50%, #0ff 0%, transparent 60%);
-    background-repeat: no-repeat;
-    animation: supernova-swirl-2 25s linear infinite alternate;
-    will-change: background-position;
+    inset: -200%; /* Make it huge to start outside the view */
+    background: radial-gradient(circle, transparent, #ff8c00);
+    animation: supernova-flare 6s ease-out infinite;
+    opacity: 0;
+    will-change: transform, opacity;
 }
 .card-supernova::after {
     content: '';
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 200px;
-    height: 200px;
-    margin: -100px 0 0 -100px;
-    background: radial-gradient(circle, #fff 10%, rgba(255, 200, 100, 0.5) 40%, transparent 70%);
+    width: 2px;
+    height: 2px;
+    margin: -1px 0 0 -1px;
     border-radius: 50%;
-    animation: pulse-core 3s infinite ease-in-out;
-    will-change: transform, opacity;
+    background: #fff;
+    box-shadow: 
+        0 0 5px 5px #fff,
+        0 0 20px 15px #fef08a,
+        0 0 40px 30px #ff8c00;
+    animation: pulse-core-v2 3s ease-in-out infinite alternate;
+    will-change: box-shadow;
 }
-@keyframes supernova-swirl {
-    from { background-position: 0% 0%, 100% 100%; }
-    to { background-position: 100% 100%, 0% 0%; }
+@keyframes supernova-flare {
+    0% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.2;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
 }
-@keyframes supernova-swirl-2 {
-    from { background-position: 100% 0%; }
-    to { background-position: 0% 100%; }
-}
-/* This original animation is still used and performant */
-@keyframes pulse-core { 
-    50% { transform: scale(1.3); opacity: 0.7; } 
+@keyframes pulse-core-v2 {
+    to {
+        box-shadow: 
+            0 0 8px 8px #fff,
+            0 0 25px 20px #fef08a,
+            0 0 50px 40px #ff8c00,
+            0 0 80px 70px #e0f;
+    }
 }
 /* --- 8. Forged Ember --- */
 .card-ember { background: #111; background-image: radial-gradient(circle at 20% 30%, #ff8c00, transparent 40%), radial-gradient(circle at 80% 70%, #e63946, transparent 40%); }
