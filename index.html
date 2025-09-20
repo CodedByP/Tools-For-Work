@@ -547,52 +547,60 @@
 .card-brushed-steel { background-color: #6c757d; background-image: linear-gradient(90deg, #adb5bd, #6c757d, #adb5bd); }
 .card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); animation: shimmer-steel 5s infinite; will-change: transform; }
 @keyframes shimmer-steel { 0% { transform: skewX(-25deg) translateX(-250%); } 100% { transform: skewX(-25deg) translateX(500%); } }
-/* --- 16. Topographic Scan (Redesigned) --- */
+/* --- 16. Topographic Scan (Hologram Redesign) --- */
 .card-topo-scan {
-    background-color: #021a02; /* Dark green background */
-    /* URL-encoded SVG provides the wavy contour lines */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cpath d='M-10 20 C 20 0, 40 0, 70 20 S 100 40, 130 20' stroke='%230f0' fill='none' stroke-width='1.5' stroke-opacity='0.2'/%3E%3Cpath d='M-10 50 C 20 30, 40 30, 70 50 S 100 70, 130 50' stroke='%230f0' fill='none' stroke-width='1.5' stroke-opacity='0.2'/%3E%3Cpath d='M-10 80 C 20 60, 40 60, 70 80 S 100 100, 130 80' stroke='%230f0' fill='none' stroke-width='1.5' stroke-opacity='0.2'/%3E%3C/svg%3E");
-    background-size: 100px 100px;
-    animation: move-topo 10s linear infinite;
-    will-change: background-position;
+    background-color: #030a1c; /* A deep, dark blue */
+    perspective: 400px; /* This enables the 3D space */
+    overflow: hidden;
+    position: relative;
 }
 
-/* The vertical scanline */
+/* This is a horizontal scanline that moves down the card */
 .card-topo-scan::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 4px; /* A thicker, more prominent line */
-    background: linear-gradient(to bottom, transparent, rgba(173, 255, 47, 0.7), transparent); /* Green-yellow, glowy */
-    box-shadow: 0 0 10px 2px rgba(173, 255, 47, 0.5);
-    animation: scan-topo 4s ease-in-out infinite;
-    will-change: transform, opacity;
+    height: 4px;
+    background: #0ff;
+    box-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+    animation: holographic-scan 3s infinite alternate ease-in-out;
+    z-index: 2; /* Ensure it's on top of the grid */
+    will-change: transform;
 }
 
-/* A subtle vignette and grid effect for more detail */
+/* This is the 3D grid plane */
 .card-topo-scan::after {
     content: '';
     position: absolute;
-    inset: 0;
+    width: 200%;
+    height: 200%;
+    left: -50%;
+    top: 50%;
     background-image: 
-        radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7)),
-        linear-gradient(to right, rgba(0,255,0,0.1) 1px, transparent 1px), 
-        linear-gradient(to bottom, rgba(0,255,0,0.1) 1px, transparent 1px);
-    background-size: 100% 100%, 30px 30px, 30px 30px;
+        linear-gradient(to right, rgba(0, 255, 255, 0.4) 1px, transparent 1px), 
+        linear-gradient(to bottom, rgba(0, 255, 255, 0.4) 1px, transparent 1px);
+    background-size: 50px 50px;
+    transform: rotateX(75deg); /* Tilts the grid into 3D space */
+    animation: move-terrain 10s linear infinite;
+    will-change: transform;
 }
 
-@keyframes move-topo {
-    from { background-position: 0 0; }
-    to { background-position: -100px 0; }
+@keyframes move-terrain {
+    from {
+        transform: rotateX(75deg) translateY(0px);
+    }
+    to {
+        transform: rotateX(75deg) translateY(-100px); /* Makes the grid scroll */
+    }
 }
 
-@keyframes scan-topo {
-    0% { transform: translateY(-20px); opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { transform: translateY(110%); opacity: 0; } /* 110% to go fully off-screen */
+@keyframes holographic-scan {
+    from {
+        transform: translateY(20px);
+    }
+    to {
+        transform: translateY(180px);
+    }
 }
 /* --- 17. Digital Camo --- */
 .card-digicamo { background-color: #3d405b; background-image: linear-gradient(45deg, #81b29a 25%, transparent 25%), linear-gradient(-45deg, #81b29a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3d405b 75%), linear-gradient(-45deg, transparent 75%, #3d405b 75%); background-size:20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
