@@ -547,10 +547,10 @@
 .card-brushed-steel { background-color: #6c757d; background-image: linear-gradient(90deg, #adb5bd, #6c757d, #adb5bd); }
 .card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); animation: shimmer-steel 5s infinite; will-change: transform; }
 @keyframes shimmer-steel { 0% { transform: skewX(-25deg) translateX(-250%); } 100% { transform: skewX(-25deg) translateX(500%); } }
-/* --- 16. Topographic Scan (Hologram Redesign) --- */
+/* --- 16. Topographic Scan (Hologram Redesign - Corrected) --- */
 .card-topo-scan {
-    background-color: #030a1c; /* A deep, dark blue */
-    perspective: 400px; /* This enables the 3D space */
+    background-color: #030a1c; /* Deep, dark blue */
+    perspective: 600px; /* Increased perspective for more depth */
     overflow: hidden;
     position: relative;
 }
@@ -563,7 +563,7 @@
     height: 4px;
     background: #0ff;
     box-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
-    animation: holographic-scan 3s infinite alternate ease-in-out;
+    animation: topo-scan-line 3s infinite alternate ease-in-out; /* <-- Renamed animation */
     z-index: 2; /* Ensure it's on top of the grid */
     will-change: transform;
 }
@@ -581,11 +581,11 @@
         linear-gradient(to bottom, rgba(0, 255, 255, 0.4) 1px, transparent 1px);
     background-size: 50px 50px;
     transform: rotateX(75deg); /* Tilts the grid into 3D space */
-    animation: move-terrain 10s linear infinite;
+    animation: move-topo-grid 10s linear infinite; /* <-- Renamed animation */
     will-change: transform;
 }
 
-@keyframes move-terrain {
+@keyframes move-topo-grid { /* <-- Renamed keyframes */
     from {
         transform: rotateX(75deg) translateY(0px);
     }
@@ -594,7 +594,7 @@
     }
 }
 
-@keyframes holographic-scan {
+@keyframes topo-scan-line { /* <-- Renamed keyframes */
     from {
         transform: translateY(20px);
     }
