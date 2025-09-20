@@ -238,10 +238,17 @@
     transition: width 0.5s ease-in-out;
 }
 
+#leveling-section-redesigned.is-default-card #level-header {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
+}
+
+#leveling-section-redesigned.is-default-card #xp-section {
+    background-color: rgba(31, 41, 55, 0.5); /* This is the same as bg-gray-800/50 */
+}		
+
 /* --- Leveling System Styles --- */
 .level-header-bg {
     /* A subtle gradient to give the header depth */
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1623,7 +1630,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     </p>
                 </div>
             </div>
-            <div id="xp-section" class="p-6 bg-gray-800/50 relative z-10">
+            <div id="xp-section" class="p-6 relative z-10">
                 <div class="xp-bar-container-redesigned" title="Experience Points Progress">
                     <div id="xp-bar-redesigned" class="xp-bar-redesigned">
                     </div>
@@ -2874,21 +2881,18 @@ const renderLevelingSystem = (userData) => {
     const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
     const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    // --- NEW LOGIC TO TOGGLE OVERLAYS ---
-    const levelHeader = document.getElementById('level-header');
-    const xpSection = document.getElementById('xp-section');
+    const levelingSection = document.getElementById('leveling-section-redesigned');
     const userCardClass = userData.callingCard || '';
 
-    // If a custom card is selected (not the default), make the overlays transparent
-    if (userCardClass && levelHeader && xpSection) {
-        levelHeader.style.background = 'transparent';
-        xpSection.classList.remove('bg-gray-800/50');
-    } else if (levelHeader && xpSection) {
-        // Otherwise, ensure the default "plastic" look is applied
-        levelHeader.style.background = ''; // Resets to the CSS class definition
-        xpSection.classList.add('bg-gray-800/50');
+    if (levelingSection) {
+        if (userCardClass) {
+            // A custom card is selected, so remove the default class
+            levelingSection.classList.remove('is-default-card');
+        } else {
+            // The default card is selected, so add the class to show overlays
+            levelingSection.classList.add('is-default-card');
+        }
     }
-    // --- END OF NEW LOGIC ---
 
     // Get all the DOM elements
     const bgContainer = document.getElementById('calling-card-bg-container');
@@ -2900,7 +2904,6 @@ const renderLevelingSystem = (userData) => {
     const nextRankTextContainer = document.getElementById('next-rank-text-container');
     const doubleXpIndicator = document.getElementById('double-xp-indicator');
 
-    // --- CALLING CARD LOGIC ---
     if (bgContainer) {
         const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
         bgContainer.classList.remove(...cardClasses);
