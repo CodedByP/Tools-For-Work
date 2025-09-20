@@ -239,9 +239,9 @@
 }
 
 /* --- Leveling System Styles --- */
-/* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
     /* A subtle gradient to give the header depth */
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1623,7 +1623,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     </p>
                 </div>
             </div>
-            <div class="p-6 relative z-10">
+            <div id="xp-section" class="p-6 bg-gray-800/50 relative z-10">
                 <div class="xp-bar-container-redesigned" title="Experience Points Progress">
                     <div id="xp-bar-redesigned" class="xp-bar-redesigned">
                     </div>
@@ -2865,103 +2865,112 @@ const injectCallingCardJs = (cardClass, container) => {
 };
 
 const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
-    const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(" ", "-")}`;
-    const weekId = getCurrentWeekId();
-    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
-    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
-    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(" ", "-")}`;
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    // Get all the DOM elements
-    const bgContainer = document.getElementById('calling-card-bg-container');
-    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
-    const rankNameEl = document.getElementById('rank-name-redesigned');
-    const levelDisplayEl = document.getElementById('level-display-redesigned');
-    const xpBarEl = document.getElementById('xp-bar-redesigned');
-    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
-    const nextRankTextContainer = document.getElementById('next-rank-text-container');
-    const doubleXpIndicator = document.getElementById('double-xp-indicator');
+    // --- NEW LOGIC TO TOGGLE OVERLAYS ---
+    const levelHeader = document.getElementById('level-header');
+    const xpSection = document.getElementById('xp-section');
+    const userCardClass = userData.callingCard || '';
 
-    // --- CORRECTED CALLING CARD LOGIC ---
-    if (bgContainer) {
-        // 1. Remove all possible card classes from the background container to reset it
-        const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
-        bgContainer.classList.remove(...cardClasses);
-        
-        // 2. Clear any old JS-injected animation elements
-        bgContainer.innerHTML = ''; 
-
-        // 3. Apply the user's selected card class directly to the background container
-        const userCardClass = userData.callingCard || '';
-        if (userCardClass) {
-            bgContainer.classList.add(userCardClass);
-            
-            // 4. Inject new animation elements into the background container
-            const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
-            if (cardConfig && cardConfig.needsJs) {
-                injectCallingCardJs(userCardClass, bgContainer);
-            }
-        }
+    // If a custom card is selected (not the default), make the overlays transparent
+    if (userCardClass && levelHeader && xpSection) {
+        levelHeader.style.background = 'transparent';
+        xpSection.classList.remove('bg-gray-800/50');
+    } else if (levelHeader && xpSection) {
+        // Otherwise, ensure the default "plastic" look is applied
+        levelHeader.style.background = ''; // Resets to the CSS class definition
+        xpSection.classList.add('bg-gray-800/50');
     }
+    // --- END OF NEW LOGIC ---
 
-    // --- The rest of the function (for rank icon, xp bar, etc.) remains the same ---
-    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
-    let innerHTML = '';
-    
-    switch(rankName) {
-        case "Newbie": case "Apprentice":
-            wrapperClasses += ' beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Journeyman": case "Artisan": case "Expert":
-            wrapperClasses += ' inner-ring beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Master":
-            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Grandmaster":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Legend":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
-            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Demigod":
-            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Deity":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
-            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
-            break;
-        default:
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-    }
-    
-    if (rankIconContainer) rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
-    if (rankNameEl) rankNameEl.textContent = levelInfo.rankName;
-    if (levelDisplayEl) levelDisplayEl.textContent = `Level ${levelInfo.level}`;
-    
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    if (xpBarEl) xpBarEl.style.width = `${progressPercent}%`;
-    if (xpTextEl) xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+    // Get all the DOM elements
+    const bgContainer = document.getElementById('calling-card-bg-container');
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
+    const nextRankTextContainer = document.getElementById('next-rank-text-container');
+    const doubleXpIndicator = document.getElementById('double-xp-indicator');
 
-    if (doubleXpIndicator) {
-        doubleXpIndicator.classList.toggle('hidden', !isDoubleXpActive);
-    }
+    // --- CALLING CARD LOGIC ---
+    if (bgContainer) {
+        const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
+        bgContainer.classList.remove(...cardClasses);
+        bgContainer.innerHTML = ''; 
+        if (userCardClass) {
+            bgContainer.classList.add(userCardClass);
+            const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
+            if (cardConfig && cardConfig.needsJs) {
+                injectCallingCardJs(userCardClass, bgContainer);
+            }
+        }
+    }
 
-    if (nextRank && nextRankTextContainer) {
-        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
-        nextRankTextContainer.classList.remove('hidden');
-    } else if (nextRankTextContainer) {
-        nextRankTextContainer.classList.add('hidden');
-    }
+    // --- RANK ICON & XP BAR LOGIC (Remains the same) ---
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
+    
+    switch(rankName) {
+        // (The entire switch statement for rank icons remains unchanged)
+        case "Newbie": case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman": case "Artisan": case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+    }
+    
+    if (rankIconContainer) rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+    if (rankNameEl) rankNameEl.textContent = levelInfo.rankName;
+    if (levelDisplayEl) levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    if (xpBarEl) xpBarEl.style.width = `${progressPercent}%`;
+    if (xpTextEl) xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+
+    if (doubleXpIndicator) {
+        doubleXpIndicator.classList.toggle('hidden', !isDoubleXpActive);
+    }
+
+    if (nextRank && nextRankTextContainer) {
+        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
+        nextRankTextContainer.classList.remove('hidden');
+    } else if (nextRankTextContainer) {
+        nextRankTextContainer.classList.add('hidden');
+    }
 };
 		
 // Renders the achievement icons inside the profile modal
