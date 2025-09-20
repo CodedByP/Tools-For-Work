@@ -568,11 +568,14 @@
     will-change: background-position;
 }
 
-/* This layer is the sweeping "scanner light" that moves up and down */
+/* Layer 2: The sweeping "scanner light" that moves up and down. */
 .card-topo-scan::after {
     content: '';
     position: absolute;
-    inset: -200% 0; /* Make it very tall so the gradient has room to move */
+    left: 0;
+    right: 0;
+    top: -50%; /* Start with half the element visible at the top */
+    height: 100%; /* Make the light bar as tall as the card */
     background: linear-gradient(to bottom, 
         transparent, 
         rgba(0, 190, 255, 0.3) 49%, 
@@ -580,7 +583,8 @@
         rgba(0, 190, 255, 0.3) 51%, 
         transparent
     );
-    animation: scan-subsurface 4s ease-in-out infinite alternate;
+    /* Use the new, corrected animation name */
+    animation: scan-subsurface-fixed 4s ease-in-out infinite alternate;
     will-change: transform;
 }
 
@@ -589,9 +593,9 @@
     to { background-position: -200px 0; } /* Slowly scrolls the map texture horizontally */
 }
 
-@keyframes scan-subsurface {
-    from { transform: translateY(-50%); }
-    to { transform: translateY(50%); }
+@keyframes scan-subsurface-fixed {
+    from { transform: translateY(0%); }
+    to { transform: translateY(100%); }
 }
 /* --- 17. Digital Camo --- */
 .card-digicamo { background-color: #3d405b; background-image: linear-gradient(45deg, #81b29a 25%, transparent 25%), linear-gradient(-45deg, #81b29a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3d405b 75%), linear-gradient(-45deg, transparent 75%, #3d405b 75%); background-size:20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
