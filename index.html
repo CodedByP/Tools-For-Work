@@ -595,53 +595,56 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (v7 - Pure CSS Box-Shadow Pulse) --- */
+/* --- 20. Heartbeat Sensor (Ultra-Reliable Pure CSS) --- */
 .card-heartbeat {
-    background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-}
+    background-color: #1a0a0a;
 
-/* Static grid background */
-.card-heartbeat::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: 
+    /* We stack all visual layers as multiple backgrounds on the main element */
+    background-image:
+        /* Layer 3: The moving pulse (a radial gradient) */
+        radial-gradient(
+            circle at center,
+            #ff3b3b 0%,
+            rgba(255, 59, 59, 0) 50%
+        ),
+        /* Layer 2: The static horizontal line */
+        linear-gradient(
+            #ff3b3b, #ff3b3b
+        ),
+        /* Layer 1: The static grid */
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    opacity: 0.5;
+
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+
+    /* Define the size for each background layer */
+    background-size: 
+        80px 80px,    /* Pulse size */
+        100% 2px,     /* Line size */
+        20px 20px,    /* Grid X size */
+        20px 20px;    /* Grid Y size */
+
+    /* Define the position for each background layer */
+    background-position: 
+        -80px center,   /* Pulse starts off-screen */
+        center center,  /* Line is centered */
+        top left,       /* Grid X starts at top-left */
+        top left;       /* Grid Y starts at top-left */
+
+    animation: move-final-pulse 2.5s linear infinite;
+    will-change: background-position;
 }
 
-/* This pseudo-element creates both the static line and the moving pulse */
-.card-heartbeat::after {
-    content: '';
-    position: absolute;
-    width: 8px; /* Width of the pulse */
-    height: 8px; /* Height of the pulse */
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    border-radius: 50%;
-    background-color: #ff3b3b;
-    
-    /* The box-shadow creates the faint line and the bright glow */
-    box-shadow: 
-        0 0 15px 5px rgba(255, 59, 59, 0.7), /* The glow */
-        -2000px 0 0 0 #ff3b3b; /* A long shadow that acts as the line */
-
-    /* The animation moves the pulse from left to right */
-    animation: move-shadow-pulse 2s linear infinite;
-    will-change: transform;
-}
-
-@keyframes move-shadow-pulse {
-    0% {
-        transform: translate(-100%) translateY(-50%);
+@keyframes move-final-pulse {
+    from {
+        /* Only animate the position of the first background (the pulse) */
+        background-position: -80px center, center center, top left, top left;
     }
-    100% {
-        transform: translate(4000%) translateY(-50%); /* A large value to ensure it crosses the screen */
+    to {
+        /* Move the pulse across the screen */
+        background-position: calc(100% + 80px) center, center center, top left, top left;
     }
 }
 /* --- Leveling System Icon Styles --- */
