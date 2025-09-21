@@ -604,69 +604,83 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Redesign v2) --- */
+/* --- 20. Heartbeat Sensor (Classic EKG Redesign) --- */
 .card-heartbeat {
-    background-color: #110808;
+    background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-    animation: ekg-pulse 2s infinite ease-in-out;
 }
 
-/* This pseudo-element creates the static, glowing grid */
+/* Static background grid. This ensures the preview is always visible. */
 .card-heartbeat::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image: 
-        linear-gradient(to right, rgba(255, 0, 0, 0.15) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 0, 0, 0.15) 1px, transparent 1px);
-    background-size: 25px 25px;
-    opacity: 0.8;
+        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.5;
 }
 
-/* This pseudo-element now uses a static clip-path, and we animate it below */
-.card-heartbeat::after {
-    content: '';
+/* This container holds the SVG and the sweep animation */
+.heartbeat-line-container {
     position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    inset: 0;
+}
+
+/* The SVG element that contains the heartbeat path */
+.heartbeat-line-container svg {
+    position: absolute;
     width: 100%;
-    height: 80px;
-    background: 
-        linear-gradient(to top, 
-            transparent, 
-            rgba(255, 100, 100, 0.2), 
-            #ff6363, 
-            rgba(255, 100, 100, 0.2), 
-            transparent
-        );
-    /* This new animation name points to our corrected keyframes */
-    animation: reveal-ekg-line 2s linear infinite;
-    will-change: clip-path;
+    height: 100px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    stroke: #ff3b3b;
+    stroke-width: 3;
+    fill: transparent;
+    stroke-dasharray: 1000; /* A large value to cover the whole path */
+    stroke-dashoffset: 1000;
+    /* This animation "draws" the line by reducing the dash offset */
+    animation: draw-heartbeat-line 2s linear infinite;
+    will-change: stroke-dashoffset;
 }
 
-/* This is the key change: we animate the clip-path from 0% width to 100% */
-@keyframes reveal-ekg-line {
+/* The sweeping scanner beam that follows the line */
+.heartbeat-sweep {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 4px;
+    background: #ff3b3b;
+    box-shadow: 0 0 15px #ff3b3b, 0 0 25px #ff3b3b;
+    animation: sweep-heartbeat-line 2s linear infinite;
+    will-change: transform;
+}
+
+@keyframes draw-heartbeat-line {
     0% {
-        clip-path: polygon(0% 50%, 0% 50%, 0% 40%, 0% 60%, 0% 45%, 0% 52%, 0% 50%, 0% 50%, 0% 55%, 0% 35%, 0% 70%, 0% 50%, 0% 50%);
-    }
-    30% {
-        /* This reveals the full EKG shape */
-        clip-path: polygon(0% 50%, 25% 50%, 28% 40%, 30% 60%, 32% 45%, 34% 52%, 36% 50%, 60% 50%, 62% 55%, 63% 35%, 65% 70%, 66% 50%, 100% 50%);
-    }
-    100% {
-        /* This keeps the full line visible until the animation loops */
-        clip-path: polygon(0% 50%, 25% 50%, 28% 40%, 30% 60%, 32% 45%, 34% 52%, 36% 50%, 60% 50%, 62% 55%, 63% 35%, 65% 70%, 66% 50%, 100% 50%);
-    }
-}
-
-@keyframes ekg-pulse {
-    0%, 100% {
-        box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.3);
+        stroke-dashoffset: 1000; /* Line is hidden */
     }
     50% {
-        box-shadow: inset 0 0 25px rgba(255, 0, 0, 0.5);
+        stroke-dashoffset: 0; /* Line is fully drawn */
+    }
+    100% {
+        stroke-dashoffset: 0; /* Stays drawn for the rest of the cycle */
+    }
+}
+
+@keyframes sweep-heartbeat-line {
+    0% {
+        transform: translateX(0%);
+    }
+    50% {
+        transform: translateX(calc(100% - 4px)); /* Sweep all the way across */
+    }
+    100% {
+        transform: translateX(calc(100% - 4px));
     }
 }
 /* --- Leveling System Icon Styles --- */
