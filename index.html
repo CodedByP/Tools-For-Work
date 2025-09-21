@@ -595,57 +595,26 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Pure CSS Scanner) --- */
+/* --- 20. Heartbeat Sensor (Final Stable Version) --- */
 .card-heartbeat {
-    position: relative;
-    overflow: hidden;
-    background-color: #1a0a0a;
-
-    /* We stack all visual layers as multiple backgrounds on the main element.
-       This is a highly reliable method. */
+    /* A static background grid. We know a single, static background-image works. */
     background-image:
-        /* Layer 3 (Top): The moving pulse */
-        radial-gradient(
-            circle at center,
-            #ff3b3b 0%,
-            rgba(255, 59, 59, 0) 50%
-        ),
-        /* Layer 2: The static horizontal line */
-        linear-gradient(#ff3b3b, #ff3b3b),
-        /* Layer 1 (Bottom): The static grid */
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
 
-    background-repeat: no-repeat, no-repeat, repeat, repeat;
-
-    /* This is the key: We explicitly define the size for each of our 4 background layers,
-       which overrides the conflicting 'cover' value from the base styles. */
-    background-size: 
-        40px 40px,    /* Pulse size */
-        100% 2px,     /* Line size */
-        20px 20px,    /* Grid X size */
-        20px 20px;    /* Grid Y size */
-
-    /* Set the initial position for each layer */
-    background-position: 
-        -40px center,   /* Pulse starts off-screen */
-        center center,  /* Line is centered */
-        top left,       /* Grid X */
-        top left;       /* Grid Y */
-
-    /* The animation now only moves the position of the pulse */
-    animation: move-scanner-pulse 2.5s linear infinite;
-    will-change: background-position;
+    /* The animation only uses background-color and box-shadow, which we know work reliably. */
+    animation: heartbeat-pulse-final 1.5s ease-in-out infinite;
 }
 
-@keyframes move-scanner-pulse {
-    from {
-        /* Start with the pulse off-screen to the left */
-        background-position: -40px center, center center, top left, top left;
+@keyframes heartbeat-pulse-final {
+    0%, 100% {
+        background-color: #440000; /* A deep, dark red */
+        box-shadow: inset 0 0 15px 5px rgba(0, 0, 0, 0.5);
     }
-    to {
-        /* Move the pulse all the way across to the right */
-        background-position: calc(100% + 40px) center, center center, top left, top left;
+    50% {
+        background-color: #ff3b3b; /* A bright, pulsing red */
+        box-shadow: inset 0 0 25px 10px rgba(255, 59, 59, 0.5);
     }
 }
 /* --- Leveling System Icon Styles --- */
