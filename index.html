@@ -369,41 +369,7 @@
 #calling-card-grid .calling-card-preview.is-active .calling-card-bg *::after {  /* Added this line */
     animation-play-state: running !important;
 }
-/* This rule makes the ::before element's background visible even when paused. */
-#calling-card-grid .card-topo-scan::before {
-    animation: none; /* Temporarily remove the animation for the static preview */
-    background-position: 50% 50%; /* Center the pattern so it's visible */
-}
 
-/* This rule ensures the animation RUNS when the preview is active */
-#calling-card-grid .calling-card-preview.is-active .card-topo-scan::before {
-    animation: topo-scroll 8s linear infinite; /* Re-apply the animation */
-}		
-
-/* --- FIX for Heartbeat Sensor Preview --- */
-/* This rule targets the heartbeat SVG ONLY when it's inside the preview grid */
-#calling-card-grid .card-heartbeat .heartbeat-line-container svg {
-    /* Set a static, visible starting point for the line in the preview */
-    stroke-dashoffset: 1950;
-    /* We temporarily disable the animation for the static preview state */
-    animation: none;
-}
-
-/* This rule targets the sweep bar ONLY when it's in the preview grid */
-#calling-card-grid .card-heartbeat .heartbeat-sweep {
-    /* Position the bar at the start of the visible line segment */
-    transform: translateX(5%);
-    animation: none;
-}
-
-/* This rule re-enables the animations when you hover or click the preview */
-#calling-card-grid .calling-card-preview.is-active .card-heartbeat .heartbeat-line-container svg {
-    animation: draw-heartbeat-line 2s linear infinite;
-}
-
-#calling-card-grid .calling-card-preview.is-active .card-heartbeat .heartbeat-sweep {
-    animation: sweep-heartbeat-line 2s linear infinite;
-}
 
 /* --- (All 20 card styles below are the same as before, but included for completeness) --- */
 /* --- 1. Circuit Pulse --- */
