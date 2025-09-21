@@ -595,84 +595,42 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Hybrid Preview/Animation Fix) --- */
+/* --- 20. Heartbeat Sensor (Pure CSS Scrolling Redesign) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
+    /* The scrolling EKG line is now the main background image */
+    background-image: url("data:image/svg+xml,%3Csvg width='300' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23ff3b3b' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: auto 50%; /* Controls the height of the line */
+    background-position: center;
+    animation: scroll-ekg 2.5s linear infinite;
+    will-change: background-position;
 }
 
-/* This is the red grid background, which is always visible */
+/* The ::before is now used for the grid overlay and a vignette effect */
 .card-heartbeat::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image: 
+        /* The grid */
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    opacity: 0.5;
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        /* A vignette to darken the edges */
+        radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7));
+    background-size: 20px 20px, 20px 20px, 100% 100%;
+    opacity: 0.7;
 }
 
-
-#calling-card-grid .card-heartbeat {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23ff3b3b' stroke-width='3' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 50%;
-}
-
-
-#calling-card-grid .calling-card-preview.is-active .card-heartbeat,
-#calling-card-bg-container.card-heartbeat {
-    background-image: none;
-}
-
-
-/* --- Styles for the JS-injected animated elements (No changes needed here) --- */
-.heartbeat-line-container {
-    position: absolute;
-    inset: 0;
-}
-
-.heartbeat-line-container svg {
-    position: absolute;
-    width: 100%;
-    height: 100px;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    stroke: #ff3b3b;
-    stroke-width: 3;
-    fill: transparent;
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: draw-heartbeat-line 2s linear infinite;
-    will-change: stroke-dashoffset;
-}
-
-.heartbeat-sweep {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 4px;
-    background: #ff3b3b;
-    box-shadow: 0 0 15px #ff3b3b, 0 0 25px #ff3b3b;
-    animation: sweep-heartbeat-line 2s linear infinite;
-    will-change: transform;
-}
-
-@keyframes draw-heartbeat-line {
-    0%   { stroke-dashoffset: 950; }
-    50%  { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: 0; }
-}
-
-@keyframes sweep-heartbeat-line {
-    0%   { transform: translateX(5%); }
-    50%  { transform: translateX(calc(100% - 4px)); }
-    100% { transform: translateX(calc(100% - 4px)); }
+@keyframes scroll-ekg {
+    from {
+        background-position-x: 0;
+    }
+    to {
+        background-position-x: -300px; /* This value should match the width of the SVG */
+    }
 }
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
@@ -2539,7 +2497,7 @@ const CALLING_CARDS = [
     { id: 'digital-camo', title: 'Digital Camo', class: 'card-digicamo' },
     { id: 'sonar-sweep', title: 'Sonar Sweep', class: 'card-sonar' },
     { id: 'unstable-energy', title: 'Unstable Energy', class: 'card-unstable-energy', needsJs: true },
-    { id: 'heartbeat-sensor', title: 'Heartbeat Sensor', class: 'card-heartbeat', needsJs: true }
+    { id: 'heartbeat-sensor', title: 'Heartbeat Sensor', class: 'card-heartbeat'}
 ];		
 
 // --- NEW: Leveling System Configuration ---		
@@ -3038,30 +2996,7 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-unstable-energy') {
         container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
     }
-    if (cardClass === 'card-heartbeat') {
-        // --- START OF NEW CODE ---
-        const lineContainer = document.createElement('div');
-        lineContainer.className = 'heartbeat-line-container';
 
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, 'svg');
-        svg.setAttribute('viewBox', '0 0 300 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
-
-        const path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('d', 'M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50');
-
-        svg.appendChild(path);
-
-        const sweep = document.createElement('div');
-        sweep.className = 'heartbeat-sweep';
-
-        lineContainer.appendChild(svg);
-        lineContainer.appendChild(sweep);
-
-        container.appendChild(lineContainer);
-        // --- END OF NEW CODE ---
-    }
 };
 
 const renderLevelingSystem = (userData) => {
