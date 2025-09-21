@@ -595,34 +595,22 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Separated Layers Fix) --- */
+/* --- 20. Heartbeat Sensor (Final Preview Fix) --- */
+
+/* Part A: Styles for the FINAL, WORKING calling card on your stats page */
 .card-heartbeat {
-    /* This element is now ONLY a flex container for the dots */
+    background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 10px;
-    /* It has no background of its own, preventing the conflict */
-    background-color: transparent; 
-}
-
-/* The ::before pseudo-element is now the dedicated background layer */
-.card-heartbeat::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1; /* This places the background behind the dots */
-    
-    background-color: #1a0a0a;
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
 }
-
-/* The dots and their animation remain the same */
 .heartbeat-dot {
     width: 4px;
     height: 4px;
@@ -630,22 +618,35 @@
     border-radius: 50%;
     opacity: 0.5;
     animation: dot-pulse 1.5s ease-in-out infinite;
-    will-change: transform, opacity, box-shadow;
 }
-
 @keyframes dot-pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 0.5;
-        box-shadow: none;
-    }
-    50% {
-        transform: scale(2.5);
-        opacity: 1;
-        box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b;
-    }
+    0%, 100% { transform: scale(1); opacity: 0.5; box-shadow: none; }
+    50% { transform: scale(2.5); opacity: 1; box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b; }
 }
 
+
+/* Part B: This is the special fix for the PREVIEW grid */
+/* It targets the heartbeat card ONLY inside the preview modal */
+#calling-card-grid .card-heartbeat {
+    /* Override the flex display to prevent layout issues like the one with your rank icon */
+    display: block; 
+    /* Hide the broken, JS-injected dots from appearing in the preview */
+    font-size: 0; /* A trick to hide child elements */
+    color: transparent;
+}
+/* We use a pseudo-element to show a STATIC placeholder image over the broken preview */
+#calling-card-grid .card-heartbeat::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* A static SVG of the EKG line */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23ff3b3b' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 50%;
+    /* Add the grid and color to the placeholder */
+    background-color: #1a0a0a;
+}
 /* --- Rank Colors & Base Icons --- */
 .level-badge-newbie { background: linear-gradient(145deg, #a3b18a, #588157); border-color: #3a5a40; }
 .level-badge-apprentice { background: linear-gradient(145deg, #d7a98c, #a05d2d); border-color: #8c582c; }
