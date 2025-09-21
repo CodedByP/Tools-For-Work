@@ -595,33 +595,57 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Fix) --- */
+/* --- 20. Heartbeat Sensor (Final Pure CSS Scanner) --- */
 .card-heartbeat {
+    position: relative;
+    overflow: hidden;
     background-color: #1a0a0a;
-    
-    /* The radial gradient for the pulse */
-    background-image: radial-gradient(circle at center, #ff3b3b, transparent 40%);
-    background-repeat: no-repeat;
-    background-position: center;
-    
-    /* THIS IS THE FIX: We override the 'cover' from the base class 
-      and set the initial size for our animation.
-    */
-    background-size: 0% 0%; 
-    opacity: 0;
 
-    animation: final-pulse-fix 2s ease-in-out infinite;
-    will-change: background-size, opacity;
+    /* We stack all visual layers as multiple backgrounds on the main element.
+       This is a highly reliable method. */
+    background-image:
+        /* Layer 3 (Top): The moving pulse */
+        radial-gradient(
+            circle at center,
+            #ff3b3b 0%,
+            rgba(255, 59, 59, 0) 50%
+        ),
+        /* Layer 2: The static horizontal line */
+        linear-gradient(#ff3b3b, #ff3b3b),
+        /* Layer 1 (Bottom): The static grid */
+        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+
+    /* This is the key: We explicitly define the size for each of our 4 background layers,
+       which overrides the conflicting 'cover' value from the base styles. */
+    background-size: 
+        40px 40px,    /* Pulse size */
+        100% 2px,     /* Line size */
+        20px 20px,    /* Grid X size */
+        20px 20px;    /* Grid Y size */
+
+    /* Set the initial position for each layer */
+    background-position: 
+        -40px center,   /* Pulse starts off-screen */
+        center center,  /* Line is centered */
+        top left,       /* Grid X */
+        top left;       /* Grid Y */
+
+    /* The animation now only moves the position of the pulse */
+    animation: move-scanner-pulse 2.5s linear infinite;
+    will-change: background-position;
 }
 
-@keyframes final-pulse-fix {
-    50% {
-        background-size: 125% 125%;
-        opacity: 1;
+@keyframes move-scanner-pulse {
+    from {
+        /* Start with the pulse off-screen to the left */
+        background-position: -40px center, center center, top left, top left;
     }
-    100% {
-        background-size: 0% 0%;
-        opacity: 0;
+    to {
+        /* Move the pulse all the way across to the right */
+        background-position: calc(100% + 40px) center, center center, top left, top left;
     }
 }
 /* --- Leveling System Icon Styles --- */
