@@ -595,32 +595,40 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Transform Animation) --- */
+/* --- 20. Heartbeat Sensor (Final Separated Layers Fix) --- */
 .card-heartbeat {
-    background-color: #1a0a0a;
+    /* This element is now ONLY a flex container for the dots */
     position: relative;
     overflow: hidden;
-    /* Static grid background */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    /* It has no background of its own, preventing the conflict */
+    background-color: transparent; 
+}
+
+/* The ::before pseudo-element is now the dedicated background layer */
+.card-heartbeat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1; /* This places the background behind the dots */
+    
+    background-color: #1a0a0a;
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
-    /* Use flexbox to automatically space out the dots */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 10px; /* Padding so dots don't touch the edges */
 }
 
-/* Style for each individual dot in the line */
+/* The dots and their animation remain the same */
 .heartbeat-dot {
     width: 4px;
     height: 4px;
     background-color: #ff3b3b;
     border-radius: 50%;
-    opacity: 0.5; /* The faint, persistent line of dots */
-    
-    /* The animation uses only transform and opacity, which we know works */
+    opacity: 0.5;
     animation: dot-pulse 1.5s ease-in-out infinite;
     will-change: transform, opacity, box-shadow;
 }
@@ -632,35 +640,10 @@
         box-shadow: none;
     }
     50% {
-        transform: scale(2.5); /* The "blip" effect */
+        transform: scale(2.5);
         opacity: 1;
         box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b;
     }
-}
-/* --- Leveling System Icon Styles --- */
-.level-badge-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.4),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
-        0 4px 8px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-    transition: transform 0.3s ease-in-out, filter 0.3s ease, box-shadow 0.5s ease-in-out;
-    border: 2px solid;
-    cursor: pointer;
-    background-size: 200% 200%;
-    background-position: 50% 50%;
-}
-
-.level-badge-wrapper:hover {
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 /* --- Rank Colors & Base Icons --- */
