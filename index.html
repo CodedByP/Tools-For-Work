@@ -595,14 +595,14 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Pure CSS Gradient Pulse) --- */
+/* --- 20. Heartbeat Sensor (v7 - Pure CSS Box-Shadow Pulse) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
 }
 
-/* Layer 1: The static red grid */
+/* Static grid background */
 .card-heartbeat::before {
     content: '';
     position: absolute;
@@ -614,62 +614,34 @@
     opacity: 0.5;
 }
 
-/* Layer 2: This holds the static line and the animated pulse */
+/* This pseudo-element creates both the static line and the moving pulse */
 .card-heartbeat::after {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
+    width: 8px; /* Width of the pulse */
+    height: 8px; /* Height of the pulse */
+    top: 50%;
     left: 0;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background-color: #ff3b3b;
+    
+    /* The box-shadow creates the faint line and the bright glow */
+    box-shadow: 
+        0 0 15px 5px rgba(255, 59, 59, 0.7), /* The glow */
+        -2000px 0 0 0 #ff3b3b; /* A long shadow that acts as the line */
 
-    /* We stack two gradients: the pulse on top of the static line */
-    background-image:
-        /* 1. The moving pulse (a glowing red dot) */
-        radial-gradient(
-            circle at center,
-            #ff3b3b 0%,
-            rgba(255, 59, 59, 0) 40%
-        ),
-        /* 2. The static horizontal line */
-        linear-gradient(
-            to right,
-            #ff3b3b, #ff3b3b
-        );
-
-    background-repeat: no-repeat;
-
-    /* Define the size and position for each background layer */
-    background-size: 
-        80px 80px,  /* The size of the glowing pulse */
-        100% 2px;   /* The size of the horizontal line */
-
-    background-position: 
-        -80px center, /* The pulse starts off-screen to the left */
-        center center;/* The horizontal line is centered */
-
-    /* The animation moves the pulse's position and adds a "beat" */
-    animation: move-heart-pulse 2s ease-in-out infinite;
-    will-change: background-position, transform;
+    /* The animation moves the pulse from left to right */
+    animation: move-shadow-pulse 2s linear infinite;
+    will-change: transform;
 }
 
-@keyframes move-heart-pulse {
+@keyframes move-shadow-pulse {
     0% {
-        background-position: -80px center, center center;
-        transform: scale(1);
-    }
-    48% {
-        /* The pulse "beats" just before the midpoint */
-        transform: scale(1.5);
-    }
-    52% {
-        /* It returns to normal size after the beat */
-        transform: scale(1);
+        transform: translate(-100%) translateY(-50%);
     }
     100% {
-        /* The pulse has moved all the way across and is now off-screen */
-        background-position: calc(100% + 80px) center, center center;
-        transform: scale(1);
+        transform: translate(4000%) translateY(-50%); /* A large value to ensure it crosses the screen */
     }
 }
 /* --- Leveling System Icon Styles --- */
