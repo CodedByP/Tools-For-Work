@@ -629,7 +629,7 @@
     stroke-width: 3;
     fill: transparent;
     stroke-dasharray: 1000;
-    stroke-dashoffset: 50; /* MODIFIED: Makes the start of the line visible */
+    stroke-dashoffset: 950; /* MODIFIED: Makes the start of the line visible */
     animation: draw-heartbeat-line 2s linear infinite;
     will-change: stroke-dashoffset;
 }
@@ -2994,7 +2994,6 @@ const backfillUserStats = async (uid) => {
     }
 };
 
-// ▼▼▼ REPLACE BOTH FUNCTIONS WITH THESE NEW VERSIONS ▼▼▼
 
 const injectCallingCardJs = (cardClass, container) => {
     if (!container) return; // Safety check
@@ -3036,15 +3035,26 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-unstable-energy') {
         container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
     }
-   if (cardClass === 'card-heartbeat') {
-        container.innerHTML = `
-            <div class="heartbeat-line-container">
-                <svg viewBox="0 0 300 100" preserveAspectRatio="none">
-                    <path d="M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50"></path>
-                </svg>
-                <div class="heartbeat-sweep"></div>
-            </div>
-        `;
+        const lineContainer = document.createElement('div');
+        lineContainer.className = 'heartbeat-line-container';
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', '0 0 300 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
+
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50');
+
+        svg.appendChild(path);
+
+        const sweep = document.createElement('div');
+        sweep.className = 'heartbeat-sweep';
+
+        lineContainer.appendChild(svg);
+        lineContainer.appendChild(sweep);
+
+        container.appendChild(lineContainer);
     }
 };
 
