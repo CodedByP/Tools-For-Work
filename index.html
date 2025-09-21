@@ -595,13 +595,14 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Classic EKG Redesign v2) --- */
+/* --- 20. Heartbeat Sensor (Hybrid Preview/Animation Fix) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
 }
 
+/* This is the red grid background, which is always visible */
 .card-heartbeat::before {
     content: '';
     position: absolute;
@@ -613,6 +614,22 @@
     opacity: 0.5;
 }
 
+
+#calling-card-grid .card-heartbeat {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23ff3b3b' stroke-width='3' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 50%;
+}
+
+
+#calling-card-grid .calling-card-preview.is-active .card-heartbeat,
+#calling-card-bg-container.card-heartbeat {
+    background-image: none;
+}
+
+
+/* --- Styles for the JS-injected animated elements (No changes needed here) --- */
 .heartbeat-line-container {
     position: absolute;
     inset: 0;
@@ -629,7 +646,7 @@
     stroke-width: 3;
     fill: transparent;
     stroke-dasharray: 1000;
-    stroke-dashoffset: 950; /* MODIFIED: Makes the start of the line visible */
+    stroke-dashoffset: 1000;
     animation: draw-heartbeat-line 2s linear infinite;
     will-change: stroke-dashoffset;
 }
@@ -642,33 +659,20 @@
     width: 4px;
     background: #ff3b3b;
     box-shadow: 0 0 15px #ff3b3b, 0 0 25px #ff3b3b;
-    transform: translateX(5%); /* ADDED: Puts the sweep bar at its starting position */
     animation: sweep-heartbeat-line 2s linear infinite;
     will-change: transform;
 }
 
 @keyframes draw-heartbeat-line {
-    0% {
-        stroke-dashoffset: 950; 
-    }
-    50% {
-        stroke-dashoffset: 0;
-    }
-    100% {
-        stroke-dashoffset: 0;
-    }
+    0%   { stroke-dashoffset: 950; }
+    50%  { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 0; }
 }
 
 @keyframes sweep-heartbeat-line {
-    0% {
-        transform: translateX(5%); 
-    }
-    50% {
-        transform: translateX(calc(100% - 4px));
-    }
-    100% {
-        transform: translateX(calc(100% - 4px));
-    }
+    0%   { transform: translateX(5%); }
+    50%  { transform: translateX(calc(100% - 4px)); }
+    100% { transform: translateX(calc(100% - 4px)); }
 }
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
