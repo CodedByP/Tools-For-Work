@@ -3035,6 +3035,59 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-unstable-energy') {
         container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
     }
+You're right to be frustrated, and my apologies that the previous fixes didn't work. Your description clarifies the issue perfectly: the background and the SVG are not rendering at all in the preview, which is a different problem than just a paused animation.
+
+This behavior almost always points to a browser rendering quirk when JavaScript injects complex HTML (like an SVG) into a container that is also being manipulated by complex CSS (like the animation-play-state rules). The most reliable way to solve this is to change how the SVG is created, making it more robust.
+
+The solution is a two-part fix that, when combined, should resolve this for good without changing the final animation you like.
+
+1. The JavaScript Fix (The Core of the Solution)
+We are going to change the injectCallingCardJs function to build the SVG elements properly using document.createElementNS instead of injecting a raw string of HTML. This is a much more stable way to handle SVGs in JavaScript and avoids the browser parsing issues that are causing the blank preview.
+
+Action: Replace the entire injectCallingCardJs function in your <script> tag with this new version.
+
+JavaScript
+
+const injectCallingCardJs = (cardClass, container) => {
+    if (!container) return; // Safety check
+    container.innerHTML = ''; // Clear previous elements
+
+    if (cardClass === 'card-datastream') {
+        let cols = '';
+        for (let i = 0; i < 15; i++) {
+            cols += `<div class="datastream-col" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
+        }
+        container.innerHTML += cols;
+    }
+    if (cardClass === 'card-tactical-hud') {
+        container.innerHTML += `<div class="hud-corner hud-corner-tl"></div><div class="hud-corner hud-corner-tr"></div><div class="hud-corner hud-corner-bl"></div><div class="hud-corner hud-corner-br"></div><div class="hud-rec">REC</div><div class="hud-scanline-2"></div>`;
+    }
+    if (cardClass === 'card-holo-grid') {
+        container.innerHTML += `<div class="holo-grid-1"></div><div class="holo-grid-2"></div><div class="holo-scanline"></div>`;
+    }
+    if (cardClass === 'card-lightning') {
+        container.innerHTML += `<div class="lightning-bolt"></div><div class="lightning-bolt"></div><div class="lightning-bolt"></div>`;
+    }
+    if (cardClass === 'card-blizzard') {
+        for (let i = 0; i < 50; i++) {
+            const snow = document.createElement('div');
+            const size = `${Math.random() * 3 + 1}px`;
+            snow.className = 'snow-particle';
+            snow.style.left = `${Math.random() * 100}%`;
+            snow.style.width = size;
+            snow.style.height = size;
+            snow.style.animationDelay = `${Math.random() * 10}s`;
+            snow.style.animationDuration = `${Math.random() * 5 + 5}s`;
+            container.appendChild(snow);
+        }
+    }
+    if (cardClass === 'card-haunting') {
+        container.innerHTML += `<div class="haunting-wisp"></div>`;
+    }
+    if (cardClass === 'card-unstable-energy') {
+        container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
+    }
+    if (cardClass === 'card-heartbeat') {	
         const lineContainer = document.createElement('div');
         lineContainer.className = 'heartbeat-line-container';
 
