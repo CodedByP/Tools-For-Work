@@ -595,26 +595,47 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Stable Version) --- */
+/* --- 20. Heartbeat Sensor (Final Clip-Path Version) --- */
 .card-heartbeat {
-    /* A static background grid. We know a single, static background-image works. */
+    position: relative;
+    overflow: hidden;
+    background-color: #1a0a0a;
+
+    /* Create the full, static scene with all visual layers.
+       This is the complete image that our animation will reveal. */
     background-image:
+        /* Layer 3: A subtle glow that will be revealed with the line */
+        radial-gradient(
+            circle at center,
+            rgba(255, 59, 59, 0.5) 0%,
+            transparent 60%
+        ),
+        /* Layer 2: The full heartbeat line (using a reliable SVG) */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 300 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23ff3b3b' stroke-width='3' fill='none'/%3E%3C/svg%3E"),
+        /* Layer 1: The grid */
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
 
-    /* The animation only uses background-color and box-shadow, which we know work reliably. */
-    animation: heartbeat-pulse-final 1.5s ease-in-out infinite;
+    /* All backgrounds are static and do not repeat (except the grid) */
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+    
+    /* Set the size for each layer to override any conflicting styles */
+    background-size: 100% 100%, 100% 50%, 20px 20px, 20px 20px;
+    background-position: center, center, top left, top left;
+
+    /* The animation uses clip-path to create the wipe/reveal effect */
+    animation: reveal-heartbeat 2s linear infinite;
+    will-change: clip-path;
 }
 
-@keyframes heartbeat-pulse-final {
+@keyframes reveal-heartbeat {
     0%, 100% {
-        background-color: #440000; /* A deep, dark red */
-        box-shadow: inset 0 0 15px 5px rgba(0, 0, 0, 0.5);
+        /* Start and end with the element completely clipped (invisible) */
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
     }
     50% {
-        background-color: #ff3b3b; /* A bright, pulsing red */
-        box-shadow: inset 0 0 25px 10px rgba(255, 59, 59, 0.5);
+        /* At the halfway point, the element is fully visible */
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
     }
 }
 /* --- Leveling System Icon Styles --- */
