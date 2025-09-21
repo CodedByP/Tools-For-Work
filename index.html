@@ -595,37 +595,28 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Attempt - Simple Pulse) --- */
+/* --- 20. Heartbeat Sensor (Final Fix) --- */
 .card-heartbeat {
-    /* We know background-color works from our tests */
     background-color: #1a0a0a;
-    position: relative;
-    overflow: hidden;
-
-    /* We use a single radial-gradient, which we know works */
-    background-image: radial-gradient(
-        circle at center, 
-        #ff3b3b 0%, 
-        rgba(255, 59, 59, 0.5) 15%, 
-        transparent 50%
-    );
-
+    
+    /* The radial gradient for the pulse */
+    background-image: radial-gradient(circle at center, #ff3b3b, transparent 40%);
     background-repeat: no-repeat;
     background-position: center;
+    
+    /* THIS IS THE FIX: We override the 'cover' from the base class 
+      and set the initial size for our animation.
+    */
+    background-size: 0% 0%; 
+    opacity: 0;
 
-    /* Animate the size of the gradient to create a pulse.
-       This is a highly reliable animation property. */
-    animation: final-pulse-effect 2.5s ease-in-out infinite;
-    will-change: background-size;
+    animation: final-pulse-fix 2s ease-in-out infinite;
+    will-change: background-size, opacity;
 }
 
-@keyframes final-pulse-effect {
-    0% {
-        background-size: 0% 0%;
-        opacity: 0;
-    }
+@keyframes final-pulse-fix {
     50% {
-        background-size: 100% 100%;
+        background-size: 125% 125%;
         opacity: 1;
     }
     100% {
