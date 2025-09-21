@@ -629,7 +629,7 @@
     stroke-width: 3;
     fill: transparent;
     stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
+    stroke-dashoffset: 950; /* MODIFIED: Makes the start of the line visible */
     animation: draw-heartbeat-line 2s linear infinite;
     will-change: stroke-dashoffset;
 }
@@ -642,28 +642,25 @@
     width: 4px;
     background: #ff3b3b;
     box-shadow: 0 0 15px #ff3b3b, 0 0 25px #ff3b3b;
+    transform: translateX(5%); /* ADDED: Puts the sweep bar at its starting position */
     animation: sweep-heartbeat-line 2s linear infinite;
     will-change: transform;
 }
 
-/* --- CORRECTED ANIMATION STARTS HERE --- */
-
 @keyframes draw-heartbeat-line {
     0% {
-        /* Start with a small piece of the line already visible */
         stroke-dashoffset: 950; 
     }
     50% {
-        stroke-dashoffset: 0;   /* Line is fully drawn */
+        stroke-dashoffset: 0;
     }
     100% {
-        stroke-dashoffset: 0;   /* Stays drawn */
+        stroke-dashoffset: 0;
     }
 }
 
 @keyframes sweep-heartbeat-line {
     0% {
-        /* Start the sweep beam where the visible line starts */
         transform: translateX(5%); 
     }
     50% {
