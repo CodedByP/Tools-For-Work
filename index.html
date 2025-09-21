@@ -604,16 +604,73 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor --- */
-.card-heartbeat { background-color: #1a0a0a; }
-.heartbeat-line { position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: #f00; opacity: 0.2; }
-.heartbeat-line svg { position: absolute; width: 100%; height: 100px; top: 50%; left: 0; transform: translateY(-50%); stroke: #f00; stroke-width: 3; fill: transparent; stroke-dasharray: 500; stroke-dashoffset: 500; animation: draw-heartbeat 2s linear infinite; will-change: stroke-dashoffset; }
-.heartbeat-sweep { position: absolute; top: 0; left: 0; height: 100%; width: 4px; background: #f00; box-shadow: 0 0 10px #f00; animation: sweep-heartbeat 2s linear infinite; will-change: transform; }
-@keyframes draw-heartbeat { 0% { stroke-dashoffset: 500; } 50% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
-@keyframes sweep-heartbeat {
-    0% { transform: translateX(0%); }      /* <<< CHANGE THIS */
-    50% { transform: translateX(100%); }   /* <<< CHANGE THIS */
-    100% { transform: translateX(100%); }  /* <<< CHANGE THIS */
+/* --- 20. Heartbeat Sensor (Redesign) --- */
+.card-heartbeat {
+    background-color: #110808; /* Darker, richer red background */
+    position: relative;
+    overflow: hidden;
+    /* A subtle pulse animation on the whole card */
+    animation: ekg-pulse 2s infinite ease-in-out;
+}
+
+/* This pseudo-element creates the static, glowing grid */
+.card-heartbeat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(to right, rgba(255, 0, 0, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.15) 1px, transparent 1px);
+    background-size: 25px 25px; /* Adjust grid size */
+    opacity: 0.8;
+}
+
+/* This pseudo-element creates and animates the heartbeat line */
+.card-heartbeat::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 80px; /* Taller area for the line */
+    background: 
+        linear-gradient(to top, 
+            transparent, 
+            rgba(255, 100, 100, 0.2), 
+            #ff6363, 
+            rgba(255, 100, 100, 0.2), 
+            transparent
+        );
+    /* This clip-path defines the EKG shape */
+    clip-path: polygon(
+        0% 50%, 25% 50%, 
+        28% 40%, 30% 60%, 32% 45%, 34% 52%, 36% 50%,
+        60% 50%,
+        62% 55%, 63% 35%, 65% 70%, 66% 50%,
+        100% 50%
+    );
+    /* The animation reveals the line from left to right */
+    animation: draw-ekg-line 2s linear infinite;
+    will-change: transform;
+}
+
+@keyframes draw-ekg-line {
+    from {
+        transform: translateY(-50%) translateX(-100%);
+    }
+    to {
+        transform: translateY(-50%) translateX(100%);
+    }
+}
+
+@keyframes ekg-pulse {
+    0%, 100% {
+        box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: inset 0 0 25px rgba(255, 0, 0, 0.5);
+    }
 }
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
