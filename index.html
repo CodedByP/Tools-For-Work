@@ -556,55 +556,22 @@
 .card-brushed-steel { background-color: #6c757d; background-image: linear-gradient(90deg, #adb5bd, #6c757d, #adb5bd); }
 .card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); animation: shimmer-steel 5s infinite; will-change: transform; }
 @keyframes shimmer-steel { 0% { transform: skewX(-25deg) translateX(-250%); } 100% { transform: skewX(-25deg) translateX(500%); } }
-/* --- 16. Topographic Scan (Subsurface Redesign) --- */
+/* --- 16. Topographic Scan (v3 - Final) --- */
 .card-topo-scan {
-    background-color: #1a2a3a; /* Dark slate blue */
-    overflow: hidden;
-    position: relative;
+    /* Base style for the PAUSED preview state */
+    background-color: #0d1b2a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop stop-color='%2300b4d8' offset='0%25'/%3E%3Cstop stop-color='%2303045e' offset='100%25'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23g)'/%3E%3Cpath d='M0 20 C 25 10, 75 10, 100 20 L100 0 L0 0 Z' fill='rgba(0,0,0,0.2)'/%3E%3Cpath d='M0 40 C 25 30, 75 30, 100 40 L100 20 L0 20 Z' fill='rgba(0,0,0,0.2)'/%3E%3Cpath d='M0 60 C 25 50, 75 50, 100 60 L100 40 L0 40 Z' fill='rgba(0,0,0,0.2)'/%3E%3Cpath d='M0 80 C 25 70, 75 70, 100 80 L100 60 L0 60 Z' fill='rgba(0,0,0,0.2)'/%3E%3Cpath d='M0 100 C 25 90, 75 90, 100 100 L100 80 L0 80 Z' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E");
+    background-size: cover;
+    animation: topo-glow 4s ease-in-out infinite alternate;
 }
 
-/* This layer holds the contour lines. It's mostly invisible until "lit up" from below. */
-.card-topo-scan::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    /* A unique, wavy SVG pattern for the contour lines */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cpath d='M-20 50 C 30 10, 80 90, 130 50 S 180 10, 230 50' stroke='rgba(0, 190, 255, 0.5)' fill='none' stroke-width='2'/%3E%3Cpath d='M-20 100 C 30 60, 80 140, 130 100 S 180 60, 230 100' stroke='rgba(0, 190, 255, 0.5)' fill='none' stroke-width='2'/%3E%3Cpath d='M-20 150 C 30 110, 80 190, 130 150 S 180 110, 230 150' stroke='rgba(0, 190, 255, 0.5)' fill='none' stroke-width='2'/%3E%3C/svg%3E");
-    background-size: 200px 200px;
-    animation: move-subsurface-map 15s linear infinite;
-    /* This blend mode is the key: it makes the lines appear only where the layer below is bright */
-    mix-blend-mode: screen; 
-    will-change: background-position;
-}
-
-/* Layer 2: The sweeping "scanner light" that moves up and down. */
-.card-topo-scan::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -50%; /* Start with half the element visible at the top */
-    height: 100%; /* Make the light bar as tall as the card */
-    background: linear-gradient(to bottom, 
-        transparent, 
-        rgba(0, 190, 255, 0.3) 49%, 
-        #fff 50%, 
-        rgba(0, 190, 255, 0.3) 51%, 
-        transparent
-    );
-    /* Use the new, corrected animation name */
-    animation: scan-subsurface 4s ease-in-out infinite alternate;
-    will-change: transform;
-}
-
-@keyframes move-subsurface-map {
-    from { background-position: 0 0; }
-    to { background-position: -200px 0; } /* Slowly scrolls the map texture horizontally */
-}
-
-@keyframes scan-subsurface { /* CORRECTED this name to match */
-    from { transform: translateY(0%); }
-    to { transform: translateY(100%); }
+@keyframes topo-glow {
+    from {
+        box-shadow: inset 0 0 15px rgba(3, 4, 94, 0.8);
+    }
+    to {
+        box-shadow: inset 0 0 25px rgba(0, 180, 216, 0.8);
+    }
 }
 /* --- 17. Digital Camo --- */
 .card-digicamo { background-color: #3d405b; background-image: linear-gradient(45deg, #81b29a 25%, transparent 25%), linear-gradient(-45deg, #81b29a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3d405b 75%), linear-gradient(-45deg, transparent 75%, #3d405b 75%); background-size:20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
