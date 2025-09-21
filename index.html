@@ -604,14 +604,13 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Classic EKG Redesign) --- */
+/* --- 20. Heartbeat Sensor (Classic EKG Redesign v2) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
 }
 
-/* Static background grid. This ensures the preview is always visible. */
 .card-heartbeat::before {
     content: '';
     position: absolute;
@@ -623,13 +622,11 @@
     opacity: 0.5;
 }
 
-/* This container holds the SVG and the sweep animation */
 .heartbeat-line-container {
     position: absolute;
     inset: 0;
 }
 
-/* The SVG element that contains the heartbeat path */
 .heartbeat-line-container svg {
     position: absolute;
     width: 100%;
@@ -640,14 +637,12 @@
     stroke: #ff3b3b;
     stroke-width: 3;
     fill: transparent;
-    stroke-dasharray: 1000; /* A large value to cover the whole path */
+    stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
-    /* This animation "draws" the line by reducing the dash offset */
     animation: draw-heartbeat-line 2s linear infinite;
     will-change: stroke-dashoffset;
 }
 
-/* The sweeping scanner beam that follows the line */
 .heartbeat-sweep {
     position: absolute;
     top: 0;
@@ -660,24 +655,28 @@
     will-change: transform;
 }
 
+/* --- CORRECTED ANIMATION STARTS HERE --- */
+
 @keyframes draw-heartbeat-line {
     0% {
-        stroke-dashoffset: 1000; /* Line is hidden */
+        /* Start with a small piece of the line already visible */
+        stroke-dashoffset: 950; 
     }
     50% {
-        stroke-dashoffset: 0; /* Line is fully drawn */
+        stroke-dashoffset: 0;   /* Line is fully drawn */
     }
     100% {
-        stroke-dashoffset: 0; /* Stays drawn for the rest of the cycle */
+        stroke-dashoffset: 0;   /* Stays drawn */
     }
 }
 
 @keyframes sweep-heartbeat-line {
     0% {
-        transform: translateX(0%);
+        /* Start the sweep beam where the visible line starts */
+        transform: translateX(5%); 
     }
     50% {
-        transform: translateX(calc(100% - 4px)); /* Sweep all the way across */
+        transform: translateX(calc(100% - 4px));
     }
     100% {
         transform: translateX(calc(100% - 4px));
