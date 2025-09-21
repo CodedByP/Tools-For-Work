@@ -3049,8 +3049,15 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-unstable-energy') {
         container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
     }
-    if (cardClass === 'card-heartbeat') {
-        container.innerHTML += `<div class="heartbeat-line"></div><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M 0 50 L 30 50 L 33 40 L 37 60 L 40 50 L 42 55 L 45 50 L 100 50" /></svg><div class="heartbeat-sweep"></div>`;
+   if (cardClass === 'card-heartbeat') {
+        container.innerHTML = `
+            <div class="heartbeat-line-container">
+                <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+                    <path d="M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50"></path>
+                </svg>
+                <div class="heartbeat-sweep"></div>
+            </div>
+        `;
     }
 };
 
