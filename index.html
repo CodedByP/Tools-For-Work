@@ -349,7 +349,6 @@
     background-size: cover; background-position: center; overflow: hidden;
 }
 
-/* --- NEW: Click-to-Play Animation Logic --- */
 /* By default, all animations in the selection grid are PAUSED */
 #calling-card-grid .calling-card-bg,
 #calling-card-grid .calling-card-bg::before,
@@ -365,6 +364,16 @@
 #calling-card-grid .calling-card-preview.is-active .calling-card-bg * {
     animation-play-state: running !important;
 }
+/* This rule makes the ::before element's background visible even when paused. */
+#calling-card-grid .card-topo-scan::before {
+    animation: none; /* Temporarily remove the animation for the static preview */
+    background-position: 50% 50%; /* Center the pattern so it's visible */
+}
+
+/* This rule ensures the animation RUNS when the preview is active */
+#calling-card-grid .calling-card-preview.is-active .card-topo-scan::before {
+    animation: topo-scroll 8s linear infinite; /* Re-apply the animation */
+}		
 
 /* --- (All 20 card styles below are the same as before, but included for completeness) --- */
 /* --- 1. Circuit Pulse --- */
