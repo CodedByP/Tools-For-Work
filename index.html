@@ -583,7 +583,8 @@
         rgba(0, 190, 255, 0.3) 51%, 
         transparent
     );
-    animation: scan-subsurface-fixed 4s ease-in-out infinite alternate;
+    /* Use the new, corrected animation name */
+    animation: scan-subsurface 4s ease-in-out infinite alternate;
     will-change: transform;
 }
 
@@ -592,7 +593,7 @@
     to { background-position: -200px 0; } /* Slowly scrolls the map texture horizontally */
 }
 
-@keyframes scan-subsurface-fixed {
+@keyframes scan-subsurface { /* CORRECTED this name to match */
     from { transform: translateY(0%); }
     to { transform: translateY(100%); }
 }
