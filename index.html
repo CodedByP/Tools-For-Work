@@ -595,57 +595,17 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Ultra-Reliable Pure CSS) --- */
+/* --- Heartbeat Diagnostic Test 2: Static Line --- */
 .card-heartbeat {
-    position: relative;
-    overflow: hidden;
+    /* Set a simple background color that we know works */
     background-color: #1a0a0a;
 
-    /* We stack all visual layers as multiple backgrounds on the main element */
-    background-image:
-        /* Layer 3: The moving pulse (a radial gradient) */
-        radial-gradient(
-            circle at center,
-            #ff3b3b 0%,
-            rgba(255, 59, 59, 0) 50%
-        ),
-        /* Layer 2: The static horizontal line */
-        linear-gradient(
-            #ff3b3b, #ff3b3b
-        ),
-        /* Layer 1: The static grid */
-        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-
-    background-repeat: no-repeat, no-repeat, repeat, repeat;
-
-    /* Define the size for each background layer */
-    background-size: 
-        80px 80px,    /* Pulse size */
-        100% 2px,     /* Line size */
-        20px 20px,    /* Grid X size */
-        20px 20px;    /* Grid Y size */
-
-    /* Define the position for each background layer */
-    background-position: 
-        -80px center,   /* Pulse starts off-screen */
-        center center,  /* Line is centered */
-        top left,       /* Grid X starts at top-left */
-        top left;       /* Grid Y starts at top-left */
-
-    animation: move-final-pulse 2.5s linear infinite;
-    will-change: background-position;
-}
-
-@keyframes move-final-pulse {
-    from {
-        /* Only animate the position of the first background (the pulse) */
-        background-position: -80px center, center center, top left, top left;
-    }
-    to {
-        /* Move the pulse across the screen */
-        background-position: calc(100% + 80px) center, center center, top left, top left;
-    }
+    /* Add only one background image: a simple horizontal line */
+    background-image: linear-gradient(#ff3b3b, #ff3b3b);
+    
+    background-repeat: no-repeat;
+    background-size: 100% 2px; /* Make the line 100% wide and 2px tall */
+    background-position: center center; /* Center it vertically and horizontally */
 }
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
