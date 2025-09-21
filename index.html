@@ -595,17 +595,76 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- Heartbeat Diagnostic Test 2: Static Line --- */
+/* --- 20. Heartbeat Sensor (Final - Pure CSS Pulse Animation) --- */
 .card-heartbeat {
-    /* Set a simple background color that we know works */
     background-color: #1a0a0a;
+    position: relative;
+    overflow: hidden;
+}
 
-    /* Add only one background image: a simple horizontal line */
-    background-image: linear-gradient(#ff3b3b, #ff3b3b);
+/* Layer 1: Creates both the static grid AND the static horizontal line */
+.card-heartbeat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     
-    background-repeat: no-repeat;
-    background-size: 100% 2px; /* Make the line 100% wide and 2px tall */
-    background-position: center center; /* Center it vertically and horizontally */
+    /* We stack the line on top of the grid patterns */
+    background-image:
+        /* The static horizontal line */
+        linear-gradient(#ff3b3b, #ff3b3b),
+        /* The grid */
+        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    
+    background-repeat: no-repeat, repeat, repeat;
+    
+    background-size:
+        100% 2px,    /* Line size */
+        20px 20px,   /* Grid X size */
+        20px 20px;   /* Grid Y size */
+
+    background-position:
+        center center, /* Line is centered */
+        top left,      /* Grid X */
+        top left;      /* Grid Y */
+
+    opacity: 0.6;
+}
+
+/* Layer 2: The animated pulsing "blip" in the center */
+.card-heartbeat::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    
+    /* Start with the element centered and scaled down */
+    transform: translate(-50%, -50%) scale(0);
+    
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    
+    background-color: #ff3b3b;
+    
+    /* The animation handles the glow and the beat */
+    animation: heartbeat-blip 2.5s ease-out infinite;
+    will-change: transform, box-shadow;
+}
+
+@keyframes heartbeat-blip {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.7);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        box-shadow: 0 0 20px 15px rgba(255, 59, 59, 0);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0);
+        box-shadow: 0 0 0 0 rgba(255, 59, 59, 0);
+    }
 }
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
