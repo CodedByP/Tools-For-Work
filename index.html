@@ -380,6 +380,31 @@
     animation: topo-scroll 8s linear infinite; /* Re-apply the animation */
 }		
 
+/* --- FIX for Heartbeat Sensor Preview --- */
+/* This rule targets the heartbeat SVG ONLY when it's inside the preview grid */
+#calling-card-grid .card-heartbeat .heartbeat-line-container svg {
+    /* Set a static, visible starting point for the line in the preview */
+    stroke-dashoffset: 950;
+    /* We temporarily disable the animation for the static preview state */
+    animation: none;
+}
+
+/* This rule targets the sweep bar ONLY when it's in the preview grid */
+#calling-card-grid .card-heartbeat .heartbeat-sweep {
+    /* Position the bar at the start of the visible line segment */
+    transform: translateX(5%);
+    animation: none;
+}
+
+/* This rule re-enables the animations when you hover or click the preview */
+#calling-card-grid .calling-card-preview.is-active .card-heartbeat .heartbeat-line-container svg {
+    animation: draw-heartbeat-line 2s linear infinite;
+}
+
+#calling-card-grid .calling-card-preview.is-active .card-heartbeat .heartbeat-sweep {
+    animation: sweep-heartbeat-line 2s linear infinite;
+}
+
 /* --- (All 20 card styles below are the same as before, but included for completeness) --- */
 /* --- 1. Circuit Pulse --- */
 .card-circuit { background-color: #0d1b2a; background-image: linear-gradient(to right, rgba(0, 180, 216, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 180, 216, 0.2) 1px, transparent 1px); background-size: 20px 20px; }
