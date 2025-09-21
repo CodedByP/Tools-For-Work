@@ -595,7 +595,7 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Pure CSS Masked Animation) --- */
+/* --- 20. Heartbeat Sensor (Pure CSS Gradient Pulse) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
@@ -614,47 +614,62 @@
     opacity: 0.5;
 }
 
-/* Layer 2: The animated heartbeat line */
+/* Layer 2: This holds the static line and the animated pulse */
 .card-heartbeat::after {
     content: '';
     position: absolute;
-    inset: 0;
-    
-    /* A bright red gradient that will be revealed by the mask */
-    background: linear-gradient(
-        to right, 
-        rgba(255, 59, 59, 0) 0%, 
-        #ff3b3b 50%, 
-        rgba(255, 59, 59, 0) 100%
-    );
-    background-size: 100px 100%; /* The width of the "glow" */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+    /* We stack two gradients: the pulse on top of the static line */
+    background-image:
+        /* 1. The moving pulse (a glowing red dot) */
+        radial-gradient(
+            circle at center,
+            #ff3b3b 0%,
+            rgba(255, 59, 59, 0) 40%
+        ),
+        /* 2. The static horizontal line */
+        linear-gradient(
+            to right,
+            #ff3b3b, #ff3b3b
+        );
+
     background-repeat: no-repeat;
 
-    /* The SVG shape of the heartbeat line, used as a mask */
-    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 L70 50 L80 30 L90 70 L100 45 L110 55 L120 50 L200 50 L210 60 L220 50 L300 50' stroke='%23fff' stroke-width='3' fill='none'/%3E%3C/svg%3E");
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: 100% 50%;
+    /* Define the size and position for each background layer */
+    background-size: 
+        80px 80px,  /* The size of the glowing pulse */
+        100% 2px;   /* The size of the horizontal line */
 
-    /* The animation moves the gradient from left to right */
-    animation: sweep-and-fade 2.5s linear infinite;
-    will-change: background-position, opacity;
+    background-position: 
+        -80px center, /* The pulse starts off-screen to the left */
+        center center;/* The horizontal line is centered */
+
+    /* The animation moves the pulse's position and adds a "beat" */
+    animation: move-heart-pulse 2s ease-in-out infinite;
+    will-change: background-position, transform;
 }
 
-@keyframes sweep-and-fade {
+@keyframes move-heart-pulse {
     0% {
-        background-position: -100px center; /* Start off-screen to the left */
-        opacity: 0;
+        background-position: -80px center, center center;
+        transform: scale(1);
     }
-    30% {
-        opacity: 1; /* Fade in */
+    48% {
+        /* The pulse "beats" just before the midpoint */
+        transform: scale(1.5);
     }
-    70% {
-        opacity: 1; /* Hold */
+    52% {
+        /* It returns to normal size after the beat */
+        transform: scale(1);
     }
     100% {
-        background-position: calc(100% + 100px) center; /* End off-screen to the right */
-        opacity: 0;
+        /* The pulse has moved all the way across and is now off-screen */
+        background-position: calc(100% + 80px) center, center center;
+        transform: scale(1);
     }
 }
 /* --- Leveling System Icon Styles --- */
