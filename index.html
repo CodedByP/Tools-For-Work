@@ -595,60 +595,51 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Final Isolated Fix) --- */
+/* --- 20. Heartbeat Sensor (CSS-Only Final) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
-    position: relative; /* This is crucial for positioning the dots inside */
+    position: relative;
     overflow: hidden;
+    /* Static background grid */
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
 }
 
-/* These styles are for the JS-injected dots. They are now positioned absolutely */
-/* so they exist in their own layer and cannot interfere with other elements. */
-.heartbeat-dot {
-    position: absolute;
-    top: 50%;
-    width: 4px;
-    height: 4px;
-    background-color: #ff3b3b;
-    border-radius: 50%;
-    opacity: 0.5;
-    animation: dot-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes dot-pulse {
-    0%, 100% { transform: scale(1) translateY(-50%); opacity: 0.5; box-shadow: none; }
-    50% { transform: scale(2.5) translateY(-50%); opacity: 1; box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b; }
-}
-/* --- FIX for Heartbeat Preview --- */
-/* This creates a simple line that pulses for the CSS-only preview */
-.card-heartbeat::before {
+/* This ::after pseudo-element creates a clean pulse effect for all views */
+.card-heartbeat::after {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 10%;
-    right: 10%;
-    height: 3px;
-    background-color: #ff3b3b;
-    border-radius: 2px;
-    box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b;
-    animation: preview-pulse 1.5s ease-in-out infinite;
-    transform: translateY(-50%);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        circle at center,
+        rgba(255, 80, 80, 0.8) 0%,
+        rgba(255, 59, 59, 0.4) 30%,
+        transparent 65%
+    );
+    transform: scale(0);
+    opacity: 0;
+    animation: final-heartbeat-pulse 2s ease-out infinite;
+    will-change: transform, opacity;
 }
 
-@keyframes preview-pulse {
-    0%, 100% { 
-        opacity: 0.7;
-        transform: scaleX(1) translateY(-50%);
+@keyframes final-heartbeat-pulse {
+    0% {
+        transform: scale(0);
+        opacity: 0;
     }
-    50% { 
+    50% {
         opacity: 1;
-        transform: scaleX(1.05) translateY(-50%);
     }
-}		
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}	
 /* --- FIX: Base styles for Rank Icon Wrapper --- */
 .level-badge-wrapper {
     position: relative;
@@ -3002,16 +2993,6 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-unstable-energy') {
         container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
     }
-	if (cardClass === 'card-heartbeat') {
-		    const totalDots = 30; // Number of dots to create the line
-		    for (let i = 0; i < totalDots; i++) {
-		        const dot = document.createElement('div');
-		        dot.className = 'heartbeat-dot';
-		        dot.style.left = `calc(${(i / (totalDots - 1)) * 100}% - 2px)`;
-		        dot.style.animationDelay = `${i * 0.05}s`;
-		        container.appendChild(dot);
-		    }
-		}
 };
 
 const renderLevelingSystem = (userData) => {
