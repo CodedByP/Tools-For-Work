@@ -595,28 +595,25 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Restored Dot Pulse) --- */
+/* --- 20. Heartbeat Sensor (Final Isolated Fix) --- */
+
+/* Part A: This handles the static background for BOTH the preview and the final card. */
 .card-heartbeat {
+    background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 10px;
-    background-color: transparent; 
-}
-.card-heartbeat::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-color: #1a0a0a;
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
 }
+
+/* Part B: These styles are for the JS-injected dots in the FINAL animation. */
+/* They won't affect the preview or the rank icon. */
 .heartbeat-dot {
+    position: absolute; /* Use absolute positioning instead of flexbox */
+    top: 50%;
+    transform: translateY(-50%);
     width: 4px;
     height: 4px;
     background-color: #ff3b3b;
@@ -624,9 +621,10 @@
     opacity: 0.5;
     animation: dot-pulse 1.5s ease-in-out infinite;
 }
+
 @keyframes dot-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.5; box-shadow: none; }
-    50% { transform: scale(2.5); opacity: 1; box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b; }
+    0%, 100% { transform: scale(1) translateY(-50%); opacity: 0.5; box-shadow: none; }
+    50% { transform: scale(2.5) translateY(-50%); opacity: 1; box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b; }
 }
 /* --- Rank Colors & Base Icons --- */
 .level-badge-newbie { background: linear-gradient(145deg, #a3b18a, #588157); border-color: #3a5a40; }
@@ -1730,7 +1728,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                 <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
                     <i class="fas fa-paint-brush mr-2"></i> Customize
                 </button>
-                <div id="rank-icon-container-redesigned" class="flex-shrink-0 self-center">
+                <div id="rank-icon-container-redesigned" class="flex-shrink-0 w-20 h-20">
                 </div>
                 <div class="flex-grow w-full text-center md:text-left">
                     <div class="flex items-center justify-center md:justify-start gap-3">
@@ -2971,6 +2969,9 @@ const injectCallingCardJs = (cardClass, container) => {
 	    for (let i = 0; i < totalDots; i++) {
 	        const dot = document.createElement('div');
 	        dot.className = 'heartbeat-dot';
+	        // Set the horizontal position of each dot
+	        dot.style.left = `calc(${(i / (totalDots - 1)) * 100}% - 2px)`;
+	        // Stagger the animation delay
 	        dot.style.animationDelay = `${i * 0.05}s`;
 	        container.appendChild(dot);
 	    }
