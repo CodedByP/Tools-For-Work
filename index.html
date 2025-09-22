@@ -349,24 +349,14 @@
     background-size: cover; background-position: center; overflow: hidden;
 }
 
-/* --- NEW: Click-to-Play Animation Logic (Corrected) --- */
-/* By default, all animations in the selection grid are PAUSED */
-#calling-card-grid .calling-card-bg,
-#calling-card-grid .calling-card-bg::before,
-#calling-card-grid .calling-card-bg::after,
-#calling-card-grid .calling-card-bg *,
-#calling-card-grid .calling-card-bg *::before,  /* Added this line */
-#calling-card-grid .calling-card-bg *::after {   /* Added this line */
+/* --- NEW: Click-to-Play Animation Logic (Targeted) --- */
+/* By default, ONLY elements with the .cc-animated class are PAUSED */
+#calling-card-grid .cc-animated {
     animation-play-state: paused !important;
 }
 
-/* When a preview gets the 'is-active' class, its animations will RUN */
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg,
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg::before,
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg::after,
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg *,
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg *::before, /* Added this line */
-#calling-card-grid .calling-card-preview.is-active .calling-card-bg *::after {  /* Added this line */
+/* When a preview is active, ONLY run animations on its .cc-animated elements */
+#calling-card-grid .calling-card-preview.is-active .cc-animated {
     animation-play-state: running !important;
 }
 
@@ -2961,24 +2951,29 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-datastream') {
         let cols = '';
         for (let i = 0; i < 15; i++) {
-            cols += `<div class="datastream-col" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
+            // Add .cc-animated to the animated columns
+            cols += `<div class="datastream-col cc-animated" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
         }
         container.innerHTML += cols;
     }
     if (cardClass === 'card-tactical-hud') {
-        container.innerHTML += `<div class="hud-corner hud-corner-tl"></div><div class="hud-corner hud-corner-tr"></div><div class="hud-corner hud-corner-bl"></div><div class="hud-corner hud-corner-br"></div><div class="hud-rec">REC</div><div class="hud-scanline-2"></div>`;
+        // Add .cc-animated to every animated element
+        container.innerHTML += `<div class="hud-corner hud-corner-tl cc-animated"></div><div class="hud-corner hud-corner-tr cc-animated"></div><div class="hud-corner hud-corner-bl cc-animated"></div><div class="hud-corner hud-corner-br cc-animated"></div><div class="hud-rec cc-animated"></div><div class="hud-scanline-2 cc-animated"></div>`;
     }
     if (cardClass === 'card-holo-grid') {
-        container.innerHTML += `<div class="holo-grid-1"></div><div class="holo-grid-2"></div><div class="holo-scanline"></div>`;
+        // Add .cc-animated to the animated grids and scanline
+        container.innerHTML += `<div class="holo-grid-1 cc-animated"></div><div class="holo-grid-2 cc-animated"></div><div class="holo-scanline cc-animated"></div>`;
     }
     if (cardClass === 'card-lightning') {
-        container.innerHTML += `<div class="lightning-bolt"></div><div class="lightning-bolt"></div><div class="lightning-bolt"></div>`;
+        // Add .cc-animated to the animated bolts
+        container.innerHTML += `<div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div>`;
     }
     if (cardClass === 'card-blizzard') {
         for (let i = 0; i < 50; i++) {
             const snow = document.createElement('div');
+            // Add .cc-animated to the animated particles
+            snow.className = 'snow-particle cc-animated';
             const size = `${Math.random() * 3 + 1}px`;
-            snow.className = 'snow-particle';
             snow.style.left = `${Math.random() * 100}%`;
             snow.style.width = size;
             snow.style.height = size;
@@ -2988,13 +2983,16 @@ const injectCallingCardJs = (cardClass, container) => {
         }
     }
     if (cardClass === 'card-haunting') {
-        container.innerHTML += `<div class="haunting-wisp"></div>`;
+        // Add .cc-animated to the animated wisp
+        container.innerHTML += `<div class="haunting-wisp cc-animated"></div>`;
     }
     if (cardClass === 'card-unstable-energy') {
-        container.innerHTML += `<div class="energy-arc"></div><div class="energy-arc"></div>`;
+        // Add .cc-animated to the animated arcs
+        container.innerHTML += `<div class="energy-arc cc-animated"></div><div class="energy-arc cc-animated"></div>`;
     }
-	    if (cardClass === 'card-heartbeat') {
-    container.innerHTML += '<div class="heartbeat-dot"></div><div class="heartbeat-pulse"></div>';
+    if (cardClass === 'card-heartbeat') {
+        // Add .cc-animated ONLY to the pulse, NOT the static dot
+        container.innerHTML += '<div class="heartbeat-dot"></div><div class="heartbeat-pulse cc-animated"></div>';
     }
 };
 
