@@ -585,53 +585,18 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (FINAL) --- */
+/* --- Heartbeat Sensor TEST Redesign --- */
 .card-heartbeat {
-    background-color: #1a0a0a;
-    position: relative;
-    overflow: hidden;
-    background-image:
-        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
+    /* A solid red starting color */
+    background-color: #990000; 
+
+    /* The test animation */
+    animation: color-flash-test 1s steps(1, end) infinite;
 }
-.heartbeat-dot {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 8px; height: 8px;
-    background: rgba(255, 80, 80, 0.9);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
-}
-.heartbeat-pulse {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: radial-gradient(
-        circle at center,
-        rgba(255, 80, 80, 0.8) 0%,
-        rgba(255, 59, 59, 0.4) 30%,
-        transparent 65%
-    );
-    animation: final-heartbeat-pulse 2s ease-out infinite;
-}
-@keyframes final-heartbeat-pulse {
-    0%   { transform: scale(0); opacity: 0; }
-    50%  { opacity: 1; }
-    100% { transform: scale(1.3); opacity: 0; }
-}
-/* --- FIX: Base styles for Rank Icon Wrapper --- */
-.level-badge-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 4px 8px rgba(0, 0, 0, 0.5);
-    border: 3px solid;
-    transition: all 0.3s ease;
+
+@keyframes color-flash-test {
+    0% { background-color: #990000; }
+    50% { background-color: #ffcc00; }
 }
 	
 
