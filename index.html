@@ -595,7 +595,7 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (CSS-Only Final) --- */
+/* --- 20. Heartbeat Sensor (Corrected) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
@@ -607,7 +607,21 @@
     background-size: 20px 20px;
 }
 
-/* This ::after pseudo-element creates a clean pulse effect for all views */
+/* NEW ::before pseudo-element for the static, visible center dot */
+.card-heartbeat::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 80, 80, 0.9);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
+}
+
+/* This ::after pseudo-element now ONLY handles the animation */
 .card-heartbeat::after {
     content: '';
     position: absolute;
@@ -621,12 +635,12 @@
         rgba(255, 59, 59, 0.4) 30%,
         transparent 65%
     );
-    transform: scale(0);
-    opacity: 0;
+    /* The base styles that made it invisible have been removed from here */
     animation: final-heartbeat-pulse 2s ease-out infinite;
     will-change: transform, opacity;
 }
 
+/* The animation itself is unchanged, starting from an invisible state */
 @keyframes final-heartbeat-pulse {
     0% {
         transform: scale(0);
@@ -639,7 +653,7 @@
         transform: scale(1.3);
         opacity: 0;
     }
-}	
+}
 /* --- FIX: Base styles for Rank Icon Wrapper --- */
 .level-badge-wrapper {
     position: relative;
