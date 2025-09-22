@@ -585,18 +585,45 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- Heartbeat Sensor TEST Redesign --- */
+/* --- 20. Heartbeat Sensor (Final, Robust Version) --- */
 .card-heartbeat {
-    /* A solid red starting color */
-    background-color: #990000; 
+    background-color: #1a0a0a;
+    
+    /* This creates 4 background layers on one element */
+    background-image:
+        /* Layer 1: The animated pulse (initially tiny) */
+        radial-gradient(circle at center, rgba(255, 80, 80, 0.8) 0%, rgba(255, 59, 59, 0.4) 30%, transparent 65%),
+        
+        /* Layer 2: The static center dot */
+        radial-gradient(circle at center, rgba(255, 80, 80, 0.9) 0%, rgba(255, 80, 80, 0.9) 4px, transparent 4px),
+        
+        /* Layer 3 & 4: The background grid */
+        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
 
-    /* The test animation */
-    animation: color-flash-test 1s steps(1, end) infinite;
+    /* Control each background layer independently */
+    background-size: 0% 0%, 100% 100%, 20px 20px, 20px 20px;
+    background-position: center, center, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+
+    /* Apply the animation directly to this element */
+    animation: heartbeat-pulse-final 2s ease-out infinite;
 }
 
-@keyframes color-flash-test {
-    0% { background-color: #990000; }
-    50% { background-color: #ffcc00; }
+@keyframes heartbeat-pulse-final {
+    0% {
+        /* Animate the size of the first background layer (the pulse) */
+        background-size: 0% 0%, 100% 100%, 20px 20px, 20px 20px;
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        /* Expand the pulse to 260% of the container size */
+        background-size: 260% 260%, 100% 100%, 20px 20px, 20px 20px;
+        opacity: 0;
+    }
 }
 		
 .level-badge-wrapper {
