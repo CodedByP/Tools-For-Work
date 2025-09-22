@@ -595,64 +595,54 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (FINAL - JS Injected) --- */
+/* --- 20. Heartbeat Sensor (FINAL - Corrected Animation) --- */
 .card-heartbeat {
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-    /* Static background grid */
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
 }
 
-/* The static, visible center dot */
-.card-heartbeat::before {
+/* This single pseudo-element will now handle the entire effect */
+.card-heartbeat::after {
     content: '';
     position: absolute;
-    top: 50%;
+    top: 50%; 
     left: 50%;
-    width: 8px;
-    height: 8px;
-    background: rgba(255, 80, 80, 0.9);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
+    /* The animation now handles all transformations */
+    animation: final-heartbeat-pulse-v2 2s ease-out infinite;
+    will-change: transform, opacity, box-shadow;
 }
 
-/* The NEW animated pulse element (injected by JS) */
-.heartbeat-pulse {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: radial-gradient(
-        circle at center,
-        rgba(255, 80, 80, 0.8) 0%,
-        rgba(255, 59, 59, 0.4) 30%,
-        transparent 65%
-    );
-    animation: final-heartbeat-pulse 2s ease-out infinite;
-    will-change: transform, opacity;
-}
-
-/* The animation keyframes are unchanged */
-@keyframes final-heartbeat-pulse {
-    0%   { transform: scale(0); opacity: 0; }
-    50%  { opacity: 1; }
-    100% { transform: scale(1.3); opacity: 0; }
-}
-
-/* The animation itself is unchanged, starting from an invisible state */
-@keyframes final-heartbeat-pulse {
+/* NEW Keyframes: The 0% state is now VISIBLE */
+@keyframes final-heartbeat-pulse-v2 {
     0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
+        /* This is the new resting/paused state: a visible dot */
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 80, 80, 0.9);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
+        box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
+    }
+    70% {
+        /* This is the expanded pulse */
+        width: 200px; /* Expands */
+        height: 200px; /* Expands */
+        background: rgba(255, 80, 80, 0); /* Fades out background color */
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+        box-shadow: 0 0 20px rgba(255, 80, 80, 0);
     }
     100% {
-        transform: scale(1.3);
+        /* Fully invisible, ready to loop */
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 80, 80, 0);
         opacity: 0;
     }
 }
