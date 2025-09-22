@@ -597,7 +597,7 @@
     background-size: 20px 20px;
 }
 
-/* Styles for the static center dot DIV (injected by JS) */
+/* Styles for the static center dot DIV */
 .heartbeat-dot {
     position: absolute;
     top: 50%;
@@ -610,7 +610,7 @@
     box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
 }
 
-/* Styles for the animated pulse DIV (injected by JS) */
+/* Styles for the animated pulse DIV */
 .heartbeat-pulse {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -624,7 +624,6 @@
     will-change: transform, opacity;
 }
 
-/* The animation itself is unchanged */
 @keyframes final-heartbeat-pulse {
     0%   { transform: scale(0); opacity: 0; }
     50%  { opacity: 1; }
@@ -2951,27 +2950,22 @@ const injectCallingCardJs = (cardClass, container) => {
     if (cardClass === 'card-datastream') {
         let cols = '';
         for (let i = 0; i < 15; i++) {
-            // Add .cc-animated to the animated columns
             cols += `<div class="datastream-col cc-animated" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
         }
         container.innerHTML += cols;
     }
     if (cardClass === 'card-tactical-hud') {
-        // Add .cc-animated to every animated element
         container.innerHTML += `<div class="hud-corner hud-corner-tl cc-animated"></div><div class="hud-corner hud-corner-tr cc-animated"></div><div class="hud-corner hud-corner-bl cc-animated"></div><div class="hud-corner hud-corner-br cc-animated"></div><div class="hud-rec cc-animated"></div><div class="hud-scanline-2 cc-animated"></div>`;
     }
     if (cardClass === 'card-holo-grid') {
-        // Add .cc-animated to the animated grids and scanline
         container.innerHTML += `<div class="holo-grid-1 cc-animated"></div><div class="holo-grid-2 cc-animated"></div><div class="holo-scanline cc-animated"></div>`;
     }
     if (cardClass === 'card-lightning') {
-        // Add .cc-animated to the animated bolts
         container.innerHTML += `<div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div>`;
     }
     if (cardClass === 'card-blizzard') {
         for (let i = 0; i < 50; i++) {
             const snow = document.createElement('div');
-            // Add .cc-animated to the animated particles
             snow.className = 'snow-particle cc-animated';
             const size = `${Math.random() * 3 + 1}px`;
             snow.style.left = `${Math.random() * 100}%`;
@@ -2983,15 +2977,13 @@ const injectCallingCardJs = (cardClass, container) => {
         }
     }
     if (cardClass === 'card-haunting') {
-        // Add .cc-animated to the animated wisp
         container.innerHTML += `<div class="haunting-wisp cc-animated"></div>`;
     }
     if (cardClass === 'card-unstable-energy') {
-        // Add .cc-animated to the animated arcs
         container.innerHTML += `<div class="energy-arc cc-animated"></div><div class="energy-arc cc-animated"></div>`;
     }
     if (cardClass === 'card-heartbeat') {
-        // Add .cc-animated ONLY to the pulse, NOT the static dot
+        // This injects the static dot (no animation class) and the animated pulse (with the class)
         container.innerHTML += '<div class="heartbeat-dot"></div><div class="heartbeat-pulse cc-animated"></div>';
     }
 };
