@@ -585,49 +585,25 @@
 @keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 @keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (EKG Redesign) --- */
+/* --- 20. Heartbeat Sensor (Simple & Safe Redesign) --- */
 .card-heartbeat {
-    background-color: #081008; /* Dark green monitor background */
-    position: relative;
-    
-    /* Multiple background layers on the single element */
+    background-color: #1a0a0a;
+    /* The static background grid */
     background-image:
-        /* Layer 1: The scrolling EKG line (as a URL-encoded SVG) */
-        url("data:image/svg+xml,%3csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0 50 H50 L60 35 L75 65 L85 45 L95 50 H200' stroke='%2332CD32' stroke-width='3' fill='none'/%3e%3c/svg%3e"),
-        
-        /* Layer 2 & 3: The faint background grid */
-        linear-gradient(to right, rgba(50, 205, 50, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(50, 205, 50, 0.1) 1px, transparent 1px);
+        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
 
-    /* Control each background layer's size and position */
-    background-size: 200px 100px, 20px 20px, 20px 20px;
-    background-position: 0 0, 0 0, 0 0;
-    background-repeat: repeat-x, repeat, repeat;
-    
-    /* We apply two different animations to the same element */
-    animation:
-        ekg-scroll 2s linear infinite,
-        pulse-glow 2s ease-in-out infinite;
+    /* The animation is applied directly to the element */
+    animation: simple-pulse-glow 2s ease-in-out infinite;
 }
 
-/* This animation scrolls the EKG line horizontally */
-@keyframes ekg-scroll {
-    from {
-        background-position: 0 0, 0 0, 0 0;
-    }
-    to {
-        /* Scrolls by the exact width of the SVG background */
-        background-position: -200px 0, 0 0, 0 0;
-    }
-}
-
-/* This animation adds a subtle red glow effect */
-@keyframes pulse-glow {
+@keyframes simple-pulse-glow {
     0%, 100% {
-        box-shadow: inset 0 0 10px 0px rgba(255, 0, 0, 0.2);
+        box-shadow: inset 0 0 15px 5px rgba(255, 0, 0, 0.2);
     }
     50% {
-        box-shadow: inset 0 0 20px 5px rgba(255, 0, 0, 0.4);
+        box-shadow: inset 0 0 25px 10px rgba(255, 80, 80, 0.5);
     }
 }
 		
