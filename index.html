@@ -238,18 +238,12 @@
     transition: width 0.5s ease-in-out;
 }
 
-#leveling-section-redesigned.is-default-card #level-header {
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
-}
-
-#leveling-section-redesigned.is-default-card #xp-section {
-    background-color: rgba(31, 41, 55, 0.5); /* This is the same as bg-gray-800/50 */
-}		
-
 /* --- Leveling System Styles --- */
+/* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
-    /* A subtle gradient to give the header depth */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* A subtle gradient to give the header depth */
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(55, 65, 81, 0.5) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .xp-bar-container-redesigned {
@@ -315,309 +309,32 @@
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
     50% { transform: scale(1.2); box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.5); }
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
-}	
+}		
 
-/* --- CALLING CARD STYLES (v3 - FINAL) --- */
-#calling-card-bg-container {
-    background-color: #1f2937; /* This provides a nice default background */
-    transition: all 0.3s ease-in-out;
-    border-radius: 1rem; /* Match the parent's rounded corners */
-    overflow: hidden;
-}
-
-.calling-card-preview {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    position: relative;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    background: #1f2937;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-.calling-card-preview:hover, .calling-card-preview.selected {
-    transform: scale(1.03);
-    border-color: #00aaff;
-    box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
-}
-
-/* Base style for ALL animated backgrounds */
-.calling-card-bg {
-    position: absolute; inset: 0; z-index: 1; background-color: #333;
-    background-size: cover; background-position: center; overflow: hidden;
-}
-
-/* --- NEW: Click-to-Play Animation Logic (Targeted) --- */
-/* By default, ONLY elements with the .cc-animated class are PAUSED */
-#calling-card-grid .cc-animated {
-    animation-play-state: paused !important;
-}
-
-/* When a preview is active, ONLY run animations on its .cc-animated elements */
-#calling-card-grid .calling-card-preview.is-active .cc-animated {
-    animation-play-state: running !important;
-}
-
-
-/* --- (All 20 card styles below are the same as before, but included for completeness) --- */
-/* --- 1. Circuit Pulse --- */
-.card-circuit { background-color: #0d1b2a; background-image: linear-gradient(to right, rgba(0, 180, 216, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 180, 216, 0.2) 1px, transparent 1px); background-size: 20px 20px; }
-.card-circuit::before { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: linear-gradient(to bottom, rgba(144, 224, 239, 0.3) 0%, transparent 30%, transparent 70%, rgba(144, 224, 239, 0.3) 100%); animation: scan-line 4s infinite linear; will-change: transform; }
-@keyframes scan-line { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-/* --- 2. Hyperspace (Redesigned with Performant Starfield) --- */
-.card-hyperspace {
-    /* A deep space gradient background */
-    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
-    overflow: hidden;
-}
-
-/* Base styles for both star layers */
-.card-hyperspace::before,
-.card-hyperspace::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    border-radius: 50%;
-    /* Use the same animation for both layers */
-    animation: hyperspace-travel 5s linear infinite;
-    will-change: transform;
-}
-
-/* Layer 1: Smaller, faster, denser stars */
-.card-hyperspace::before {
-    width: 2px;
-    height: 2px;
-    background: transparent;
-    /* This long list creates 100 small stars scattered randomly */
-    box-shadow: -332px -433px #FFF, 34px -436px #FFF, 348px -261px #FFF, -320px 28px #FFF, -174px 34px #FFF, -429px 432px #FFF, -311px -223px #FFF, 48px 43px #FFF, 15px -410px #FFF, -328px -255px #FFF, -450px 42px #FFF, 14px 28px #FFF, -222px -321px #FFF, 429px -426px #FFF, -12px -34px #FFF, 461px 321px #FFF, 342px -34px #FFF, -270px 470px #FFF, -438px -498px #FFF, 444px 433px #FFF, -418px 43px #FFF, 32px 345px #FFF, -128px 432px #FFF, -125px -434px #FFF, 234px -321px #FFF, 34px 234px #FFF, -424px -142px #FFF, 158px -134px #FFF, 24px -235px #FFF, -32px -434px #FFF, 23px 123px #FFF, 432px -234px #FFF, -234px 234px #FFF, 42px -12px #FFF, -321px 321px #FFF, 459px -134px #FFF, 234px 158px #FFF, -164px 234px #FFF, -444px -231px #FFF, -34px 58px #FFF, 421px 321px #FFF, -469px 345px #FFF, 321px 421px #FFF, -432px 123px #FFF, -461px -34px #FFF, 234px -123px #FFF, -158px 123px #FFF, 321px -459px #FFF, -421px 351px #FFF, -123px -321px #FFF;
-}
-
-/* Layer 2: Larger, slower stars for parallax effect */
-.card-hyperspace::after {
-    width: 3px;
-    height: 3px;
-    background: transparent;
-    /* This creates 50 larger, more distant stars */
-    box-shadow: 235px -162px #FFF, -112px 191px #FFF, -462px -412px #FFF, 334px 31px #FFF, -195px -29px #FFF, -204px 44px #FFF, 13px -352px #FFF, -41px -204px #FFF, 417px -270px #FFF, 359px 128px #FFF, 10px 381px #FFF, 219px 241px #FFF, 452px -454px #FFF, -450px -259px #FFF, 192px 329px #FFF, -42px -235px #FFF, -204px 234px #FFF, -219px -435px #FFF, 321px 234px #FFF, -462px 143px #FFF, 32px 192px #FFF, 234px -462px #FFF, -192px 352px #FFF, 435px -12px #FFF, -352px 234px #FFF, 192px -435px #FFF, 12px 435px #FFF, -12px -192px #FFF, -235px 321px #FFF, -435px -352px #FFF;
-    /* Start this animation halfway through the other one for a continuous effect */
-    animation-delay: -2.5s;
-}
-
-@keyframes hyperspace-travel {
-    0% {
-        opacity: 0;
-        transform: scale(0.2) translate(-50%, -50%);
-        transform-origin: center;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-        transform: scale(2.5) translate(-50%, -50%);
-        transform-origin: center;
-    }
-}
-/* --- 3. Hex Core Pulse --- */
-.card-hex-pulse { background-color: #1a1a1a; background-image: repeating-conic-gradient(from 30deg, #222 0deg 60deg, #333 60deg 120deg); background-size: 40px 24px; }
-.card-hex-pulse::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, transparent 0%, rgba(0, 255, 255, 0.3) 50%, transparent 100%); width: 100%; height: 100%; opacity: 0.5; animation: hex-pulse-sweep 3s infinite ease-in-out; will-change: transform; }
-@keyframes hex-pulse-sweep { 0% { transform: translateX(-100%); } 50% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-/* --- 4. Data Stream --- */
-.card-datastream { background: #020a02; }
-.datastream-col { position: absolute; top: 0; height: 100%; width: 20px; color: #0f0; font-size: 10px; font-family: monospace; writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; user-select: none; text-shadow: 0 0 5px #0f0; animation: scroll-stream 3s linear infinite; will-change: transform; }
-@keyframes scroll-stream { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
-/* --- 5. Tactical HUD --- */
-.card-tactical-hud { background: #0a111a; }
-.hud-corner { position: absolute; width: 25px; height: 25px; border: 3px solid rgba(0, 255, 255, 0.7); animation: hud-flicker 2.5s infinite steps(1); will-change: opacity; }
-.hud-corner-tl { top: 1rem; left: 1rem; border-right: none; border-bottom: none; }
-.hud-corner-tr { top: 1rem; right: 1rem; border-left: none; border-bottom: none; }
-.hud-corner-bl { bottom: 1rem; left: 1rem; border-right: none; border-top: none; }
-.hud-corner-br { bottom: 1rem; right: 1rem; border-left: none; border-top: none; }
-.hud-rec { position: absolute; top: 1rem; right: 1rem; font-family: 'Poppins', sans-serif; color: #f00; font-size: 1rem; font-weight: 700; animation: hud-rec-pulse 1.5s infinite; will-change: opacity; }
-.hud-rec::before { content: '●'; margin-right: 0.5rem; }
-.hud-scanline-2 { position: absolute; width: 100%; height: 1px; background: rgba(0, 255, 255, 0.4); animation: scan-hud-2 4s infinite linear; will-change: transform; }
-@keyframes hud-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-@keyframes hud-rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes scan-hud-2 { 0% { transform: translateY(0); } 50% { transform: translateY(200px); } 100% { transform: translateY(0); } }
-/* --- 6. Holo-Grid --- */
-.card-holo-grid { background-color: #030a1c; perspective: 500px; animation: holo-flicker 2s infinite steps(1); will-change: opacity; }
-.holo-grid-1, .holo-grid-2 { position: absolute; width: 200%; height: 200%; left: -50%; top: 50%; transform: rotateX(75deg); will-change: transform; }
-.holo-grid-1 { background-image: linear-gradient(to right, #f0f 1px, transparent 1px), linear-gradient(to bottom, #f0f 1px, transparent 1px); background-size: 50px 50px; animation: move-terrain 5s linear infinite; }
-.holo-grid-2 { background-image: linear-gradient(to right, rgba(0,255,255,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,255,0.3) 1px, transparent 1px); background-size: 25px 25px; animation: move-terrain 10s linear infinite reverse; }
-.holo-scanline { position: absolute; width: 100%; height: 4px; background: #0ff; box-shadow: 0 0 10px #0ff, 0 0 20px #0ff; animation: scan-hud-holo 3s infinite alternate ease-in-out; will-change: transform; }
-.card-holo-grid::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 255, 255, 0.3) 0%, transparent 50%); opacity: 0.5; }
-@keyframes holo-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.95; } }
-@keyframes move-terrain { from { transform: rotateX(75deg) translateY(0px); } to { transform: rotateX(75deg) translateY(-50px); } }
-@keyframes scan-hud-holo { 0% { transform: translateY(20px); } 100% { transform: translateY(180px); } }
-/* --- 7. Supernova (Redesigned v2) --- */
-.card-supernova {
-    background-color: #0d0d1a;
-    background-image: radial-gradient(circle at center, #4a044e, #0d0d1a 70%);
-}
-.card-supernova::before {
-    content: '';
-    position: absolute;
-    inset: -200%; /* Make it huge to start outside the view */
-    background: radial-gradient(circle, transparent, #ff8c00);
-    animation: supernova-flare 6s ease-out infinite;
-    opacity: 0;
-    will-change: transform, opacity;
-}
-.card-supernova::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 2px;
-    height: 2px;
-    margin: -1px 0 0 -1px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 
-        0 0 5px 5px #fff,
-        0 0 20px 15px #fef08a,
-        0 0 40px 30px #ff8c00;
-    animation: pulse-core-v2 3s ease-in-out infinite alternate;
-    will-change: box-shadow;
-}
-@keyframes supernova-flare {
-    0% {
-        transform: scale(0.1);
-        opacity: 0;
-    }
-    30% {
-        opacity: 0.2;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0;
-    }
-}
-@keyframes pulse-core-v2 {
-    to {
-        box-shadow: 
-            0 0 8px 8px #fff,
-            0 0 25px 20px #fef08a,
-            0 0 50px 40px #ff8c00,
-            0 0 80px 70px #e0f;
-    }
-}
-/* --- 8. Forged Ember --- */
-.card-ember { background: #111; background-image: radial-gradient(circle at 20% 30%, #ff8c00, transparent 40%), radial-gradient(circle at 80% 70%, #e63946, transparent 40%); }
-.card-ember::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 10 L100 10 M20 0 L20 100 M0 30 L100 30 M40 0 L40 100 M0 50 L100 50 M60 0 L60 100 M0 70 L100 70 M80 0 L80 100 M0 90 L100 90' stroke='rgba(0,0,0,0.3)' stroke-width='10'/%3E%3Cpath d='M10 0 L10 100 M0 20 L100 20 M30 0 L30 100 M0 40 L100 40 M50 0 L50 100 M0 60 L100 60 M70 0 L70 100 M0 80 L100 80 M90 0 L90 100' stroke='rgba(0,0,0,0.3)' stroke-width='10'/%3E%3C/svg%3E"); background-size: 50px 50px; opacity: 0.5; transform: rotate(45deg); }
-.card-ember::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle, #ff4800, transparent 70%); opacity: 0.8; animation: pulse-ember 4s infinite alternate; will-change: transform, opacity; }
-@keyframes pulse-ember { 0% { opacity: 0.3; transform: scale(1); } 100% { opacity: 0.6; transform: scale(1.2); } }
-/* --- 9. Lightning Storm --- */
-.card-lightning { background: linear-gradient(to bottom, #000428, #004e92); }
-.lightning-bolt { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #fff; box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #0ff; opacity: 0; animation: flash 4s linear infinite; will-change: transform, opacity; }
-.lightning-bolt:nth-child(2) { left: 30%; animation-delay: 0.5s; }
-.lightning-bolt:nth-child(3) { left: 70%; animation-delay: 1.2s; }
-@keyframes flash { 0%, 100% { opacity: 0; } 1%, 3% { opacity: 1; } 2% { transform: translateX(5px); } 4%, 50% { opacity: 0; } }
-/* --- 10. Blizzard --- */
-.card-blizzard { background: linear-gradient(to bottom, #0a192f, #4a6a8c); }
-.snow-particle { position: absolute; background: #fff; border-radius: 50%; opacity: 0.8; animation: snowfall 10s linear infinite; will-change: transform; }
-@keyframes snowfall { 0% { transform: translate(0, -20px) rotate(0deg); } 100% { transform: translate(-100px, 250px) rotate(360deg); } }
-/* --- 11. Haunting --- */
-.card-haunting { background-color: #1a1a2e; }
-.haunting-wisp { position: absolute; width: 100%; height: 100%; filter: url(#ghost-filter); will-change: filter; }
-.haunting-wisp::before, .haunting-wisp::after { content: ''; position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, #9e00ff 0%, transparent 60%); border-radius: 50%; animation: wisp-move 12s linear infinite; will-change: transform; }
-.haunting-wisp::after { background: radial-gradient(circle, #0ff 0%, transparent 60%); animation: wisp-move 10s linear infinite alternate; animation-delay: -3s; }
-@keyframes wisp-move { 0% { transform: translate(20%, 30%) scale(1); } 25% { transform: translate(40%, -10%) scale(1.2); } 50% { transform: translate(70%, 20%) scale(0.8); } 75% { transform: translate(30%, 80%) scale(1.1); } 100% { transform: translate(20%, 30%) scale(1); } }
-/* --- 12. Liquid Gold --- */
-.card-liquid-gold { background-color: #b8860b; background-image: linear-gradient(135deg, #ffd700 0%, #daa520 25%, #b8860b 50%, #ffd700 75%, #daa520 100%); background-size: 200% 200%; animation: liquid-metal 5s ease infinite; will-change: background-position; }
-@keyframes liquid-metal { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-/* --- 13. Crystalline Shard --- */
-.card-crystalline { background-color: #00b4d8; background-image: linear-gradient(160deg, #ade8f4, #0077b6); }
-.card-crystalline::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpolygon points='0,0 100,0 50,50' fill='rgba(255,255,255,0.1)'/%3E%3Cpolygon points='0,100 100,100 50,50' fill='rgba(0,0,0,0.1)'/%3E%3Cpolygon points='0,0 0,100 50,50' fill='rgba(255,255,255,0.05)'/%3E%3Cpolygon points='100,0 100,100 50,50' fill='rgba(0,0,0,0.05)'/%3E%3C/svg%3E"); background-size: 100px 100px; opacity: 0.5; }
-.card-crystalline::after { content: ''; position: absolute; top: -50%; left: 0; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); animation: shimmer-crystal 4s infinite; will-change: transform; }
-@keyframes shimmer-crystal { 0% { transform: rotate(25deg) translateX(-150%); } 100% { transform: rotate(25deg) translateX(150%); } }
-/* --- 14. Carbon Shimmer --- */
-.card-carbon { background-color: #222; background-image: linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%), linear-gradient(-45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%); background-size: 20px 20px; }
-.card-carbon::after { content: ''; position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%); animation: shimmer-carbon 4s infinite linear; animation-delay: 1s; will-change: transform; }
-@keyframes shimmer-carbon { 0% { transform: skewX(-20deg) translateX(-350%); } 100% { transform: skewX(-20deg) translateX(700%); } }
-/* --- 15. Brushed Steel --- */
-.card-brushed-steel { background-color: #6c757d; background-image: linear-gradient(90deg, #adb5bd, #6c757d, #adb5bd); }
-.card-brushed-steel::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%); animation: shimmer-steel 5s infinite; will-change: transform; }
-@keyframes shimmer-steel { 0% { transform: skewX(-25deg) translateX(-250%); } 100% { transform: skewX(-25deg) translateX(500%); } }
-/* --- 16. Topographic Scan (v6 - Static Pulse) --- */
-.card-topo-scan {
-    background-color: #0d1b2a;
-    /* This non-animated gradient creates the static contour lines */
-    background-image: 
-        repeating-radial-gradient(
-            circle at 50% 50%, 
-            #00aaff 0, 
-            #00aaff 2px, 
-            transparent 2px, 
-            transparent 30px
-        );
-    background-size: 200% 200%; /* Makes the rings larger */
-    background-position: 50% 50%;
-    /* The animation is a simple, non-intrusive box-shadow pulse */
-    animation: static-pulse-glow 3s ease-in-out infinite alternate;
-}
-
-@keyframes static-pulse-glow {
-    from {
-        box-shadow: inset 0 0 25px 5px rgba(3, 4, 94, 0.7);
-    }
-    to {
-        box-shadow: inset 0 0 15px 0px rgba(0, 170, 255, 0.7);
-    }
-}
-/* --- 17. Digital Camo --- */
-.card-digicamo { background-color: #3d405b; background-image: linear-gradient(45deg, #81b29a 25%, transparent 25%), linear-gradient(-45deg, #81b29a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3d405b 75%), linear-gradient(-45deg, transparent 75%, #3d405b 75%); background-size:20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-.card-digicamo::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.1); animation: static-flicker 3s infinite steps(1); will-change: opacity; }
-@keyframes static-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-/* --- 18. Sonar Sweep --- */
-.card-sonar { background: #021a02; background-image: linear-gradient(to right, rgba(0,255,0,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,0,0.1) 1px, transparent 1px); background-size: 30px 30px; }
-.card-sonar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, rgba(0, 255, 0, 0.4) 30%, transparent 31%); animation: sonar-sweep 4s linear infinite; opacity: 0.7; will-change: transform; }
-.card-sonar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; border: 1px solid rgba(0, 255, 0, 0.2); }
-@keyframes sonar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-/* --- 19. Unstable Energy --- */
-.card-unstable-energy { background-color: #0c0a1a; }
-.energy-arc { position: absolute; width: 2px; height: 150%; background: #fff; box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff; animation: arc-flicker 0.1s infinite alternate; will-change: opacity; }
-.energy-arc:nth-child(1) { top: -25%; left: 10%; transform-origin: 50% 0; animation: arc-sway-1 2s infinite ease-in-out; will-change: transform; }
-.energy-arc:nth-child(2) { top: -25%; left: 90%; transform-origin: 50% 0; animation: arc-sway-2 2.2s infinite ease-in-out; will-change: transform; }
-@keyframes arc-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; } }
-@keyframes arc-sway-1 { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-@keyframes arc-sway-2 { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }
-/* --- 20. Heartbeat Sensor (Simple & Safe Redesign) --- */
-.card-heartbeat {
-    background-color: #1a0a0a;
-    /* The static background grid */
-    background-image:
-        linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-
-    /* The animation is applied directly to the element */
-    animation: simple-pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes simple-pulse-glow {
-    0%, 100% {
-        box-shadow: inset 0 0 15px 5px rgba(255, 0, 0, 0.2);
-    }
-    50% {
-        box-shadow: inset 0 0 25px 10px rgba(255, 80, 80, 0.5);
-    }
-}
-		
+/* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 4px 8px rgba(0, 0, 0, 0.5);
-    border: 3px solid;
-    transition: all 0.3s ease;
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, filter 0.3s ease, box-shadow 0.5s ease-in-out;
+    border: 2px solid;
+    cursor: pointer;
+    background-size: 200% 200%;
+    background-position: 50% 50%;
+}
+
+.level-badge-wrapper:hover {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 /* --- Rank Colors & Base Icons --- */
@@ -1715,47 +1432,42 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     </div>
 
     <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-
-        <div id="leveling-section-redesigned" class="p-0 overflow-hidden shadow-2xl relative rounded-2xl">
-            <div id="calling-card-bg-container" class="absolute inset-0 z-0"></div>
-            <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative z-10">
-                <button id="customize-card-btn" class="absolute top-4 right-4 bg-gray-700/50 hover:bg-gray-600/70 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20" title="Customize Calling Card">
-                    <i class="fas fa-paint-brush mr-2"></i> Customize
-                </button>
-                <div id="rank-icon-container-redesigned" class="flex-shrink-0 w-20 h-20">
-                </div>
-                <div class="flex-grow w-full text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-3">
-                        <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
-                        </h3>
-                        <div id="double-xp-indicator" class="hidden relative group">
-                            <i class="fas fa-bolt text-3xl text-yellow-400"></i>
-                            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-                                2x XP Active!
-                            </span>
-                        </div>
-                    </div>
-                    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
-                    </p>
-                </div>
-            </div>
-            <div id="xp-section" class="p-6 relative z-10">
-                <div class="xp-bar-container-redesigned" title="Experience Points Progress">
-                    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-                    </div>
-                    <span id="xp-progress-text-redesigned" class="xp-bar-text">
-                    </span>
-                </div>
-                <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
-                </div>
-            </div>
-        </div>
+		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl">
+		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative">
+		        <div id="rank-icon-container-redesigned" class="flex-shrink-0">
+		            </div>
+				<div class="flex-grow w-full text-center md:text-left">
+				    <div class="flex items-center justify-center md:justify-start gap-3">
+				        <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+				        </h3>
+				        <div id="double-xp-indicator" class="hidden relative group">
+				            <i class="fas fa-bolt text-3xl text-yellow-400"></i>
+				            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+				                2x XP Active!
+				            </span>
+				        </div>
+				    </div>
+				    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
+				    </p>
+				</div>
+		    </div>
+		    <div class="p-6 bg-gray-800/50">
+					<div class="xp-bar-container-redesigned" title="Experience Points Progress">
+					    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
+					        </div>
+					    <span id="xp-progress-text-redesigned" class="xp-bar-text">
+					    </span>
+					</div>
+		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
+		            </div>
+		    </div>
+		</div>
 
         <div id="achievements-module" class="floating-card p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
-                 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    🏆 Achievements
-                </h2>
+				 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+				    🏆 Achievements
+				</h2>
                 <div class="flex items-center gap-4">
                     <div id="achievement-tabs" class="flex gap-2 text-sm">
                         <button class="achievement-tab px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white" data-filter="all">All</button>
@@ -1770,33 +1482,39 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                 </div>
             </div>
             <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 overflow-y-auto max-h-[340px] p-2 scrollbar-hide">
-            </div>
+                </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    ⚡️ Activity Snapshot
-                </h2>
-                <div id="metric-badges-container" class="flex flex-col space-y-4">
-                </div>
-            </div>
-            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-                  <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
-                      <span>🏃 Active Challenges</span>
-                      <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
-                  </h2>
-                  <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
-                  </div>
-            </div>
-            <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    ⭐ Leaderboard
-                </h2>
-                 <div id="leaderboard-container" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-hide">
-                </div>
-            </div>
-            <div class="floating-card p-6 sm:p-8 lg:col-span-2">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+		    
+		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		            ⚡️ Activity Snapshot
+		        </h2>
+		        <div id="metric-badges-container" class="flex flex-col space-y-4">
+		            </div>
+		    </div>
+		    
+			<div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+					<h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
+					    <span>🏃 Active Challenges</span>
+					    <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
+					</h2>
+                    <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
+		        </div>
+		    </div>
+		    
+		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
+		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+		            ⭐ Leaderboard
+		        </h2>
+		         <div id="leaderboard-container" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-hide">
+		            </div>
+		    </div>
+		</div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="floating-card p-6 sm:p-8">
                 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
                     <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Responses
                 </h2>
@@ -1804,7 +1522,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     <canvas id="stats-chart"></canvas>
                 </div>
             </div>
-            <div class="floating-card p-6 sm:p-8 lg:col-span-1">
+            <div class="floating-card p-6 sm:p-8">
                 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
                     <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
                 </h2>
@@ -1812,16 +1530,17 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
-            <div class="floating-card p-6 sm:p-8 lg:col-span-3">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-                </h2>
-                <div id="activity-chart-container" class="relative h-64 sm:h-80">
-                    <canvas id="activityChart"></canvas>
-                </div>
+        </div>
+
+        <div class="floating-card p-6 sm:p-8">
+            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+                <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+            </h2>
+            <div id="activity-chart-container" class="relative h-64 sm:h-80">
+                <canvas id="activityChart"></canvas>
             </div>
         </div>
-        </div>
+    </div>
 </div>
 
 <div id="profile-modal" class="modal hidden">
@@ -2340,37 +2059,6 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        </button>
 		    </div>
 		</div>
-
-		<div id="calling-card-modal" class="modal hidden">
-		    <div class="modal-content w-full max-w-6xl max-h-[90vh] flex flex-col p-0">
-		        <svg class="absolute w-0 h-0">
-		            <defs>
-		                <filter id="ghost-filter">
-		                    <feTurbulence type="fractalNoise" baseFrequency="0.01 0.03" numOctaves="3" result="noise" />
-		                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="100" xChannelSelector="R" yChannelSelector="G" />
-		                </filter>
-		            </defs>
-		        </svg>
-		
-		        <div class="flex justify-between items-center p-6 border-b border-gray-700 flex-shrink-0">
-		            <h3 class="text-2xl font-bold text-gray-200">Select Your Calling Card</h3>
-		            <button id="close-calling-card-modal-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300">
-		                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-		                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-		                </svg>
-		            </button>
-		        </div>
-		
-		        <div id="calling-card-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto p-6">
-		            </div>
-		        
-		        <div class="flex justify-end p-4 border-t border-gray-700 flex-shrink-0 bg-gray-800">
-		            <button id="save-calling-card-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
-		                Save Selection
-		            </button>
-		        </div>
-		    </div>
-		</div>
 	
 		
     <script type="module">
@@ -2433,34 +2121,8 @@ let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
 let profileChartInstance = null;	
 let messageTimeout = null;
-let selectedCardClass = null;
-let activePreview = null;
-let userRootUnsubscribe = null; 
-
 		
-const CALLING_CARDS = [
-    { id: 'default', title: 'Default', class: '' },
-    { id: 'circuit-pulse', title: 'Circuit Pulse', class: 'card-circuit' },
-    { id: 'hyperspace', title: 'Hyperspace', class: 'card-hyperspace', needsJs: true },
-    { id: 'hex-core-pulse', title: 'Hex Core Pulse', class: 'card-hex-pulse' },
-    { id: 'data-stream', title: 'Data Stream', class: 'card-datastream', needsJs: true },
-    { id: 'tactical-hud', title: 'Tactical HUD', class: 'card-tactical-hud', needsJs: true },
-    { id: 'holo-grid', title: 'Holo-Grid', class: 'card-holo-grid', needsJs: true },
-    { id: 'supernova', title: 'Supernova', class: 'card-supernova', needsJs: true },
-    { id: 'forged-ember', title: 'Forged Ember', class: 'card-ember' },
-    { id: 'lightning-storm', title: 'Lightning Storm', class: 'card-lightning', needsJs: true },
-    { id: 'blizzard', title: 'Blizzard', class: 'card-blizzard', needsJs: true },
-    { id: 'haunting', title: 'Haunting', class: 'card-haunting', needsJs: true },
-    { id: 'liquid-gold', title: 'Liquid Gold', class: 'card-liquid-gold' },
-    { id: 'crystalline-shard', title: 'Crystalline Shard', class: 'card-crystalline' },
-    { id: 'carbon-shimmer', title: 'Carbon Shimmer', class: 'card-carbon' },
-    { id: 'brushed-steel', title: 'Brushed Steel', class: 'card-brushed-steel' },
-    { id: 'topographic-scan', title: 'Topographic Scan', class: 'card-topo-scan' },
-    { id: 'digital-camo', title: 'Digital Camo', class: 'card-digicamo' },
-    { id: 'sonar-sweep', title: 'Sonar Sweep', class: 'card-sonar' },
-    { id: 'unstable-energy', title: 'Unstable Energy', class: 'card-unstable-energy', needsJs: true },
-    { id: 'heartbeat-sensor', title: 'Heartbeat Sensor', class: 'card-heartbeat', needsJs: true}
-];		
+		
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
@@ -2789,48 +2451,6 @@ const backfillActiveDays = async (uid) => {
         console.error("Error during active days backfill:", error);
     }
 };
-
-const renderCallingCardSelection = async () => {
-    const grid = document.getElementById('calling-card-grid');
-    if (!grid) return;
-
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.exists() ? userDoc.data() : {};
-    const currentCard = userData.callingCard || '';
-    
-    // Set the selected card for the first time when the modal opens
-    selectedCardClass = currentCard;
-
-    grid.innerHTML = CALLING_CARDS.map(card => {
-        const isSelected = card.class === currentCard;
-        // This new structure wraps each card with a title above it.
-        return `
-            <div class="flex flex-col">
-                <h4 class="text-lg font-semibold text-center text-gray-200 mb-2 truncate">${card.title}</h4>
-                <div class="calling-card-preview ${isSelected ? 'selected' : ''}" data-card-class="${card.class}">
-                    <div class="calling-card-bg ${card.class}"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    // Inject JS-based elements after the grid is built
-    grid.querySelectorAll('.calling-card-preview').forEach(preview => {
-        const cardClass = preview.dataset.cardClass;
-        const cardConfig = CALLING_CARDS.find(c => c.class === cardClass);
-        if (cardConfig && cardConfig.needsJs) {
-            injectCallingCardJs(cardClass, preview.querySelector('.calling-card-bg'));
-        }
-    });
-
-    // Make the initially selected card the active one to preview it
-    const initialActive = grid.querySelector('.calling-card-preview.selected');
-    if (initialActive) {
-        initialActive.classList.add('is-active');
-        activePreview = initialActive;
-    }
-};
 		
 const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
     // If there are no copies or no active days, the average is 0.
@@ -2916,156 +2536,6 @@ const backfillUserStats = async (uid) => {
     } catch (error) {
         console.error(`Error during stats backfill for user ${uid}:`, error);
     }
-};
-
-
-const injectCallingCardJs = (cardClass, container) => {
-    if (!container) return; 
-    container.innerHTML = ''; 
-
-    if (cardClass === 'card-datastream') {
-        let cols = '';
-        for (let i = 0; i < 15; i++) {
-            cols += `<div class="datastream-col cc-animated" style="left:${Math.random()*100}%;animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*3}s;">01011011001</div>`;
-        }
-        container.innerHTML += cols;
-    }
-    if (cardClass === 'card-tactical-hud') {
-        container.innerHTML += `<div class="hud-corner hud-corner-tl cc-animated"></div><div class="hud-corner hud-corner-tr cc-animated"></div><div class="hud-corner hud-corner-bl cc-animated"></div><div class="hud-corner hud-corner-br cc-animated"></div><div class="hud-rec cc-animated"></div><div class="hud-scanline-2 cc-animated"></div>`;
-    }
-    if (cardClass === 'card-holo-grid') {
-        container.innerHTML += `<div class="holo-grid-1 cc-animated"></div><div class="holo-grid-2 cc-animated"></div><div class="holo-scanline cc-animated"></div>`;
-    }
-    if (cardClass === 'card-lightning') {
-        container.innerHTML += `<div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div><div class="lightning-bolt cc-animated"></div>`;
-    }
-    if (cardClass === 'card-blizzard') {
-        for (let i = 0; i < 50; i++) {
-            const snow = document.createElement('div');
-            snow.className = 'snow-particle cc-animated';
-            const size = `${Math.random() * 3 + 1}px`;
-            snow.style.left = `${Math.random() * 100}%`;
-            snow.style.width = size;
-            snow.style.height = size;
-            snow.style.animationDelay = `${Math.random() * 10}s`;
-            snow.style.animationDuration = `${Math.random() * 5 + 5}s`;
-            container.appendChild(snow);
-        }
-    }
-    if (cardClass === 'card-haunting') {
-        container.innerHTML += `<div class="haunting-wisp cc-animated"></div>`;
-    }
-    if (cardClass === 'card-unstable-energy') {
-        container.innerHTML += `<div class="energy-arc cc-animated"></div><div class="energy-arc cc-animated"></div>`;
-    }
-    if (cardClass === 'card-heartbeat') {
-        container.innerHTML += '<div class="heartbeat-dot"></div><div class="heartbeat-pulse cc-animated"></div>';
-    }
-};
-
-const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
-    const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(" ", "-")}`;
-    const weekId = getCurrentWeekId();
-    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
-    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
-    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
-
-    const levelingSection = document.getElementById('leveling-section-redesigned');
-    const userCardClass = userData.callingCard || '';
-
-    if (levelingSection) {
-        if (userCardClass) {
-            // A custom card is selected, so remove the default class
-            levelingSection.classList.remove('is-default-card');
-        } else {
-            // The default card is selected, so add the class to show overlays
-            levelingSection.classList.add('is-default-card');
-        }
-    }
-
-    // Get all the DOM elements
-    const bgContainer = document.getElementById('calling-card-bg-container');
-    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
-    const rankNameEl = document.getElementById('rank-name-redesigned');
-    const levelDisplayEl = document.getElementById('level-display-redesigned');
-    const xpBarEl = document.getElementById('xp-bar-redesigned');
-    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
-    const nextRankTextContainer = document.getElementById('next-rank-text-container');
-    const doubleXpIndicator = document.getElementById('double-xp-indicator');
-
-    if (bgContainer) {
-        const cardClasses = CALLING_CARDS.map(c => c.class).filter(Boolean);
-        bgContainer.classList.remove(...cardClasses);
-        bgContainer.innerHTML = ''; 
-        if (userCardClass) {
-            bgContainer.classList.add(userCardClass);
-            const cardConfig = CALLING_CARDS.find(c => c.class === userCardClass);
-            if (cardConfig && cardConfig.needsJs) {
-                injectCallingCardJs(userCardClass, bgContainer);
-            }
-        }
-    }
-
-    // --- RANK ICON & XP BAR LOGIC (Remains the same) ---
-    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
-    let innerHTML = '';
-    
-    switch(rankName) {
-        // (The entire switch statement for rank icons remains unchanged)
-        case "Newbie": case "Apprentice":
-            wrapperClasses += ' beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Journeyman": case "Artisan": case "Expert":
-            wrapperClasses += ' inner-ring beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Master":
-            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Grandmaster":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Legend":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
-            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Demigod":
-            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Deity":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
-            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
-            break;
-        default:
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-    }
-    
-    if (rankIconContainer) rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
-    if (rankNameEl) rankNameEl.textContent = levelInfo.rankName;
-    if (levelDisplayEl) levelDisplayEl.textContent = `Level ${levelInfo.level}`;
-    
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    if (xpBarEl) xpBarEl.style.width = `${progressPercent}%`;
-    if (xpTextEl) xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
-
-    if (doubleXpIndicator) {
-        doubleXpIndicator.classList.toggle('hidden', !isDoubleXpActive);
-    }
-
-    if (nextRank && nextRankTextContainer) {
-        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
-        nextRankTextContainer.classList.remove('hidden');
-    } else if (nextRankTextContainer) {
-        nextRankTextContainer.classList.add('hidden');
-    }
 };
 		
 // Renders the achievement icons inside the profile modal
@@ -5579,6 +5049,87 @@ const renderActivityChart = (events) => {
     });
 };
 
+const renderLevelingSystem = (userData) => {
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+
+    // --- Check if the weekly challenge is complete ---
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
+
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
+    const nextRankTextContainer = document.getElementById('next-rank-text-container');
+    const doubleXpIndicator = document.getElementById('double-xp-indicator'); // Get the new icon
+
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
+
+    switch(rankName) {
+        case "Newbie": case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman": case "Artisan": case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+    }
+    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+
+    rankNameEl.textContent = levelInfo.rankName;
+    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    xpBarEl.style.width = `${progressPercent}%`;
+    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+
+    // --- Logic to show/hide the icon ---
+    if (isDoubleXpActive) {
+        doubleXpIndicator.classList.remove('hidden');
+    } else {
+        doubleXpIndicator.classList.add('hidden');
+    }
+
+    if (nextRank && nextRankTextContainer) {
+        const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
+        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
+        nextRankTextContainer.classList.remove('hidden');
+    } else if (nextRankTextContainer) {
+        nextRankTextContainer.classList.add('hidden');
+    }
+};
 // --- Renders all stats and achievement data for the page ---
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
@@ -5724,72 +5275,6 @@ const showPlaceholderDemo = () => {
 // PASTE THIS ENTIRE BLOCK
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
-	
-    const customizeCardBtn = document.getElementById('customize-card-btn');
-    const callingCardModal = document.getElementById('calling-card-modal');
-    const closeCallingCardModalBtn = document.getElementById('close-calling-card-modal-btn');
-    const callingCardGrid = document.getElementById('calling-card-grid');
-    const saveCallingCardBtn = document.getElementById('save-calling-card-btn');
-
-    if (customizeCardBtn) {
-        customizeCardBtn.addEventListener('click', async () => {
-            if (isAnonymous) {
-                showMessage("Please sign in to customize your calling card.", "error");
-                return;
-            }
-            await renderCallingCardSelection();
-            callingCardModal.classList.remove('hidden');
-        });
-    }
-
-    if (closeCallingCardModalBtn) {
-        closeCallingCardModalBtn.addEventListener('click', () => {
-            callingCardModal.classList.add('hidden');
-            if(activePreview) activePreview.classList.remove('is-active'); // Stop animation on close
-            activePreview = null;
-        });
-    }
-
-    if (callingCardGrid) {
-        callingCardGrid.addEventListener('click', (e) => {
-            const selectedCardPreview = e.target.closest('.calling-card-preview');
-            if (selectedCardPreview) {
-                // Handle the selection highlight
-                callingCardGrid.querySelectorAll('.calling-card-preview').forEach(el => el.classList.remove('selected'));
-                selectedCardPreview.classList.add('selected');
-                selectedCardClass = selectedCardPreview.dataset.cardClass;
-
-                // Handle the click-to-play animation
-                if (activePreview) {
-                    activePreview.classList.remove('is-active');
-                }
-                selectedCardPreview.classList.add('is-active');
-                activePreview = selectedCardPreview;
-            }
-        });
-    }
-
-    if (saveCallingCardBtn) {
-        saveCallingCardBtn.addEventListener('click', async () => {
-            if (userId && !isAnonymous && selectedCardClass !== null) {
-                const userDocRef = getUserRootDocRef(userId);
-                try {
-                    await setDoc(userDocRef, { callingCard: selectedCardClass }, { merge: true });
-                    showMessage("Calling Card saved!", "success");
-                    callingCardModal.classList.add('hidden');
-                    if(activePreview) activePreview.classList.remove('is-active');
-                    activePreview = null;
-                } catch (error) {
-                    console.error("Error saving calling card:", error);
-                    showMessage("Could not save selection.", "error");
-                }
-            } else if (isAnonymous) {
-                 showMessage("Please sign in to save your selection.", "error");
-            } else {
-                 showMessage("Please select a card first.", "error");
-            }
-        });
-    }
 	
     const unlockAudio = () => {
         if (!audioUnlocked) {
@@ -6495,11 +5980,11 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
     });	
 
 
+
 // --- Core Application Logic (Auth and Data Sync) ---
 onAuthStateChanged(auth, async (user) => {
     if (cannedResponsesUnsubscribe) { cannedResponsesUnsubscribe(); cannedResponsesUnsubscribe = null; }
     if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
-	if (userRootUnsubscribe) { userRootUnsubscribe(); userRootUnsubscribe = null; } 
     if (user) {
         userId = user.uid;
         isAnonymous = user.isAnonymous;
@@ -6539,16 +6024,6 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
-            userRootUnsubscribe = onSnapshot(userDocRef, (doc) => {
-                const userData = doc.exists() ? doc.data() : {};
-                
-                // If we are on the stats page, re-render the leveling system
-                if (currentPage === 'my-stats') {
-                    renderLevelingSystem(userData);
-                }
-
-                // You can also update other real-time elements here in the future
-            });
 			await updateUserLeaderboardEntry();
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
