@@ -623,6 +623,32 @@
     0%, 100% { transform: scale(1) translateY(-50%); opacity: 0.5; box-shadow: none; }
     50% { transform: scale(2.5) translateY(-50%); opacity: 1; box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b; }
 }
+/* --- FIX for Heartbeat Preview --- */
+/* This creates a simple line that pulses for the CSS-only preview */
+.card-heartbeat::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background-color: #ff3b3b;
+    border-radius: 2px;
+    box-shadow: 0 0 10px #ff3b3b, 0 0 15px #ff3b3b;
+    animation: preview-pulse 1.5s ease-in-out infinite;
+    transform: translateY(-50%);
+}
+
+@keyframes preview-pulse {
+    0%, 100% { 
+        opacity: 0.7;
+        transform: scaleX(1) translateY(-50%);
+    }
+    50% { 
+        opacity: 1;
+        transform: scaleX(1.05) translateY(-50%);
+    }
+}		
 /* --- FIX: Base styles for Rank Icon Wrapper --- */
 .level-badge-wrapper {
     position: relative;
