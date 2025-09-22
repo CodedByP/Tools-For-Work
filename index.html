@@ -590,29 +590,20 @@
     background-color: #1a0a0a;
     position: relative;
     overflow: hidden;
-    /* Static background grid */
     background-image:
         linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
 }
-
-/* Styles for the static center dot DIV */
 .heartbeat-dot {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
+    top: 50%; left: 50%;
+    width: 8px; height: 8px;
     background: rgba(255, 80, 80, 0.9);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px rgba(255, 80, 80, 0.7);
-    border: 10px solid fuchsia; 
-	
 }
-
-/* Styles for the animated pulse DIV */
 .heartbeat-pulse {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -623,9 +614,7 @@
         transparent 65%
     );
     animation: final-heartbeat-pulse 2s ease-out infinite;
-    will-change: transform, opacity;
 }
-
 @keyframes final-heartbeat-pulse {
     0%   { transform: scale(0); opacity: 0; }
     50%  { opacity: 1; }
@@ -2946,8 +2935,8 @@ const backfillUserStats = async (uid) => {
 
 
 const injectCallingCardJs = (cardClass, container) => {
-    if (!container) return; // Safety check
-    container.innerHTML = ''; // Clear previous elements
+    if (!container) return; 
+    container.innerHTML = ''; 
 
     if (cardClass === 'card-datastream') {
         let cols = '';
@@ -2985,7 +2974,6 @@ const injectCallingCardJs = (cardClass, container) => {
         container.innerHTML += `<div class="energy-arc cc-animated"></div><div class="energy-arc cc-animated"></div>`;
     }
     if (cardClass === 'card-heartbeat') {
-        // This injects the static dot (no animation class) and the animated pulse (with the class)
         container.innerHTML += '<div class="heartbeat-dot"></div><div class="heartbeat-pulse cc-animated"></div>';
     }
 };
