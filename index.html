@@ -5305,8 +5305,6 @@ const showPlaceholderDemo = () => {
 };
 
 
-// PASTE THIS ENTIRE BLOCK
-// --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 	
     const unlockAudio = () => {
@@ -5482,21 +5480,6 @@ function attachEventListeners() {
             openMenuId = null;
         }
     });
-}
-    document.addEventListener('click', (event) => {
-        const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
-        const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
-        const categoryActionsMenu = document.getElementById('category-actions-menu');
-        const categoryActionsBtn = document.getElementById('category-actions-btn');
-        if (!categoryActionsMenu.contains(event.target) && !categoryActionsBtn.contains(event.target)) {
-            categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
-            categoryActionsBtn.classList.remove('active');
-        }
-        if (!isClickInsideMeatballsMenu) {
-            document.querySelectorAll('.meatballs-menu').forEach(m => m.classList.add('hidden'));
-            openMenuId = null;
-        }
-    });
 
     document.getElementById('close-login-popup-btn').addEventListener('click', async () => {
         document.getElementById('login-popup-modal').classList.remove('show');
@@ -5553,26 +5536,25 @@ function attachEventListeners() {
         }
     });
 
+    document.getElementById('stats-tab-btn').addEventListener('click', (e) => {
+        document.getElementById('stats-panel').classList.remove('hidden');
+        document.getElementById('achievements-panel').classList.add('hidden');
+        
+        e.target.classList.add('text-white', 'border-blue-500');
+        e.target.classList.remove('text-gray-400', 'border-transparent');
+        document.getElementById('achievements-tab-btn').classList.add('text-gray-400', 'border-transparent');
+        document.getElementById('achievements-tab-btn').classList.remove('text-white', 'border-blue-500');
+    });
 
-document.getElementById('stats-tab-btn').addEventListener('click', (e) => {
-    document.getElementById('stats-panel').classList.remove('hidden');
-    document.getElementById('achievements-panel').classList.add('hidden');
-    
-    e.target.classList.add('text-white', 'border-blue-500');
-    e.target.classList.remove('text-gray-400', 'border-transparent');
-    document.getElementById('achievements-tab-btn').classList.add('text-gray-400', 'border-transparent');
-    document.getElementById('achievements-tab-btn').classList.remove('text-white', 'border-blue-500');
-});
+    document.getElementById('achievements-tab-btn').addEventListener('click', (e) => {
+        document.getElementById('achievements-panel').classList.remove('hidden');
+        document.getElementById('stats-panel').classList.add('hidden');
 
-document.getElementById('achievements-tab-btn').addEventListener('click', (e) => {
-    document.getElementById('achievements-panel').classList.remove('hidden');
-    document.getElementById('stats-panel').classList.add('hidden');
-
-    e.target.classList.add('text-white', 'border-blue-500');
-    e.target.classList.remove('text-gray-400', 'border-transparent');
-    document.getElementById('stats-tab-btn').classList.add('text-gray-400', 'border-transparent');
-    document.getElementById('stats-tab-btn').classList.remove('text-white', 'border-blue-500');
-});
+        e.target.classList.add('text-white', 'border-blue-500');
+        e.target.classList.remove('text-gray-400', 'border-transparent');
+        document.getElementById('stats-tab-btn').classList.add('text-gray-400', 'border-transparent');
+        document.getElementById('stats-tab-btn').classList.remove('text-white', 'border-blue-500');
+    });
 		
     document.getElementById('show-tutorial-btn').addEventListener('click', async () => {
         if (userId && !isAnonymous) {
@@ -5792,26 +5774,26 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
         extractAndDisplayNumbers();
         showMessage('Input cleared!', 'success');
     });
-document.getElementById('copy-button-fedex').addEventListener('click', async () => {
-    const text = document.getElementById('input-text-fedex').value;
-    const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
-    const matches = text.match(fedexRegex) || [];
-    if (matches.length > 0) {
-        const uniqueNumbers = [...new Set(matches)];
-        
-        await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
-        const numbersToCopy = uniqueNumbers.join('\t');
-        copyToClipboard(numbersToCopy);
-		await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
+    document.getElementById('copy-button-fedex').addEventListener('click', async () => {
+        const text = document.getElementById('input-text-fedex').value;
+        const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
+        const matches = text.match(fedexRegex) || [];
+        if (matches.length > 0) {
+            const uniqueNumbers = [...new Set(matches)];
+            
+            await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
+            const numbersToCopy = uniqueNumbers.join('\t');
+            copyToClipboard(numbersToCopy);
+            await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
 
-        const numbersForUrl = uniqueNumbers.join(',');
-        const encodedNumbers = encodeURIComponent(numbersForUrl);
-        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-        window.open(fedexUrl, '_blank');
-    } else {
-        showMessage('No tracking numbers to copy.', 'error');
-    }
-});
+            const numbersForUrl = uniqueNumbers.join(',');
+            const encodedNumbers = encodeURIComponent(numbersForUrl);
+            const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
+            window.open(fedexUrl, '_blank');
+        } else {
+            showMessage('No tracking numbers to copy.', 'error');
+        }
+    });
     document.getElementById('import-export-btn-settings').addEventListener('click', () => { document.getElementById('import-export-modal').classList.remove('hidden'); });
     document.getElementById('close-import-export-modal-btn').addEventListener('click', () => { document.getElementById('import-export-modal').classList.add('hidden'); });
     document.getElementById('export-btn').addEventListener('click', () => { exportData(); });
@@ -5820,76 +5802,76 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         if (file) importData(file);
     });
 
-document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-    const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
-    const userValues = {};
-    inputs.forEach(input => {
-        const key = input.dataset.placeholder;
-        userValues[key] = input.value.trim();
+    document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
+        const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
+        const userValues = {};
+        inputs.forEach(input => {
+            const key = input.dataset.placeholder;
+            userValues[key] = input.value.trim();
+        });
+
+        const finalContent = replacePlaceholders(currentTextToCopy, userValues);
+        // Pass the stored ID and category to the final copy function
+        copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
+
+        document.getElementById('placeholder-modal').classList.add('hidden');
+        document.getElementById('copied-text-display').textContent = finalContent;
+
+        if (isTutorialActive) {
+            document.getElementById('copy-success-modal').classList.remove('hidden');
+            currentTutorialStep++;
+            showTutorialStep(currentTutorialStep);
+        } else {
+            document.getElementById('copy-success-modal').classList.remove('hidden');
+        }
     });
 
-    const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-    // Pass the stored ID and category to the final copy function
-    copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
+    // The cancel button logic is correct and doesn't need to be changed.
+    document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
+        document.getElementById('placeholder-modal').classList.add('hidden');
+        
+        if (isTutorialActive) {
+            document.getElementById('tutorial-modal').classList.remove('hidden');
+            document.getElementById('tutorial-overlay').classList.remove('hidden');
+            showTutorialStep(currentTutorialStep);
+        } 
+    });
 
-    document.getElementById('placeholder-modal').classList.add('hidden');
-    document.getElementById('copied-text-display').textContent = finalContent;
+    // The showPlaceholderDemo logic should be updated slightly.
+    document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+        isTutorialActive = true; 
+        const highlightedResponse = document.querySelector('.response-item.highlight-target');
+        if (highlightedResponse) {
+            const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+            processAndCopy(textToCopy);
+        } else {
+            console.error("No highlighted response found for the tutorial demo.");
+            const fallbackText = "Hello [Customer's Name], this is a default message.";
+            processAndCopy(fallbackText);
+        }
+        
+        // Hide the tutorial modal and overlay so the placeholder modal is the main focus.
+        // This is correct.
+        document.getElementById('tutorial-modal').classList.add('hidden');
+        document.getElementById('tutorial-overlay').classList.add('hidden');
+    });
 
-    if (isTutorialActive) {
-        document.getElementById('copy-success-modal').classList.remove('hidden');
-        currentTutorialStep++;
-        showTutorialStep(currentTutorialStep);
-    } else {
-        document.getElementById('copy-success-modal').classList.remove('hidden');
-    }
-});
-
-// The cancel button logic is correct and doesn't need to be changed.
-document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
-    document.getElementById('placeholder-modal').classList.add('hidden');
-    
-    if (isTutorialActive) {
-        document.getElementById('tutorial-modal').classList.remove('hidden');
-        document.getElementById('tutorial-overlay').classList.remove('hidden');
-        showTutorialStep(currentTutorialStep);
-    } 
-});
-
-// The showPlaceholderDemo logic should be updated slightly.
-document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
-    isTutorialActive = true; 
-    const highlightedResponse = document.querySelector('.response-item.highlight-target');
-    if (highlightedResponse) {
-        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
-        processAndCopy(textToCopy);
-    } else {
-        console.error("No highlighted response found for the tutorial demo.");
-        const fallbackText = "Hello [Customer's Name], this is a default message.";
-        processAndCopy(fallbackText);
-    }
-    
-    // Hide the tutorial modal and overlay so the placeholder modal is the main focus.
-    // This is correct.
-    document.getElementById('tutorial-modal').classList.add('hidden');
-    document.getElementById('tutorial-overlay').classList.add('hidden');
-});
-
-// Add a check to the showPlaceholderDemo function as well to set the flag
-document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
-    isTutorialActive = true; // Set the flag to true when starting the demo
-    const highlightedResponse = document.querySelector('.response-item.highlight-target');
-    if (highlightedResponse) {
-        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
-        processAndCopy(textToCopy);
-    } else {
-        console.error("No highlighted response found for the tutorial demo.");
-        const fallbackText = "Hello [Customer's Name], this is a default message.";
-        processAndCopy(fallbackText);
-    }
-    // The placeholder modal is shown inside processAndCopy, so we don't do it here.
-    document.getElementById('tutorial-modal').classList.add('hidden');
-    document.getElementById('tutorial-overlay').classList.add('hidden');
-});
+    // Add a check to the showPlaceholderDemo function as well to set the flag
+    document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
+        isTutorialActive = true; // Set the flag to true when starting the demo
+        const highlightedResponse = document.querySelector('.response-item.highlight-target');
+        if (highlightedResponse) {
+            const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
+            processAndCopy(textToCopy);
+        } else {
+            console.error("No highlighted response found for the tutorial demo.");
+            const fallbackText = "Hello [Customer's Name], this is a default message.";
+            processAndCopy(fallbackText);
+        }
+        // The placeholder modal is shown inside processAndCopy, so we don't do it here.
+        document.getElementById('tutorial-modal').classList.add('hidden');
+        document.getElementById('tutorial-overlay').classList.add('hidden');
+    });
 
 	
     document.getElementById('sign-in-btn-settings').addEventListener('click', async () => {
@@ -5898,106 +5880,106 @@ document.getElementById('show-placeholder-example-btn').addEventListener('click'
     document.getElementById('sign-out-btn-settings').addEventListener('click', async () => {
         try { await signOut(auth); showMessage("Signed out successfully!"); await signInAnonymously(auth); } catch (error) { console.error("Sign out failed", error); showMessage("Sign out failed. Please try again.", 'error'); }
     });
-document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
-    if (isAnonymous) {
-        showMessage("Please sign in to check for updates.", "error");
-        return;
-    }
+    document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
+        if (isAnonymous) {
+            showMessage("Please sign in to check for updates.", "error");
+            return;
+        }
 
-    const updateModal = document.getElementById('update-modal');
-    const updateModalTitle = document.getElementById('update-modal-title');
-    const updateModalMessage = document.getElementById('update-modal-message');
-    const updateModalButtons = document.getElementById('update-modal-buttons');
+        const updateModal = document.getElementById('update-modal');
+        const updateModalTitle = document.getElementById('update-modal-title');
+        const updateModalMessage = document.getElementById('update-modal-message');
+        const updateModalButtons = document.getElementById('update-modal-buttons');
 
-    // Show the modal immediately
-    updateModal.classList.remove('hidden');
-    updateModalTitle.textContent = "Checking for Updates...";
-    updateModalMessage.textContent = "Comparing your data with the latest blueprint...";
-    updateModalButtons.classList.add('hidden');
+        // Show the modal immediately
+        updateModal.classList.remove('hidden');
+        updateModalTitle.textContent = "Checking for Updates...";
+        updateModalMessage.textContent = "Comparing your data with the latest blueprint...";
+        updateModalButtons.classList.add('hidden');
 
-    try {
-        // 1. Get the latest blueprint from your code
-        const blueprint = await getCannedResponsesBlueprint();
-        
-        // 2. Make a deep copy of the user's current data to modify it safely
-        const updatedCategories = JSON.parse(JSON.stringify(categories));
-        
-        let changesMade = false;
-        let updatedResponsesCount = 0;
-        let newResponsesCount = 0;
-        let newCategoryCount = 0;
+        try {
+            // 1. Get the latest blueprint from your code
+            const blueprint = await getCannedResponsesBlueprint();
+            
+            // 2. Make a deep copy of the user's current data to modify it safely
+            const updatedCategories = JSON.parse(JSON.stringify(categories));
+            
+            let changesMade = false;
+            let updatedResponsesCount = 0;
+            let newResponsesCount = 0;
+            let newCategoryCount = 0;
 
-        // 3. Loop through every category and response in the blueprint
-        for (const blueprintCategoryName in blueprint) {
-            const blueprintCategory = blueprint[blueprintCategoryName];
+            // 3. Loop through every category and response in the blueprint
+            for (const blueprintCategoryName in blueprint) {
+                const blueprintCategory = blueprint[blueprintCategoryName];
 
-            // Check if the category exists for the user; if not, add it
-            if (!updatedCategories[blueprintCategoryName]) {
-                updatedCategories[blueprintCategoryName] = {
-                    color: blueprintCategory.color,
-                    responses: [] // Start with an empty array
-                };
-                newCategoryCount++;
-                changesMade = true;
-            }
-
-            for (const blueprintResponse of blueprintCategory.responses) {
-                // Find the user's version of this response
-                const userResponse = updatedCategories[blueprintCategoryName].responses.find(r => r.id === blueprintResponse.id);
-
-                if (userResponse) {
-                    // Response exists, check its version
-                    // (Use 0 as a default if the user's response doesn't have a version yet)
-                    const userVersion = userResponse.version || 0;
-                    if (blueprintResponse.version > userVersion) {
-                        // Blueprint is newer! Overwrite the user's response text and update their version.
-                        userResponse.text = blueprintResponse.text;
-                        userResponse.label = blueprintResponse.label;
-                        userResponse.version = blueprintResponse.version; // Crucial!
-                        updatedResponsesCount++;
-                        changesMade = true;
-                    }
-                } else {
-                    // Response does not exist for the user, so add it
-                    updatedCategories[blueprintCategoryName].responses.push(blueprintResponse);
-                    newResponsesCount++;
+                // Check if the category exists for the user; if not, add it
+                if (!updatedCategories[blueprintCategoryName]) {
+                    updatedCategories[blueprintCategoryName] = {
+                        color: blueprintCategory.color,
+                        responses: [] // Start with an empty array
+                    };
+                    newCategoryCount++;
                     changesMade = true;
                 }
-            }
-        }
-        
-        // 4. If any changes were made, save the updated data to Firestore
-        if (changesMade) {
-            await saveToFirestore(updatedCategories);
-			const userDocRef = getUserRootDocRef(userId);
-            await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
-            showUpdateNotification(false);
-            updateModalTitle.textContent = "Updates Applied! ✅";
-            updateModalMessage.innerHTML = `
-                <p>Your data has been successfully updated.</p>
-                <ul class="list-disc list-inside mt-2 text-left">
-                    ${newCategoryCount > 0 ? `<li>${newCategoryCount} new categories added.</li>` : ''}
-                    ${newResponsesCount > 0 ? `<li>${newResponsesCount} new responses added.</li>` : ''}
-                    ${updatedResponsesCount > 0 ? `<li>${updatedResponsesCount} existing responses updated.</li>` : ''}
-                </ul>
-            `;
-        } else {
-			const userDocRef = getUserRootDocRef(userId);
-            await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
-            showUpdateNotification(false);
-            updateModalTitle.textContent = "You're Up to Date! 👍";
-            updateModalMessage.textContent = "No new updates were found.";
-        }
 
-    } catch (error) {
-        console.error("Error checking for updates:", error);
-        updateModalTitle.textContent = "Update Failed ❌";
-        updateModalMessage.textContent = "An error occurred. Please try again later.";
-    } finally {
-        // Always show the close button at the end
-        updateModalButtons.classList.remove('hidden');
-    }
-});
+                for (const blueprintResponse of blueprintCategory.responses) {
+                    // Find the user's version of this response
+                    const userResponse = updatedCategories[blueprintCategoryName].responses.find(r => r.id === blueprintResponse.id);
+
+                    if (userResponse) {
+                        // Response exists, check its version
+                        // (Use 0 as a default if the user's response doesn't have a version yet)
+                        const userVersion = userResponse.version || 0;
+                        if (blueprintResponse.version > userVersion) {
+                            // Blueprint is newer! Overwrite the user's response text and update their version.
+                            userResponse.text = blueprintResponse.text;
+                            userResponse.label = blueprintResponse.label;
+                            userResponse.version = blueprintResponse.version; // Crucial!
+                            updatedResponsesCount++;
+                            changesMade = true;
+                        }
+                    } else {
+                        // Response does not exist for the user, so add it
+                        updatedCategories[blueprintCategoryName].responses.push(blueprintResponse);
+                        newResponsesCount++;
+                        changesMade = true;
+                    }
+                }
+            }
+            
+            // 4. If any changes were made, save the updated data to Firestore
+            if (changesMade) {
+                await saveToFirestore(updatedCategories);
+    			const userDocRef = getUserRootDocRef(userId);
+                await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
+                showUpdateNotification(false);
+                updateModalTitle.textContent = "Updates Applied! ✅";
+                updateModalMessage.innerHTML = `
+                    <p>Your data has been successfully updated.</p>
+                    <ul class="list-disc list-inside mt-2 text-left">
+                        ${newCategoryCount > 0 ? `<li>${newCategoryCount} new categories added.</li>` : ''}
+                        ${newResponsesCount > 0 ? `<li>${newResponsesCount} new responses added.</li>` : ''}
+                        ${updatedResponsesCount > 0 ? `<li>${updatedResponsesCount} existing responses updated.</li>` : ''}
+                    </ul>
+                `;
+            } else {
+    			const userDocRef = getUserRootDocRef(userId);
+                await setDoc(userDocRef, { syncedBlueprintVersion: masterBlueprintVersion }, { merge: true });
+                showUpdateNotification(false);
+                updateModalTitle.textContent = "You're Up to Date! 👍";
+                updateModalMessage.textContent = "No new updates were found.";
+            }
+
+        } catch (error) {
+            console.error("Error checking for updates:", error);
+            updateModalTitle.textContent = "Update Failed ❌";
+            updateModalMessage.textContent = "An error occurred. Please try again later.";
+        } finally {
+            // Always show the close button at the end
+            updateModalButtons.classList.remove('hidden');
+        }
+    });
     document.getElementById('close-update-btn').addEventListener('click', () => { document.getElementById('update-modal').classList.add('hidden'); });
     document.getElementById('show-placeholder-example-btn').addEventListener('click', showPlaceholderDemo);
 
@@ -6131,7 +6113,7 @@ onAuthStateChanged(auth, async (user) => {
         loader.classList.add('hidden');
     }	
 });
-}
+
 attachEventListeners();
 </script>
 </body>
