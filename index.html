@@ -2408,6 +2408,43 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// Add this new, centralized function
+const unlockAchievement = async (userId, achievement) => {
+    if (!userId || isAnonymous || !achievement) return;
+
+    // 1. Show the notification toast and play the sound
+    showAchievementNotification(achievement);
+
+    // 2. Award the standard XP for unlocking an achievement
+    await awardXP(XP_VALUES.UNLOCK_ACHIEVEMENT, 'Achievement Unlocked');
+
+    // 3. Trigger confetti for major milestone achievements
+    const milestoneAchievements = [
+        'copy_tiers', 'librarian_tiers', 'endless_scroll', 
+        'the_historian', 'streak_breaker', 'grand_master', 'marathon_finisher'
+    ];
+    if (milestoneAchievements.includes(achievement.id)) {
+        triggerCelebration();
+    }
+
+    // 4. Save the achievement to the user's PRIVATE data record
+    const userDocRef = getUserRootDocRef(userId);
+    const achievementUpdate = {
+        [`achievementsData.${achievement.id}`]: { date: new Date().toISOString() }
+    };
+    await setDoc(userDocRef, achievementUpdate, { merge: true });
+
+    // 5. Save the achievement to the user's PUBLIC leaderboard profile (This is the missing piece!)
+    const leaderboardDocRef = doc(db, "leaderboard", userId);
+    const leaderboardDoc = await getDoc(leaderboardDocRef);
+    const existingAchievements = leaderboardDoc.exists() ? leaderboardDoc.data().unlockedAchievements || [] : [];
+    
+    if (!existingAchievements.includes(achievement.id)) {
+        const updatedAchievements = [...existingAchievements, achievement.id];
+        await setDoc(leaderboardDocRef, { unlockedAchievements: updatedAchievements }, { merge: true });
+    }
+};
+		
 const backfillActiveDays = async (uid) => {
     console.log(`Checking if active days backfill is needed for user ${uid}...`);
     try {
@@ -3070,24 +3107,18 @@ const checkAndAwardChallengeXP = async (userId) => {
                 await updateDoc(userDocRef, { lastMonthlyChallengeMonth: monthId });
                 showMessage("Monthly Challenge Complete! 3x XP is active for the rest of the month!", "success");
 
-                // 2. Check for and award the new one-time achievement
-                const userAchievements = userData.achievementsData || {};
-                if (!userAchievements.marathon_finisher) {
-                    await awardXP(5000); // Grant the 5,000 XP bonus
-                    
-                    // Add the achievement to the user's data
-                    const newAchievements = { ...userAchievements, marathon_finisher: { date: new Date().toISOString() }};
-                    await updateDoc(userDocRef, { achievementsData: newAchievements });
-                    
-                    // Show the notification toast
-                    showAchievementNotification({
+                const userAchievements = userData.achievementsData || {};
+                if (!userAchievements.marathon_finisher) {
+                    // This now calls our new centralized function!
+                    await unlockAchievement(userId, {
                         id: 'marathon_finisher',
                         name: 'Marathon Finisher',
-                        desc: 'Complete the Monthly Marathon challenge.',
                         icon: 'fa-shoe-prints',
                         color: 'text-yellow-400'
                     });
-                }
+                    // Award the special one-time bonus XP
+                    await awardXP(5000, 'Marathon Finisher Bonus');
+                }
             }
         }
     } catch (error) {
@@ -3887,41 +3918,11 @@ const achievements = [
 
     achievements.forEach(ach => {
         if (ach.unlocked && !userAchievements[ach.id]) {
-            showAchievementNotification(ach);
-            newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
-			awardXP(XP_VALUES.UNLOCK_ACHIEVEMENT);
-			
-			if (milestoneAchievements.includes(ach.id)) {
-                triggerCelebration();
-            }
-
+            // This loop now calls our new centralized function for every achievement
+            unlockAchievement(userId, ach);
         }
     });
 
-    // If we have new achievements to notify, update Firestore
-    if (Object.keys(newAchievementsToSave).length > 0) {
-        await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
-		try {
-	        const leaderboardDocRef = doc(db, "leaderboard", userId);
-	        const leaderboardDoc = await getDoc(leaderboardDocRef);
-	        
-	        // Get the list of already unlocked achievements from the leaderboard
-	        const existingAchievements = leaderboardDoc.exists() ? leaderboardDoc.data().unlockedAchievements || [] : [];
-	        
-	        // Get the IDs of the newly unlocked achievements
-	        const newAchievementIds = Object.keys(newAchievementsToSave);
-	
-	        // Combine the old and new lists, ensuring no duplicates
-	        const allAchievements = [...new Set([...existingAchievements, ...newAchievementIds])];
-	
-	        // Save the complete list back to the leaderboard
-	        await updateDoc(leaderboardDocRef, { unlockedAchievements: allAchievements });
-	
-	    } catch(error) {
-	        console.error("Failed to update achievements on leaderboard:", error);
-	    }
-    }
-};	
 		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
