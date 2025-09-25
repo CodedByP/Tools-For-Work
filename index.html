@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;600&display=swap');
@@ -4997,7 +4998,6 @@ const renderActivityChart = (events) => {
     const container = document.getElementById('activity-chart-container');
     if (!container) return;
 
-    // Clear previous chart and messages
     container.innerHTML = '<canvas id="activityChart"></canvas>';
     const ctx = document.getElementById('activityChart').getContext('2d');
     
@@ -5006,22 +5006,24 @@ const renderActivityChart = (events) => {
     }
 
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
-    if (copyEvents.length < 2) { // Need at least 2 data points for a line chart
-        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Not enough copy activity to show a trend.</p>';
+    if (copyEvents.length === 0) { // Changed this to 0, as even one point can be shown
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your activity trend.</p>';
         return;
     }
 
-    // Group copy events by day
+    // Change 1: Group activity by day, but keep it as a map for now
     const activityByDay = copyEvents.reduce((acc, event) => {
         const date = event.timestamp.toDate().toISOString().split('T')[0];
         acc[date] = (acc[date] || 0) + 1;
         return acc;
     }, {});
 
-    const sortedDates = Object.keys(activityByDay).sort();
-    const labels = sortedDates;
-    const data = sortedDates.map(date => activityByDay[date]);
-    
+    // Change 2: Convert the grouped data into {x, y} points for the time-series axis
+    const chartDataPoints = Object.keys(activityByDay).sort().map(date => ({
+        x: date, // The date string 'YYYY-MM-DD'
+        y: activityByDay[date] // The count for that day
+    }));
+
     const isLightMode = document.body.classList.contains('light-mode');
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
@@ -5029,10 +5031,9 @@ const renderActivityChart = (events) => {
     activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
             datasets: [{
                 label: 'Copies per Day',
-                data: data,
+                data: chartDataPoints, // Use the new data points
                 fill: true,
                 backgroundColor: 'rgba(74, 222, 128, 0.2)',
                 borderColor: 'rgba(74, 222, 128, 1)',
@@ -5043,11 +5044,39 @@ const renderActivityChart = (events) => {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            // Change 3: Configure the x-axis for the time series
             scales: {
-                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
-                x: { ticks: { color: textColor }, grid: { color: gridColor } }
+                x: {
+                    type: 'time', // <-- This is the magic!
+                    time: {
+                        unit: 'day', // Group data by day
+                        tooltipFormat: 'MMM d, yyyy', // Format for tooltips (e.g., Sep 24, 2025)
+                        displayFormats: {
+                           day: 'MMM d' // Format for axis labels (e.g., Sep 24)
+                        }
+                    },
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: textColor, precision: 0 }, 
+                    grid: { color: gridColor } 
+                }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                // Change 4: Customize tooltips for better date display
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            // This ensures the tooltip title is also nicely formatted
+                            const date = new Date(context[0].parsed.x);
+                            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                        }
+                    }
+                }
+            }
         }
     });
 };
