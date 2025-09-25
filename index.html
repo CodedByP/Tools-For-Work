@@ -3041,24 +3041,23 @@ const checkAndAwardChallengeXP = async (userId) => {
         const lastDailyCompletion = userData.lastDailyChallengeDate || '';
         if (lastDailyCompletion !== todayStr) {
              const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(events);
-             if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
-                await awardXP(CHALLENGES_CONFIG.dailyCopies.xp);
-                await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
-                showMessage(`Daily Challenge Complete! +${CHALLENGES_CONFIG.dailyCopies.xp} XP`, "success");
-            }
+			if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.dailyCopies.xp, 'Daily Challenge');
+                await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
+            }
         }
 
         // --- Weekly Challenge Check (No changes here) ---
         const weekId = getCurrentWeekId();
         const lastWeeklyCompletion = userData.lastWeeklyChallengeWeek || '';
-        if (lastWeeklyCompletion !== weekId) {
-            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
-            if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
-                await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp);
-                await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
-                showMessage("Weekly Challenge Complete! 2x XP is now active.", "success");
-            }
-        }
+		if (lastWeeklyCompletion !== weekId) {
+            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp, 'Weekly Challenge');
+                await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
+                showMessage("2x XP is now active for the week!", "success");
+            }
+        }
 
         // --- NEW: Monthly Challenge Check ---
         const monthId = getCurrentMonthId();
@@ -3256,69 +3255,81 @@ const calculateLevelInfo = (totalXp) => {
 };
 
 
-const awardXP = async (amount) => {
-    if (!userId || isAnonymous) return 0; // Return 0 if not eligible
+const awardXP = async (baseAmount, actionName = 'Action Complete') => {
+    if (!userId || isAnonymous || baseAmount <= 0) return 0;
 
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.exists() ? userDoc.data() : { xp: 0 };
-    
-    // --- NEW: Check for 3x Monthly Boost First ---
-    const monthId = getCurrentMonthId();
-    const isMonthlyChallengeDone = userData.lastMonthlyChallengeMonth === monthId;
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : { xp: 0 };
+    
+    let finalAmount = baseAmount;
+    let multiplier = 1;
 
-    // --- Existing Weekly Boost Check ---
-    const weekId = getCurrentWeekId();
-    const isWeeklyChallengeDone = userData.lastWeeklyChallengeWeek === weekId;
+    const monthId = getCurrentMonthId();
+    const isMonthlyChallengeDone = userData.lastMonthlyChallengeMonth === monthId;
 
-    // Prioritize the monthly boost
-    if (isMonthlyChallengeDone) {
-        amount *= 3;
-    } else if (isWeeklyChallengeDone) {
-        amount *= 2;
-    }
+    const weekId = getCurrentWeekId();
+    const isWeeklyChallengeDone = userData.lastWeeklyChallengeWeek === weekId;
 
-    try {
-        const oldXp = userData.xp || 0;
-        const newXp = oldXp + amount;
+    if (isMonthlyChallengeDone) {
+        finalAmount *= 3;
+        multiplier = 3;
+    } else if (isWeeklyChallengeDone) {
+        finalAmount *= 2;
+        multiplier = 2;
+    }
 
-        const oldLevelInfo = calculateLevelInfo(oldXp);
-        const newLevelInfo = calculateLevelInfo(newXp);
+    try {
+        const oldXp = userData.xp || 0;
+        const newXp = oldXp + finalAmount;
 
-        await setDoc(userDocRef, { xp: newXp }, { merge: true });
-        await updateLeaderboardData(userId, newLevelInfo);
+        const oldLevelInfo = calculateLevelInfo(oldXp);
+        const newLevelInfo = calculateLevelInfo(newXp);
 
-        // Check for a LEVEL up
-        if (newLevelInfo.level > oldLevelInfo.level) {
-            showLevelUpNotification(newLevelInfo.level, newLevelInfo.rankName, newLevelInfo.rankIcon);
-            triggerCelebration();
-            const sound = document.getElementById('level-up-sound');
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.error("Level up audio play failed:", e));
-            }
-            const levelDisplay = document.getElementById('level-display');
-            if (levelDisplay) {
-                levelDisplay.classList.add('level-up-animation');
-                setTimeout(() => levelDisplay.classList.remove('level-up-animation'), 1500);
-            }
+        await setDoc(userDocRef, { xp: newXp }, { merge: true });
+        await updateLeaderboardData(userId, newLevelInfo);
+
+        // --- THIS IS THE NEW NOTIFICATION LOGIC ---
+        let message = actionName;
+        if (multiplier > 1) {
+            message = `${actionName}! +${finalAmount} XP (${multiplier}x Bonus!)`;
+        } else {
+            message = `${actionName}! +${finalAmount} XP`;
         }
-        
-        // Check for a RANK up
-        if (newLevelInfo.rankName !== oldLevelInfo.rankName) {
-            const iconWrapper = document.querySelector('.level-badge-wrapper');
-            if (iconWrapper) {
-                iconWrapper.classList.add('rank-up-glow');
-                setTimeout(() => iconWrapper.classList.remove('rank-up-glow'), 1500);
-            }
-        }
-        
-        return amount; // Return the final calculated XP amount
+        showMessage(message, 'success');
+        // --- END OF NEW LOGIC ---
 
-    } catch (error) {
-        console.error("Error awarding XP:", error);
-        return 0; // Return 0 on error
-    }
+        // Check for a LEVEL up
+        if (newLevelInfo.level > oldLevelInfo.level) {
+            showLevelUpNotification(newLevelInfo.level, newLevelInfo.rankName, newLevelInfo.rankIcon);
+            triggerCelebration();
+            const sound = document.getElementById('level-up-sound');
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.error("Level up audio play failed:", e));
+            }
+            const levelDisplay = document.getElementById('level-display');
+            if (levelDisplay) {
+                levelDisplay.classList.add('level-up-animation');
+                setTimeout(() => levelDisplay.classList.remove('level-up-animation'), 1500);
+            }
+        }
+        
+        // Check for a RANK up
+        if (newLevelInfo.rankName !== oldLevelInfo.rankName) {
+            const iconWrapper = document.querySelector('.level-badge-wrapper');
+            if (iconWrapper) {
+                iconWrapper.classList.add('rank-up-glow');
+                setTimeout(() => iconWrapper.classList.remove('rank-up-glow'), 1500);
+            }
+        }
+        
+        return finalAmount; // Return the final calculated XP amount
+
+    } catch (error) {
+        console.error("Error awarding XP:", error);
+        return 0; // Return 0 on error
+    }
 };
 
 		
@@ -4489,15 +4500,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
         if (now - lastCopyTime > COOLDOWN_PERIOD) {
             lastCopyTimestamps[responseId] = now;
             
-            // This now returns the final amount after multipliers
-            const finalXpAwarded = await awardXP(XP_VALUES.COPY_RESPONSE); 
-
-            let message = "Copied!";
-            if (finalXpAwarded > XP_VALUES.COPY_RESPONSE) {
-                const multiplier = finalXpAwarded / XP_VALUES.COPY_RESPONSE;
-                message = `Copied! +${finalXpAwarded} XP (${multiplier}x Bonus!)`;
-            }
-            showMessage(message, 'success');
+			await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
 
             logUserEvent('copy', { responseId, categoryName, text });
 
@@ -5769,7 +5772,7 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
         const numbersToCopy = uniqueNumbers.join('\t');
         copyToClipboard(numbersToCopy);
-		await awardXP(XP_VALUES.FEDEX_TRACKING);
+		await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
 
         const numbersForUrl = uniqueNumbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
