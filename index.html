@@ -239,6 +239,41 @@
     transition: width 0.5s ease-in-out;
 }
 
+/* --- Improved Challenge Card & Button Styles --- */
+.challenge-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Add a lift effect on hover for incomplete challenges */
+.challenge-card:not(.is-complete):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.track-challenge-btn .fa-crosshairs {
+    color: #6b7280; /* text-gray-500 */
+    opacity: 0.6;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+/* Make the icon fully visible on hover */
+.challenge-card:hover .track-challenge-btn .fa-crosshairs {
+    opacity: 1;
+}
+
+/* Styles for the actively tracked challenge's button */
+.track-challenge-btn.is-tracked .fa-crosshairs {
+    color: #34d399; /* A nice green color */
+    opacity: 1;
+    animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}		
+
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
@@ -4331,66 +4366,67 @@ const renderCategories = () => {
     renderResponses();
 };
 
-// REPLACE your entire renderChallenges function with this one
 
 const renderChallenges = async (events) => {
-    const container = document.getElementById('challenges-container');
-    if (!container) return;
-    container.innerHTML = ''; // Clear previous content
+    const container = document.getElementById('challenges-container');
+    if (!container) return;
+    container.innerHTML = ''; // Clear previous content
 
-    // 1. Initialize a counter for completed challenges
-    let completedCount = 0;
+    let completedCount = 0;
 
-    for (const challenge of Object.values(CHALLENGES_CONFIG)) {
-        const progressData = await challenge.getProgress(events);
-        const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
-        const isComplete = progressData.current >= challenge.goal;
-        const isTracked = challenge.id === trackedChallengeId;
+    for (const challenge of Object.values(CHALLENGES_CONFIG)) {
+        const progressData = await challenge.getProgress(events);
+        const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
+        const isComplete = progressData.current >= challenge.goal;
+        const isTracked = challenge.id === trackedChallengeId;
 
-        // 2. Increment the counter if a challenge is complete
-        if (isComplete) completedCount++;
+        if (isComplete) completedCount++;
 
-        const challengeCardHTML = `
-            <div class="bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'border-2 border-green-400' : ''}">
-                <button 
-                    class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700 transition-colors z-10" 
-                    title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
-                    data-challenge-id="${challenge.id}">
-                    <i class="fas fa-crosshairs ${isTracked ? 'text-green-400 animate-pulse' : 'text-gray-500'}"></i>
-                </button>
-                <div>
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                        </div>
-                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
-                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <div class="flex justify-between items-center text-sm mb-1">
-                        <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
-                            ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
-                        </span>
-                        <span class="font-bold text-yellow-400">+${challenge.xp} XP</span>
-                    </div>
-                    <div class="challenge-progress-container">
-                        <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.innerHTML += challengeCardHTML;
-    }
+        // Conditionally render the button only if the challenge is NOT complete
+        const trackButtonHTML = !isComplete ? `
+            <button
+                class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700/50 transition-colors z-10 ${isTracked ? 'is-tracked' : ''}"
+                title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}"
+                data-challenge-id="${challenge.id}">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+        ` : '';
 
-    // 3. Update the counter element in the HTML
-    const totalChallenges = Object.values(CHALLENGES_CONFIG).length;
-    const counterEl = document.getElementById('challenge-counter');
-    if (counterEl) {
-        counterEl.textContent = `${completedCount}/${totalChallenges}`;
-    }
+        const challengeCardHTML = `
+            <div class="challenge-card bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
+                ${trackButtonHTML}
+                <div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-100">${challenge.title}</h4>
+                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+                        </div>
+                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between items-center text-sm mb-1">
+                        <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
+                            ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
+                        </span>
+                        <span class="font-bold text-yellow-400">+${challenge.xp} XP</span>
+                    </div>
+                    <div class="challenge-progress-container">
+                        <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += challengeCardHTML;
+    }
+
+    const totalChallenges = Object.values(CHALLENGES_CONFIG).length;
+    const counterEl = document.getElementById('challenge-counter');
+    if (counterEl) {
+        counterEl.textContent = `${completedCount}/${totalChallenges}`;
+    }
 };
 		
 const renderResponses = (searchQuery = '') => {
