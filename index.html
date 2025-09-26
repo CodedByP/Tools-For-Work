@@ -4347,15 +4347,18 @@ const renderChallenges = async (events) => {
 
         if (isComplete) completedCount++;
 
-        // Conditionally render the button only if the challenge is NOT complete
-        const trackButtonHTML = !isComplete ? `
-            <button
-                class="track-challenge-btn p-2 rounded-full hover:bg-gray-700/50 transition-colors z-10 ${isTracked ? 'is-tracked' : ''}"
-                title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}"
-                data-challenge-id="${challenge.id}">
-                <i class="fas fa-crosshairs"></i>
-            </button>
-        ` : '';
+		const trackButtonHTML = !isComplete ? `
+		    <button
+		        class="track-challenge-btn py-1 px-4 rounded-lg text-sm font-semibold transition-all z-10 ${
+		            isTracked
+		                ? 'bg-gray-600 hover:bg-gray-700 text-white' // Style for "Stop Tracking"
+		                : 'bg-blue-600 hover:bg-blue-700 text-white'   // Style for "Track"
+		        }"
+		        title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}"
+		        data-challenge-id="${challenge.id}">
+		        ${isTracked ? 'Stop Tracking' : 'Track'}
+		    </button>
+		` : '';
 
         const challengeCardHTML = `
             <div class="challenge-card bg-gray-800 p-4 rounded-xl ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
