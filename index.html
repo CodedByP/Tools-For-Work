@@ -3172,49 +3172,72 @@ const checkAndAwardChallengeXP = async (userId) => {
         const querySnapshot = await getDocs(query(eventsCollectionRef));
         const events = querySnapshot.docs.map(doc => doc.data());
         
-        // --- Daily Challenge Check (No changes here) ---
+        // --- Daily Challenge Check ---
         const todayStr = getCurrentDateString();
         const lastDailyCompletion = userData.lastDailyChallengeDate || '';
         if (lastDailyCompletion !== todayStr) {
-             const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(events);
-			if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
-                await awardXP(CHALLENGES_CONFIG.dailyCopies.xp, 'Daily Challenge');
-                await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
-            }
+            const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.dailyCopies.xp, 'Daily Challenge');
+                await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
+
+                // --- ADD THIS CHECK ---
+                // If this is the challenge being tracked, stop tracking it.
+                if (trackedChallengeId === 'dailyCopies') {
+                    stopTrackingChallenge();
+                }
+            }
         }
 
-        // --- Weekly Challenge Check (No changes here) ---
+        // --- Weekly Challenges Check ---
         const weekId = getCurrentWeekId();
+        
+        // Check for Weekly Copies Challenge
         const lastWeeklyCompletion = userData.lastWeeklyChallengeWeek || '';
-		if (lastWeeklyCompletion !== weekId) {
-            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
-            if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
-                await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp, 'Weekly Challenge');
-                await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
-                showMessage("2x XP is now active for the week!", "success");
-            }
-        }
+        if (lastWeeklyCompletion !== weekId) {
+            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
+                await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp, 'Weekly Challenge');
+                await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
+                showMessage("2x XP is now active for the week!", "success");
 
-        // --- NEW: Monthly Challenge Check ---
+                // --- ADD THIS CHECK ---
+                if (trackedChallengeId === 'weeklyCopies') {
+                    stopTrackingChallenge();
+                }
+            }
+        }
+
+        // Check for Logistics Expert Challenge
+        const lastLogisticsCompletion = userData.lastLogisticsChallengeWeek || '';
+        if (lastLogisticsCompletion !== weekId) {
+            const { current } = await CHALLENGES_CONFIG.logisticsExpert.getProgress(events);
+            if (current >= CHALLENGES_CONFIG.logisticsExpert.goal) {
+                await awardXP(CHALLENGES_CONFIG.logisticsExpert.xp, 'Logistics Expert');
+                await updateDoc(userDocRef, { lastLogisticsChallengeWeek: weekId });
+
+                // --- ADD THIS CHECK ---
+                if (trackedChallengeId === 'logisticsExpert') {
+                    stopTrackingChallenge();
+                }
+            }
+        }
+
+
+        // --- Monthly Challenge Check ---
         const monthId = getCurrentMonthId();
         const lastMonthlyCompletion = userData.lastMonthlyChallengeMonth || '';
         if (lastMonthlyCompletion !== monthId) {
             const { current } = await CHALLENGES_CONFIG.monthlyMarathon.getProgress(events);
             if (current >= CHALLENGES_CONFIG.monthlyMarathon.goal) {
-                // 1. Set the flag to activate 3x XP for the rest of the month
                 await updateDoc(userDocRef, { lastMonthlyChallengeMonth: monthId });
                 showMessage("Monthly Challenge Complete! 3x XP is active for the rest of the month!", "success");
 
-                // 2. Check for and award the new one-time achievement
                 const userAchievements = userData.achievementsData || {};
                 if (!userAchievements.marathon_finisher) {
-                    await awardXP(5000); // Grant the 5,000 XP bonus
-                    
-                    // Add the achievement to the user's data
+                    await awardXP(5000); 
                     const newAchievements = { ...userAchievements, marathon_finisher: { date: new Date().toISOString() }};
                     await updateDoc(userDocRef, { achievementsData: newAchievements });
-                    
-                    // Show the notification toast
                     showAchievementNotification({
                         id: 'marathon_finisher',
                         name: 'Marathon Finisher',
@@ -3223,12 +3246,17 @@ const checkAndAwardChallengeXP = async (userId) => {
                         color: 'text-yellow-400'
                     });
                 }
+                
+                // --- ADD THIS CHECK ---
+                if (trackedChallengeId === 'monthlyMarathon') {
+                    stopTrackingChallenge();
+                }
             }
         }
     } catch (error) {
         console.error("Error checking for challenge XP:", error);
     }
-};	
+};
 
 const showLevelUpNotification = (level, rankName, rankIcon) => {
     const modal = document.getElementById('level-up-modal');
