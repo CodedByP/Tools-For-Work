@@ -3816,39 +3816,36 @@ const logUserEvent = async (eventType, eventData = {}) => {
 };
 
 const updateDarkModeStreak = async () => {
-    if (isAnonymous || !userId || document.body.classList.contains('light-mode')) {
-        return; // Only run for signed-in users when in dark mode
-    }
+    if (isAnonymous || !userId || document.body.classList.contains('light-mode')) {
+        return; // Only run for signed-in users when in dark mode
+    }
 
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const today = new Date();
-	const formattedDate = today.toLocaleDateString('en-US', {
-	    year: 'numeric',
-	    month: 'long',
-	    day: 'numeric'
-	});
-    
-    const data = userDoc.exists() ? userDoc.data() : {};
-    const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const data = userDoc.exists() ? userDoc.data() : {};
+    const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
 
-    if (darkModeUsage.lastUsed === today) {
-        return; // Already counted for today
-    }
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    if (darkModeUsage.lastUsed === todayStr) {
+        return; // Already counted for today
+    }
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-    if (darkModeUsage.lastUsed === yesterdayStr) {
-        darkModeUsage.streak++; // It's a consecutive day, increment!
-    } else {
-        darkModeUsage.streak = 1; // Not consecutive, reset to 1
-    }
-    darkModeUsage.lastUsed = today;
-    
-    await setDoc(userDocRef, { darkModeUsage }, { merge: true });
-    logUserEvent('used_dark_mode'); // Log this to trigger the achievement check
+    if (darkModeUsage.lastUsed === yesterdayStr) {
+        darkModeUsage.streak++; // It's a consecutive day, increment!
+    } else {
+        darkModeUsage.streak = 1; // Not consecutive, reset to 1
+    }
+    
+    darkModeUsage.lastUsed = todayStr;
+    
+    await setDoc(userDocRef, { darkModeUsage }, { merge: true });
+    logUserEvent('used_dark_mode'); // Log this to trigger the achievement check
 };
 
 const getTier = (count, tiers) => {
