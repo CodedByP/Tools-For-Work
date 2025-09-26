@@ -4674,6 +4674,14 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
                     await batch.commit();
+					
+				    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+				    const snapshot = await getDocs(query(eventsCollectionRef));
+				    const events = snapshot.docs.map(doc => doc.data());
+				
+				    await renderChallenges(events);
+				    await renderChallengeTracker(events);
+					
                 } catch (error) {
                     console.error("Error updating copy count:", error);
                 }
@@ -5969,11 +5977,21 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
     const matches = text.match(fedexRegex) || [];
     if (matches.length > 0) {
         const uniqueNumbers = [...new Set(matches)];
-        
+
         await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
         const numbersToCopy = uniqueNumbers.join('\t');
         copyToClipboard(numbersToCopy);
-		await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
+        await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
+
+        // --- FIX STARTS HERE ---
+        // Just like before, re-fetch events and re-render the challenge UI
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
+        
+        await renderChallenges(events);
+        await renderChallengeTracker(events);
+        // --- FIX ENDS HERE ---
 
         const numbersForUrl = uniqueNumbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
