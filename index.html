@@ -1550,7 +1550,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                 </div>
         </div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		    
 		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
 		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
@@ -1568,6 +1568,35 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                     <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
 		        </div>
 		    </div>
+
+			<div class="floating-card p-6 sm:p-8 flex flex-col h-full">
+			    <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
+			        <i class="fas fa-medal mr-3 text-3xl text-yellow-400"></i> My Records
+			    </h2>
+			    <div id="records-container" class="flex flex-col space-y-4 flex-grow justify-center">
+			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
+			            <div class="flex items-center">
+			                <i class="fas fa-calendar-day text-blue-400 w-6 text-center mr-3"></i>
+			                <p class="text-gray-300">Most Copies in a Day</p>
+			            </div>
+			            <p id="record-daily" class="text-xl font-bold text-white">--</p>
+			        </div>
+			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
+			            <div class="flex items-center">
+			                <i class="fas fa-calendar-week text-green-400 w-6 text-center mr-3"></i>
+			                <p class="text-gray-300">Most Copies in a Week</p>
+			            </div>
+			            <p id="record-weekly" class="text-xl font-bold text-white">--</p>
+			        </div>
+			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
+			            <div class="flex items-center">
+			                <i class="fas fa-calendar-alt text-purple-400 w-6 text-center mr-3"></i>
+			                <p class="text-gray-300">Most Copies in a Month</p>
+			            </div>
+			            <p id="record-monthly" class="text-xl font-bold text-white">--</p>
+			        </div>
+			    </div>
+			</div>
 		    
 		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
 		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
@@ -2475,6 +2504,54 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+const calculateAndRenderRecords = (events) => {
+    // 1. Filter for only 'copy' events that have a valid timestamp
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
+
+    // If the user has no copy events, set records to 0 and exit
+    if (copyEvents.length === 0) {
+        document.getElementById('record-daily').textContent = '0';
+        document.getElementById('record-weekly').textContent = '0';
+        document.getElementById('record-monthly').textContent = '0';
+        return;
+    }
+
+    // Helper function to get the week key for a given date (e.g., "2025-W39")
+    const getWeekKey = (d) => {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+    };
+
+    // 2. Group all copy events by day, week, and month
+    const dailyCounts = {};
+    const weeklyCounts = {};
+    const monthlyCounts = {};
+
+    copyEvents.forEach(event => {
+        const date = event.timestamp.toDate();
+        const dayKey = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+        const weekKey = getWeekKey(date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // 'YYYY-MM'
+
+        dailyCounts[dayKey] = (dailyCounts[dayKey] || 0) + 1;
+        weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
+        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+    });
+
+    // 3. Find the highest value (the record) from each group
+    const maxDaily = Object.values(dailyCounts).length > 0 ? Math.max(...Object.values(dailyCounts)) : 0;
+    const maxWeekly = Object.values(weeklyCounts).length > 0 ? Math.max(...Object.values(weeklyCounts)) : 0;
+    const maxMonthly = Object.values(monthlyCounts).length > 0 ? Math.max(...Object.values(monthlyCounts)) : 0;
+
+    // 4. Update the HTML elements with the calculated records
+    document.getElementById('record-daily').textContent = maxDaily.toLocaleString();
+    document.getElementById('record-weekly').textContent = maxWeekly.toLocaleString();
+    document.getElementById('record-monthly').textContent = maxMonthly.toLocaleString();
+};		
 
 const displayToast = (notification) => {
     isNotificationActive = true; // Set the flag
@@ -5354,8 +5431,9 @@ const renderAdvancedStats = async () => {
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
         // Render main components first
-        renderCategoryChart(events);
-        renderActivityChart(events);
+        await renderCategoryChart(events);
+		calculateAndRenderRecords(events);
+        await renderActivityChart(events);
         renderLeaderboard();
         renderFilteredAchievements(events, userData);
 
