@@ -2183,6 +2183,8 @@ let activeAchievementFilter = 'all';
 let profileChartInstance = null;	
 let messageTimeout = null;
 let trackedChallengeId = null;
+let notificationQueue = [];
+let isNotificationActive = false;		
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -2467,6 +2469,51 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+const displayToast = (notification) => {
+    isNotificationActive = true; // Set the flag
+
+    // This function now ONLY handles general messages for the top-right toast
+    const toast = document.getElementById('copy-toast');
+    const toastIcon = document.getElementById('copy-toast-icon');
+    const toastMessage = document.getElementById('copy-toast-message');
+
+    if (!toast || !toastIcon || !toastMessage) {
+        // If elements don't exist, free up the queue and process the next item
+        isNotificationActive = false;
+        processNotificationQueue();
+        return;
+    }
+
+    if (notification.style === 'success') {
+        toastIcon.innerHTML = `<i class="fas fa-check-circle text-green-400"></i>`;
+    } else if (notification.style === 'error') {
+        toastIcon.innerHTML = `<i class="fas fa-times-circle text-red-400"></i>`;
+    }
+
+    toastMessage.textContent = notification.message;
+    toast.classList.add('show');
+
+    // Set a timer to hide the toast
+    setTimeout(() => {
+        toast.classList.remove('show');
+        // IMPORTANT: Wait for the CSS fade-out animation to finish
+        setTimeout(() => {
+            isNotificationActive = false; // Free up the queue
+            processNotificationQueue();   // Check for the next notification
+        }, 500); // This duration must match your CSS transition-duration
+    }, 3000);
+};
+
+const processNotificationQueue = () => {
+    // If a toast is already active, or if the queue is empty, do nothing.
+    if (isNotificationActive || notificationQueue.length === 0) {
+        return;
+    }
+    // Get the next notification from the front of the queue and display it
+    const nextNotification = notificationQueue.shift();
+    displayToast(nextNotification);
+};
 
 const startTrackingChallenge = async (challengeId) => {
     trackedChallengeId = challengeId;
