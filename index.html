@@ -1505,6 +1505,12 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 				                2x XP Active!
 				            </span>
 				        </div>
+					    <div id="triple-xp-indicator" class="hidden relative group">
+					        <i class="fas fa-fire text-3xl text-orange-400"></i>
+					        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+					            3x XP Active!
+					        </span>
+					    </div>
 				    </div>
 				    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
 				    </p>
@@ -5230,88 +5236,95 @@ const renderActivityChart = (events) => {
 };
 
 const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
-    const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
 
-    // --- Check if the weekly challenge is complete ---
-    const weekId = getCurrentWeekId();
-    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+    const monthId = getCurrentMonthId();
+    const isTripleXpActive = userData.lastMonthlyChallengeMonth === monthId;
 
-    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
-    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
 
-    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
-    const rankNameEl = document.getElementById('rank-name-redesigned');
-    const levelDisplayEl = document.getElementById('level-display-redesigned');
-    const xpBarEl = document.getElementById('xp-bar-redesigned');
-    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
-    const nextRankTextContainer = document.getElementById('next-rank-text-container');
-    const doubleXpIndicator = document.getElementById('double-xp-indicator'); // Get the new icon
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
-    let innerHTML = '';
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
+    const nextRankTextContainer = document.getElementById('next-rank-text-container');
 
-    switch(rankName) {
-        case "Newbie": case "Apprentice":
-            wrapperClasses += ' beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Journeyman": case "Artisan": case "Expert":
-            wrapperClasses += ' inner-ring beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Master":
-            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Grandmaster":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Legend":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
-            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Demigod":
-            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Deity":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
-            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
-            break;
-        default:
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-    }
-    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+    const doubleXpIndicator = document.getElementById('double-xp-indicator');
+    const tripleXpIndicator = document.getElementById('triple-xp-indicator');
 
-    rankNameEl.textContent = levelInfo.rankName;
-    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = '';
 
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    xpBarEl.style.width = `${progressPercent}%`;
-    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+    switch(rankName) {
+        case "Newbie": case "Apprentice":
+            wrapperClasses += ' beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Journeyman": case "Artisan": case "Expert":
+            wrapperClasses += ' inner-ring beveled-edge';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Master":
+            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Grandmaster":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Legend":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
+            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Demigod":
+            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+        case "Deity":
+            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
+            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
+            break;
+        default:
+            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+            break;
+    }
+    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
 
-    // --- Logic to show/hide the icon ---
-    if (isDoubleXpActive) {
-        doubleXpIndicator.classList.remove('hidden');
-    } else {
+    rankNameEl.textContent = levelInfo.rankName;
+    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    xpBarEl.style.width = `${progressPercent}%`;
+    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+
+    if (isTripleXpActive) {
+        tripleXpIndicator.classList.remove('hidden');
         doubleXpIndicator.classList.add('hidden');
-    }
+    } else if (isDoubleXpActive) {
+        doubleXpIndicator.classList.remove('hidden');
+        tripleXpIndicator.classList.add('hidden');
+    } else {
+        doubleXpIndicator.classList.add('hidden');
+        tripleXpIndicator.classList.add('hidden');
+    }
 
-    if (nextRank && nextRankTextContainer) {
-        const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
-        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
-        nextRankTextContainer.classList.remove('hidden');
-    } else if (nextRankTextContainer) {
-        nextRankTextContainer.classList.add('hidden');
-    }
+    if (nextRank && nextRankTextContainer) {
+        const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
+        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
+        nextRankTextContainer.classList.remove('hidden');
+    } else if (nextRankTextContainer) {
+        nextRankTextContainer.classList.add('hidden');
+    }
 };
-// --- Renders all stats and achievement data for the page ---
-// REPLACE your entire renderAdvancedStats function with this new one
+
 
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
