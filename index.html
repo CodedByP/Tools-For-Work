@@ -4362,18 +4362,18 @@ const renderChallenges = async (events) => {
 
         const challengeCardHTML = `
             <div class="challenge-card bg-gray-800 p-4 rounded-xl ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
-                <div class="challenge-header">
-                    <div class="challenge-info">
-                        <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                    </div>
-                    <div class="challenge-actions">
-                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
-                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
-                        </div>
-                        ${trackButtonHTML}
-                    </div>
-                </div>
+				<div class="challenge-header flex justify-between items-start">
+				    <div class="challenge-info">
+				        <h4 class="font-bold text-gray-100">${challenge.title}</h4>
+				        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+				    </div>
+				    <div class="challenge-actions flex items-center gap-4">
+				        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+				            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
+				        </div>
+				        ${trackButtonHTML}
+				    </div>
+				</div>
                 <div class="mt-4">
                     <div class="flex justify-between items-center text-sm mb-1">
                         <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
