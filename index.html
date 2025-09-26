@@ -241,38 +241,37 @@
 
 /* --- Improved Challenge Card & Button Styles --- */
 .challenge-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 2px solid transparent; /* Add a base border to prevent layout shifts */
 }
 
 /* Add a lift effect on hover for incomplete challenges */
 .challenge-card:not(.is-complete):hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
 .track-challenge-btn .fa-crosshairs {
-    color: #6b7280; /* text-gray-500 */
-    opacity: 0.6;
-    transition: opacity 0.2s ease, color 0.2s ease;
+    color: #6b7280; /* text-gray-500 */
+    transition: color 0.2s ease;
 }
 
-/* Make the icon fully visible on hover */
+/* On card hover, make the track icon a bit brighter */
 .challenge-card:hover .track-challenge-btn .fa-crosshairs {
-    opacity: 1;
+    color: #9ca3af; /* text-gray-400 */
 }
 
 /* Styles for the actively tracked challenge's button */
 .track-challenge-btn.is-tracked .fa-crosshairs {
-    color: #34d399; /* A nice green color */
-    opacity: 1;
-    animation: pulse-green 1.5s infinite;
+    color: #34d399; /* A nice green color */
+    animation: pulse-green 1.5s infinite;
 }
 
 @keyframes pulse-green {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-}		
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}	
 
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
@@ -4382,32 +4381,29 @@ const renderChallenges = async (events) => {
 
         if (isComplete) completedCount++;
 
-        // Conditionally render the button only if the challenge is NOT complete
+        // Button is only shown if the challenge is NOT complete
         const trackButtonHTML = !isComplete ? `
-            <button
-                class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700/50 transition-colors z-10 ${isTracked ? 'is-tracked' : ''}"
-                title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}"
+            <button 
+                class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700/50 transition-colors z-10 ${isTracked ? 'is-tracked' : ''}" 
+                title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
                 data-challenge-id="${challenge.id}">
                 <i class="fas fa-crosshairs"></i>
             </button>
         ` : '';
 
-        // This HTML structure now exactly matches your original, working layout.
+        // This revised structure is cleaner and uses flexbox correctly.
         const challengeCardHTML = `
-            <div class="challenge-card bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
+            <div class="challenge-card bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'is-complete border-2 border-green-400' : 'border-transparent'}">
                 ${trackButtonHTML}
-                <div>
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                        </div>
-                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
-                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
-                        </div>
+                                <div class="flex justify-between items-start">
+                    <div class="pr-8">                         <h4 class="font-bold text-gray-100">${challenge.title}</h4>
+                        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+                    </div>
+                    <div class="flex-shrink-0 text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+                        <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
                     </div>
                 </div>
-                <div class="mt-4">
+                                <div class="mt-4">
                     <div class="flex justify-between items-center text-sm mb-1">
                         <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
                             ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
