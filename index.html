@@ -2468,35 +2468,56 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+
+const updateChallengeUI = async () => {
+    if (!userId || isAnonymous || currentPage !== 'my-stats') return;
+    try {
+        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
+
+        // These two calls will now correctly update the UI without conflicts
+        await renderChallenges(events);
+        await renderChallengeTracker(events);
+    } catch (error) {
+        console.error("Failed to update challenge UI:", error);
+    }
+};
+		
 const startTrackingChallenge = (challengeId) => {
     trackedChallengeId = challengeId;
     localStorage.setItem('trackedChallengeId', challengeId);
-    renderAdvancedStats(); // This will re-render the challenges and the tracker
+    updateChallengeUI(); // More efficient update
 };
 
 const stopTrackingChallenge = () => {
+    const hud = document.getElementById('challenge-tracker-hud');
     trackedChallengeId = null;
     localStorage.removeItem('trackedChallengeId');
-    const hud = document.getElementById('challenge-tracker-hud');
-    hud.classList.remove('visible');
-    renderChallenges([]); // Re-render challenges to update the track icon
-    // A small delay to allow the fade-out animation to complete
-    setTimeout(() => {
-        hud.innerHTML = '';
-        hud.classList.add('hidden');
-    }, 500);
+    
+    // Animate the HUD out
+    if (hud) {
+        hud.classList.remove('visible');
+        setTimeout(() => hud.classList.add('hidden'), 500); // Hide after animation
+    }
+    
+    // Update the icons on the challenge cards
+    updateChallengeUI();
 };
 
 const renderChallengeTracker = async (events) => {
     const hud = document.getElementById('challenge-tracker-hud');
     if (!trackedChallengeId || !hud) {
-        hud.classList.remove('visible');
+        if(hud) {
+            hud.classList.remove('visible');
+            setTimeout(() => hud.classList.add('hidden'), 500);
+        }
         return;
     }
 
     const challenge = CHALLENGES_CONFIG[trackedChallengeId];
     if (!challenge) {
-        stopTrackingChallenge();
+        stopTrackingChallenge(); // Clean up if the tracked ID is invalid
         return;
     }
 
@@ -2521,7 +2542,6 @@ const renderChallengeTracker = async (events) => {
         </div>
     `;
     hud.classList.remove('hidden');
-    // Use a tiny timeout to allow the browser to render the element before transitioning
     setTimeout(() => hud.classList.add('visible'), 10);
 };
 				
@@ -5318,7 +5338,6 @@ const renderAdvancedStats = async () => {
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
         // Render all components
-        renderChallenges(events);
 		renderChallengeTracker(events);
         renderCategoryChart(events);
         renderActivityChart(events);
