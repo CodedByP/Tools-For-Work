@@ -1588,7 +1588,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		            </div>
 		    </div>
 		    
-			<div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col">
+			<div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
 					<h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
 					    <span>🏃 Active Challenges</span>
 					    <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
@@ -4369,7 +4369,7 @@ const renderCategories = () => {
 const renderChallenges = async (events) => {
     const container = document.getElementById('challenges-container');
     if (!container) return;
-    container.innerHTML = ''; // Clear previous content
+    container.innerHTML = ''; 
 
     let completedCount = 0;
 
@@ -4381,41 +4381,40 @@ const renderChallenges = async (events) => {
 
         if (isComplete) completedCount++;
 
-        // Button is only shown if the challenge is NOT complete
-        const trackButtonHTML = !isComplete ? `
-        <button 
-            class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700/50 transition-colors z-10 ${isTracked ? 'is-tracked' : ''}" 
-            title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
-            data-challenge-id="${challenge.id}">
-            <i class="fas fa-crosshairs"></i>
-        </button>
-    ` : '';
+        // Conditionally create the button, or a placeholder div for consistent alignment
+        const buttonOrPlaceholder = !isComplete ? `
+            <button 
+                class="track-challenge-btn p-2 rounded-full hover:bg-gray-700 transition-colors" 
+                title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
+                data-challenge-id="${challenge.id}">
+                <i class="fas fa-crosshairs ${isTracked ? 'text-green-400 animate-pulse' : 'text-gray-500'}"></i>
+            </button>
+        ` : `<div style="width: 40px; height: 40px;"></div>`; // An invisible placeholder to keep spacing consistent
 
         const challengeCardHTML = `
-            <div class="challenge-card bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
-                ${trackButtonHTML}
-                
-                                <div class="pr-8">
-                                        <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                        </div>
-                        <div class="flex-shrink-0 text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+            <div class="bg-gray-800 p-4 rounded-xl ${isComplete ? 'border-2 border-green-400' : ''}">
+                                <div class="flex justify-between items-start">
+                                        <div class="flex-grow">
+                        <h4 class="font-bold text-gray-100">${challenge.title}</h4>
+                        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+                    </div>
+                                        <div class="flex items-center space-x-3 ml-4 flex-shrink-0">
+                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
                             <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
                         </div>
+                        ${buttonOrPlaceholder}
                     </div>
+                </div>
 
-                                        <div class="mt-4">
-                        <div class="flex justify-between items-center text-sm mb-1">
-                            <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
-                                ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
-                            </span>
-                            <span class="font-bold text-yellow-400">+${challenge.xp} XP</span>
-                        </div>
-                        <div class="challenge-progress-container">
-                            <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
-                        </div>
+                                <div class="mt-4">
+                    <div class="flex justify-between items-center text-sm mb-1">
+                        <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
+                            ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
+                        </span>
+                        <span class="font-bold text-yellow-400">+${challenge.xp} XP</span>
+                    </div>
+                    <div class="challenge-progress-container">
+                        <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
                     </div>
                 </div>
             </div>
