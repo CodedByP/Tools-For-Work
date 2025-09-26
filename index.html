@@ -4132,7 +4132,8 @@ const achievements = [
 
     // If we have new achievements to notify, update Firestore
     if (Object.keys(newAchievementsToSave).length > 0) {
-        await setDoc(userDocRef, { achievementsData: newAchievementsToSave }, { merge: true });
+		const updatedAchievements = { ...userAchievements, ...newAchievementsToSave };
+		await setDoc(userDocRef, { achievementsData: updatedAchievements }, { merge: true });
 		try {
 	        const leaderboardDocRef = doc(db, "leaderboard", userId);
 	        const leaderboardDoc = await getDoc(leaderboardDocRef);
