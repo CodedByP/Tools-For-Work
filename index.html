@@ -4350,29 +4350,28 @@ const renderChallenges = async (events) => {
         // Conditionally create the button, or a placeholder div for consistent alignment
         const buttonOrPlaceholder = !isComplete ? `
             <button 
-                class="track-challenge-btn p-2 rounded-full hover:bg-gray-700 transition-colors" 
+                class="track-challenge-btn p-2 rounded-full hover:bg-gray-700/50 transition-colors" 
                 title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
                 data-challenge-id="${challenge.id}">
                 <i class="fas fa-crosshairs ${isTracked ? 'text-green-400 animate-pulse' : 'text-gray-500'}"></i>
             </button>
-        ` : `<div style="width: 40px; height: 40px;"></div>`; // An invisible placeholder to keep spacing consistent
+        ` : `<div style="width: 40px; height: 40px;"></div>`; // Invisible placeholder
 
         const challengeCardHTML = `
             <div class="bg-gray-800 p-4 rounded-xl ${isComplete ? 'border-2 border-green-400' : ''}">
-                                <div class="flex justify-between items-start">
-                                        <div class="flex-grow pr-4">
-                        <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                    </div>
-                                        <div class="flex items-center space-x-3 ml-4 flex-shrink-0">
+                                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-gray-100 pr-4">${challenge.title}</h4>
+                    <div class="flex items-center space-x-3 flex-shrink-0">
                         <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
                             <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
                         </div>
-                        ${buttonOrPlaceholder}
+                        ${buttonOrPlaceholder}
                     </div>
                 </div>
 
-                                <div class="mt-4">
+                                <p class="text-sm text-gray-400 mb-4">${challenge.description}</p>
+                
+                                <div>
                     <div class="flex justify-between items-center text-sm mb-1">
                         <span class="font-semibold ${isComplete ? 'text-green-400' : 'text-gray-300'}">
                             ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
