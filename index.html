@@ -239,45 +239,6 @@
     transition: width 0.5s ease-in-out;
 }
 
-/* --- Improved Challenge Card & Button Styles --- */
-.challenge-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    border: 2px solid transparent;
-}
-
-/* This is the key fix to ensure text wraps correctly inside a flex container. */
-.challenge-content {
-    min-width: 0;
-}
-
-/* Add a lift effect on hover for incomplete challenges */
-.challenge-card:not(.is-complete):hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.track-challenge-btn .fa-crosshairs {
-    color: #6b7280; /* text-gray-500 */
-    transition: color 0.2s ease;
-}
-
-/* On card hover, make the track icon a bit brighter */
-.challenge-card:hover .track-challenge-btn .fa-crosshairs {
-    color: #9ca3af; /* text-gray-400 */
-}
-
-/* Styles for the actively tracked challenge's button */
-.track-challenge-btn.is-tracked .fa-crosshairs {
-    color: #34d399; /* A nice green color */
-    animation: pulse-green 1.5s infinite;
-}
-
-@keyframes pulse-green {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-}
-
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
