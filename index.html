@@ -5652,6 +5652,21 @@ function attachEventListeners() {
             openMenuId = null;
         }
     });
+} 
+    document.addEventListener('click', (event) => {
+        const isClickInsideCategoryActions = event.target.closest('#category-actions-menu') || event.target.closest('#category-actions-btn');
+        const isClickInsideMeatballsMenu = event.target.closest('.meatballs-menu') || event.target.closest('.meatballs-button');
+        const categoryActionsMenu = document.getElementById('category-actions-menu');
+        const categoryActionsBtn = document.getElementById('category-actions-btn');
+        if (!categoryActionsMenu.contains(event.target) && !categoryActionsBtn.contains(event.target)) {
+            categoryActionsMenu.classList.add('hidden', 'scale-95', 'opacity-0');
+            categoryActionsBtn.classList.remove('active');
+        }
+        if (!isClickInsideMeatballsMenu) {
+            document.querySelectorAll('.meatballs-menu').forEach(m => m.classList.add('hidden'));
+            openMenuId = null;
+        }
+    });	
 
 
     document.getElementById('close-login-popup-btn').addEventListener('click', async () => {
