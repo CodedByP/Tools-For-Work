@@ -242,7 +242,12 @@
 /* --- Improved Challenge Card & Button Styles --- */
 .challenge-card {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    border: 2px solid transparent; /* Add a base border to prevent layout shifts */
+    border: 2px solid transparent;
+}
+
+/* This is the key fix to ensure text wraps correctly inside a flex container. */
+.challenge-content {
+    min-width: 0;
 }
 
 /* Add a lift effect on hover for incomplete challenges */
@@ -271,7 +276,7 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
-}	
+}
 
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
@@ -4394,7 +4399,7 @@ const renderChallenges = async (events) => {
         const challengeCardHTML = `
             <div class="bg-gray-800 p-4 rounded-xl ${isComplete ? 'border-2 border-green-400' : ''}">
                                 <div class="flex justify-between items-start">
-                                        <div class="flex-grow">
+                                        <div class="flex-grow challenge-content">
                         <h4 class="font-bold text-gray-100">${challenge.title}</h4>
                         <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
                     </div>
