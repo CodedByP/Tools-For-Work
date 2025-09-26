@@ -5338,6 +5338,7 @@ const renderAdvancedStats = async () => {
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
         // Render all components
+		await updateChallengeUI();
 		renderChallengeTracker(events);
         renderCategoryChart(events);
         renderActivityChart(events);
