@@ -2467,42 +2467,23 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
-
-
-const updateChallengeUI = async () => {
-    if (!userId || isAnonymous || currentPage !== 'my-stats') return;
-    try {
-        const eventsCollectionRef = getUserEventsCollectionRef(userId);
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => doc.data());
-
-        // These two calls will now correctly update the UI without conflicts
-        await renderChallenges(events);
-        await renderChallengeTracker(events);
-    } catch (error) {
-        console.error("Failed to update challenge UI:", error);
-    }
-};
 		
+// REPLACE the old tracking functions with these
+
 const startTrackingChallenge = (challengeId) => {
     trackedChallengeId = challengeId;
     localStorage.setItem('trackedChallengeId', challengeId);
-    updateChallengeUI(); // More efficient update
+    renderAdvancedStats(); // Re-render the whole stats page with the new state
 };
 
 const stopTrackingChallenge = () => {
-    const hud = document.getElementById('challenge-tracker-hud');
     trackedChallengeId = null;
     localStorage.removeItem('trackedChallengeId');
-    
-    // Animate the HUD out
+    const hud = document.getElementById('challenge-tracker-hud');
     if (hud) {
         hud.classList.remove('visible');
-        setTimeout(() => hud.classList.add('hidden'), 500); // Hide after animation
     }
-    
-    // Update the icons on the challenge cards
-    updateChallengeUI();
+    renderAdvancedStats(); // Re-render to update the icons
 };
 
 const renderChallengeTracker = async (events) => {
@@ -5338,8 +5319,8 @@ const renderAdvancedStats = async () => {
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
         // Render all components
-		await updateChallengeUI();
-		renderChallengeTracker(events);
+		await renderChallenges(events);
+		await renderChallengeTracker(events);
         renderCategoryChart(events);
         renderActivityChart(events);
         renderLeaderboard();
