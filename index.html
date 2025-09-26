@@ -4392,18 +4392,17 @@ const renderChallenges = async (events) => {
             </button>
         ` : '';
 
+        // NOTE: The structure inside here has been simplified to fix the layout issue.
         const challengeCardHTML = `
             <div class="challenge-card bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'is-complete border-2 border-green-400' : 'border-2 border-transparent'}">
                 ${trackButtonHTML}
-                <div>
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-gray-100">${challenge.title}</h4>
-                            <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
-                        </div>
-                        <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
-                            <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
-                        </div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-bold text-gray-100">${challenge.title}</h4>
+                        <p class="text-sm text-gray-400 mt-1">${challenge.description}</p>
+                    </div>
+                    <div class="text-2xl ${isComplete ? 'text-green-400' : 'text-gray-500'}">
+                        <i class="fas ${isComplete ? 'fa-check-circle' : challenge.icon}"></i>
                     </div>
                 </div>
                 <div class="mt-4">
