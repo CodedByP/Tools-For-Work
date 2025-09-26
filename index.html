@@ -2467,29 +2467,45 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
-		
-// REPLACE the old tracking functions with these
 
-const startTrackingChallenge = (challengeId) => {
+const startTrackingChallenge = async (challengeId) => {
     trackedChallengeId = challengeId;
     localStorage.setItem('trackedChallengeId', challengeId);
-    renderAdvancedStats(); // Re-render the whole stats page with the new state
+
+    // Re-fetch events to ensure we have the latest data
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => doc.data());
+
+    // Now re-render only the two components that need to change
+    await renderChallenges(events);
+    await renderChallengeTracker(events);
 };
 
-const stopTrackingChallenge = () => {
+const stopTrackingChallenge = async () => {
     trackedChallengeId = null;
     localStorage.removeItem('trackedChallengeId');
+    
     const hud = document.getElementById('challenge-tracker-hud');
     if (hud) {
         hud.classList.remove('visible');
+        // A short delay to allow the fade-out animation
+        setTimeout(() => hud.classList.add('hidden'), 500); 
     }
-    renderAdvancedStats(); // Re-render to update the icons
+
+    // Re-fetch events to update the UI
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => doc.data());
+    
+    // Just re-render the challenges list to update the icon
+    await renderChallenges(events);
 };
 
 const renderChallengeTracker = async (events) => {
     const hud = document.getElementById('challenge-tracker-hud');
     if (!trackedChallengeId || !hud) {
-        if(hud) {
+        if (hud) {
             hud.classList.remove('visible');
             setTimeout(() => hud.classList.add('hidden'), 500);
         }
@@ -2523,6 +2539,7 @@ const renderChallengeTracker = async (events) => {
         </div>
     `;
     hud.classList.remove('hidden');
+    // Use a tiny timeout to allow the browser to render the element before transitioning
     setTimeout(() => hud.classList.add('visible'), 10);
 };
 				
@@ -5291,6 +5308,8 @@ const renderLevelingSystem = (userData) => {
     }
 };
 // --- Renders all stats and achievement data for the page ---
+// REPLACE your entire renderAdvancedStats function with this new one
+
 const renderAdvancedStats = async () => {
     const statsContent = document.getElementById('stats-content');
     const statsLoader = document.getElementById('stats-loader');
@@ -5318,15 +5337,13 @@ const renderAdvancedStats = async () => {
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-        // --- THIS IS THE CORRECTED LOGIC ---
-        // We now render the challenges and tracker *after* everything else,
-        // ensuring the state is correct.
+        // Render main components first
         renderCategoryChart(events);
         renderActivityChart(events);
         renderLeaderboard();
         renderFilteredAchievements(events, userData);
 
-        // --- Metric Badges (no changes here, just for context) ---
+        // --- Metric Badges ---
         const now = new Date();
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
@@ -5369,11 +5386,7 @@ const renderAdvancedStats = async () => {
             </div>
         `;
 
-        // --- Final step: Render challenges and tracker ---
-        await renderChallenges(events);
-        await renderChallengeTracker(events);
-
-        // --- Top 5 Chart (no changes here, just for context) ---
+        // --- Top 5 Chart ---
         let allResponses = [];
         for (const categoryName in categories) {
             if (categories[categoryName].responses) {
@@ -5401,6 +5414,10 @@ const renderAdvancedStats = async () => {
         } else {
             chartContainer.innerHTML = '<p class="text-gray-400 text-center flex items-center justify-center h-full">Copy responses to see your top 5 here!</p>';
         }
+		
+		// --- Final step: Render challenges and tracker AFTER all other data is ready ---
+        await renderChallenges(events);
+        await renderChallengeTracker(events);
 
     } catch (error) {
         console.error("Error rendering stats:", error);
