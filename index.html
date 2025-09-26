@@ -4047,6 +4047,22 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
 	const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
 	const hasCleanSlate = deletedInLast5Mins >= 5;	
 
+		const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
+		const startOfWeek = new Date();
+		startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
+		startOfWeek.setHours(0, 0, 0, 0);
+		const weeklyCopyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
+		const weeklyLogisticsProgress = events.filter(e => e.type === 'extract_tracking' && e.timestamp?.toDate() >= startOfWeek).length;
+		const monthlyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length;
+		
+		const allChallengesComplete = 
+		    dailyProgress >= CHALLENGES_CONFIG.dailyCopies.goal &&
+		    weeklyCopyProgress >= CHALLENGES_CONFIG.weeklyCopies.goal &&
+		    monthlyProgress >= CHALLENGES_CONFIG.monthlyMarathon.goal &&
+		    weeklyLogisticsProgress >= CHALLENGES_CONFIG.logisticsExpert.goal;
+		
+		const hasChallengeChampion = allChallengesComplete;
+	
 	const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
 	const startOfWeek = new Date();
 	startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
