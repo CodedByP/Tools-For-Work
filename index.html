@@ -727,7 +727,65 @@
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
 }		
-        
+
+/* --- Challenge Tracker HUD Styles --- */
+#challenge-tracker-hud {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 1.25rem;
+    background-color: rgba(31, 41, 55, 0.8); /* bg-gray-800 with opacity */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(75, 85, 99, 0.5); /* border-gray-600 */
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 1rem;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    z-index: 4000;
+    transform: translateX(-120%);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
+}
+
+#challenge-tracker-hud.visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.challenge-tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.challenge-tracker-title {
+    font-weight: bold;
+    color: #e5e7eb; /* text-gray-200 */
+    padding-left: 0.5rem;
+}
+
+#challenge-tracker-close-btn {
+    background: none;
+    border: none;
+    color: #9ca3af; /* text-gray-400 */
+    cursor: pointer;
+    transition: color 0.2s ease;
+    font-size: 1.1rem;
+}
+
+#challenge-tracker-close-btn:hover {
+    color: #ffffff;
+}
+
+.challenge-tracker-progress-text {
+    font-size: 0.875rem;
+    color: #d1d5db; /* text-gray-300 */
+    margin-bottom: 0.25rem;
+    text-align: right;
+}
+		
 /* Update the main modal container to be a full-screen overlay */
 /* Refined modal container for full-screen overlay */
 .modal {
@@ -2060,6 +2118,11 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 		        </button>
 		    </div>
 		</div>
+
+	<div id="challenge-tracker-hud" class="hidden">
+			</div>
+		    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 	
 		
     <script type="module">
@@ -2122,7 +2185,7 @@ let lastCopyTimestamps = {};
 let activeAchievementFilter = 'all';		
 let profileChartInstance = null;	
 let messageTimeout = null;
-		
+let trackedChallengeId = null;
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -2407,6 +2470,64 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+const startTrackingChallenge = (challengeId) => {
+    trackedChallengeId = challengeId;
+    localStorage.setItem('trackedChallengeId', challengeId);
+    renderAdvancedStats(); // This will re-render the challenges and the tracker
+};
+
+const stopTrackingChallenge = () => {
+    trackedChallengeId = null;
+    localStorage.removeItem('trackedChallengeId');
+    const hud = document.getElementById('challenge-tracker-hud');
+    hud.classList.remove('visible');
+    renderChallenges([]); // Re-render challenges to update the track icon
+    // A small delay to allow the fade-out animation to complete
+    setTimeout(() => {
+        hud.innerHTML = '';
+        hud.classList.add('hidden');
+    }, 500);
+};
+
+const renderChallengeTracker = async (events) => {
+    const hud = document.getElementById('challenge-tracker-hud');
+    if (!trackedChallengeId || !hud) {
+        hud.classList.remove('visible');
+        return;
+    }
+
+    const challenge = CHALLENGES_CONFIG[trackedChallengeId];
+    if (!challenge) {
+        stopTrackingChallenge();
+        return;
+    }
+
+    const progressData = await challenge.getProgress(events);
+    const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
+
+    hud.innerHTML = `
+        <div class="challenge-tracker-header">
+            <div class="flex items-center">
+                <i class="fas ${challenge.icon} text-blue-400"></i>
+                <span class="challenge-tracker-title">${challenge.title}</span>
+            </div>
+            <button id="challenge-tracker-close-btn" title="Stop Tracking">&times;</button>
+        </div>
+        <div>
+            <div class="challenge-tracker-progress-text">
+                ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
+            </div>
+            <div class="challenge-progress-container">
+                <div class="challenge-progress-bar" style="width: ${progressPercent}%;"></div>
+            </div>
+        </div>
+    `;
+    hud.classList.remove('hidden');
+    // Use a tiny timeout to allow the browser to render the element before transitioning
+    setTimeout(() => hud.classList.add('visible'), 10);
+};
+				
 
 const backfillActiveDays = async (uid) => {
     console.log(`Checking if active days backfill is needed for user ${uid}...`);
@@ -4196,6 +4317,8 @@ const renderCategories = () => {
     renderResponses();
 };
 
+// REPLACE your entire renderChallenges function with this one
+
 const renderChallenges = async (events) => {
     const container = document.getElementById('challenges-container');
     if (!container) return;
@@ -4208,12 +4331,19 @@ const renderChallenges = async (events) => {
         const progressData = await challenge.getProgress(events);
         const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
         const isComplete = progressData.current >= challenge.goal;
+        const isTracked = challenge.id === trackedChallengeId;
 
         // 2. Increment the counter if a challenge is complete
         if (isComplete) completedCount++;
 
         const challengeCardHTML = `
-            <div class="bg-gray-800 p-4 rounded-xl ${isComplete ? 'border-2 border-green-400' : ''}">
+            <div class="bg-gray-800 p-4 rounded-xl relative ${isComplete ? 'border-2 border-green-400' : ''}">
+                <button 
+                    class="track-challenge-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-700 transition-colors z-10" 
+                    title="${isTracked ? 'Stop Tracking' : 'Track Challenge'}" 
+                    data-challenge-id="${challenge.id}">
+                    <i class="fas fa-crosshairs ${isTracked ? 'text-green-400 animate-pulse' : 'text-gray-500'}"></i>
+                </button>
                 <div>
                     <div class="flex justify-between items-start">
                         <div>
@@ -5192,6 +5322,7 @@ const renderAdvancedStats = async () => {
 
         // Render all components
         renderChallenges(events);
+		renderChallengeTracker(events);
         renderCategoryChart(events);
         renderActivityChart(events);
         renderLeaderboard();
@@ -5321,6 +5452,29 @@ function attachEventListeners() {
         }
     };
     document.body.addEventListener('click', unlockAudio);
+
+	const challengesContainer = document.getElementById('challenges-container');
+    if (challengesContainer) {
+        challengesContainer.addEventListener('click', e => {
+            const trackBtn = e.target.closest('.track-challenge-btn');
+            if (trackBtn) {
+                const challengeId = trackBtn.dataset.challengeId;
+                if (trackedChallengeId === challengeId) {
+                    stopTrackingChallenge();
+                } else {
+                    startTrackingChallenge(challengeId);
+                }
+            }
+        });
+    }
+
+    document.body.addEventListener('click', e => {
+        // This listener is on the body because the HUD is created and destroyed dynamically
+        const closeBtn = e.target.closest('#challenge-tracker-close-btn');
+        if (closeBtn) {
+            stopTrackingChallenge();
+        }
+    });
 	
     // Navigation Listeners
     const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings'];
@@ -6019,6 +6173,7 @@ onAuthStateChanged(auth, async (user) => {
     if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
     if (user) {
         userId = user.uid;
+		trackedChallengeId = localStorage.getItem('trackedChallengeId');
         isAnonymous = user.isAnonymous;
         const displayName = user.displayName || user.email || 'User';
         userName = displayName.split(' ')[0].split('@')[0];
