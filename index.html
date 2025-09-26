@@ -5318,14 +5318,15 @@ const renderAdvancedStats = async () => {
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
-        // Render all components
-		renderChallenges(events);
-		renderChallengeTracker(events);
+        // --- THIS IS THE CORRECTED LOGIC ---
+        // We now render the challenges and tracker *after* everything else,
+        // ensuring the state is correct.
         renderCategoryChart(events);
         renderActivityChart(events);
         renderLeaderboard();
+        renderFilteredAchievements(events, userData);
 
-        // --- Metric Badges ---
+        // --- Metric Badges (no changes here, just for context) ---
         const now = new Date();
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
@@ -5337,7 +5338,7 @@ const renderAdvancedStats = async () => {
         const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
         const totalCategories = Object.keys(categories).length;
 
-metricBadgesContainer.innerHTML = `
+        metricBadgesContainer.innerHTML = `
             <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
                 <div class="flex items-center">
                     <i class="fas fa-copy text-blue-400 w-6 text-center mr-3"></i>
@@ -5366,12 +5367,13 @@ metricBadgesContainer.innerHTML = `
                 </div>
                 <p class="text-xl font-bold text-white">${totalCategories}</p>
             </div>
-        `;
+        `;
 
-        // --- Achievements Rendering (Redesigned) ---
-        renderFilteredAchievements(events, userData);
+        // --- Final step: Render challenges and tracker ---
+        await renderChallenges(events);
+        await renderChallengeTracker(events);
 
-        // --- Top 5 Chart ---
+        // --- Top 5 Chart (no changes here, just for context) ---
         let allResponses = [];
         for (const categoryName in categories) {
             if (categories[categoryName].responses) {
