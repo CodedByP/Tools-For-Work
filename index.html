@@ -2954,111 +2954,25 @@ const updateUserLeaderboardEntry = async () => {
 };
 	
 
-// --- Renders achievements based on the active filter ---
+// ▼▼▼ REPLACE THE OLD FUNCTION WITH THIS NEW, SIMPLIFIED VERSION ▼▼▼
+
 const renderFilteredAchievements = (events, userData) => {
     const userAchievements = userData.achievementsData || {};
-    const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
-    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
-    const totalCopies = events.filter(e => e.type === 'copy').length;
-    const totalCategories = Object.keys(categories).length;
-    const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
-    const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-    const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
-
-    const dailyActivity = events.reduce((acc, event) => {
-        if (!event.timestamp) return acc;
-        const date = event.timestamp.toDate().toISOString().split('T')[0];
-        if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
-        if (event.type === 'copy') acc[date].copies++;
-        if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
-        if (event.type === 'add_link') acc[date].links++;
-        return acc;
-    }, {});
-
-    const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
-    const hasCreatedCategory = events.some(e => e.type === 'create_category');
-    const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
-    const hasPinnedResponse = events.some(e => e.type === 'pin_response');
-    const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
-    const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
-    const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
-    const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-    const hasHistorian = daysSinceSignIn >= 365;
-    const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
-    const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
-    let maxStreak = 0;
-    if (usageDates.length > 0) {
-        let currentStreak = 1;
-        for (let i = 1; i < usageDates.length; i++) {
-            const prevDate = new Date(usageDates[i - 1]);
-            const currentDate = new Date(usageDates[i]);
-            if (!isBusinessDay(currentDate)) continue;
-            const diffTime = currentDate - prevDate;
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
-                currentStreak++;
-            } else {
-                maxStreak = Math.max(maxStreak, currentStreak);
-                currentStreak = 1;
-            }
-        }
-        maxStreak = Math.max(maxStreak, currentStreak);
-    }
-
-
-    const copyTiers = getTier(totalCopies, [
-        { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
-        { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
-        { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
-    ]);
-    const librarianTiers = getTier(totalCategories, [
-        { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
-        { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
-        { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
-    ]);
-
-    const allAchievements = [
-        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
-        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
-        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
-        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
-        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
-        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
-        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: hasPinnedResponse },
-        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
-        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
-        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
-        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
-        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
-        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
-        { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", color: "text-violet-500", unlocked: totalCopies >= 1000 },
-        { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", color: "text-yellow-300", unlocked: hasPerfectDay },
-        { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", color: "text-green-600", unlocked: hasLivingLibrary },
-        { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", color: "text-gray-300", unlocked: hasTheScribe },
-        { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", color: "text-red-400", unlocked: hasHistorian },
-        { id: 'marathon_finisher', name: "Marathon Finisher", desc: "Complete the Monthly Marathon challenge.", icon: "fa-shoe-prints", color: "text-yellow-400", unlocked: userAchievements.marathon_finisher ? true : false },	
-		{ id: 'challenge_champion', name: "Challenge Champion", desc: "Complete all active challenges at the same time.", icon: "fa-shield-alt", color: "text-teal-400", unlocked: hasChallengeChampion },
-        { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", color: "text-red-500", unlocked: hasStreakBreaker },
-        { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", color: "text-blue-500", unlocked: events.some(e => e.type === 'move_response') },
-        { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate },
-        { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
-        { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
-    ];
-
-    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
-    const grandMasterAchievement = { id: 'grand_master', name: "The Grand Master", desc: "Unlock all other achievements.", icon: "fa-trophy", color: "text-yellow-400", unlocked: allOtherAchievementsUnlocked };
     
-    const achievementsToRender = [...allAchievements, grandMasterAchievement];
-	
-    const unlockedCount = allAchievements.filter(a => a.unlocked).length;
-    const totalCount = allAchievements.length;
+    // Call the new helper function to get the current state of all achievements
+    const allAchievements = calculateAllAchievements(events, userData);
+
+    const unlockedCount = allAchievements.filter(a => a.unlocked && a.id !== 'grand_master').length;
+    const totalCount = allAchievements.length - 1; // Exclude Grand Master from the count
     const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
     
     document.getElementById('ach-progress-text').textContent = `${unlockedCount} / ${totalCount} Unlocked`;
     document.getElementById('ach-progress-bar').style.width = `${progress}%`;
     
     const container = document.getElementById('achievements-container');
-    let filtered = activeAchievementFilter === 'unlocked' ? allAchievements.filter(a => a.unlocked) : allAchievements;
+    let filtered = activeAchievementFilter === 'unlocked' 
+        ? allAchievements.filter(a => a.unlocked) 
+        : allAchievements;
 
     if (filtered.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-400 col-span-full py-8">No achievements here yet!</p>';
@@ -3967,208 +3881,177 @@ const getTier = (count, tiers) => {
     return currentTier;
 };		
 
-const checkAndNotifyAchievements = async (firstSignIn) => {
-    if (!userId || isAnonymous) return;
-	
-    const milestoneAchievements = [
-        'copy_tiers',        // For unlocking any "Wordsmith" or "Master" tier
-        'librarian_tiers',   // For unlocking any "Head Archivist" or "Chief" tier
-        'endless_scroll',    // A very big milestone!
-        'the_historian',     // A long-term achievement
-        'streak_breaker',    // Rewarding consistency
-        'grand_master'       // The ultimate achievement!
-    ];
-    // Get the latest events and user data
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => doc.data());
-    
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-	const userData = userDoc.exists() ? userDoc.data() : {};
-	const userAchievements = userData.achievementsData || {};
-	const darkModeUsage = userData.darkModeUsage || { streak: 0 };
-	const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
 
+const calculateAllAchievements = (events, userData) => {
+    const userAchievements = userData.achievementsData || {};
+    const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
+    const darkModeUsage = userData.darkModeUsage || { streak: 0 };
     const totalCopies = events.filter(e => e.type === 'copy').length;
     const totalCategories = Object.keys(categories).length;
     const hasArchitectAchievement = Object.values(categories).some(cat => cat.responses && cat.responses.length >= 5);
     const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-
-	const copyEvents = events.filter(e => e.type === 'copy');
-    const categoriesUsedInSession = new Set();
-    const sessionStartTime = new Date(Date.now() - 30 * 60 * 1000); // last 30 minutes
-    copyEvents.forEach(event => {
-        if (event.timestamp?.toDate() > sessionStartTime && event.categoryName) {
-            categoriesUsedInSession.add(event.categoryName);
+    const daysSinceSignIn = firstSignIn ? Math.floor((new Date() - firstSignIn) / (1000 * 60 * 60 * 24)) : 0;
+    const dailyActivity = events.reduce((acc, event) => {
+        if (!event.timestamp) return acc;
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
+        if (event.type === 'copy') acc[date].copies++;
+        if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
+        if (event.type === 'add_link') acc[date].links++;
+        return acc;
+    }, {});
+    const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
+    const hasCreatedCategory = events.some(e => e.type === 'create_category');
+    const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
+    const hasPinnedResponse = events.some(e => e.type === 'pin_response');
+    const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
+    const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
+    const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
+    const hasTheScribe = uniqueCategoriesIn30Min >= 5;
+    const hasHistorian = daysSinceSignIn >= 365;
+    const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
+    const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
+    let maxStreak = 0;
+    if (usageDates.length > 0) {
+        let currentStreak = 1;
+        for (let i = 1; i < usageDates.length; i++) {
+            const prevDate = new Date(usageDates[i - 1]);
+            const currentDate = new Date(usageDates[i]);
+            if (!isBusinessDay(currentDate)) continue;
+            const diffTime = currentDate - prevDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
+                currentStreak++;
+            } else {
+                maxStreak = Math.max(maxStreak, currentStreak);
+                currentStreak = 1;
+            }
         }
-    });
-    const hasGlobetrotter = categoriesUsedInSession.size >= 2;
+        maxStreak = Math.max(maxStreak, currentStreak);
+    }
+    const hasStreakBreaker = maxStreak >= 90;
+    const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
+    const hasCleanSlate = deletedInLast5Mins >= 5;
 
-	const dailyActivity = events.reduce((acc, event) => {
-	    if (!event.timestamp) return acc;
-	    const date = event.timestamp.toDate().toISOString().split('T')[0];
-	    if (!acc[date]) acc[date] = { copies: 0, tracking: 0, links: 0 };
-	    if (event.type === 'copy') acc[date].copies++;
-	    if (event.type === 'extract_tracking') acc[date].tracking += (event.count || 0);
-	    if (event.type === 'add_link') acc[date].links++;
-	    return acc;
-	}, {});
-	const hasPerfectDay = Object.values(dailyActivity).some(day => day.copies >= 10 && day.tracking >= 3 && day.links >= 1);
-	const hasCreatedCategory = events.some(e => e.type === 'create_category');
-	const hasCreatedResponseWithPlaceholder = events.some(e => e.type === 'create_response' && /\[([^\]]+)\]/g.test(e.text || ''));
-	const hasPinnedResponse = events.some(e => e.type === 'pin_response');
-	const hasLivingLibrary = hasCreatedCategory && hasCreatedResponseWithPlaceholder && hasPinnedResponse;
-	const recentCopyEvents = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() > new Date(Date.now() - 30 * 60 * 1000));
-	const uniqueCategoriesIn30Min = new Set(recentCopyEvents.map(e => e.categoryName)).size;
-	const hasTheScribe = uniqueCategoriesIn30Min >= 5;
-	const hasHistorian = daysSinceSignIn >= 365;
-	const isBusinessDay = (date) => { const day = date.getDay(); return day > 0 && day < 6; };
-	const usageDates = [...new Set(events.filter(e => e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0]))].sort();
-	let maxStreak = 0;
-	if (usageDates.length > 0) {
-	    let currentStreak = 1;
-	    for (let i = 1; i < usageDates.length; i++) {
-	        const prevDate = new Date(usageDates[i - 1]);
-	        const currentDate = new Date(usageDates[i]);
-	        if (!isBusinessDay(currentDate)) continue;
-	        const diffTime = currentDate - prevDate;
-	        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-	        if (diffDays === 1 || (prevDate.getDay() === 5 && diffDays === 3)) {
-	            currentStreak++;
-	        } else {
-	            maxStreak = Math.max(maxStreak, currentStreak);
-	            currentStreak = 1;
-	        }
-	    }
-	    maxStreak = Math.max(maxStreak, currentStreak);
-	}
-	const hasStreakBreaker = maxStreak >= 90;
-	const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
-	const hasCleanSlate = deletedInLast5Mins >= 5;	
+    const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
+    startOfWeek.setHours(0, 0, 0, 0);
+    const weeklyCopyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
+    const weeklyLogisticsProgress = events.filter(e => e.type === 'extract_tracking' && e.timestamp?.toDate() >= startOfWeek).length;
+    const monthlyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length;
 
-		const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
-		const startOfWeek = new Date();
-		startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
-		startOfWeek.setHours(0, 0, 0, 0);
-		const weeklyCopyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
-		const weeklyLogisticsProgress = events.filter(e => e.type === 'extract_tracking' && e.timestamp?.toDate() >= startOfWeek).length;
-		const monthlyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length;
-		
-		const allChallengesComplete = 
-		    dailyProgress >= CHALLENGES_CONFIG.dailyCopies.goal &&
-		    weeklyCopyProgress >= CHALLENGES_CONFIG.weeklyCopies.goal &&
-		    monthlyProgress >= CHALLENGES_CONFIG.monthlyMarathon.goal &&
-		    weeklyLogisticsProgress >= CHALLENGES_CONFIG.logisticsExpert.goal;
-		
-		const hasChallengeChampion = allChallengesComplete;
-	
-	const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
-	const startOfWeek = new Date();
-	startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
-	startOfWeek.setHours(0, 0, 0, 0);
-	const weeklyCopyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= startOfWeek).length;
-	const weeklyLogisticsProgress = events.filter(e => e.type === 'extract_tracking' && e.timestamp?.toDate() >= startOfWeek).length;
-	const monthlyProgress = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= new Date(new Date().getFullYear(), new Date().getMonth(), 1)).length;
-	
-	const allChallengesComplete = 
-	    dailyProgress >= CHALLENGES_CONFIG.dailyCopies.goal &&
-	    weeklyCopyProgress >= CHALLENGES_CONFIG.weeklyCopies.goal &&
-	    monthlyProgress >= CHALLENGES_CONFIG.monthlyMarathon.goal &&
-	    weeklyLogisticsProgress >= CHALLENGES_CONFIG.logisticsExpert.goal;
-	
-	const hasChallengeChampion = allChallengesComplete;
-	if (hasChallengeChampion && !userAchievements.challenge_champion) {
-	    awardXP(5000, 'Challenge Champion Bonus!');
-	}
+    const allChallengesComplete = 
+        dailyProgress >= CHALLENGES_CONFIG.dailyCopies.goal &&
+        weeklyCopyProgress >= CHALLENGES_CONFIG.weeklyCopies.goal &&
+        monthlyProgress >= CHALLENGES_CONFIG.monthlyMarathon.goal &&
+        weeklyLogisticsProgress >= CHALLENGES_CONFIG.logisticsExpert.goal;
 
+    const hasChallengeChampion = allChallengesComplete;
 
-	const copyTiers = getTier(totalCopies, [
+    const copyTiers = getTier(totalCopies, [
         { name: "Copycat", goal: 10, icon: "fa-clipboard", color: "text-amber-500" },
         { name: "Wordsmith", goal: 50, icon: "fa-clipboard", color: "text-slate-400" },
         { name: "Master of Efficiency", goal: 100, icon: "fa-clipboard", color: "text-yellow-400" }
     ]);
-    
     const librarianTiers = getTier(totalCategories, [
         { name: "The Librarian", goal: 5, icon: "fa-book-open", color: "text-amber-500" },
         { name: "Head Archivist", goal: 10, icon: "fa-book-open", color: "text-slate-400" },
         { name: "Chief Organizer", goal: 25, icon: "fa-book-open", color: "text-yellow-400" }
     ]);
-    
-const achievements = [
-    // Core Actions
-    { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
-    { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
-    { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
-    
-    // Organization & Management
-    { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
-    { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
-    { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
-    { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: hasPinnedResponse },
-    { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
 
-    // Exploration & Discovery
-    { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
-    { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
-    { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
-    { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
-    { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
+    const allAchievements = [
+        { id: 'first_responder', name: "First Responder", desc: "Copied your first response.", icon: "fa-rocket", color: "text-blue-400", unlocked: totalCopies > 0 },
+        { id: 'copy_tiers', name: copyTiers.name, desc: `Copied ${totalCopies} / ${copyTiers.goal} responses.`, icon: copyTiers.icon, color: copyTiers.color, unlocked: copyTiers.unlocked },
+        { id: 'the_creator', name: "The Creator", desc: "Created your first response.", icon: "fa-plus-circle", color: "text-green-400", unlocked: events.some(e => e.type === 'create_response') },
+        { id: 'librarian_tiers', name: librarianTiers.name, desc: `Created ${totalCategories} / ${librarianTiers.goal} categories.`, icon: librarianTiers.icon, color: librarianTiers.color, unlocked: librarianTiers.unlocked },
+        { id: 'the_architect', name: "The Architect", desc: "Create a category with 5+ responses.", icon: "fa-drafting-compass", color: "text-teal-400", unlocked: hasArchitectAchievement },
+        { id: 'the_editor', name: "The Editor", desc: "Edited a response.", icon: "fa-pencil-alt", color: "text-indigo-400", unlocked: events.some(e => e.type === 'edit_response') },
+        { id: 'the_curator', name: "The Curator", desc: "Pinned a response.", icon: "fa-thumbtack", color: "text-white", unlocked: hasPinnedResponse },
+        { id: 'the_color_coder', name: "The Color Coder", desc: "Changed a category's color.", icon: "fa-palette", color: "text-pink-400", unlocked: events.some(e => e.type === 'change_color') },
+        { id: 'the_explorer', name: "The Explorer", desc: "Visited all main pages.", icon: "fa-compass", color: "text-orange-400", unlocked: visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links') },
+        { id: 'the_data_hoarder', name: "The Data Hoarder", desc: "Imported a data file.", icon: "fa-cloud-download-alt", color: "text-sky-400", unlocked: events.some(e => e.type === 'import_data') },
+        { id: 'the_personalizer', name: "The Personalizer", desc: "Added a new helpful link.", icon: "fa-link", color: "text-lime-400", unlocked: events.some(e => e.type === 'add_link') },
+        { id: 'the_globetrotter', name: "The Globetrotter", desc: "Used responses from 2+ categories in one session.", icon: "fa-globe-americas", color: "text-cyan-400", unlocked: events.some(e => e.type === 'globetrotter_milestone') },
+        { id: 'the_night_owl', name: "The Night Owl", desc: `Use dark mode for 5 consecutive days. (${darkModeUsage.streak}/5)`, icon: "fa-moon", color: "text-purple-400", unlocked: darkModeUsage.streak >= 5 },
+        { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", color: "text-violet-500", unlocked: totalCopies >= 1000 },
+        { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", color: "text-yellow-300", unlocked: hasPerfectDay },
+        { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", color: "text-green-600", unlocked: hasLivingLibrary },
+        { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", color: "text-gray-300", unlocked: hasTheScribe },
+        { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", color: "text-red-400", unlocked: hasHistorian },
+        { id: 'marathon_finisher', name: "Marathon Finisher", desc: "Complete the Monthly Marathon challenge.", icon: "fa-shoe-prints", color: "text-yellow-400", unlocked: userAchievements.marathon_finisher ? true : false },		
+        { id: 'challenge_champion', name: "Challenge Champion", desc: "Complete all active challenges at the same time.", icon: "fa-shield-alt", color: "text-teal-400", unlocked: hasChallengeChampion },
+        { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", color: "text-red-500", unlocked: hasStreakBreaker },
+        { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", color: "text-blue-500", unlocked: events.some(e => e.type === 'move_response') },
+        { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate },
+        { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
+        { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
+    ];
     
-    // --- YOUR NEW ADVANCED ACHIEVEMENTS (Now with colors!) ---
-    { id: 'endless_scroll', name: "The Endless Scroll", desc: `Copy 1,000 responses. (${totalCopies}/1000)`, icon: "fa-infinity", color: "text-violet-500", unlocked: totalCopies >= 1000 },
-    { id: 'perfect_day', name: "The Perfect Day", desc: "Copy 10+ responses, extract 3+ tracking numbers, and add a link in one day.", icon: "fa-sun", color: "text-yellow-300", unlocked: hasPerfectDay },
-    { id: 'living_library', name: "The Living Library", desc: "Create a category, add a response with a placeholder, and pin it.", icon: "fa-book-dead", color: "text-green-600", unlocked: hasLivingLibrary },
-    { id: 'the_scribe', name: "The Scribe", desc: "Use a response from 5 different categories in 30 minutes.", icon: "fa-feather-alt", color: "text-gray-300", unlocked: hasTheScribe },
-    { id: 'the_historian', name: "The Historian", desc: `Be a member for 365 days. (${daysSinceSignIn}/365)`, icon: "fa-calendar-alt", color: "text-red-400", unlocked: hasHistorian },
-    { id: 'streak_breaker', name: "The Streak Breaker", desc: `Maintain a 90 business-day usage streak. (${maxStreak}/90)`, icon: "fa-fire", color: "text-red-500", unlocked: hasStreakBreaker },
-	{ id: 'challenge_champion', name: "Challenge Champion", desc: "Complete all active challenges at the same time.", icon: "fa-shield-alt", color: "text-teal-400", unlocked: hasChallengeChampion },
-    { id: 'meticulous_mover', name: "The Meticulous Mover", desc: "Edit a response and move it to a different category.", icon: "fa-truck-moving", color: "text-blue-500", unlocked: events.some(e => e.type === 'move_response') },
-    { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate },
-    { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') },
-    { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') },
-];
+    // Check for Grand Master separately
+    const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
+    allAchievements.push({ id: 'grand_master', name: "The Grand Master", desc: "Unlock all other achievements.", icon: "fa-trophy", color: "text-yellow-400", unlocked: allOtherAchievementsUnlocked });
 
+    return allAchievements;
+};		
+
+// ▼▼▼ REPLACE THE OLD FUNCTION WITH THIS NEW, SIMPLIFIED VERSION ▼▼▼
+
+const checkAndNotifyAchievements = async (firstSignIn) => {
+    if (!userId || isAnonymous) return;
+
+    const milestoneAchievements = [
+        'copy_tiers', 'librarian_tiers', 'endless_scroll', 'the_historian', 'streak_breaker', 'grand_master'
+    ];
+
+    // Get user data and events
+    const userDocRef = getUserRootDocRef(userId);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const userAchievements = userData.achievementsData || {};
+    
+    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    const events = snapshot.docs.map(doc => doc.data());
+
+    // Call the new helper function to get the current state of all achievements
+    const achievements = calculateAllAchievements(events, userData);
+
+    // --- Special Bonus XP Checks ---
+    const challengeChampion = achievements.find(a => a.id === 'challenge_champion');
+    if (challengeChampion && challengeChampion.unlocked && !userAchievements.challenge_champion) {
+        awardXP(5000, 'Challenge Champion Bonus!');
+    }
+
+    // --- Regular Achievement Unlocking and Saving ---
     const newAchievementsToSave = {};
-
-    achievements.forEach(ach => {
-        if (ach.unlocked && !userAchievements[ach.id]) {
-            showAchievementNotification(ach);
-            newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
-			awardXP(XP_VALUES.UNLOCK_ACHIEVEMENT);
-			
-			if (milestoneAchievements.includes(ach.id)) {
+    achievements.forEach(ach => {
+        if (ach.unlocked && !userAchievements[ach.id]) {
+            showAchievementNotification(ach);
+            newAchievementsToSave[ach.id] = { date: new Date().toISOString() };
+            awardXP(XP_VALUES.UNLOCK_ACHIEVEMENT);
+            if (milestoneAchievements.includes(ach.id)) {
                 triggerCelebration();
             }
+        }
+    });
 
-        }
-    });
-
-    // If we have new achievements to notify, update Firestore
-    if (Object.keys(newAchievementsToSave).length > 0) {
-		const updatedAchievements = { ...userAchievements, ...newAchievementsToSave };
-		await setDoc(userDocRef, { achievementsData: updatedAchievements }, { merge: true });
-		try {
-	        const leaderboardDocRef = doc(db, "leaderboard", userId);
-	        const leaderboardDoc = await getDoc(leaderboardDocRef);
-	        
-	        // Get the list of already unlocked achievements from the leaderboard
-	        const existingAchievements = leaderboardDoc.exists() ? leaderboardDoc.data().unlockedAchievements || [] : [];
-	        
-	        // Get the IDs of the newly unlocked achievements
-	        const newAchievementIds = Object.keys(newAchievementsToSave);
-	
-	        // Combine the old and new lists, ensuring no duplicates
-	        const allAchievements = [...new Set([...existingAchievements, ...newAchievementIds])];
-	
-	        // Save the complete list back to the leaderboard
-	        await updateDoc(leaderboardDocRef, { unlockedAchievements: allAchievements });
-	
-	    } catch(error) {
-	        console.error("Failed to update achievements on leaderboard:", error);
-	    }
-    }
-};	
+    if (Object.keys(newAchievementsToSave).length > 0) {
+        const updatedAchievements = { ...userAchievements, ...newAchievementsToSave };
+        await setDoc(userDocRef, { achievementsData: updatedAchievements }, { merge: true });
+        
+        try {
+            const leaderboardDocRef = doc(db, "leaderboard", userId);
+            const leaderboardDoc = await getDoc(leaderboardDocRef);
+            const existingAchievements = leaderboardDoc.exists() ? leaderboardDoc.data().unlockedAchievements || [] : [];
+            const newAchievementIds = Object.keys(newAchievementsToSave);
+            const allAchievements = [...new Set([...existingAchievements, ...newAchievementIds])];
+            await updateDoc(leaderboardDocRef, { unlockedAchievements: allAchievements });
+        } catch(error) {
+            console.error("Failed to update achievements on leaderboard:", error);
+        }
+    }
+};
 		
 const getCannedResponsesBlueprint = async () => { return defaultCannedResponsesBlueprint; };
 const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBlueprint; };
