@@ -5237,23 +5237,28 @@ const renderActivityChart = (events) => {
     }
 
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
-    if (copyEvents.length === 0) { // Changed this to 0, as even one point can be shown
+    if (copyEvents.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your activity trend.</p>';
         return;
     }
 
-    // Change 1: Group activity by day, but keep it as a map for now
+    // Group activity by day
     const activityByDay = copyEvents.reduce((acc, event) => {
         const date = event.timestamp.toDate().toISOString().split('T')[0];
         acc[date] = (acc[date] || 0) + 1;
         return acc;
     }, {});
+    
+    // Sort the dates to ensure the chart is in chronological order
+    const sortedDates = Object.keys(activityByDay).sort();
 
-    // Change 2: Convert the grouped data into {x, y} points for the time-series axis
-    const chartDataPoints = Object.keys(activityByDay).sort().map(date => ({
-        x: date, // The date string 'YYYY-MM-DD'
-        y: activityByDay[date] // The count for that day
-    }));
+    // Create separate arrays for labels (dates) and data (counts)
+    const chartLabels = sortedDates.map(date => {
+        // Format the date for better readability on the axis (e.g., "Sep 26")
+        const d = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const chartData = sortedDates.map(date => activityByDay[date]);
 
     const isLightMode = document.body.classList.contains('light-mode');
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
@@ -5262,9 +5267,12 @@ const renderActivityChart = (events) => {
     activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
+            // CHANGED: Use the new labels and data arrays
+            labels: chartLabels, 
             datasets: [{
                 label: 'Copies per Day',
-                data: chartDataPoints, // Use the new data points
+                // CHANGED: Use the new data array
+                data: chartData, 
                 fill: true,
                 backgroundColor: 'rgba(74, 222, 128, 0.2)',
                 borderColor: 'rgba(74, 222, 128, 1)',
@@ -5275,17 +5283,10 @@ const renderActivityChart = (events) => {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            // Change 3: Configure the x-axis for the time series
             scales: {
                 x: {
-                    type: 'time', // <-- This is the magic!
-                    time: {
-                        unit: 'day', // Group data by day
-                        tooltipFormat: 'MMM d, yyyy', // Format for tooltips (e.g., Sep 24, 2025)
-                        displayFormats: {
-                           day: 'MMM d' // Format for axis labels (e.g., Sep 24)
-                        }
-                    },
+                    // CHANGED: Use 'category' type instead of 'time'
+                    type: 'category', 
                     ticks: { color: textColor },
                     grid: { color: gridColor }
                 },
@@ -5297,13 +5298,13 @@ const renderActivityChart = (events) => {
             },
             plugins: { 
                 legend: { display: false },
-                // Change 4: Customize tooltips for better date display
                 tooltip: {
+                    // This is optional but improves the tooltip display
                     callbacks: {
                         title: function(context) {
-                            // This ensures the tooltip title is also nicely formatted
-                            const date = new Date(context[0].parsed.x);
-                            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                            // Use the original sorted date for a full date title
+                            const originalDate = new Date(sortedDates[context[0].dataIndex] + 'T00:00:00');
+                             return originalDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                         }
                     }
                 }
