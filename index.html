@@ -239,6 +239,35 @@
     transition: width 0.5s ease-in-out;
 }
 
+/* --- Add these to your <style> block --- */
+#challenge-tracker-hud.challenge-completed {
+    border-color: #34d399; /* A nice green */
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.5);
+}
+
+.challenge-completed-message {
+    text-align: center;
+    padding: 1.5rem 0;
+    animation: pop-in 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.challenge-completed-message i {
+    font-size: 2rem;
+    color: #34d399;
+}
+
+.challenge-completed-message p {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #e5e7eb; /* text-gray-200 */
+    margin-top: 0.75rem;
+}
+
+@keyframes pop-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+		
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
@@ -2505,6 +2534,39 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const showChallengeCompletionAnimation = (challengeId) => {
+    // 1. Only run the animation if the completed challenge is the one being tracked.
+    if (challengeId !== trackedChallengeId) {
+        return;
+    }
+
+    const hud = document.getElementById('challenge-tracker-hud');
+    if (!hud) return;
+
+    // 2. Add the green glow and replace the content with the success message.
+    hud.classList.add('challenge-completed');
+    hud.innerHTML = `
+        <div class="challenge-completed-message">
+            <i class="fas fa-check-circle"></i>
+            <p>Challenge Completed!</p>
+        </div>
+    `;
+
+    // 3. Wait 3 seconds to let the user see the message.
+    setTimeout(() => {
+        // 4. Trigger the slide-out animation.
+        hud.classList.remove('visible');
+
+        // 5. After the animation finishes, clean up the state.
+        setTimeout(() => {
+            stopTrackingChallenge();
+            // Also, remove the completion style in case the HUD is shown again
+            hud.classList.remove('challenge-completed');
+        }, 500); // This MUST match your CSS transition duration
+
+    }, 3000); // 3-second delay
+};		
+
 const calculateAndRenderRecords = (events) => {
     // 1. Filter for only 'copy' events that have a valid timestamp
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
@@ -2632,6 +2694,8 @@ const stopTrackingChallenge = async () => {
     await renderChallenges(events);
 };
 
+// In your <script> tag...
+
 const renderChallengeTracker = async (events) => {
     const hud = document.getElementById('challenge-tracker-hud');
     if (!trackedChallengeId || !hud) {
@@ -2659,6 +2723,7 @@ const renderChallengeTracker = async (events) => {
             </div>
             <button id="challenge-tracker-close-btn" title="Stop Tracking">&times;</button>
         </div>
+        <p class="text-sm text-gray-400 mb-3 px-1">${challenge.description}</p>
         <div>
             <div class="challenge-tracker-progress-text">
                 ${progressData.current.toLocaleString()} / ${challenge.goal.toLocaleString()}
@@ -2669,7 +2734,6 @@ const renderChallengeTracker = async (events) => {
         </div>
     `;
     hud.classList.remove('hidden');
-    // Use a tiny timeout to allow the browser to render the element before transitioning
     setTimeout(() => hud.classList.add('visible'), 10);
 };
 				
@@ -3205,6 +3269,8 @@ const getCurrentMonthId = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 };		
 
+// In your <script> tag, find and UPDATE the checkAndAwardChallengeXP function...
+
 const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
 
@@ -3224,12 +3290,7 @@ const checkAndAwardChallengeXP = async (userId) => {
             if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
                 await awardXP(CHALLENGES_CONFIG.dailyCopies.xp, 'Daily Challenge');
                 await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
-
-                // --- ADD THIS CHECK ---
-                // If this is the challenge being tracked, stop tracking it.
-                if (trackedChallengeId === 'dailyCopies') {
-                    stopTrackingChallenge();
-                }
+                showChallengeCompletionAnimation('dailyCopies');
             }
         }
 
@@ -3244,11 +3305,7 @@ const checkAndAwardChallengeXP = async (userId) => {
                 await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp, 'Weekly Challenge');
                 await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
                 showMessage("2x XP is now active for the week!", "success");
-
-                // --- ADD THIS CHECK ---
-                if (trackedChallengeId === 'weeklyCopies') {
-                    stopTrackingChallenge();
-                }
+                showChallengeCompletionAnimation('weeklyCopies');
             }
         }
 
@@ -3259,14 +3316,9 @@ const checkAndAwardChallengeXP = async (userId) => {
             if (current >= CHALLENGES_CONFIG.logisticsExpert.goal) {
                 await awardXP(CHALLENGES_CONFIG.logisticsExpert.xp, 'Logistics Expert');
                 await updateDoc(userDocRef, { lastLogisticsChallengeWeek: weekId });
-
-                // --- ADD THIS CHECK ---
-                if (trackedChallengeId === 'logisticsExpert') {
-                    stopTrackingChallenge();
-                }
+                showChallengeCompletionAnimation('logisticsExpert');
             }
         }
-
 
         // --- Monthly Challenge Check ---
         const monthId = getCurrentMonthId();
@@ -3290,11 +3342,8 @@ const checkAndAwardChallengeXP = async (userId) => {
                         color: 'text-yellow-400'
                     });
                 }
-                
-                // --- ADD THIS CHECK ---
-                if (trackedChallengeId === 'monthlyMarathon') {
-                    stopTrackingChallenge();
-                }
+    
+                showChallengeCompletionAnimation('monthlyMarathon');
             }
         }
     } catch (error) {
