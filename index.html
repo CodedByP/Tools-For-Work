@@ -116,6 +116,46 @@
         transform: scale(1.15);
     }
 }
+
+/* --- Styles for Activity Chart Filters --- */
+        .activity-filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 600; /* font-semibold */
+            font-size: 0.875rem; /* text-sm */
+            color: #d1d5db; /* text-gray-300 */
+            transition: all 0.2s ease-in-out;
+        }
+        .activity-filter-btn:hover {
+            background-color: #4b5563; /* hover:bg-gray-600 */
+            color: #ffffff; /* hover:text-white */
+        }
+        .activity-filter-btn.active {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: #ffffff; /* text-white */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Light mode styles for the new elements */
+        body.light-mode .activity-filter-btn {
+            color: #374151; /* text-gray-700 */
+        }
+        body.light-mode .activity-filter-btn:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+            color: #111827; /* hover:text-black */
+        }
+        body.light-mode .activity-filter-btn.active {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: #ffffff; /* text-white */
+        }
+        body.light-mode #activity-stats-display {
+            border-top-color: #d1d5db; /* border-gray-300 */
+        }
+        body.light-mode #stats-total-copies,
+        body.light-mode #stats-avg-copies,
+        body.light-mode #stats-busiest-day {
+            color: #1f2937; /* text-gray-800 */
+        }		
 		
 /* --- Custom Scrollbar Styles --- */
 /* This targets the scrollbar itself */
@@ -1655,14 +1695,38 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             </div>
         </div>
 
-        <div class="floating-card p-6 sm:p-8">
-            <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-            </h2>
-            <div id="activity-chart-container" class="relative h-64 sm:h-80">
-                <canvas id="activityChart"></canvas>
+ <div class="floating-card p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 class="text-2xl font-bold text-gray-200 flex items-center">
+                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
+                </h2>
+                <div id="activity-filter-group" class="flex items-center space-x-1 bg-gray-700 rounded-lg p-1 self-start sm:self-center">
+                    <button class="activity-filter-btn" data-period="7">Last 7 Days</button>
+                    <button class="activity-filter-btn" data-period="30">Last 30 Days</button>
+                    <button class="activity-filter-btn" data-period="month">This Month</button>
+                    <button class="activity-filter-btn active" data-period="all">All Time</button>
+                </div>
             </div>
-        </div>
+                        <div id="activity-chart-container" class="relative h-64 sm:h-80">
+                <canvas id="activityChart"></canvas>
+            </div>
+
+            <div id="activity-stats-display" class="mt-6 pt-6 border-t border-gray-600 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Total Copies</h4>
+                    <p id="stats-total-copies" class="text-3xl font-bold text-white">--</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Avg. Copies / Day</h4>
+                    <p id="stats-avg-copies" class="text-3xl font-bold text-white">--</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Busiest Day</h4>
+                    <p id="stats-busiest-day" class="text-3xl font-bold text-white">--</p>
+                    <p id="stats-busiest-day-count" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -5276,92 +5340,154 @@ const renderCategoryChart = (events) => {
     });
 };
 
-const renderActivityChart = (events) => {
-    const container = document.getElementById('activity-chart-container');
-    if (!container) return;
+// FIND and REPLACE the entire renderActivityChart function
+const renderActivityChart = (events, period = 'all') => {
+    const container = document.getElementById('activity-chart-container');
+    if (!container) return;
 
-    container.innerHTML = '<canvas id="activityChart"></canvas>';
-    const ctx = document.getElementById('activityChart').getContext('2d');
+    container.innerHTML = '<canvas id="activityChart"></canvas>';
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    if (activityChartInstance) {
+        activityChartInstance.destroy();
+    }
+
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
+
+    // --- 1. FILTERING LOGIC ---
+    const now = new Date();
+    let filteredEvents = [];
+    let startDate = new Date();
+    let daysInPeriod = 1;
+
+    if (period === '7') {
+        startDate.setDate(now.getDate() - 6); // 6 days ago + today = 7 days
+        startDate.setHours(0, 0, 0, 0);
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+        daysInPeriod = 7;
+    } else if (period === '30') {
+        startDate.setDate(now.getDate() - 29); // 29 days ago + today = 30 days
+        startDate.setHours(0, 0, 0, 0);
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+        daysInPeriod = 30;
+    } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of this month
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+        daysInPeriod = now.getDate(); // Days so far this month
+    } else { // 'all'
+        filteredEvents = copyEvents;
+        if (filteredEvents.length > 0) {
+            // Find the earliest date for "all time" stats
+            startDate = filteredEvents.reduce((earliest, e) => {
+                const eventDate = e.timestamp.toDate();
+                return eventDate < earliest ? eventDate : earliest;
+            }, new Date());
+            
+            // Calculate total days for "all time"
+            const firstDay = new Date(startDate.setHours(0,0,0,0));
+            const lastDay = new Date(now.setHours(0,0,0,0));
+            daysInPeriod = Math.max(1, Math.round((lastDay - firstDay) / (1000 * 60 * 60 * 24)) + 1);
+        }
+    }
     
-    if (activityChartInstance) {
-        activityChartInstance.destroy();
+    // --- 2. CHART DATA PREPARATION ---
+    const activityByDay = filteredEvents.reduce((acc, event) => {
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+    }, {});
+    
+    const sortedDates = Object.keys(activityByDay).sort();
+
+    const chartLabels = sortedDates.map(date => {
+        const d = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const chartData = sortedDates.map(date => activityByDay[date]);
+
+    // --- 3. STATS CALCULATION & DISPLAY ---
+    let totalCopies = 0;
+    let avgCopies = 0;
+    let busiestDay = '--';
+    let busiestDayCount = 0;
+    
+    if (filteredEvents.length > 0) {
+        totalCopies = filteredEvents.length;
+        avgCopies = (totalCopies / daysInPeriod).toFixed(1);
+
+        // Find busiest day from the 'activityByDay' object
+        for (const date in activityByDay) {
+            if (activityByDay[date] > busiestDayCount) {
+                busiestDayCount = activityByDay[date];
+                const d = new Date(date + 'T00:00:00');
+                busiestDay = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            }
+        }
     }
 
-    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
-    if (copyEvents.length === 0) {
+    // Update the HTML for the stats display
+    document.getElementById('stats-total-copies').textContent = totalCopies.toLocaleString();
+    document.getElementById('stats-avg-copies').textContent = avgCopies;
+    document.getElementById('stats-busiest-day').textContent = busiestDay;
+    document.getElementById('stats-busiest-day-count').textContent = busiestDayCount > 0 ? `(${busiestDayCount} copies)` : '';
+
+
+    // --- 4. RENDER THE CHART ---
+    if (filteredEvents.length === 0 && period !== 'all') {
+        container.innerHTML = '<p class="text-center text-gray-400 mt-12">No activity recorded for this period.</p>';
+        // Still render the chart if "all time" is 0
+    } else if (copyEvents.length === 0) {
         container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your activity trend.</p>';
         return;
     }
 
-    // Group activity by day
-    const activityByDay = copyEvents.reduce((acc, event) => {
-        const date = event.timestamp.toDate().toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-    }, {});
-    
-    // Sort the dates to ensure the chart is in chronological order
-    const sortedDates = Object.keys(activityByDay).sort();
+    const isLightMode = document.body.classList.contains('light-mode');
+    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
 
-    // Create separate arrays for labels (dates) and data (counts)
-    const chartLabels = sortedDates.map(date => {
-        // Format the date for better readability on the axis (e.g., "Sep 26")
-        const d = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    });
-    const chartData = sortedDates.map(date => activityByDay[date]);
-
-    const isLightMode = document.body.classList.contains('light-mode');
-    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-
-    activityChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            // CHANGED: Use the new labels and data arrays
-            labels: chartLabels, 
-            datasets: [{
-                label: 'Copies per Day',
-                // CHANGED: Use the new data array
-                data: chartData, 
-                fill: true,
-                backgroundColor: 'rgba(74, 222, 128, 0.2)',
-                borderColor: 'rgba(74, 222, 128, 1)',
-                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
-                tension: 0.2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    // CHANGED: Use 'category' type instead of 'time'
-                    type: 'category', 
-                    ticks: { color: textColor },
-                    grid: { color: gridColor }
-                },
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { color: textColor, precision: 0 }, 
-                    grid: { color: gridColor } 
-                }
-            },
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    // This is optional but improves the tooltip display
-                    callbacks: {
-                        title: function(context) {
-                            // Use the original sorted date for a full date title
-                            const originalDate = new Date(sortedDates[context[0].dataIndex] + 'T00:00:00');
-                             return originalDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                        }
-                    }
-                }
-            }
-        }
-    });
+    activityChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Copies per Day',
+                data: chartData,
+                fill: true,
+                backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                borderColor: 'rgba(74, 222, 128, 1)',
+                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                // Per your request, we are keeping the 'category' type
+                    type: 'category', 
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: textColor, precision: 0 }, 
+                    grid: { color: gridColor } 
+                }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const originalDate = new Date(sortedDates[context[0].dataIndex] + 'T00:00:00');
+                             return originalDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                _         }
+                    }
+                }
+            }
+        }
+    });
 };
 
 const renderLevelingSystem = (userData) => {
@@ -5485,7 +5611,7 @@ const renderAdvancedStats = async () => {
         // Render main components first
         await renderCategoryChart(events);
 		calculateAndRenderRecords(events);
-        await renderActivityChart(events);
+        renderActivityChart(events);
         renderLeaderboard();
         renderFilteredAchievements(events, userData);
 
@@ -5601,6 +5727,31 @@ const showPlaceholderDemo = () => {
 // PASTE THIS ENTIRE BLOCK
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+const activityFilterGroup = document.getElementById('activity-filter-group');
+if (activityFilterGroup) {
+    activityFilterGroup.addEventListener('click', async (e) => {
+        const button = e.target.closest('.activity-filter-btn');
+        if (button && !button.classList.contains('active')) {
+            // 1. Update active class
+            activityFilterGroup.querySelectorAll('.activity-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            // 2. Get data and re-render
+            const period = button.dataset.period;
+            
+            // We need to re-fetch the events data to pass to the render function
+            // (This is necessary in case new events happened since the page loaded)
+            const eventsCollectionRef = getUserEventsCollectionRef(userId);
+            const snapshot = await getDocs(query(eventsCollectionRef));
+            const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            
+            renderActivityChart(events, period);
+        }
+    });
+}
 	
     const unlockAudio = () => {
         if (!audioUnlocked) {
