@@ -5652,13 +5652,18 @@ const renderAdvancedStats = async () => {
             </div>
         `;
 
-        // --- Top 5 Chart ---
-        let allResponses = [];
-        for (const categoryName in categories) {
-            if (categories[categoryName].responses) {
-                allResponses.push(...categories[categoryName].responses);
-            }
-        }
+// --- Top 5 Chart ---
+        let allResponses = [];
+        for (const categoryName in categories) {
+            if (categories[categoryName].responses) {
+                // By mapping, we add the categoryName to each response object
+                const categoryResponses = categories[categoryName].responses.map(r => ({
+                    ...r,
+                    categoryName: categoryName 
+                }));
+                allResponses.push(...categoryResponses);
+            }
+        }
         const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
 
         if (sortedResponses.length > 0) {
@@ -5666,6 +5671,10 @@ const renderAdvancedStats = async () => {
             const topResponses = sortedResponses.slice(0, 5);
             const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
             const chartData = topResponses.map(r => r.timesCopied);
+            const borderColors = topResponses.map(r => 
+                categories[r.categoryName]?.color || '#60a5fa' // Use category color or a default blue
+            );
+            const backgroundColors = borderColors.map(color => color + '80');
 
             if (statsChart) statsChart.destroy();
             const ctx = document.getElementById('stats-chart').getContext('2d');
@@ -5674,8 +5683,14 @@ const renderAdvancedStats = async () => {
             const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
             statsChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: chartLabels, datasets: [{ label: 'Times Copied', data: chartData, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
+				data: { labels: chartLabels, datasets: [{ 
+                label: 'Times Copied', 
+                data: chartData, 
+                backgroundColor: backgroundColors, // Use our new array
+                borderColor: borderColors,       // Use our new array
+                borderWidth: 1 
+            }] },
+				options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
             });
         } else {
             chartContainer.innerHTML = '<p class="text-gray-400 text-center flex items-center justify-center h-full">Copy responses to see your top 5 here!</p>';
