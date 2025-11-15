@@ -2633,8 +2633,37 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+const calculateAndSaveUserRecords = async (uid) => {
+    if (!uid || isAnonymous) return; // Don't run for anonymous users
+    console.log(`Calculating and saving personal records for user ${uid}...`);
 
-// --- NEW HELPER FUNCTION ---
+    try {
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
+
+        // 1. Fetch all of the user's past events
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
+
+        // 2. Calculate user's personal records (using your existing helper)
+        const records = calculateUserRecords(events); 
+
+        // 3. Prepare the data object to update
+        const recordsToUpdate = {
+            recordDaily: records.daily,
+            recordWeekly: records.weekly,
+            recordMonthly: records.monthly
+        };
+
+        // 4. Update the public leaderboard document with the latest records
+        await setDoc(leaderboardDocRef, recordsToUpdate, { merge: true });
+        console.log(`✅ Successfully updated personal records for user ${uid}.`);
+
+    } catch (error) {
+        console.error(`Error calculating and saving user records for ${uid}:`, error);
+    }
+};
+		
 const calculateUserRecords = (events) => {
     // 1. Filter for only 'copy' events that have a valid timestamp
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
@@ -6688,6 +6717,7 @@ onAuthStateChanged(auth, async (user) => {
 			if (!userData.activeDaysBackfilled) {
            		 await backfillActiveDays(userId);
        		}
+			await calculateAndSaveUserRecords(userId);
 			
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
