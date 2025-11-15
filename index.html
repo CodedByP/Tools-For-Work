@@ -3199,7 +3199,7 @@ const renderFilteredAchievements = (events, userData) => {
         const unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || new Date().toISOString()) : '';
         
         return `
-            <div class="achievement-card-redesign floating-card ${ach.unlocked ? 'cursor-pointer' : 'cursor-default'}"
+            <div class="achievement-card-redesign floating-card cursor-pointer"
                  data-id="${ach.id}" data-name="${ach.name}" data-desc="${sanitizedDesc}"
                  data-icon="${ach.icon}" data-color="${ach.color || 'text-yellow-400'}"
                  data-unlocked="${ach.unlocked}" data-unlocked-date="${unlockedDate}">
@@ -5804,35 +5804,49 @@ if (activityFilterGroup) {
     if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
     
     // Achievement Listeners
-    const achievementsContainer = document.getElementById('achievements-container');
-    if(achievementsContainer) {
-        achievementsContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.achievement-card-redesign');
-            if (card && card.dataset.unlocked === 'true') {
-                const modal = document.getElementById('achievement-details-modal');
-                const modalIcon = document.getElementById('modal-achievement-icon');
-                const modalTitle = document.getElementById('modal-achievement-title');
-                const modalDesc = document.getElementById('modal-achievement-desc');
-                const modalDateEl = document.getElementById('modal-achievement-date');
-                
-                const { name, desc, icon, color, unlockedDate } = card.dataset;
-                
-                modalIcon.className = `text-6xl mb-4 ${color}`;
-                modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
-                modalTitle.textContent = name;
-                modalDesc.textContent = desc;
-                
-                if (unlockedDate) {
-                    const date = new Date(unlockedDate);
-                    modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
-                } else {
-                    modalDateEl.textContent = 'Unlocked!';
-                }
+    const achievementsContainer = document.getElementById('achievements-container');
+    if(achievementsContainer) {
+        achievementsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.achievement-card-redesign');
+            
+            // 1. We change the condition to fire as long as a card was clicked
+            if (card) { 
+                const modal = document.getElementById('achievement-details-modal');
+                const modalIcon = document.getElementById('modal-achievement-icon');
+                const modalTitle = document.getElementById('modal-achievement-title');
+                const modalDesc = document.getElementById('modal-achievement-desc');
+                const modalDateEl = document.getElementById('modal-achievement-date');
+                
+                // 2. Get all data from the card, including the 'unlocked' status
+                const { name, desc, icon, color, unlockedDate, unlocked } = card.dataset;
+                const isUnlocked = unlocked === 'true'; // Convert string to boolean
 
-                modal.classList.remove('hidden');
-            }
-        });
-    }
+                // 3. Populate all the common fields
+                modalIcon.className = `text-6xl mb-4 ${isUnlocked ? color : 'text-gray-500'}`; // Use gray color if locked
+                modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+                modalTitle.textContent = name;
+                modalDesc.textContent = desc; // This description already contains the unlock criteria
+                
+                // 4. This is the new logic to show EITHER the date OR the XP reward
+                if (isUnlocked) {
+                    // It's unlocked: show the date
+                        modalDateEl.classList.remove('text-yellow-400', 'font-bold', 'text-lg'); // Remove XP styles
+                    if (unlockedDate) {
+                        const date = new Date(unlockedDate);
+                        modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
+                    } else {
+                        modalDateEl.textContent = 'Unlocked!';
+                  _ }
+                } else {
+                    // It's locked: show the XP reward
+                        modalDateEl.classList.add('text-yellow-400', 'font-bold', 'text-lg'); // Add eye-catching styles for XP
+                    modalDateEl.textContent = `Reward: ${XP_VALUES.UNLOCK_ACHIEVEMENT.toLocaleString()} XP`;
+                }
+
+                modal.classList.remove('hidden');
+            }
+        });
+    }
 
     const closeAchievementModalBtn = document.getElementById('close-achievement-modal-btn');
     if(closeAchievementModalBtn) {
