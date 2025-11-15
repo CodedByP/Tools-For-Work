@@ -1753,22 +1753,44 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
             <div id="stats-panel" class="profile-tab-panel">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-gray-700 p-4 rounded-lg col-span-2">
-                        <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
-                                <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
-                                <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
-                                <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
-                            </div>
-                        </div>
-                    </div>
+<div id="stats-panel" class="profile-tab-panel">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-700 p-4 rounded-lg col-span-2">
+                      <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
+                                <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
+                                <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
+                                <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                      <div class="bg-gray-700 p-4 rounded-lg col-span-2">
+                        <h4 class="font-bold text-gray-300 mb-3">Personal Records</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center">
+                               <span class="text-gray-400"><i class="fas fa-calendar-day mr-2 text-blue-400"></i>Most Copies in a Day</span>
+                                <span id="profile-record-daily" class="font-bold text-white text-lg">--</span>
+                            </div>
+                           <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-calendar-week mr-2 text-green-400"></i>Most Copies in a Week</span>
+                             <span id="profile-record-weekly" class="font-bold text-white text-lg">--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400"><i class="fas fa-calendar-alt mr-2 text-purple-400"></i>Most Copies in a Month</span>
+                             <span id="profile-record-monthly" class="font-bold text-white text-lg">--</span>
+                            </div>
+                      </div>
+                    </div>
+                   <div class="bg-gray-700 p-4 rounded-lg col-span-2">
                     <div class="bg-gray-700 p-4 rounded-lg col-span-2">
                         <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
                         <div id="profile-chart-wrapper" class="relative h-48">
@@ -2600,6 +2622,50 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- NEW HELPER FUNCTION ---
+const calculateUserRecords = (events) => {
+    // 1. Filter for only 'copy' events that have a valid timestamp
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
+
+    // If the user has no copy events, return 0s
+    if (copyEvents.length === 0) {
+        return { daily: 0, weekly: 0, monthly: 0 };
+    }
+
+    // 2. Helper function to get the week key (you already have this)
+    const getWeekKey = (d) => {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+    };
+
+    // 3. Group all copy events
+    const dailyCounts = {};
+    const weeklyCounts = {};
+    const monthlyCounts = {};
+
+    copyEvents.forEach(event => {
+        const date = event.timestamp.toDate();
+        const dayKey = date.toISOString().split('T')[0];
+        const weekKey = getWeekKey(date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+        dailyCounts[dayKey] = (dailyCounts[dayKey] || 0) + 1;
+        weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
+        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+    });
+
+    // 4. Find the highest value (the record) from each group
+    const maxDaily = Object.values(dailyCounts).length > 0 ? Math.max(...Object.values(dailyCounts)) : 0;
+    const maxWeekly = Object.values(weeklyCounts).length > 0 ? Math.max(...Object.values(weeklyCounts)) : 0;
+    const maxMonthly = Object.values(monthlyCounts).length > 0 ? Math.max(...Object.values(monthlyCounts)) : 0;
+
+    // 5. Return the data as an object
+    return { daily: maxDaily, weekly: maxWeekly, monthly: maxMonthly };
+};
+
 const showChallengeCompletionAnimation = (challengeId) => {
     // 1. Only run the animation if the completed challenge is the one being tracked.
     if (challengeId !== trackedChallengeId) {
@@ -2869,70 +2935,90 @@ const findFavoriteCategory = (categoryCounts) => {
 		
 // REPLACE your old backfillUserStats function with this new one
 const backfillUserStats = async (uid) => {
-    console.log(`Checking if full stats backfill is needed for user ${uid}...`);
-    try {
-        const userDocRef = getUserRootDocRef(uid);
-        const eventsCollectionRef = getUserEventsCollectionRef(uid);
-        const leaderboardDocRef = doc(db, "leaderboard", uid);
+    console.log(`Checking if full stats backfill is needed for user ${uid}...`);
+    try {
+        const userDocRef = getUserRootDocRef(uid);
+        const userDoc = await getDoc(userDocRef); // Get the user doc
+        const userData = userDoc.exists() ? userDoc.data() : {}; // Get data
 
-        // 1. Fetch all of the user's past events
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => doc.data());
-
-        // 2. Calculate basic stats from events
-        const totalCopies = events.filter(e => e.type === 'copy').length;
-        const categoryCounts = events
-            .filter(e => e.type === 'copy' && e.categoryName)
-            .reduce((acc, event) => {
-                acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
-                return acc;
-            }, {});
-
-        // 3. NEW: Calculate achievements based purely on the user's event history
-        const unlockedAchievementIds = new Set();
-        const totalCategoriesCreated = events.filter(e => e.type === 'create_category').length;
-        const responsesPerCategory = events
-            .filter(e => e.type === 'create_response' && e.category)
-            .reduce((acc, e) => {
-                acc[e.category] = (acc[e.category] || 0) + 1;
-                return acc;
-            }, {});
-
-        if (totalCopies > 0) unlockedAchievementIds.add('first_responder');
-        if (totalCopies >= 10) unlockedAchievementIds.add('copy_tiers');
-        if (events.some(e => e.type === 'create_response')) unlockedAchievementIds.add('the_creator');
-        if (totalCategoriesCreated >= 5) unlockedAchievementIds.add('librarian_tiers');
-        if (Object.values(responsesPerCategory).some(count => count >= 5)) unlockedAchievementIds.add('the_architect');
-        if (events.some(e => e.type === 'edit_response')) unlockedAchievementIds.add('the_editor');
-        if (events.some(e => e.type === 'pin_response')) unlockedAchievementIds.add('the_curator');
-        if (events.some(e => e.type === 'change_color')) unlockedAchievementIds.add('the_color_coder');
-        if (events.some(e => e.type === 'import_data')) unlockedAchievementIds.add('the_data_hoarder');
-        if (events.some(e => e.type === 'add_link')) unlockedAchievementIds.add('the_personalizer');
-        if (events.some(e => e.type === 'globetrotter_milestone')) unlockedAchievementIds.add('the_globetrotter');
-
-        const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-        if (visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links')) {
-            unlockedAchievementIds.add('the_explorer');
+        // IMPORTANT: We change this check so it can re-run on old users
+        if (userData.recordsBackfilled) {
+             console.log('Records already backfilled. Skipping.');
+             return;
         }
-        
-        // 4. Prepare the complete data object for the public leaderboard document
-        const statsToUpdate = {
-            totalCopies: totalCopies,
-            categoryCounts: categoryCounts,
-            unlockedAchievements: Array.from(unlockedAchievementIds) // The missing piece!
-        };
 
-        // 5. Update the public leaderboard document with all the data
-        await setDoc(leaderboardDocRef, statsToUpdate, { merge: true });
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
 
-        // 6. Set the flag so this never runs again for this user
-        await setDoc(userDocRef, { statsBackfilled: true }, { merge: true });
+        // 1. Fetch all of the user's past events
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
 
-        console.log(`✅ Successfully backfilled stats and ${unlockedAchievementIds.size} achievements for user ${uid}.`);
+        // 2. Calculate basic stats from events
+        const totalCopies = events.filter(e => e.type === 'copy').length;
+        const categoryCounts = events
+            .filter(e => e.type === 'copy' && e.categoryName)
+            .reduce((acc, event) => {
+                acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
+                return acc;
+            }, {});
 
-    } catch (error) {
-        console.error(`Error during stats backfill for user ${uid}:`, error);
-    }
+        // --- NEW ---
+        // 3. Calculate user's personal records
+        const records = calculateUserRecords(events); 
+        // --- END NEW ---
+
+        // 3. NEW: Calculate achievements based purely on the user's event history
+        // ... (your existing achievement calculation logic is unchanged) ...
+        const unlockedAchievementIds = new Set();
+        const totalCategoriesCreated = events.filter(e => e.type === 'create_category').length;
+        const responsesPerCategory = events
+            .filter(e => e.type === 'create_response' && e.category)
+            .reduce((acc, e) => {
+                acc[e.category] = (acc[e.category] || 0) + 1;
+                return acc;
+            }, {});
+
+        if (totalCopies > 0) unlockedAchievementIds.add('first_responder');
+        if (totalCopies >= 10) unlockedAchievementIds.add('copy_tiers');
+        if (events.some(e => e.type === 'create_response')) unlockedAchievementIds.add('the_creator');
+        if (totalCategoriesCreated >= 5) unlockedAchievementIds.add('librarian_tiers');
+        if (Object.values(responsesPerCategory).some(count => count >= 5)) unlockedAchievementIds.add('the_architect');
+        if (events.some(e => e.type === 'edit_response')) unlockedAchievementIds.add('the_editor');
+        if (events.some(e => e.type === 'pin_response')) unlockedAchievementIds.add('the_curator');
+        if (events.some(e => e.type === 'change_color')) unlockedAchievementIds.add('the_color_coder');
+        if (events.some(e => e.type === 'import_data')) unlockedAchievementIds.add('the_data_hoarder');
+        if (events.some(e => e.type === 'add_link')) unlockedAchievementIds.add('the_personalizer');
+        if (events.some(e => e.type === 'globetrotter_milestone')) unlockedAchievementIds.add('the_globetrotter');
+
+        const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
+        if (visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links')) {
+            unlockedAchievementIds.add('the_explorer');
+        }
+        
+        // 4. Prepare the complete data object for the public leaderboard document
+        const statsToUpdate = {
+            totalCopies: totalCopies,
+            categoryCounts: categoryCounts,
+            unlockedAchievements: Array.from(unlockedAchievementIds),
+            // --- NEW ---
+            recordDaily: records.daily,
+            recordWeekly: records.weekly,
+            recordMonthly: records.monthly
+            // --- END NEW ---
+        };
+
+        // 5. Update the public leaderboard document with all the data
+        await setDoc(leaderboardDocRef, statsToUpdate, { merge: true });
+
+        // 6. Set the flag so this never runs again for this user
+        await setDoc(userDocRef, { statsBackfilled: true, recordsBackfilled: true }, { merge: true });
+
+        console.log(`✅ Successfully backfilled stats, records, and ${unlockedAchievementIds.size} achievements for user ${uid}.`);
+
+    } catch (error) {
+        console.error(`Error during stats backfill for user ${uid}:`, error);
+    }
 };
 		
 // Renders the achievement icons inside the profile modal
@@ -3104,24 +3190,32 @@ const showUserProfile = async (profileUserId) => {
                 Member since ${formattedDate}
             </div>`;
         
-        // ▼▼▼ POPULATE THE ALL-TIME STATS ▼▼▼
-        const totalCopies = profileData.totalCopies || 0;
-        const favoriteCategory = findFavoriteCategory(profileData.categoryCounts);
-        // 1. Fetch the count of active days from the new subcollection
-        const activeDaysColRef = collection(db, "leaderboard", profileUserId, "activeDays");
-        const activeDaysSnapshot = await getDocs(activeDaysColRef);
-        const numberOfActiveDays = activeDaysSnapshot.size;
+// ▼▼▼ POPULATE THE ALL-TIME STATS ▼▼▼
+        const totalCopies = profileData.totalCopies || 0;
+        const favoriteCategory = findFavoriteCategory(profileData.categoryCounts);
+        
+        // 1. Fetch the count of active days from the new subcollection
+        const activeDaysColRef = collection(db, "leaderboard", profileUserId, "activeDays");
+        const activeDaysSnapshot = await getDocs(activeDaysColRef);
+        const numberOfActiveDays = activeDaysSnapshot.size;
 
-        // 2. Call the new calculation function with the correct data
-        const copiesPerDay = calculateAverageOnActiveDays(totalCopies, numberOfActiveDays);
+        // 2. Call the calculation function
+        const copiesPerDay = calculateAverageOnActiveDays(totalCopies, numberOfActiveDays);
 
-        document.getElementById('profile-total-copies').textContent = totalCopies.toLocaleString();
-        document.getElementById('profile-fav-category').textContent = favoriteCategory;
-        document.getElementById('profile-cpd').textContent = copiesPerDay; // Display the new average
-        
-        // RENDER THE CHARTS AND ACHIEVEMENTS
-        renderProfileCategoryChart(profileData.categoryCounts || {});
-        renderProfileAchievements(profileData.unlockedAchievements || []);
+        // 3. Populate the existing "All-Time Stats"
+        document.getElementById('profile-total-copies').textContent = totalCopies.toLocaleString();
+        document.getElementById('profile-fav-category').textContent = favoriteCategory;
+        document.getElementById('profile-cpd').textContent = copiesPerDay;
+
+        // 4. --- NEW --- Populate the "Personal Records"
+        document.getElementById('profile-record-daily').textContent = (profileData.recordDaily || 0).toLocaleString();
+        document.getElementById('profile-record-weekly').textContent = (profileData.recordWeekly || 0).toLocaleString();
+        document.getElementById('profile-record-monthly').textContent = (profileData.recordMonthly || 0).toLocaleString();
+        // --- END NEW ---
+        
+        // RENDER THE CHARTS AND ACHIEVEMENTS
+        renderProfileCategoryChart(profileData.categoryCounts || {});
+        renderProfileAchievements(profileData.unlockedAchievements || []);
 
     } catch (error) {
         console.error("Error fetching user profile:", error);
