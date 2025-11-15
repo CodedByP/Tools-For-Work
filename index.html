@@ -1733,83 +1733,98 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 </div>
 
 <div id="profile-modal" class="modal hidden">
-<div id="profile-modal-content-wrapper" class="modal-content w-full max-w-2xl p-0 overflow-hidden modal-scroll-fix">	
-        <div id="profile-modal-header" class="p-6 text-center text-white relative">
-            <div id="profile-header-container">
-                </div>
-        </div>
+        <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-2xl p-0 overflow-hidden modal-scroll-fix shadow-2xl rounded-xl">    
+            
+            <!-- Header -->
+            <div id="profile-modal-header" class="p-6 text-center text-white relative bg-gray-800">
+                <div id="profile-header-container">
+                    <!-- Header content would go here -->
+                </div>
+            </div>
 
-        <div class="flex border-b border-gray-700 bg-gray-800">
-            <button id="stats-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-blue-500 text-white">
-                <i class="fas fa-chart-bar mr-2"></i> Statistics
-            </button>
-            <button id="achievements-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-transparent text-gray-400">
-                <i class="fas fa-trophy mr-2"></i> Trophy Case
-            </button>
-        </div>
-        
-        <div id="profile-modal-body" class="p-6 bg-gray-800">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-700 bg-gray-800">
+                <button id="stats-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-blue-500 text-white hover:bg-gray-700 transition">
+                    <i class="fas fa-chart-bar mr-2"></i> Statistics
+                </button>
+                <button id="achievements-tab-btn" class="profile-tab-btn flex-1 py-3 font-bold text-center border-b-2 border-transparent text-gray-400 hover:text-white hover:bg-gray-700 transition">
+                    <i class="fas fa-trophy mr-2"></i> Trophy Case
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div id="profile-modal-body" class="p-6 bg-gray-800">
 
-                    <div id="stats-panel" class="profile-tab-panel">
-                            <div class="grid grid-cols-1 gap-4"> 
-                    
-                                        <div class="bg-gray-700 p-4 rounded-lg">
-                        <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
-                        <div class="space-y-3 text-base">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
-                                <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
-                                <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
-                                <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
-                            </div>
-                        </div>
-                    </div>
-        
-                                        <div class="bg-gray-700 p-4 rounded-lg">
-                        <h4 class="font-bold text-gray-300 mb-3">Personal Records</h4>
-                        <div class="space-y-3 text-base">
-                            <div class="flex justify-between items-center">
-                               <span class="text-gray-400"><i class="fas fa-calendar-day mr-2 text-blue-400"></i>Most Copies in a Day</span>
-                                <span id="profile-record-daily" class="font-bold text-white text-lg">--</span>
-                            </div>
-                           <div class="flex justify-between items-center">
-                           <span class="text-gray-400"><i class="fas fa-calendar-week mr-2 text-green-400"></i>Most Copies in a Week</span>
-                             <span id="profile-record-weekly" class="font-bold text-white text-lg">--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400"><i class="fas fa-calendar-alt mr-2 text-purple-400"></i>Most Copies in a Month</span>
-                             <span id="profile-record-monthly" class="font-bold text-white text-lg">--</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Stats Panel -->
+                <div id="stats-panel" class="profile-tab-panel">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+                        
+                        <!-- All-Time Stats -->
+                        <div class="bg-gray-700 p-4 rounded-lg md:col-span-2">
+                            <h4 class="font-bold text-gray-300 mb-3">All-Time Stats</h4>
+                            <div class="space-y-3 text-base">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400"><i class="fas fa-copy mr-2"></i>Responses Copied</span>
+                                    <span id="profile-total-copies" class="font-bold text-white text-lg">--</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400"><i class="fas fa-star mr-2"></i>Favorite Category</span>
+                                    <span id="profile-fav-category" class="font-bold text-white text-lg">--</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400"><i class="fas fa-chart-line mr-2"></i>Copies Per Day</span>
+                                    <span id="profile-cpd" class="font-bold text-white text-lg">--</span>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Personal Records -->
+                        <div class="bg-gray-700 p-4 rounded-lg md:col-span-2">
+                            <h4 class="font-bold text-gray-300 mb-3">Personal Records</h4>
+                            <div class="space-y-3 text-base">
+                                <div class="flex justify-between items-center">
+                                   <span class="text-gray-400"><i class="fas fa-calendar-day mr-2 text-blue-400"></i>Most Copies in a Day</span>
+                                    <span id="profile-record-daily" class="font-bold text-white text-lg">--</span>
+                                </div>
+                               <div class="flex justify-between items-center">
+                                   <span class="text-gray-400"><i class="fas fa-calendar-week mr-2 text-green-400"></i>Most Copies in a Week</span>
+                                    <span id="profile-record-weekly" class="font-bold text-white text-lg">--</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400"><i class="fas fa-calendar-alt mr-2 text-purple-400"></i>Most Copies in a Month</span>
+                                    <span id="profile-record-monthly" class="font-bold text-white text-lg">--</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                        <div class="bg-gray-700 p-4 rounded-lg">
-                        <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
-                        <div id="profile-chart-wrapper" class="relative h-64">
-                        <canvas id="profile-category-chart"></canvas>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-                    <div id="achievements-panel" class="profile-tab-panel hidden">
-			<div id="profile-achievements-container" class="grid grid-cols-4 sm:grid-cols-7 gap-4 overflow-y-auto max-h-64 scrollbar-hide p-2">                    </div>
-            </div>
-        </div>
+                        <!-- Chart Section -->
+                        <div class="bg-gray-700 p-4 rounded-lg md:col-span-2">
+                            <h4 class="font-bold text-gray-300 mb-2">Category Breakdown</h4>
+                            <div id="profile-chart-wrapper" class="relative h-64">
+                                <canvas id="profile-category-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
 
-        <div class="flex justify-end p-4 bg-gray-800 border-t border-gray-700">
-            <button id="close-profile-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
+                <!-- Achievements Panel (Hidden by default) -->
+                <div id="achievements-panel" class="profile-tab-panel hidden">
+                    <div id="profile-achievements-container" class="grid grid-cols-5 sm:grid-cols-6 gap-4 scrollbar-hide p-2">
+                        <!-- Achievements would go here -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end p-4 bg-gray-800 border-t border-gray-700">
+                <button id="close-profile-modal-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="placeholder-modal" class="modal hidden">
         <div class="modal-content">
