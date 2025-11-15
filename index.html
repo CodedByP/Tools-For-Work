@@ -5360,39 +5360,31 @@ const renderActivityChart = (events, period = 'all') => {
     const now = new Date();
     let filteredEvents = [];
     let startDate = new Date();
-    let daysInPeriod = 1;
 
     if (period === '7') {
         startDate.setDate(now.getDate() - 6); // 6 days ago + today = 7 days
         startDate.setHours(0, 0, 0, 0);
         filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-        daysInPeriod = 7;
     } else if (period === '30') {
         startDate.setDate(now.getDate() - 29); // 29 days ago + today = 30 days
         startDate.setHours(0, 0, 0, 0);
         filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-        daysInPeriod = 30;
     } else if (period === 'month') {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of this month
         filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-        daysInPeriod = now.getDate(); // Days so far this month
     } else { // 'all'
         filteredEvents = copyEvents;
     }
     
     // --- 2. CHART DATA PREPARATION ---
-    const activityByDay = filteredEvents.reduce((acc, event) => {
+const activityByDay = filteredEvents.reduce((acc, event) => {
         const date = event.timestamp.toDate().toISOString().split('T')[0];
         acc[date] = (acc[date] || 0) + 1;
         return acc;
     }, {});
-    if (period === 'all') {
-        const activeDayCount = Object.keys(activityByDay).length;
-        daysInPeriod = activeDayCount > 0 ? activeDayCount : 1; // Use active day count
-    }
-    
+    const activeDayCount = Object.keys(activityByDay).length;
+    const daysInPeriod = activeDayCount > 0 ? activeDayCount : 1;
     const sortedDates = Object.keys(activityByDay).sort();
-
     const chartLabels = sortedDates.map(date => {
         const d = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
         return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
