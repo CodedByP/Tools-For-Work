@@ -125,6 +125,7 @@
             font-size: 0.875rem; /* text-sm */
             color: #d1d5db; /* text-gray-300 */
             transition: all 0.2s ease-in-out;
+			background-color: #374151; /* bg-gray-700 */
         }
         .activity-filter-btn:hover {
             background-color: #4b5563; /* hover:bg-gray-600 */
@@ -1700,7 +1701,7 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
                 <h2 class="text-2xl font-bold text-gray-200 flex items-center">
                     <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
                 </h2>
-                <div id="activity-filter-group" class="flex items-center space-x-1 bg-gray-700 rounded-lg p-1 self-start sm:self-center">
+                <div id="activity-filter-group" class="flex items-center space-x-2 self-start sm:self-center">
                     <button class="activity-filter-btn" data-period="7">Last 7 Days</button>
                     <button class="activity-filter-btn" data-period="30">Last 30 Days</button>
                     <button class="activity-filter-btn" data-period="month">This Month</button>
@@ -5376,18 +5377,6 @@ const renderActivityChart = (events, period = 'all') => {
         daysInPeriod = now.getDate(); // Days so far this month
     } else { // 'all'
         filteredEvents = copyEvents;
-        if (filteredEvents.length > 0) {
-            // Find the earliest date for "all time" stats
-            startDate = filteredEvents.reduce((earliest, e) => {
-                const eventDate = e.timestamp.toDate();
-                return eventDate < earliest ? eventDate : earliest;
-            }, new Date());
-            
-            // Calculate total days for "all time"
-            const firstDay = new Date(startDate.setHours(0,0,0,0));
-            const lastDay = new Date(now.setHours(0,0,0,0));
-            daysInPeriod = Math.max(1, Math.round((lastDay - firstDay) / (1000 * 60 * 60 * 24)) + 1);
-        }
     }
     
     // --- 2. CHART DATA PREPARATION ---
@@ -5396,6 +5385,10 @@ const renderActivityChart = (events, period = 'all') => {
         acc[date] = (acc[date] || 0) + 1;
         return acc;
     }, {});
+    if (period === 'all') {
+        const activeDayCount = Object.keys(activityByDay).length;
+        daysInPeriod = activeDayCount > 0 ? activeDayCount : 1; // Use active day count
+    }
     
     const sortedDates = Object.keys(activityByDay).sort();
 
