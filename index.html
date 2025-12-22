@@ -153,12 +153,22 @@
         body.light-mode #activity-stats-display {
             border-top-color: #d1d5db; /* border-gray-300 */
         }
-        body.light-mode #stats-total-copies,
-        body.light-mode #stats-avg-copies,
-        body.light-mode #stats-busiest-day {
-            color: #1f2937; /* text-gray-800 */
-        }		
-		
+/* Light Mode: Fix Activity Stats Visibility */
+        body.light-mode #stats-total-copies,
+        body.light-mode #stats-avg-copies,
+        body.light-mode #stats-busiest-day {
+            color: #111827 !important; /* Force dark almost-black text */
+        }
+
+        /* Fix the labels (Total Copies, etc.) which are too light in Light Mode */
+        body.light-mode #activity-stats-display h4 {
+            color: #4b5563 !important; /* Darker gray for readability */
+        }
+
+        /* Fix the small counter text under busiest day */
+        body.light-mode #stats-busiest-day-count {
+            color: #6b7280 !important;
+        }
 /* --- Custom Scrollbar Styles --- */
 /* This targets the scrollbar itself */
 #challenges-container::-webkit-scrollbar,
