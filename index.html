@@ -2607,7 +2607,23 @@ const renderExpandedActivityChart = (period) => {
         }
     });
 };
-		
+
+// --- PASTE THIS CODE BLOCK ---
+
+const closeExpandedChart = () => {
+    const modal = document.getElementById('expanded-chart-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    
+    // Good practice: Destroy the chart instance so it renders fresh next time
+    if (expandedChartInstance) {
+        expandedChartInstance.destroy();
+        expandedChartInstance = null;
+    }
+};
+
+// -----------------------------
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
