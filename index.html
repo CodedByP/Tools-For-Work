@@ -1730,12 +1730,16 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
             </div>
         </div>
 
-        <div class="bento-card bento-span-2 lg:col-span-2 p-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+		<div id="activity-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
+            <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 relative z-20">
                 <h3 class="text-lg font-bold text-gray-200 flex items-center">
                     <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
                 </h3>
-                <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right"> 
+                <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right pointer-events-auto"> 
                     <button class="activity-filter-btn px-3 py-1 text-xs" data-period="7">7D</button>
                     <button class="activity-filter-btn px-3 py-1 text-xs" data-period="30">30D</button>
                     <button class="activity-filter-btn px-3 py-1 text-xs active" data-period="all">All</button>
@@ -1744,7 +1748,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
             <div id="activity-chart-container" class="relative h-48 w-full">
                 <canvas id="activityChart"></canvas>
             </div>
-            <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3">
+            <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3 relative z-20">
                 <div>
                     <p class="text-xs text-gray-500">Total</p>
                     <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">--</p>
@@ -1777,15 +1781,23 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
         </div>
 
-        <div class="bento-card bento-span-2 lg:col-span-2 p-6">
-            <h3 class="text-lg font-bold text-gray-200 mb-2">Category Breakdown</h3>
+		<div id="category-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
+            <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
+            </div>
+
+            <h3 class="text-lg font-bold text-gray-200 mb-2 relative z-20">Category Breakdown</h3>
             <div id="category-chart-container" class="relative h-48 w-full flex justify-center">
                 <canvas id="categoryChart"></canvas>
             </div>
         </div>
         
-        <div class="bento-card bento-span-2 lg:col-span-2 p-6">
-            <h3 class="text-lg font-bold text-gray-200 mb-2">Top Responses</h3>
+		<div id="stats-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
+            <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
+            </div>
+
+            <h3 class="text-lg font-bold text-gray-200 mb-2 relative z-20">Top Responses</h3>
             <div id="stats-container" class="relative h-48 w-full">
                 <canvas id="stats-chart"></canvas>
             </div>
@@ -2348,6 +2360,26 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 	<div id="challenge-tracker-hud" class="hidden">
 			</div>
 	
+	<div id="expanded-chart-modal" class="modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity duration-300">
+    <div class="modal-content w-11/12 max-w-6xl h-[85vh] bg-gray-900 rounded-2xl shadow-2xl flex flex-col p-6 relative border border-gray-700">
+        
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="expanded-chart-title" class="text-3xl font-bold text-gray-100">Chart View</h3>
+            <button id="close-expanded-chart-btn" class="text-gray-400 hover:text-white transition-colors p-2">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="flex-grow w-full relative bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+            <canvas id="expanded-chart-canvas"></canvas>
+        </div>
+
+        <div class="mt-4 text-center text-gray-400 text-sm">
+            <i class="fas fa-info-circle mr-2"></i> Pinch or scroll to zoom (if applicable)
+        </div>
+    </div>
+</div>
+	
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -2410,7 +2442,68 @@ let profileChartInstance = null;
 let messageTimeout = null;
 let trackedChallengeId = null;
 let notificationQueue = [];
-let isNotificationActive = false;		
+let isNotificationActive = false;
+let expandedChartInstance = null;
+
+		
+const openExpandedChart = (sourceChartInstance, title) => {
+    if (!sourceChartInstance) return;
+
+    const modal = document.getElementById('expanded-chart-modal');
+    const modalTitle = document.getElementById('expanded-chart-title');
+    const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
+
+    // Set Title
+    modalTitle.textContent = title;
+
+    // Destroy previous instance
+    if (expandedChartInstance) {
+        expandedChartInstance.destroy();
+    }
+
+    // Clone Config
+    const config = sourceChartInstance.config;
+    
+    // Create optimized options for Big Screen
+    const newOptions = {
+        ...config.options,
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            ...config.options.plugins,
+            legend: {
+                display: true, // Show legend on big view
+                position: 'top',
+                labels: {
+                    color: document.body.classList.contains('light-mode') ? '#1f2937' : '#e5e7eb',
+                    font: { size: 14 }
+                }
+            },
+            title: { display: false },
+            tooltip: config.options.plugins.tooltip
+        },
+        scales: config.options.scales
+    };
+
+    // Render Big Chart
+    expandedChartInstance = new Chart(ctx, {
+        type: config.type,
+        data: config.data,
+        options: newOptions
+    });
+
+    // Show Modal
+    modal.classList.remove('hidden');
+};
+
+const closeExpandedChart = () => {
+    const modal = document.getElementById('expanded-chart-modal');
+    modal.classList.add('hidden');
+    if (expandedChartInstance) {
+        expandedChartInstance.destroy();
+        expandedChartInstance = null;
+    }
+};
 		
 
 // --- NEW: Leveling System Configuration ---		
@@ -5943,9 +6036,57 @@ const showPlaceholderDemo = () => {
 };
 
 
-// PASTE THIS ENTIRE BLOCK
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+    
+    // 1. Activity Chart Click
+    const activityWrapper = document.getElementById('activity-card-wrapper');
+    if (activityWrapper) {
+        activityWrapper.addEventListener('click', (e) => {
+            // Prevent triggering if clicking the filter buttons
+            if (e.target.closest('.activity-filter-btn')) return;
+            openExpandedChart(activityChartInstance, 'Activity Flow Analysis');
+        });
+    }
+
+    // 2. Category Chart Click
+    const categoryWrapper = document.getElementById('category-card-wrapper');
+    if (categoryWrapper) {
+        categoryWrapper.addEventListener('click', () => {
+            openExpandedChart(categoryChartInstance, 'Category Breakdown');
+        });
+    }
+
+    // 3. Top Responses Chart Click
+    const statsWrapper = document.getElementById('stats-card-wrapper');
+    if (statsWrapper) {
+        statsWrapper.addEventListener('click', () => {
+            openExpandedChart(statsChart, 'Top 5 Responses');
+        });
+    }
+
+    // 4. Close Modal Listener
+    const closeExpandedBtn = document.getElementById('close-expanded-chart-btn');
+    if(closeExpandedBtn) {
+        closeExpandedBtn.addEventListener('click', closeExpandedChart);
+    }
+
+    // 5. Close on background click
+    const expandedModal = document.getElementById('expanded-chart-modal');
+    if(expandedModal) {
+        expandedModal.addEventListener('click', (e) => {
+            if (e.target === expandedModal) {
+                closeExpandedChart();
+            }
+        });
+    }
+    
+    // 6. Close on Escape Key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && expandedModal && !expandedModal.classList.contains('hidden')) {
+            closeExpandedChart();
+        }
+    });
 
 const activityFilterGroup = document.getElementById('activity-filter-group');
 if (activityFilterGroup) {
