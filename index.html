@@ -2360,22 +2360,50 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 	<div id="challenge-tracker-hud" class="hidden">
 			</div>
 	
-	<div id="expanded-chart-modal" class="modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity duration-300">
-    <div class="modal-content w-11/12 max-w-6xl h-[85vh] bg-gray-900 rounded-2xl shadow-2xl flex flex-col p-6 relative border border-gray-700">
+<div id="expanded-chart-modal" class="modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity duration-300">
+    <div class="modal-content w-11/12 max-w-6xl h-[90vh] bg-gray-900 rounded-2xl shadow-2xl flex flex-col p-6 relative border border-gray-700">
         
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
             <h3 id="expanded-chart-title" class="text-3xl font-bold text-gray-100">Chart View</h3>
-            <button id="close-expanded-chart-btn" class="text-gray-400 hover:text-white transition-colors p-2">
-                <i class="fas fa-times text-2xl"></i>
+            
+            <div id="expanded-activity-controls" class="hidden flex-wrap justify-center gap-2">
+                <div id="modal-activity-filter-group" class="flex p-1 bg-gray-800 rounded-full"> 
+                    <button class="activity-filter-btn px-4 py-2 text-sm" data-period="7">7 Days</button>
+                    <button class="activity-filter-btn px-4 py-2 text-sm" data-period="30">30 Days</button>
+                    <button class="activity-filter-btn px-4 py-2 text-sm" data-period="month">This Month</button>
+                    <button class="activity-filter-btn px-4 py-2 text-sm active" data-period="all">All Time</button>
+                </div>
+            </div>
+
+            <button id="close-expanded-chart-btn" class="text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full h-10 w-10 flex items-center justify-center">
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <div class="flex-grow w-full relative bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+        <div id="expanded-activity-stats" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+            <div class="text-center border-b md:border-b-0 md:border-r border-gray-600 pb-2 md:pb-0">
+                <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Total Copies</p>
+                <p id="modal-stats-total" class="text-3xl font-bold text-white">--</p>
+            </div>
+            <div class="text-center border-b md:border-b-0 md:border-r border-gray-600 pb-2 md:pb-0">
+                <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Daily Average</p>
+                <p id="modal-stats-avg" class="text-3xl font-bold text-white">--</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Busiest Day</p>
+                <div class="flex flex-col items-center justify-center">
+                    <p id="modal-stats-peak-date" class="text-xl font-bold text-white">--</p>
+                    <p id="modal-stats-peak-count" class="text-sm text-emerald-400 font-mono">--</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow w-full relative bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
             <canvas id="expanded-chart-canvas"></canvas>
         </div>
 
         <div class="mt-4 text-center text-gray-400 text-sm">
-            <i class="fas fa-info-circle mr-2"></i> Pinch or scroll to zoom (if applicable)
+            <i class="fas fa-search-plus mr-2"></i> Interactive Analysis View
         </div>
     </div>
 </div>
@@ -2443,66 +2471,142 @@ let messageTimeout = null;
 let trackedChallengeId = null;
 let notificationQueue = [];
 let isNotificationActive = false;
-let expandedChartInstance = null;
 
 		
-const openExpandedChart = (sourceChartInstance, title) => {
+let expandedChartEvents = []; // Store events specifically for the modal
+
+const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartType = 'generic') => {
     if (!sourceChartInstance) return;
 
     const modal = document.getElementById('expanded-chart-modal');
     const modalTitle = document.getElementById('expanded-chart-title');
     const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
+    
+    // Elements to toggle
+    const controlsDiv = document.getElementById('expanded-activity-controls');
+    const statsDiv = document.getElementById('expanded-activity-stats');
 
-    // Set Title
     modalTitle.textContent = title;
 
-    // Destroy previous instance
-    if (expandedChartInstance) {
-        expandedChartInstance.destroy();
-    }
+    if (expandedChartInstance) expandedChartInstance.destroy();
 
-    // Clone Config
-    const config = sourceChartInstance.config;
-    
-    // Create optimized options for Big Screen
-    const newOptions = {
-        ...config.options,
-        maintainAspectRatio: false,
-        responsive: true,
-        plugins: {
-            ...config.options.plugins,
-            legend: {
-                display: true, // Show legend on big view
-                position: 'top',
-                labels: {
-                    color: document.body.classList.contains('light-mode') ? '#1f2937' : '#e5e7eb',
-                    font: { size: 14 }
+    // --- CASE A: ACTIVITY CHART (Interactive) ---
+    if (chartType === 'activity' && eventsData) {
+        // 1. Show Controls
+        controlsDiv.classList.remove('hidden');
+        controlsDiv.classList.add('flex');
+        statsDiv.classList.remove('hidden');
+        statsDiv.classList.add('grid');
+        
+        // 2. Store data for filtering
+        expandedChartEvents = eventsData;
+
+        // 3. Render Initial View (Default to 'all')
+        renderExpandedActivityChart('all');
+
+        // 4. Attach Filter Click Listeners (Only once)
+        const filterGroup = document.getElementById('modal-activity-filter-group');
+        // Remove old listeners by cloning and replacing the node (simplest way to avoid duplicates)
+        const newFilterGroup = filterGroup.cloneNode(true);
+        filterGroup.parentNode.replaceChild(newFilterGroup, filterGroup);
+        
+        newFilterGroup.addEventListener('click', (e) => {
+            const btn = e.target.closest('.activity-filter-btn');
+            if (btn) {
+                newFilterGroup.querySelectorAll('.activity-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderExpandedActivityChart(btn.dataset.period);
+            }
+        });
+
+    } 
+    // --- CASE B: GENERIC CHARTS (Category, Top 5) ---
+    else {
+        // 1. Hide Controls
+        controlsDiv.classList.add('hidden');
+        controlsDiv.classList.remove('flex');
+        statsDiv.classList.add('hidden');
+        statsDiv.classList.remove('grid');
+
+        // 2. Standard Clone Rendering (Existing logic)
+        const config = sourceChartInstance.config;
+        const newOptions = {
+            ...config.options,
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                ...config.options.plugins,
+                legend: {
+                    display: true,
+                    labels: { color: '#e5e7eb', font: { size: 14 } }
                 }
             },
-            title: { display: false },
-            tooltip: config.options.plugins.tooltip
-        },
-        scales: config.options.scales
-    };
+            scales: config.options.scales
+        };
 
-    // Render Big Chart
-    expandedChartInstance = new Chart(ctx, {
-        type: config.type,
-        data: config.data,
-        options: newOptions
-    });
+        expandedChartInstance = new Chart(ctx, {
+            type: config.type,
+            data: config.data,
+            options: newOptions
+        });
+    }
 
-    // Show Modal
     modal.classList.remove('hidden');
 };
 
-const closeExpandedChart = () => {
-    const modal = document.getElementById('expanded-chart-modal');
-    modal.classList.add('hidden');
-    if (expandedChartInstance) {
-        expandedChartInstance.destroy();
-        expandedChartInstance = null;
-    }
+// Internal function to handle rendering inside the modal
+const renderExpandedActivityChart = (period) => {
+    const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
+    
+    // 1. Process Data
+    const processed = processActivityData(expandedChartEvents, period);
+
+    // 2. Update Modal Stats
+    document.getElementById('modal-stats-total').textContent = processed.total.toLocaleString();
+    document.getElementById('modal-stats-avg').textContent = processed.avg;
+    document.getElementById('modal-stats-peak-date').textContent = processed.peakDate;
+    document.getElementById('modal-stats-peak-count').textContent = processed.peakCount > 0 ? `${processed.peakCount} copies` : '--';
+
+    // 3. Render Chart
+    if (expandedChartInstance) expandedChartInstance.destroy();
+
+    const isLightMode = document.body.classList.contains('light-mode');
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+
+    expandedChartInstance = new Chart(ctx, {
+        type: 'bar', // Bar chart looks nice for detailed daily analysis
+        data: {
+            labels: processed.labels,
+            datasets: [{
+                label: 'Copies',
+                data: processed.data,
+                backgroundColor: 'rgba(59, 130, 246, 0.6)', // Blue bars
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const originalDate = new Date(processed.rawSortedDates[context[0].dataIndex] + 'T00:00:00');
+                            return originalDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                        }
+                    }
+                }
+            }
+        }
+    });
 };
 		
 
@@ -5580,6 +5684,81 @@ const renderSettingsPage = () => {
     }
 };
 
+// This calculates chart data AND stats for any given period
+const processActivityData = (events, period) => {
+    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
+    const now = new Date();
+    let startDate = new Date();
+    let filteredEvents = [];
+
+    // Filter Logic
+    if (period === '7') {
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+    } else if (period === '30') {
+        startDate.setDate(now.getDate() - 29);
+        startDate.setHours(0, 0, 0, 0);
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+    } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
+    } else { // 'all'
+        filteredEvents = copyEvents;
+    }
+
+    // Group by Date
+    const activityByDay = filteredEvents.reduce((acc, event) => {
+        const date = event.timestamp.toDate().toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+    }, {});
+
+    // Sort Dates
+    const sortedDates = Object.keys(activityByDay).sort();
+    
+    // Calculate Stats
+    let totalCopies = filteredEvents.length;
+    
+    // Calculate number of days in the range (for average)
+    let daysDivisor = 1;
+    if (period === 'all') {
+        daysDivisor = Object.keys(activityByDay).length || 1;
+    } else if (period === '7') { daysDivisor = 7; }
+    else if (period === '30') { daysDivisor = 30; }
+    else if (period === 'month') { daysDivisor = now.getDate(); }
+
+    let avgCopies = (totalCopies / daysDivisor).toFixed(1);
+
+    let peakCount = 0;
+    let peakDate = '--';
+
+    for (const date in activityByDay) {
+        if (activityByDay[date] > peakCount) {
+            peakCount = activityByDay[date];
+            const d = new Date(date + 'T00:00:00');
+            peakDate = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+    }
+
+    // Prepare Chart Data
+    const chartLabels = sortedDates.map(date => {
+        const d = new Date(date + 'T00:00:00');
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const chartData = sortedDates.map(date => activityByDay[date]);
+
+    return {
+        labels: chartLabels,
+        data: chartData,
+        total: totalCopies,
+        avg: avgCopies,
+        peakDate: peakDate,
+        peakCount: peakCount,
+        rawSortedDates: sortedDates // useful for tooltips
+    };
+};
+
 const renderCategoryChart = (events) => {
     const container = document.getElementById('category-chart-container');
     if (!container) return;
@@ -5663,136 +5842,70 @@ const renderCategoryChart = (events) => {
 
 // FIND and REPLACE the entire renderActivityChart function
 const renderActivityChart = (events, period = 'all') => {
-    const container = document.getElementById('activity-chart-container');
-    if (!container) return;
+    const container = document.getElementById('activity-chart-container');
+    if (!container) return;
 
-    container.innerHTML = '<canvas id="activityChart"></canvas>';
-    const ctx = document.getElementById('activityChart').getContext('2d');
-    
-    if (activityChartInstance) {
-        activityChartInstance.destroy();
-    }
-
-    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
-
-    // --- 1. FILTERING LOGIC ---
-    const now = new Date();
-    let filteredEvents = [];
-    let startDate = new Date();
-
-    if (period === '7') {
-        startDate.setDate(now.getDate() - 6); // 6 days ago + today = 7 days
-        startDate.setHours(0, 0, 0, 0);
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else if (period === '30') {
-        startDate.setDate(now.getDate() - 29); // 29 days ago + today = 30 days
-        startDate.setHours(0, 0, 0, 0);
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else if (period === 'month') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of this month
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else { // 'all'
-        filteredEvents = copyEvents;
+    // Destroy old if exists
+    if (activityChartInstance) {
+        activityChartInstance.destroy();
     }
     
-    // --- 2. CHART DATA PREPARATION ---
-const activityByDay = filteredEvents.reduce((acc, event) => {
-        const date = event.timestamp.toDate().toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-    }, {});
-    const activeDayCount = Object.keys(activityByDay).length;
-    const daysInPeriod = activeDayCount > 0 ? activeDayCount : 1;
-    const sortedDates = Object.keys(activityByDay).sort();
-    const chartLabels = sortedDates.map(date => {
-        const d = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    });
-    const chartData = sortedDates.map(date => activityByDay[date]);
+    container.innerHTML = '<canvas id="activityChart"></canvas>';
+    const ctx = document.getElementById('activityChart').getContext('2d');
 
-    // --- 3. STATS CALCULATION & DISPLAY ---
-    let totalCopies = 0;
-    let avgCopies = 0;
-    let busiestDay = '--';
-    let busiestDayCount = 0;
-    
-    if (filteredEvents.length > 0) {
-        totalCopies = filteredEvents.length;
-        avgCopies = (totalCopies / daysInPeriod).toFixed(1);
+    // 1. Get Processed Data using the Helper
+    const processed = processActivityData(events, period);
 
-        // Find busiest day from the 'activityByDay' object
-        for (const date in activityByDay) {
-            if (activityByDay[date] > busiestDayCount) {
-                busiestDayCount = activityByDay[date];
-                const d = new Date(date + 'T00:00:00');
-                busiestDay = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    // 2. Update Dashboard Stats
+    document.getElementById('stats-total-copies').textContent = processed.total.toLocaleString();
+    document.getElementById('stats-avg-copies').textContent = processed.avg;
+    document.getElementById('stats-busiest-day').textContent = processed.peakDate;
+    document.getElementById('stats-busiest-day-count').textContent = processed.peakCount > 0 ? `(${processed.peakCount} copies)` : '';
+
+    if (processed.total === 0 && period !== 'all') {
+         container.innerHTML = '<p class="text-center text-gray-400 mt-12">No activity recorded for this period.</p>';
+         return;
+    }
+
+    // 3. Render Dashboard Chart
+    const isLightMode = document.body.classList.contains('light-mode');
+    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    activityChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: processed.labels,
+            datasets: [{
+                label: 'Copies',
+                data: processed.data,
+                fill: true,
+                backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                borderColor: 'rgba(74, 222, 128, 1)',
+                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { type: 'category', ticks: { color: textColor }, grid: { color: gridColor } },
+                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const originalDate = new Date(processed.rawSortedDates[context[0].dataIndex] + 'T00:00:00');
+                            return originalDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                        }
+                    }
+                }
             }
         }
-    }
-
-    // Update the HTML for the stats display
-    document.getElementById('stats-total-copies').textContent = totalCopies.toLocaleString();
-    document.getElementById('stats-avg-copies').textContent = avgCopies;
-    document.getElementById('stats-busiest-day').textContent = busiestDay;
-    document.getElementById('stats-busiest-day-count').textContent = busiestDayCount > 0 ? `(${busiestDayCount} copies)` : '';
-
-
-    // --- 4. RENDER THE CHART ---
-    if (filteredEvents.length === 0 && period !== 'all') {
-        container.innerHTML = '<p class="text-center text-gray-400 mt-12">No activity recorded for this period.</p>';
-        // Still render the chart if "all time" is 0
-    } else if (copyEvents.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your activity trend.</p>';
-        return;
-    }
-
-    const isLightMode = document.body.classList.contains('light-mode');
-    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-
-    activityChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Copies per Day',
-                data: chartData,
-                fill: true,
-                backgroundColor: 'rgba(74, 222, 128, 0.2)',
-                borderColor: 'rgba(74, 222, 128, 1)',
-                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
-                tension: 0.2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                // Per your request, we are keeping the 'category' type
-                    type: 'category', 
-                    ticks: { color: textColor },
-                    grid: { color: gridColor }
-                },
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { color: textColor, precision: 0 }, 
-                    grid: { color: gridColor } 
-                }
-            },
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            const originalDate = new Date(sortedDates[context[0].dataIndex] + 'T00:00:00');
-                             return originalDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                _         }
-                    }
-                }
-            }
-        }
-    });
+    });
 };
 
 const renderLevelingSystem = (userData) => {
@@ -6039,13 +6152,19 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
     
-    // 1. Activity Chart Click
+
     const activityWrapper = document.getElementById('activity-card-wrapper');
     if (activityWrapper) {
-        activityWrapper.addEventListener('click', (e) => {
-            // Prevent triggering if clicking the filter buttons
+        activityWrapper.addEventListener('click', async (e) => {
+            // Prevent triggering if clicking the dashboard filter buttons
             if (e.target.closest('.activity-filter-btn')) return;
-            openExpandedChart(activityChartInstance, 'Activity Flow Analysis');
+            if (userId) {
+                const eventsCollectionRef = getUserEventsCollectionRef(userId);
+                const snapshot = await getDocs(query(eventsCollectionRef));
+                const currentEvents = snapshot.docs.map(doc => doc.data());
+                
+                openExpandedChart(activityChartInstance, 'Activity Analysis', currentEvents, 'activity');
+            }
         });
     }
 
