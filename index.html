@@ -1253,6 +1253,75 @@ body.light-mode #tutorial-next-btn:hover { background-color: #3b82f6; }
 #tutorial-finish-btn:hover { background-color: #22c55e; }
 body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 
+/* --- Bento Grid Layout Styles --- */
+.bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    auto-rows: minmax(180px, auto);
+}
+
+@media (min-width: 768px) {
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+    .bento-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Bento Item Spans */
+.bento-span-1 { grid-column: span 1; }
+.bento-span-2 { grid-column: span 1; } /* Mobile default */
+.bento-span-full { grid-column: 1 / -1; }
+
+@media (min-width: 768px) {
+    .bento-span-2 { grid-column: span 2; }
+    .bento-row-2 { grid-row: span 2; }
+}
+
+/* Bento Card Base */
+.bento-card {
+    background-color: rgba(31, 41, 55, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.bento-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+    z-index: 10;
+}
+
+body.light-mode .bento-card {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Mini-Stat Box (Inside Snapshot) */
+.mini-stat-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: background 0.2s;
+}
+.mini-stat-box:hover { background: rgba(0, 0, 0, 0.4); }
+body.light-mode .mini-stat-box { background: rgba(0, 0, 0, 0.05); }
+body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
+		
+
     </style>
 		
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -1571,176 +1640,150 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
         </svg>
     </div>
 
-    <div id="stats-content" class="w-full max-w-7xl mx-auto space-y-8 hidden">
-		<div id="leveling-section-redesigned" class="floating-card p-0 overflow-hidden shadow-2xl">
-		    <div class="level-header-bg p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 relative">
-		        <div id="rank-icon-container-redesigned" class="flex-shrink-0">
-		            </div>
-				<div class="flex-grow w-full text-center md:text-left">
-				    <div class="flex items-center justify-center md:justify-start gap-3">
-				        <h3 id="rank-name-redesigned" class="text-4xl font-bold text-white tracking-wide" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
-				        </h3>
-				        <div id="double-xp-indicator" class="hidden relative group">
-				            <i class="fas fa-bolt text-3xl text-yellow-400"></i>
-				            <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-				                2x XP Active!
-				            </span>
-				        </div>
-					    <div id="triple-xp-indicator" class="hidden relative group">
-					        <i class="fas fa-fire text-3xl text-orange-400"></i>
-					        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-					            3x XP Active!
-					        </span>
-					    </div>
-				    </div>
-				    <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1">
-				    </p>
-				</div>
-		    </div>
-		    <div class="p-6 bg-gray-800/50">
-					<div class="xp-bar-container-redesigned" title="Experience Points Progress">
-					    <div id="xp-bar-redesigned" class="xp-bar-redesigned">
-					        </div>
-					    <span id="xp-progress-text-redesigned" class="xp-bar-text">
-					    </span>
-					</div>
-		        <div id="next-rank-text-container" class="text-right text-sm text-gray-400 mt-2">
-		            </div>
-		    </div>
-		</div>
+<div id="stats-content" class="w-full max-w-7xl mx-auto hidden">
+        
+        <div class="mb-8 animate-fade-in">
+            <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                Command Center
+            </h2>
+            <p class="text-gray-400 mt-2">Track your productivity, rank, and achievements.</p>
+        </div>
 
-        <div id="achievements-module" class="floating-card p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
-				 <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-				    🏆 Achievements
-				</h2>
-                <div class="flex items-center gap-4">
-                    <div id="achievement-tabs" class="flex gap-2 text-sm">
-                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white" data-filter="all">All</button>
-                        <button class="achievement-tab px-4 py-2 rounded-lg font-semibold text-gray-300 hover:bg-gray-700 transition" data-filter="unlocked">Unlocked</button>
+        <div class="bento-grid">
+
+            <div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px]">
+                <div class="level-header-bg p-6 flex flex-col sm:flex-row items-center gap-6 relative flex-grow">
+                    <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform scale-90"></div>
+                    <div class="flex-grow w-full text-center sm:text-left z-10">
+                        <div class="flex items-center justify-center sm:justify-start gap-3">
+                            <h3 id="rank-name-redesigned" class="text-3xl font-bold text-white tracking-wide drop-shadow-md"></h3>
+                            <div id="double-xp-indicator" class="hidden"><i class="fas fa-bolt text-2xl text-yellow-400 animate-pulse"></i></div>
+                            <div id="triple-xp-indicator" class="hidden"><i class="fas fa-fire text-2xl text-orange-400 animate-pulse"></i></div>
+                        </div>
+                        <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1"></p>
                     </div>
-                    <div class="text-right">
-                        <p id="ach-progress-text" class="text-lg font-semibold text-gray-300">0 / 0 Unlocked</p>
-                        <div class="w-24 h-2 bg-gray-700 rounded-full mt-1">
-                            <div id="ach-progress-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <div class="p-6 bg-gray-900/30 border-t border-gray-700/50">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1 uppercase font-bold">
+                        <span>XP Progress</span>
+                        <span id="next-rank-text-container"></span>
+                    </div>
+                    <div class="xp-bar-container-redesigned h-4">
+                        <div id="xp-bar-redesigned" class="xp-bar-redesigned"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span id="xp-progress-text-redesigned" class="text-xs font-bold text-white relative z-10"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card bento-span-2 p-6">
+                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-camera-retro mr-2 text-pink-400"></i> Snapshot
+                </h3>
+                <div id="metric-badges-container" class="grid grid-cols-2 gap-4 h-full">
+                    </div>
+            </div>
+
+            <div class="bento-card bento-span-1 bento-row-2 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
+                        <i class="fas fa-flag-checkered mr-2 text-red-400"></i> Challenges
+                    </h3>
+                    <span id="challenge-counter" class="bg-gray-700 text-xs px-2 py-1 rounded-full text-white"></span>
+                </div>
+                <div id="challenges-container" class="space-y-3 overflow-y-auto pr-1 scrollbar-hide h-full"></div>
+            </div>
+
+            <div class="bento-card bento-span-2 lg:col-span-3 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
+                        <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
+                    </h3>
+                    <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90"> 
+                        <button class="activity-filter-btn px-3 py-1 text-xs" data-period="7">7D</button>
+                        <button class="activity-filter-btn px-3 py-1 text-xs" data-period="30">30D</button>
+                        <button class="activity-filter-btn px-3 py-1 text-xs active" data-period="all">All</button>
+                    </div>
+                </div>
+                <div id="activity-chart-container" class="relative h-48 w-full">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Total</p>
+                        <p id="stats-total-copies" class="text-lg font-bold text-white">--</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Avg/Day</p>
+                        <p id="stats-avg-copies" class="text-lg font-bold text-white">--</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Peak</p>
+                        <p id="stats-busiest-day" class="hidden">--</p> 
+                        <p id="stats-busiest-day-count" class="text-lg font-bold text-white">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card bento-span-2 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
+                        <i class="fas fa-trophy mr-2 text-yellow-400"></i> Trophy Case
+                    </h3>
+                    <div class="w-1/3 text-right">
+                        <div class="text-xs text-gray-400 mb-1" id="ach-progress-text">0/0</div>
+                        <div class="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="ach-progress-bar" class="h-full bg-yellow-400 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
+                <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 gap-2 overflow-y-auto max-h-[200px] scrollbar-hide"></div>
             </div>
-            <div id="achievements-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 overflow-y-auto max-h-[340px] p-2 scrollbar-hide">
-                </div>
-        </div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-		    
-		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		            ⚡️ Activity Snapshot
-		        </h2>
-		        <div id="metric-badges-container" class="flex flex-col space-y-4">
-		            </div>
-		    </div>
-		    
-			<div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-					<h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-baseline">
-					    <span>🏃 Active Challenges</span>
-					    <span id="challenge-counter" class="ml-3 text-lg font-medium text-gray-500"></span>
-					</h2>
-                    <div id="challenges-container" class="space-y-4 max-h-[340px] overflow-y-auto pr-2">
-		        </div>
-		    </div>
-
-			<div class="floating-card p-6 sm:p-8 flex flex-col h-full">
-			    <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-			        <i class="fas fa-medal mr-3 text-3xl text-yellow-400"></i> My Records
-			    </h2>
-			    <div id="records-container" class="flex flex-col space-y-4 flex-grow justify-center">
-			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-			            <div class="flex items-center">
-			                <i class="fas fa-calendar-day text-blue-400 w-6 text-center mr-3"></i>
-			                <p class="text-gray-300">Most Copies in a Day</p>
-			            </div>
-			            <p id="record-daily" class="text-xl font-bold text-white">--</p>
-			        </div>
-			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-			            <div class="flex items-center">
-			                <i class="fas fa-calendar-week text-green-400 w-6 text-center mr-3"></i>
-			                <p class="text-gray-300">Most Copies in a Week</p>
-			            </div>
-			            <p id="record-weekly" class="text-xl font-bold text-white">--</p>
-			        </div>
-			        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-			            <div class="flex items-center">
-			                <i class="fas fa-calendar-alt text-purple-400 w-6 text-center mr-3"></i>
-			                <p class="text-gray-300">Most Copies in a Month</p>
-			            </div>
-			            <p id="record-monthly" class="text-xl font-bold text-white">--</p>
-			        </div>
-			    </div>
-			</div>
-		    
-		    <div class="floating-card p-6 sm:p-8 lg:col-span-1 flex flex-col h-full">
-		        <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-		            ⭐ Leaderboard
-		        </h2>
-		         <div id="leaderboard-container" class="space-y-2 max-h-[340px] overflow-y-auto scrollbar-hide">
-		            </div>
-		    </div>
-		</div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="floating-card p-6 sm:p-8">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-chart-bar mr-3 text-3xl text-teal-400"></i> Top 5 Responses
-                </h2>
-                <div id="stats-container" class="w-full relative h-64 sm:h-80">
-                    <canvas id="stats-chart"></canvas>
+            <div class="bento-card bento-span-1 p-6 flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-medal mr-2 text-orange-400"></i> Records
+                </h3>
+                <div class="space-y-3 flex-grow">
+                    <div class="bg-gray-800/50 p-3 rounded-lg flex justify-between items-center border-l-4 border-blue-500">
+                        <span class="text-xs text-gray-400 uppercase">Daily</span>
+                        <span id="record-daily" class="text-xl font-bold text-white">0</span>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg flex justify-between items-center border-l-4 border-purple-500">
+                        <span class="text-xs text-gray-400 uppercase">Weekly</span>
+                        <span id="record-weekly" class="text-xl font-bold text-white">0</span>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg flex justify-between items-center border-l-4 border-yellow-500">
+                        <span class="text-xs text-gray-400 uppercase">Monthly</span>
+                        <span id="record-monthly" class="text-xl font-bold text-white">0</span>
+                    </div>
                 </div>
             </div>
-            <div class="floating-card p-6 sm:p-8">
-                <h2 class="text-2xl font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-pie-chart mr-3 text-3xl text-indigo-400"></i> Category Breakdown
-                </h2>
-                <div id="category-chart-container" class="relative h-64 sm:h-80">
+
+            <div class="bento-card bento-span-1 p-6 max-h-[350px]">
+                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
+                    <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
+                </h3>
+                <div id="leaderboard-container" class="overflow-y-auto space-y-2 scrollbar-hide h-full"></div>
+            </div>
+
+            <div class="bento-card bento-span-1 lg:col-span-2 p-6">
+                <h3 class="text-lg font-bold text-gray-200 mb-2">Category Breakdown</h3>
+                <div id="category-chart-container" class="relative h-48 w-full flex justify-center">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
+            
+            <div class="bento-card bento-span-1 lg:col-span-2 p-6">
+                <h3 class="text-lg font-bold text-gray-200 mb-2">Top Responses</h3>
+                <div id="stats-container" class="relative h-48 w-full">
+                    <canvas id="stats-chart"></canvas>
+                </div>
+            </div>
+
         </div>
-
- <div class="floating-card p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
-                <h2 class="text-2xl font-bold text-gray-200 flex items-center">
-                    <i class="fas fa-chart-line mr-3 text-3xl text-green-400"></i> Activity Over Time
-                </h2>
-			<div id="activity-filter-group" class="flex items-center space-x-2 bg-transparent self-start sm:self-center"> 
-					<button class="activity-filter-btn" data-period="7">Last 7 Days</button>
-                    <button class="activity-filter-btn" data-period="30">Last 30 Days</button>
-                    <button class="activity-filter-btn" data-period="month">This Month</button>
-                    <button class="activity-filter-btn active" data-period="all">All Time</button>
-                </div>
-            </div>
-                        <div id="activity-chart-container" class="relative h-64 sm:h-80">
-                <canvas id="activityChart"></canvas>
-            </div>
-
-            <div id="activity-stats-display" class="mt-6 pt-6 border-t border-gray-600 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Total Copies</h4>
-                    <p id="stats-total-copies" class="text-3xl font-bold text-white">--</p>
-                </div>
-                <div>
-                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Avg. Copies / Day</h4>
-                    <p id="stats-avg-copies" class="text-3xl font-bold text-white">--</p>
-                </div>
-                <div>
-                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Busiest Day</h4>
-                    <p id="stats-busiest-day" class="text-3xl font-bold text-white">--</p>
-                    <p id="stats-busiest-day-count" class="text-sm text-gray-500"></p>
-                </div>
-            </div>
-        </div>
     </div>
-</div>
 
 <div id="profile-modal" class="modal hidden">
         <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-2xl p-0 overflow-hidden modal-scroll-fix shadow-2xl rounded-xl">    
@@ -3352,7 +3395,7 @@ const renderFilteredAchievements = (events, userData) => {
         const unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || new Date().toISOString()) : '';
         
         return `
-            <div class="achievement-card-redesign floating-card cursor-pointer"
+            <div class="achievement-card-redesign flex flex-col items-center text-center p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
                  data-id="${ach.id}" data-name="${ach.name}" data-desc="${sanitizedDesc}"
                  data-icon="${ach.icon}" data-color="${ach.color || 'text-yellow-400'}"
                  data-unlocked="${ach.unlocked}" data-unlocked-date="${unlockedDate}">
@@ -5786,35 +5829,27 @@ const renderAdvancedStats = async () => {
         const editsThisMonth = events.filter(e => e.type === 'edit_response' && e.timestamp?.toDate() > startOfMonth).length;
         const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
         const totalCategories = Object.keys(categories).length;
-
+// --- Metric Badges (UPDATED FOR BENTO) ---
         metricBadgesContainer.innerHTML = `
-            <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-                <div class="flex items-center">
-                    <i class="fas fa-copy text-blue-400 w-6 text-center mr-3"></i>
-                    <p class="text-gray-300">Copies This Week</p>
-                </div>
-                <p class="text-xl font-bold text-white">${copiesThisWeek}</p>
+            <div class="mini-stat-box group">
+                <i class="fas fa-copy text-2xl text-blue-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                <span class="text-2xl font-extrabold text-white">${copiesThisWeek}</span>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Week Copies</span>
             </div>
-            <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-                <div class="flex items-center">
-                    <i class="fas fa-pencil-alt text-green-400 w-6 text-center mr-3"></i>
-                    <p class="text-gray-300">Edits This Month</p>
-                </div>
-                <p class="text-xl font-bold text-white">${editsThisMonth}</p>
+            <div class="mini-stat-box group">
+                <i class="fas fa-pencil-alt text-2xl text-green-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                <span class="text-2xl font-extrabold text-white">${editsThisMonth}</span>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Month Edits</span>
             </div>
-            <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-                <div class="flex items-center">
-                    <i class="fas fa-plus-square text-purple-400 w-6 text-center mr-3"></i>
-                    <p class="text-gray-300">Responses Created</p>
-                </div>
-                <p class="text-xl font-bold text-white">${totalResponsesCreated}</p>
+            <div class="mini-stat-box group">
+                <i class="fas fa-plus-square text-2xl text-purple-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                <span class="text-2xl font-extrabold text-white">${totalResponsesCreated}</span>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Responses</span>
             </div>
-            <div class="flex items-center justify-between bg-gray-800 p-4 rounded-xl">
-                <div class="flex items-center">
-                    <i class="fas fa-folder text-yellow-400 w-6 text-center mr-3"></i>
-                    <p class="text-gray-300">Total Categories</p>
-                </div>
-                <p class="text-xl font-bold text-white">${totalCategories}</p>
+            <div class="mini-stat-box group">
+                <i class="fas fa-folder text-2xl text-yellow-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                <span class="text-2xl font-extrabold text-white">${totalCategories}</span>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">Categories</span>
             </div>
         `;
 
