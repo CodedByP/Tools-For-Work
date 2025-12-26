@@ -2471,9 +2471,8 @@ let messageTimeout = null;
 let trackedChallengeId = null;
 let notificationQueue = [];
 let isNotificationActive = false;
-
-		
-let expandedChartEvents = []; // Store events specifically for the modal
+let expandedChartInstance = null; // <--- ADD THIS LINE HERE
+let expandedChartEvents = [];     // <--- AND THIS ONE
 
 const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartType = 'generic') => {
     if (!sourceChartInstance) return;
