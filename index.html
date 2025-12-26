@@ -1278,7 +1278,10 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     .bento-span-2 { grid-column: span 2; }
     .bento-row-2 { grid-row: span 2; }
 }
-
+		
+.bento-row-span-2 {
+    grid-row: span 2;
+}
 /* Bento Card Base */
 .bento-card {
     background-color: rgba(31, 41, 55, 0.6);
@@ -1761,12 +1764,15 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
-            <div class="bento-card bento-span-1 p-6 max-h-[350px]">
-                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
-                </h3>
-                <div id="leaderboard-container" class="overflow-y-auto space-y-2 scrollbar-hide h-full"></div>
-            </div>
+			<div class="bento-card bento-span-1 bento-row-span-2 p-6 flex flex-col h-full min-h-[400px]">
+			    <div class="flex justify-between items-center mb-4">
+			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
+			            <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
+			        </h3>
+			        <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Top 10</span>
+			    </div>
+			    <div id="leaderboard-container" class="flex-grow overflow-y-auto space-y-2 scrollbar-hide"></div>
+			</div>
 
             <div class="bento-card bento-span-1 lg:col-span-2 p-6">
                 <h3 class="text-lg font-bold text-gray-200 mb-2">Category Breakdown</h3>
