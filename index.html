@@ -807,6 +807,35 @@
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
+}	
+
+/* --- Premium Modal Animation Styles --- */
+
+/* 1. Base state for the Overlay (Background) */
+#expanded-chart-modal {
+    opacity: 0;
+    visibility: hidden; /* Use visibility instead of display:none for smoother transitions */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 2. State when the modal is OPEN */
+#expanded-chart-modal.modal-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 3. Base state for the Content Box (The Card) */
+#expanded-chart-modal .modal-content {
+    transform: scale(0.9) translateY(20px); /* Start slightly small and lower */
+    opacity: 0;
+    /* This bezier curve creates the "Spring" bounce effect */
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+/* 4. State when the content is OPEN */
+#expanded-chart-modal.modal-visible .modal-content {
+    transform: scale(1) translateY(0); /* Snap to perfect center */
+    opacity: 1;
 }		
 
 /* --- Challenge Tracker HUD Styles --- */
@@ -2508,21 +2537,15 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
 
     // --- CASE A: ACTIVITY CHART (Interactive) ---
     if (chartType === 'activity' && eventsData) {
-        // 1. Show Controls
         controlsDiv.classList.remove('hidden');
         controlsDiv.classList.add('flex');
         statsDiv.classList.remove('hidden');
         statsDiv.classList.add('grid');
         
-        // 2. Store data for filtering
         expandedChartEvents = eventsData;
-
-        // 3. Render Initial View (Default to 'all')
         renderExpandedActivityChart('all');
 
-        // 4. Attach Filter Click Listeners (Only once)
         const filterGroup = document.getElementById('modal-activity-filter-group');
-        // Remove old listeners by cloning and replacing the node (simplest way to avoid duplicates)
         const newFilterGroup = filterGroup.cloneNode(true);
         filterGroup.parentNode.replaceChild(newFilterGroup, filterGroup);
         
@@ -2536,15 +2559,13 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         });
 
     } 
-    // --- CASE B: GENERIC CHARTS (Category, Top 5) ---
+    // --- CASE B: GENERIC CHARTS ---
     else {
-        // 1. Hide Controls
         controlsDiv.classList.add('hidden');
         controlsDiv.classList.remove('flex');
         statsDiv.classList.add('hidden');
         statsDiv.classList.remove('grid');
 
-        // 2. Standard Clone Rendering (Existing logic)
         const config = sourceChartInstance.config;
         const newOptions = {
             ...config.options,
@@ -2567,7 +2588,17 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         });
     }
 
+    // --- NEW ANIMATION LOGIC START ---
+    // 1. Remove the 'hidden' class to put it in the DOM (display: flex)
     modal.classList.remove('hidden');
+    
+    // 2. Force a browser "Reflow" (this is the magic trick)
+    // Asking for the offsetHeight forces the browser to calculate positions *before* we add the class
+    void modal.offsetHeight; 
+
+    // 3. Add the visibility class to trigger the CSS transition
+    modal.classList.add('modal-visible');
+    // --- NEW ANIMATION LOGIC END ---
 };
 
 // Internal function to handle rendering inside the modal
@@ -2625,22 +2656,25 @@ const renderExpandedActivityChart = (period) => {
     });
 };
 
-// --- PASTE THIS CODE BLOCK ---
-
 const closeExpandedChart = () => {
     const modal = document.getElementById('expanded-chart-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
     
-    // Good practice: Destroy the chart instance so it renders fresh next time
-    if (expandedChartInstance) {
-        expandedChartInstance.destroy();
-        expandedChartInstance = null;
+    if (modal) {
+        // 1. Remove the visible class to trigger the fade-out/zoom-down animation
+        modal.classList.remove('modal-visible');
+
+        // 2. Wait for the CSS transition (0.3s) to finish before adding display:none
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            
+            // Clean up chart after animation is done
+            if (expandedChartInstance) {
+                expandedChartInstance.destroy();
+                expandedChartInstance = null;
+            }
+        }, 300); // This must match the CSS transition time (0.3s)
     }
 };
-
-// -----------------------------
 
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
