@@ -1253,16 +1253,19 @@ body.light-mode #tutorial-next-btn:hover { background-color: #3b82f6; }
 #tutorial-finish-btn:hover { background-color: #22c55e; }
 body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 
-/* --- Bento Grid Layout Styles --- */
+/* Bento Grid Layout - UPDATED FOR MOBILE */
 .bento-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    auto-rows: minmax(180px, auto);
+    gap: 1.25rem; /* Slightly tighter gap */
+    auto-rows: auto; /* Let content dictate height on mobile */
 }
 
 @media (min-width: 768px) {
-    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        auto-rows: minmax(180px, auto); /* Enforce height on tablet+ */
+    }
 }
 
 @media (min-width: 1024px) {
@@ -1282,30 +1285,44 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 .bento-row-span-2 {
     grid-row: span 2;
 }
-/* Bento Card Base */
+/* Enhanced Bento Card - REPLACES OLD .bento-card */
 .bento-card {
-    background-color: rgba(31, 41, 55, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(30, 41, 59, 0.4); /* Lower opacity for glass feel */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid transparent; 
+    border-top: 1px solid rgba(255, 255, 255, 0.15); /* Top highlight */
+    border-left: 1px solid rgba(255, 255, 255, 0.08); /* Left highlight */
     border-radius: 1.5rem;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 0 20px rgba(0, 0, 0, 0.2); /* Inner depth */
     overflow: hidden;
     position: relative;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy hover */
     display: flex;
     flex-direction: column;
 }
 
 .bento-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.1);
-    z-index: 10;
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.4), 
+        0 10px 10px -5px rgba(0, 0, 0, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.1);
+    border-top-color: rgba(255, 255, 255, 0.3);
+    z-index: 20;
 }
 
+/* Light Mode Override */
 body.light-mode .bento-card {
-    background-color: rgba(255, 255, 255, 0.7);
-    border-color: rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.65);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.05), 
+        0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 /* Mini-Stat Box (Inside Snapshot) */
@@ -4849,22 +4866,31 @@ const renderLeaderboard = async () => {
         let rank = 1;
 
         querySnapshot.forEach(doc => {
-            const userData = doc.data();
-            const rankClass = rank <= 3 ? `top-${rank}` : '';
-            
-			leaderboardHTML += `
-			    <div class="leaderboard-entry cursor-pointer" data-userid="${doc.id}">
-			        <span class="leaderboard-rank ${rankClass}">${rank}</span>
-			        <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
-			            <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
-			        </div>
-			        <div class="leaderboard-details">
-			            <p class="font-semibold text-gray-100">${userData.displayName}</p>
-			            <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
-			        </div>
-			       <span class="leaderboard-xp text-emerald-400">${userData.xp.toLocaleString()} XP</span>
-			    </div>
-			`;
+		const userData = doc.data();
+		
+		let rankDisplay = `<span class="leaderboard-rank font-mono text-gray-500 w-6 text-center">${rank}</span>`;
+		
+		if (rank === 1) {
+		    rankDisplay = `<div class="w-6 text-center text-yellow-400 text-lg drop-shadow-md"><i class="fas fa-crown"></i></div>`;
+		} else if (rank === 2) {
+		    rankDisplay = `<div class="w-6 text-center text-gray-300 text-lg drop-shadow-md"><i class="fas fa-medal"></i></div>`;
+		} else if (rank === 3) {
+		    rankDisplay = `<div class="w-6 text-center text-amber-600 text-lg drop-shadow-md"><i class="fas fa-medal"></i></div>`;
+		}
+		
+		leaderboardHTML += `
+		    <div class="leaderboard-entry cursor-pointer" data-userid="${doc.id}">
+		        ${rankDisplay}
+		        <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
+		            <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
+		        </div>
+		        <div class="leaderboard-details">
+		            <p class="font-semibold text-gray-100">${userData.displayName}</p>
+		            <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
+		        </div>
+		        <span class="leaderboard-xp text-emerald-400">${userData.xp.toLocaleString()} XP</span>
+		    </div>
+		`;
             rank++;
         });
 
@@ -5881,11 +5907,16 @@ const renderActivityChart = (events, period = 'all') => {
          container.innerHTML = '<p class="text-center text-gray-400 mt-12">No activity recorded for this period.</p>';
          return;
     }
-
+    
     // 3. Render Dashboard Chart
     const isLightMode = document.body.classList.contains('light-mode');
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+
+    // Create Gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue fade
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
 
     activityChartInstance = new Chart(ctx, {
         type: 'line',
@@ -5895,28 +5926,45 @@ const renderActivityChart = (events, period = 'all') => {
                 label: 'Copies',
                 data: processed.data,
                 fill: true,
-                backgroundColor: 'rgba(74, 222, 128, 0.2)',
-                borderColor: 'rgba(74, 222, 128, 1)',
-                pointBackgroundColor: 'rgba(74, 222, 128, 1)',
-                tension: 0.3
+                backgroundColor: gradient, // Use gradient fill
+                borderColor: '#3b82f6', // Solid blue line
+                borderWidth: 2,
+                pointBackgroundColor: '#1d4ed8',
+                pointBorderColor: '#ffffff',
+                pointHoverBackgroundColor: '#ffffff',
+                pointHoverBorderColor: '#3b82f6',
+                tension: 0.4 // Makes lines smoother (curved)
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             scales: {
-                x: { type: 'category', ticks: { color: textColor }, grid: { color: gridColor } },
-                y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+                x: { 
+                    type: 'category', 
+                    ticks: { color: textColor, font: { family: 'Inter', size: 11 } }, 
+                    grid: { display: false } // Hide X grid
+                },
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: textColor, font: { family: 'Inter', size: 11 }, maxTicksLimit: 5 }, 
+                    grid: { color: gridColor, borderDash: [5, 5] }, // Dashed Y grid
+                    border: { display: false } // Remove axis line
+                }
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            const originalDate = new Date(processed.rawSortedDates[context[0].dataIndex] + 'T00:00:00');
-                            return originalDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                        }
-                    }
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false // Remove color box in tooltip
                 }
             }
         }
@@ -6061,26 +6109,58 @@ const renderAdvancedStats = async () => {
         const totalCategories = Object.keys(categories).length;
 // --- Metric Badges (UPDATED FOR BENTO) ---
         metricBadgesContainer.innerHTML = `
-            <div class="mini-stat-box group">
-                <i class="fas fa-copy text-2xl text-blue-400 mb-2 group-hover:scale-110 transition-transform"></i>
-                <span class="text-2xl font-extrabold text-white">${copiesThisWeek}</span>
-                <span class="text-xs text-gray-400 uppercase tracking-wide">Week Copies</span>
-            </div>
-            <div class="mini-stat-box group">
-                <i class="fas fa-pencil-alt text-2xl text-green-400 mb-2 group-hover:scale-110 transition-transform"></i>
-                <span class="text-2xl font-extrabold text-white">${editsThisMonth}</span>
-                <span class="text-xs text-gray-400 uppercase tracking-wide">Month Edits</span>
-            </div>
-            <div class="mini-stat-box group">
-                <i class="fas fa-plus-square text-2xl text-purple-400 mb-2 group-hover:scale-110 transition-transform"></i>
-                <span class="text-2xl font-extrabold text-white">${totalResponsesCreated}</span>
-                <span class="text-xs text-gray-400 uppercase tracking-wide">Responses</span>
-            </div>
-            <div class="mini-stat-box group">
-                <i class="fas fa-folder text-2xl text-yellow-400 mb-2 group-hover:scale-110 transition-transform"></i>
-                <span class="text-2xl font-extrabold text-white">${totalCategories}</span>
-                <span class="text-xs text-gray-400 uppercase tracking-wide">Categories</span>
-            </div>
+		<div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-slate-900/40 border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-blue-400/50 transition-colors">
+		        <div class="absolute -right-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+		        <div class="flex justify-between items-start z-10">
+		            <div class="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+		                <i class="fas fa-copy text-lg"></i>
+		            </div>
+		            ${copiesThisWeek > 0 ? '<span class="text-xs font-bold text-green-400 flex items-center"><i class="fas fa-arrow-up mr-1"></i>Active</span>' : ''}
+		        </div>
+		        <div class="mt-3 z-10">
+		            <span class="block text-3xl font-bold text-white tracking-tight">${copiesThisWeek}</span>
+		            <span class="text-xs text-blue-200/60 font-medium uppercase tracking-wider">Copies This Week</span>
+		        </div>
+		    </div>
+		
+		    <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-emerald-400/50 transition-colors">
+		        <div class="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+		        <div class="flex justify-between items-start z-10">
+		            <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
+		                <i class="fas fa-pencil-alt text-lg"></i>
+		            </div>
+		        </div>
+		        <div class="mt-3 z-10">
+		            <span class="block text-3xl font-bold text-white tracking-tight">${editsThisMonth}</span>
+		            <span class="text-xs text-emerald-200/60 font-medium uppercase tracking-wider">Edits This Month</span>
+		        </div>
+		    </div>
+		
+		    <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-slate-900/40 border border-purple-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-purple-400/50 transition-colors">
+		        <div class="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+		        <div class="flex justify-between items-start z-10">
+		            <div class="p-2 bg-purple-500/20 rounded-lg text-purple-400">
+		                <i class="fas fa-database text-lg"></i>
+		            </div>
+		        </div>
+		        <div class="mt-3 z-10">
+		            <span class="block text-3xl font-bold text-white tracking-tight">${totalResponsesCreated}</span>
+		            <span class="text-xs text-purple-200/60 font-medium uppercase tracking-wider">Total Library</span>
+		        </div>
+		    </div>
+		
+		    <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-amber-900/40 to-slate-900/40 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-amber-400/50 transition-colors">
+		        <div class="absolute -right-4 -top-4 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+		        <div class="flex justify-between items-start z-10">
+		            <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+		                <i class="fas fa-folder-open text-lg"></i>
+		            </div>
+		        </div>
+		        <div class="mt-3 z-10">
+		            <span class="block text-3xl font-bold text-white tracking-tight">${totalCategories}</span>
+		            <span class="text-xs text-amber-200/60 font-medium uppercase tracking-wider">Active Categories</span>
+		        </div>
+		    </div>
         `;
 
 // --- Top 5 Chart ---
