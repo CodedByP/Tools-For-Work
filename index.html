@@ -3447,6 +3447,63 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+		const recalculateCurrentPeriodStats = async (uid) => {
+    if (!uid || isAnonymous) return;
+    
+    console.log("Recalculating Weekly/Monthly stats based on history...");
+
+    try {
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        
+        const currentWeekId = getCurrentWeekId();
+        const currentMonthId = getCurrentMonthId();
+        
+        let calculatedWeekly = 0;
+        let calculatedMonthly = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.type === 'copy' && data.timestamp) {
+                const date = data.timestamp.toDate();
+                
+                // Check Week
+                // Re-using the logic inside getCurrentWeekId but for a specific date
+                const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                const eventWeekId = `${d.getUTCFullYear()}-${weekNo}`;
+
+                // Check Month
+                const eventMonthId = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+                if (eventWeekId === currentWeekId) {
+                    calculatedWeekly++;
+                }
+                if (eventMonthId === currentMonthId) {
+                    calculatedMonthly++;
+                }
+            }
+        });
+
+        // Update the Leaderboard Document with the correct history counts
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
+        await setDoc(leaderboardDocRef, {
+            weeklyXp: calculatedWeekly,
+            lastWeeklyXpId: currentWeekId,
+            monthlyXp: calculatedMonthly,
+            lastMonthlyXpId: currentMonthId,
+            statsRecalculated: true // Flag to prevent re-running
+        }, { merge: true });
+
+        console.log(`✅ Fixed! Weekly: ${calculatedWeekly}, Monthly: ${calculatedMonthly}`);
+
+    } catch (error) {
+        console.error("Error recalculating stats:", error);
+    }
+};
+
 const getTimeAgo = (timestamp) => {
     if (!timestamp) return 'Offline';
     const date = timestamp.toDate();
@@ -8159,6 +8216,9 @@ onAuthStateChanged(auth, async (user) => {
 			if (!userData.activeDaysBackfilled) {
            		 await backfillActiveDays(userId);
        		}
+			if (!userData.statsRecalculated) {
+                await recalculateCurrentPeriodStats(userId);
+            }
 			await calculateAndSaveUserRecords(userId);
 			
             if (!userData.firstSignIn) {
