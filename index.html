@@ -6271,14 +6271,10 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
     if (responseId && categoryName) {
         const now = Date.now();
-        const COOLDOWN_PERIOD = 5000; // Set to 5 Seconds
+        const COOLDOWN_PERIOD = 5000; // 5 Seconds
         
-        // Get the last time they clicked THIS specific response
         const lastCopyTime = lastCopyTimestamps[responseId] || 0;
-
-        // CRITICAL CHANGE: Update the timestamp immediately.
-        // This resets the timer on every click, effectively "punishing" spam.
-        lastCopyTimestamps[responseId] = now;
+        lastCopyTimestamps[responseId] = now; // Reset timer immediately
 
         if (now - lastCopyTime > COOLDOWN_PERIOD) {
             
@@ -6288,7 +6284,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
             if (userId && !isAnonymous) {
                 try {
-                    // 1. Existing Logic: Track per-category stats locally
+                    // ... (Local category count logic stays the same) ...
                     const category = categories[categoryName];
                     if (category && category.responses) {
                         const response = category.responses.find(r => r.id === responseId);
@@ -6298,7 +6294,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         }
                     }
 
-                    // 2. Setup References
+                    // Setup References
                     const leaderboardDocRef = doc(db, "leaderboard", userId);
                     const categoryCountField = `categoryCounts.${categoryName}`;
                     const todayStr = new Date().toISOString().split('T')[0];
@@ -6308,8 +6304,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     const lbDocSnap = await getDoc(leaderboardDocRef);
                     const lbData = lbDocSnap.exists() ? lbDocSnap.data() : {};
 
-                    // --- LOGIC: Track Weekly AND Monthly ---
-                    // Define these variables inside the scope
+                    // Track Weekly/Monthly
                     const currentWeekId = getCurrentWeekId(); 
                     const currentMonthId = getCurrentMonthId();
                     
@@ -6333,25 +6328,26 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     
                     const batch = writeBatch(db);
                     
+                    // This updates the 'lastActive' timestamp in the DB
                     batch.update(leaderboardDocRef, {
                         totalCopies: increment(1),
                         [`categoryCounts.${categoryName}`]: increment(1),
-                        lastActive: serverTimestamp(),
-                        ...updates // Injects both weekly and monthly updates
+                        lastActive: serverTimestamp(), 
+                        ...updates 
                     });
                     
-                    // Update the Active Days Sub-collection
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
                     
                     await batch.commit();
                     
-                    // Refresh UI
+                    // Refresh Challenges UI
                     const eventsCollectionRef = getUserEventsCollectionRef(userId);
                     const snapshot = await getDocs(query(eventsCollectionRef));
                     const events = snapshot.docs.map(doc => doc.data());
                 
                     await renderChallenges(events);
                     await renderChallengeTracker(events);
+                    renderLeaderboard(currentLeaderboardView); 
                     
                 } catch (error) {
                     console.error("Error updating copy count:", error);
