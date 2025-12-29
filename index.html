@@ -5642,7 +5642,7 @@ const renderLeaderboard = async (view = 'all') => {
             return;
         }
 
-        // --- 3. Render Podium (Top 3) ---
+// --- 3. Render Podium (Top 3) ---
         let html = '<div class="podium-container">';
         const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd
         
@@ -5651,10 +5651,12 @@ const renderLeaderboard = async (view = 'all') => {
                 const u = users[idx];
                 const rank = idx + 1;
                 const isFirst = rank === 1;
+                
+                // Calculate Status
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
                 
-                // Determine which score to display on the card
+                // Determine which score to display
                 let displayScore = u.xp;
                 let scoreLabel = "Total XP";
                 
@@ -5669,13 +5671,20 @@ const renderLeaderboard = async (view = 'all') => {
                 html += `
                     <div class="podium-card podium-rank-${rank}" data-userid="${u.id}">
                         ${isFirst ? '<i class="fas fa-crown rank-1-crown"></i>' : ''}
+                        
                         <div class="podium-avatar level-badge-${u.rankName.toLowerCase()}">
                             <i class="fas ${u.rankIcon}"></i>
                         </div>
+                        
                         <div class="text-center z-10">
                             <p class="font-bold text-white text-xs truncate w-20">${u.displayName}</p>
                             <p class="text-xs text-blue-300 font-mono font-bold">${displayScore.toLocaleString()}</p>
-                            <p class="text-[9px] text-gray-400 uppercase">${scoreLabel}</p>
+                            <p class="text-[9px] text-gray-400 uppercase mb-1">${scoreLabel}</p>
+                            
+                            <div class="mt-1 text-[9px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'} flex items-center justify-center">
+                                <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
+                                ${status}
+                            </div>
                         </div>
                     </div>
                 `;
