@@ -449,7 +449,37 @@
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(-5px); }
 }		
-		
+
+/* --- Fix for Leaderboard List Icons --- */
+.list-avatar {
+    width: 3rem; /* 48px */
+    height: 3rem;
+    aspect-ratio: 1 / 1; /* Forces perfect circle */
+    flex-shrink: 0; /* Prevents squishing */
+    border-radius: 50%;
+    
+    /* Centering logic */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Spacing */
+    margin-left: 0.5rem;
+    margin-right: 1rem;
+
+    /* Visual Style (Matches Podium but subtler) */
+    font-size: 1.25rem; /* Icon size */
+    box-shadow: 
+        0 2px 5px rgba(0,0,0,0.3), 
+        inset 0 1px 3px rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.15);
+    background: #1f2937; /* Fallback */
+}
+
+/* Ensure the icon inside pops */
+.list-avatar i {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}		
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
@@ -5566,18 +5596,18 @@ const renderLeaderboard = async () => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
+                const badgeClass = `level-badge-${u.rankName.toLowerCase()}`;
 
                 listHTML += `
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
-                        <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
+                        <span class="font-mono text-gray-500 w-6 text-center font-bold text-lg">${rank}</span>
                         
-                        <div class="level-badge-wrapper level-badge-${u.rankName.toLowerCase()} scale-75 origin-left" style="width: 40px; height: 40px;">
-                            <i class="fas ${u.rankIcon} text-lg"></i>
+                        <div class="list-avatar ${badgeClass}">
+                            <i class="fas ${u.rankIcon} text-white"></i>
                         </div>
                         
-                        <div class="ml-2 flex-grow">
-                            <div class="flex items-center gap-2">
-                                <p class="font-semibold text-gray-200 text-sm">${u.displayName}</p>
+                        <div class="flex-grow min-w-0"> <div class="flex items-center gap-2">
+                                <p class="font-semibold text-gray-200 text-sm truncate">${u.displayName}</p>
                                 ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse" title="On Fire!"></i>' : ''}
                             </div>
                             <p class="text-[10px] text-gray-500 flex items-center">
@@ -5586,7 +5616,7 @@ const renderLeaderboard = async () => {
                             </p>
                         </div>
                         
-                        <span class="font-bold text-blue-400 text-sm">${u.xp.toLocaleString()}</span>
+                        <span class="font-bold text-blue-400 text-sm font-mono whitespace-nowrap">${u.xp.toLocaleString()} XP</span>
                     </div>
                 `;
             });
