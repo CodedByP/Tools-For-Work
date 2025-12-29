@@ -6115,14 +6115,13 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ THE FLEXBOX FIX ▼▼▼
-            // 1. display: flex; flex-wrap: wrap; -> This allows items to sit next to each other.
-            // 2. gap: 1rem; -> Adds space between them.
+            // ▼▼▼ FIX 1: Use repeat(2, minmax(0, 1fr)) ▼▼▼
+            // This forces 2 columns and prevents content from expanding the grid cells.
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="response-flex-container" style="display: flex; flex-wrap: wrap; gap: 1.5rem; width: 100%;"></div>
+                <div class="response-grid-container" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; width: 100%;"></div>
             `;
-            const responsesInSection = labelSection.querySelector('div.response-flex-container');
+            const responsesInSection = labelSection.querySelector('div.response-grid-container');
 
             groupedResponses[label].forEach(response => {
                 let displayText = response.text;
@@ -6140,17 +6139,11 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // ▼▼▼ ITEM STYLING FIX ▼▼▼
-                // 1. width: calc(50% - 0.75rem); -> Forces the item to be exactly 50% minus half the gap.
-                // 2. min-width: 300px; -> Ensures that if the screen is super small, it stacks instead of squishing.
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
-                responseEl.style.cssText = `
-                    flex: 1 1 calc(50% - 1.5rem); 
-                    min-width: 300px; 
-                    background-color: ${categoryColor}; 
-                    border-color: ${categoryColor};
-                `;
-                
+                // ▼▼▼ FIX 2: overflow-hidden and w-full ▼▼▼
+                // overflow-hidden contains long text inside the box.
+                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all overflow-hidden w-full h-full';
+                responseEl.style.backgroundColor = categoryColor;
+                responseEl.style.borderColor = categoryColor;
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
@@ -6165,8 +6158,8 @@ const renderResponses = (searchQuery = '') => {
                         </button>
                     </div>
                     
-                    <div class="flex-grow display-mode space-y-2 w-full mb-4">
-                        <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed">${displayText}</p>
+                    <div class="flex-grow display-mode space-y-2 w-full mb-4 overflow-hidden">
+                        <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
                     </div>
 
                     <div class="flex justify-between items-center pt-4 border-t border-black/10 mt-auto">
