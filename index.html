@@ -1845,7 +1845,10 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			        
 			        <div class="record-card record-daily-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-day record-bg-icon text-blue-500"></i>
-			            <span class="text-xs text-blue-200 uppercase font-bold tracking-wider relative z-10">Daily Best</span>
+			            <div class="flex justify-between items-start relative z-10">
+			                <span class="text-xs text-blue-200 uppercase font-bold tracking-wider">Daily Best</span>
+			                <span id="record-daily-date" class="text-[10px] text-blue-100 bg-blue-600/30 px-2 py-0.5 rounded-full">--</span>
+			            </div>
 			            <div class="flex items-end gap-2 mt-1 relative z-10">
 			                <span id="record-daily" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
 			                <span class="text-xs text-blue-300 mb-1">copies</span>
@@ -1854,7 +1857,10 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			
 			        <div class="record-card record-weekly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-week record-bg-icon text-purple-500"></i>
-			            <span class="text-xs text-purple-200 uppercase font-bold tracking-wider relative z-10">Weekly Best</span>
+			            <div class="flex justify-between items-start relative z-10">
+			                <span class="text-xs text-purple-200 uppercase font-bold tracking-wider">Weekly Best</span>
+			                <span id="record-weekly-date" class="text-[10px] text-purple-100 bg-purple-600/30 px-2 py-0.5 rounded-full">--</span>
+			            </div>
 			            <div class="flex items-end gap-2 mt-1 relative z-10">
 			                <span id="record-weekly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
 			                <span class="text-xs text-purple-300 mb-1">copies</span>
@@ -1863,7 +1869,10 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			
 			        <div class="record-card record-monthly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-alt record-bg-icon text-yellow-500"></i>
-			            <span class="text-xs text-yellow-200 uppercase font-bold tracking-wider relative z-10">Monthly Best</span>
+			            <div class="flex justify-between items-start relative z-10">
+			                <span class="text-xs text-yellow-200 uppercase font-bold tracking-wider">Monthly Best</span>
+			                <span id="record-monthly-date" class="text-[10px] text-yellow-100 bg-yellow-600/30 px-2 py-0.5 rounded-full">--</span>
+			            </div>
 			            <div class="flex items-end gap-2 mt-1 relative z-10">
 			                <span id="record-monthly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
 			                <span class="text-xs text-yellow-300 mb-1">copies</span>
@@ -3285,52 +3294,106 @@ const showChallengeCompletionAnimation = (challengeId) => {
 };		
 
 const calculateAndRenderRecords = (events) => {
-    // 1. Filter for only 'copy' events that have a valid timestamp
+    // 1. Filter for valid copy events
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
 
-    // If the user has no copy events, set records to 0 and exit
+    // Default elements
+    const dailyCountEl = document.getElementById('record-daily');
+    const weeklyCountEl = document.getElementById('record-weekly');
+    const monthlyCountEl = document.getElementById('record-monthly');
+    const dailyDateEl = document.getElementById('record-daily-date');
+    const weeklyDateEl = document.getElementById('record-weekly-date');
+    const monthlyDateEl = document.getElementById('record-monthly-date');
+
     if (copyEvents.length === 0) {
-        document.getElementById('record-daily').textContent = '0';
-        document.getElementById('record-weekly').textContent = '0';
-        document.getElementById('record-monthly').textContent = '0';
+        dailyCountEl.textContent = '0'; weeklyCountEl.textContent = '0'; monthlyCountEl.textContent = '0';
         return;
     }
 
-    // Helper function to get the week key for a given date (e.g., "2025-W39")
+    // --- Helper to get Week String (e.g., "Week 52, 2025") ---
     const getWeekKey = (d) => {
-        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
     };
 
-    // 2. Group all copy events by day, week, and month
-    const dailyCounts = {};
-    const weeklyCounts = {};
-    const monthlyCounts = {};
+    // --- Data Buckets ---
+    const dailyData = {};
+    const weeklyData = {};
+    const monthlyData = {};
 
+    // 2. Iterate events and fill buckets
     copyEvents.forEach(event => {
         const date = event.timestamp.toDate();
-        const dayKey = date.toISOString().split('T')[0]; // 'YYYY-MM-DD'
-        const weekKey = getWeekKey(date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // 'YYYY-MM'
+        
+        // Keys for grouping
+        const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const weekKey = getWeekKey(date);                // YYYY-W##
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
 
-        dailyCounts[dayKey] = (dailyCounts[dayKey] || 0) + 1;
-        weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
-        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+        dailyData[dayKey] = (dailyData[dayKey] || 0) + 1;
+        weeklyData[weekKey] = (weeklyData[weekKey] || 0) + 1;
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
     });
 
-    // 3. Find the highest value (the record) from each group
-    const maxDaily = Object.values(dailyCounts).length > 0 ? Math.max(...Object.values(dailyCounts)) : 0;
-    const maxWeekly = Object.values(weeklyCounts).length > 0 ? Math.max(...Object.values(weeklyCounts)) : 0;
-    const maxMonthly = Object.values(monthlyCounts).length > 0 ? Math.max(...Object.values(monthlyCounts)) : 0;
+    // 3. Helper to find max value AND its key (date)
+    const findRecord = (dataObj) => {
+        let maxVal = 0;
+        let maxKey = null;
+        for (const [key, val] of Object.entries(dataObj)) {
+            if (val > maxVal) {
+                maxVal = val;
+                maxKey = key;
+            } else if (val === maxVal) {
+                // If tie, prefer the more recent date
+                if (key > maxKey) maxKey = key;
+            }
+        }
+        return { val: maxVal, key: maxKey };
+    };
 
-    // 4. Update the HTML elements with the calculated records
-	animateValue(document.getElementById('record-daily'), 0, maxDaily, 1500);
-    animateValue(document.getElementById('record-weekly'), 0, maxWeekly, 1500);
-    animateValue(document.getElementById('record-monthly'), 0, maxMonthly, 1500);
-};		
+    const bestDay = findRecord(dailyData);
+    const bestWeek = findRecord(weeklyData);
+    const bestMonth = findRecord(monthlyData);
+
+    // 4. Format Dates for Display
+    
+    // Daily Format: "Dec 25, 2025"
+    let dailyDateStr = '--';
+    if (bestDay.key) {
+        const [y, m, d] = bestDay.key.split('-');
+        const dateObj = new Date(y, m - 1, d);
+        dailyDateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Weekly Format: "W52, Dec 2025"
+    let weeklyDateStr = '--';
+    if (bestWeek.key) {
+        const [year, week] = bestWeek.key.split('-W');
+        // Approximate month for the week
+        weeklyDateStr = `Week ${week}, ${year}`;
+    }
+
+    // Monthly Format: "December 2025"
+    let monthlyDateStr = '--';
+    if (bestMonth.key) {
+        const [y, m] = bestMonth.key.split('-');
+        const dateObj = new Date(y, m - 1, 1);
+        monthlyDateStr = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    // 5. Update UI
+    animateValue(dailyCountEl, 0, bestDay.val, 1500);
+    dailyDateEl.textContent = dailyDateStr;
+
+    animateValue(weeklyCountEl, 0, bestWeek.val, 1500);
+    weeklyDateEl.textContent = weeklyDateStr;
+
+    animateValue(monthlyCountEl, 0, bestMonth.val, 1500);
+    monthlyDateEl.textContent = monthlyDateStr;
+};	
 
 const displayToast = (notification) => {
     isNotificationActive = true; // Set the flag
