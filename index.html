@@ -6040,7 +6040,7 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase();
 
-    // 1. Filter Logic (Unchanged)
+    // 1. Filter Logic
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
@@ -6081,12 +6081,12 @@ const renderResponses = (searchQuery = '') => {
         }
     }
     
-    // 2. Heading Logic (Unchanged)
+    // 2. Heading Logic
     if (responsesToRender.length > 0 || query) {
         const count = responsesToRender.length;
         const label = query ? 'Results Found' : 'Saved Replies';
         headingText = `${query ? 'Search Results' : activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} ${label})</span>`;
-    }   
+    }    
     
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
@@ -6094,7 +6094,7 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (UPDATED FOR GRID)
+    // 3. Rendering Logic
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
         const groupedResponses = responsesToRender.reduce((acc, response) => {
@@ -6108,17 +6108,17 @@ const renderResponses = (searchQuery = '') => {
 
         for (const label in groupedResponses) {
             const labelSection = document.createElement('div');
-            labelSection.className = 'mb-8'; // More spacing between sections
+            labelSection.className = 'mb-8'; 
             let highlightedLabel = label;
             if(query) {
                 const regex = new RegExp(query, 'gi');
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ CHANGE 1: THIS MAKES IT 2 COLUMNS ▼▼▼
+            // ▼▼▼ THE FIX IS HERE: Changed lg:grid-cols-2 to md:grid-cols-2 and added w-full ▼▼▼
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-stretch"></div>
             `;
             const responsesInSection = labelSection.querySelector('div.grid');
 
@@ -6138,14 +6138,13 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // ▼▼▼ CHANGE 2: h-full makes cards equal height ▼▼▼
+                // h-full makes sure the cards stretch to equal height within the row
                 responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all h-full';
                 responseEl.style.backgroundColor = categoryColor;
                 responseEl.style.borderColor = categoryColor;
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
-                // ▼▼▼ CHANGE 3: mt-auto pushes buttons to bottom ▼▼▼
                 responseEl.innerHTML = `
                     <div class="flex justify-between items-start w-full mb-2">
                          <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
@@ -6180,7 +6179,7 @@ const renderResponses = (searchQuery = '') => {
             responsesList.appendChild(labelSection);
         }
         
-        // 4. Tutorial Highlighting (Unchanged)
+        // 4. Tutorial Highlighting
         if (currentTutorialStep === 5 || currentTutorialStep === 6) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
@@ -6192,7 +6191,7 @@ const renderResponses = (searchQuery = '') => {
                     if (pinButton) pinButton.classList.add('highlight-target');
                 }
             }
-        }       
+        }        
     } else {
         emptyState.classList.add('hidden');
     }
