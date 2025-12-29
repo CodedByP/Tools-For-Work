@@ -625,6 +625,18 @@
 .xp-boost-pill:hover {
     transform: translateY(-2px);
 }
+
+		/* Optional: Make responses grid on large screens */
+@media (min-width: 1024px) {
+    #responses-list > div > div.space-y-4 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 Columns */
+        gap: 1.5rem;
+    }
+    #responses-list > div > div.space-y-4 > * {
+        margin-top: 0 !important; /* Override space-y-4 margin */
+    }
+}
 		
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
