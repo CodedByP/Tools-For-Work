@@ -401,6 +401,40 @@
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
 }		
 
+/* --- NEW: Level Header Improvements --- */
+.next-rank-ghost {
+    filter: grayscale(100%) opacity(0.4);
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.next-rank-ghost:hover {
+    filter: grayscale(0%) opacity(0.8);
+    transform: scale(0.9);
+}
+
+/* Dynamic Ambient Background */
+#rank-ambient-bg {
+    background-size: 400% 400%;
+    animation: ambient-shift 15s ease infinite;
+}
+
+@keyframes ambient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* XP Boost Pills */
+.xp-boost-pill {
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s;
+    cursor: help; /* Shows a question mark cursor on hover */
+}
+.xp-boost-pill:hover {
+    transform: translateY(-2px);
+}
+		
 /* --- Leveling System Icon Styles --- */
 .level-badge-wrapper {
     position: relative;
@@ -1785,31 +1819,48 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
         <div class="bento-grid">
 
-            <div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px]">
-                <div class="level-header-bg p-6 flex flex-col sm:flex-row items-center gap-6 relative flex-grow">
-                    <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform scale-90 sm:scale-100"></div>
-                    <div class="flex-grow w-full text-center sm:text-left z-10">
-                        <div class="flex items-center justify-center sm:justify-start gap-3">
-                            <h3 id="rank-name-redesigned" class="text-3xl sm:text-4xl font-bold text-white tracking-wide drop-shadow-md"></h3>
-                            <div id="double-xp-indicator" class="hidden relative group"><i class="fas fa-bolt text-2xl text-yellow-400 animate-pulse"></i></div>
-                            <div id="triple-xp-indicator" class="hidden relative group"><i class="fas fa-fire text-2xl text-orange-400 animate-pulse"></i></div>
-                        </div>
-                        <p id="level-display-redesigned" class="text-lg font-semibold text-blue-300 mt-1"></p>
-                    </div>
-                </div>
-                <div class="p-6 bg-gray-900/30 border-t border-gray-700/50">
-                    <div class="flex justify-between text-xs text-gray-400 mb-1 uppercase tracking-wider font-bold">
-                        <span>Current XP</span>
-                        <span id="next-rank-text-container"></span>
-                    </div>
-                    <div class="xp-bar-container-redesigned h-4">
-                        <div id="xp-bar-redesigned" class="xp-bar-redesigned"></div>
-                    </div>
-                    <div class="text-center mt-2">
-                        <span id="xp-progress-text-redesigned" class="text-xs font-bold text-white relative z-10"></span>
-                    </div>
-                </div>
-            </div>
+		<div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px] overflow-hidden relative group">
+		    <div id="rank-ambient-bg" class="absolute inset-0 opacity-20 transition-all duration-1000"></div>
+		
+		    <div class="p-6 flex flex-col justify-between relative z-10 h-full">
+		        <div class="flex items-center justify-between w-full">
+		            <div class="flex items-center gap-5">
+		                <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform transition-transform duration-500 hover:scale-110 origin-left"></div>
+		                <div>
+		                    <h3 id="rank-name-redesigned" class="text-3xl font-extrabold text-white tracking-wide drop-shadow-md leading-none"></h3>
+		                    <p id="level-display-redesigned" class="text-sm font-bold text-blue-200 mt-1 uppercase tracking-wider"></p>
+		                </div>
+		            </div>
+		
+		            <div class="hidden sm:flex flex-col items-center justify-center pl-4 border-l border-white/10" id="next-rank-container">
+		                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Next Rank</span>
+		                <div id="next-rank-icon" class="next-rank-ghost"></div>
+		            </div>
+		        </div>
+		
+		        <div class="flex items-center gap-3 mt-4 mb-2">
+		             <div id="double-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold flex items-center gap-2" title="2x XP Active: Weekly Challenge">
+		                <i class="fas fa-bolt animate-pulse"></i> 2x Boost
+		            </div>
+		            <div id="triple-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/50 text-orange-400 text-xs font-bold flex items-center gap-2" title="3x XP Active: Monthly Challenge">
+		                <i class="fas fa-fire animate-pulse"></i> 3x Boost
+		            </div>
+		        </div>
+		
+		        <div class="mt-auto pt-4">
+		            <div class="flex justify-between text-xs font-bold text-gray-300 mb-2">
+		                <span id="current-xp-display"></span>
+		                <span id="xp-needed-display" class="text-gray-500"></span>
+		            </div>
+		            <div class="xp-bar-container-redesigned h-3 bg-gray-900/80 rounded-full overflow-hidden border border-gray-700/50 relative shadow-inner">
+		                <div id="xp-bar-redesigned" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 relative transition-all duration-1000">
+		                    <div class="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]"></div>
+		                </div>
+		            </div>
+		             <p id="xp-progress-text-redesigned" class="hidden"></p> 
+		        </div>
+		    </div>
+		</div>
 
             <div class="bento-card bento-span-2 p-6 flex flex-col">
                 <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
@@ -6386,93 +6437,99 @@ const renderActivityChart = (events, period = 'all') => {
 };
 
 const renderLevelingSystem = (userData) => {
-    const totalXp = userData.xp || 0;
-    const levelInfo = calculateLevelInfo(totalXp);
-    const rankName = levelInfo.rankName;
-    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
+    const totalXp = userData.xp || 0;
+    const levelInfo = calculateLevelInfo(totalXp);
+    const rankName = levelInfo.rankName;
+    const rankClass = `level-badge-${rankName.toLowerCase().replace(' ', '-')}`;
 
-    const monthId = getCurrentMonthId();
-    const isTripleXpActive = userData.lastMonthlyChallengeMonth === monthId;
+    // Calculate Next Rank
+    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
+    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
 
-    const weekId = getCurrentWeekId();
-    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+    // Elements
+    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
+    const rankNameEl = document.getElementById('rank-name-redesigned');
+    const levelDisplayEl = document.getElementById('level-display-redesigned');
+    const xpBarEl = document.getElementById('xp-bar-redesigned');
+    
+    // New Elements
+    const nextRankIconContainer = document.getElementById('next-rank-icon');
+    const currentXpDisplay = document.getElementById('current-xp-display');
+    const xpNeededDisplay = document.getElementById('xp-needed-display');
+    const ambientBg = document.getElementById('rank-ambient-bg');
 
-    const currentRankIndex = LEVEL_RANKS.findIndex(r => r.name === rankName);
-    const nextRank = (currentRankIndex < LEVEL_RANKS.length - 1) ? LEVEL_RANKS[currentRankIndex + 1] : null;
-
-    const rankIconContainer = document.getElementById('rank-icon-container-redesigned');
-    const rankNameEl = document.getElementById('rank-name-redesigned');
-    const levelDisplayEl = document.getElementById('level-display-redesigned');
-    const xpBarEl = document.getElementById('xp-bar-redesigned');
-    const xpTextEl = document.getElementById('xp-progress-text-redesigned');
-    const nextRankTextContainer = document.getElementById('next-rank-text-container');
-
-    const doubleXpIndicator = document.getElementById('double-xp-indicator');
+    const doubleXpIndicator = document.getElementById('double-xp-indicator');
     const tripleXpIndicator = document.getElementById('triple-xp-indicator');
 
-    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
-    let innerHTML = '';
+    // 1. Render Current Rank Icon
+    let wrapperClasses = `level-badge-wrapper ${rankClass}`;
+    let innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
+    
+    // Add special effects for high ranks
+    if (["Master", "Grandmaster", "Legend", "Demigod", "Deity"].includes(rankName)) {
+        wrapperClasses += ' inner-ring beveled-edge glowing-effect';
+    } else {
+        wrapperClasses += ' beveled-edge';
+    }
+    
+    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
 
-    switch(rankName) {
-        case "Newbie": case "Apprentice":
-            wrapperClasses += ' beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Journeyman": case "Artisan": case "Expert":
-            wrapperClasses += ' inner-ring beveled-edge';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Master":
-            wrapperClasses += ' inner-ring glowing-effect beveled-edge master-shine-effect';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Grandmaster":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem grandmaster-crystal-pulse';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Legend":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem layered-emblem legend-molten-core';
-            innerHTML = `<div class="flame f1"></div><div class="flame f2"></div><div class="flame f3"></div><i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Demigod":
-            wrapperClasses += ' inner-ring glowing-effect demigod-power-surge beveled-edge emblem-ring-gem layered-emblem';
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-        case "Deity":
-            wrapperClasses += ' inner-ring beveled-edge emblem-ring-gem deity-particles';
-            innerHTML = `<div class="divine-radiance"></div><div class="gleam-container"></div><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><svg class="deity-glyph" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="deity-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffffff;" /><stop offset="100%" style="stop-color:#e2e8f0;" /></linearGradient><filter id="deity-glow-filter" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"><animate attributeName="stdDeviation" values="2; 4; 2" dur="4s" repeatCount="indefinite" /></feGaussianBlur><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g filter="url(#deity-glow-filter)"><circle cx="50" cy="50" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" opacity="0.8"/><circle cx="50" cy="50" r="32" fill="none" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/><path d="M50 15 V 38 M85 50 H 62 M50 85 V 62 M15 50 H 38" stroke="#94a3b8" stroke-width="1.5" /><path d="M29.29 29.29 L44.85 44.85 M70.71 29.29 L55.15 44.85 M70.71 70.71 L55.15 55.15 M29.29 70.71 L44.85 55.15" stroke="#94a3b8" stroke-width="1.5" /><path d="M50 42 L58 50 L50 58 L42 50 Z" fill="url(#deity-gradient)"/></g></svg>`;
-            break;
-        default:
-            innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
-            break;
-    }
-    rankIconContainer.innerHTML = `<div class="${wrapperClasses}">${innerHTML}</div>`;
+    // 2. Render Text Info
+    rankNameEl.textContent = levelInfo.rankName;
+    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    
+    // 3. Render Progress Bar & Text
+    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
+    xpBarEl.style.width = `${progressPercent}%`;
+    
+    currentXpDisplay.innerHTML = `<span class="text-white">${levelInfo.xpProgress.toLocaleString()}</span> XP`;
+    xpNeededDisplay.textContent = `${(levelInfo.xpForNextLevel - levelInfo.xpProgress).toLocaleString()} to Level ${levelInfo.level + 1}`;
 
-    rankNameEl.textContent = levelInfo.rankName;
-    levelDisplayEl.textContent = `Level ${levelInfo.level}`;
+    // 4. Render Next Rank Ghost Icon
+    if (nextRank) {
+        const nextRankClass = `level-badge-${nextRank.name.toLowerCase().replace(' ', '-')}`;
+        // We use the same wrapper classes but stripped of animations to keep it subtle
+        nextRankIconContainer.innerHTML = `
+            <div class="level-badge-wrapper ${nextRankClass} border-2 border-gray-600/50" style="width: 50px; height: 50px;">
+                <i class="fas ${nextRank.icon} text-2xl opacity-50"></i>
+            </div>
+        `;
+        document.getElementById('next-rank-container').classList.remove('invisible');
+    } else {
+        // Max level reached
+        document.getElementById('next-rank-container').classList.add('invisible');
+        xpNeededDisplay.textContent = "Max Level Reached";
+    }
 
-    const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
-    xpBarEl.style.width = `${progressPercent}%`;
-    xpTextEl.textContent = `${levelInfo.xpProgress.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP`;
+    // 5. Update Ambient Background Color based on Rank
+    let bgColors = 'from-gray-800 to-gray-900'; // Default
+    if (rankName === 'Newbie') bgColors = 'linear-gradient(to right, #3f6212, #14532d)'; // Greenish
+    if (rankName === 'Apprentice') bgColors = 'linear-gradient(to right, #7c2d12, #451a03)'; // Brownish
+    if (rankName === 'Journeyman') bgColors = 'linear-gradient(to right, #374151, #1f2937)'; // Gray
+    if (rankName === 'Artisan') bgColors = 'linear-gradient(to right, #1e3a8a, #172554)'; // Blue
+    if (rankName === 'Expert') bgColors = 'linear-gradient(to right, #4338ca, #312e81)'; // Indigo
+    if (rankName === 'Master') bgColors = 'linear-gradient(to right, #a16207, #713f12)'; // Gold
+    if (rankName === 'Grandmaster') bgColors = 'linear-gradient(to right, #7e22ce, #581c87)'; // Purple
+    if (rankName === 'Legend') bgColors = 'linear-gradient(to right, #b91c1c, #7f1d1d)'; // Red
+    
+    ambientBg.style.background = bgColors;
 
-    if (isTripleXpActive) {
-        tripleXpIndicator.classList.remove('hidden');
+    // 6. Multipliers
+    const monthId = getCurrentMonthId();
+    const isTripleXpActive = userData.lastMonthlyChallengeMonth === monthId;
+    const weekId = getCurrentWeekId();
+    const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
+
+    if (isTripleXpActive) {
+        tripleXpIndicator.classList.remove('hidden');
         doubleXpIndicator.classList.add('hidden');
-    } else if (isDoubleXpActive) {
-        doubleXpIndicator.classList.remove('hidden');
+    } else if (isDoubleXpActive) {
+        doubleXpIndicator.classList.remove('hidden');
         tripleXpIndicator.classList.add('hidden');
-    } else {
-        doubleXpIndicator.classList.add('hidden');
+    } else {
+        doubleXpIndicator.classList.add('hidden');
         tripleXpIndicator.classList.add('hidden');
-    }
-
-    if (nextRank && nextRankTextContainer) {
-        const xpToGo = levelInfo.xpForNextLevel - levelInfo.xpProgress;
-        nextRankTextContainer.innerHTML = `Next rank at <span class="font-bold text-gray-300">Level ${nextRank.level}</span>`;
-        nextRankTextContainer.classList.remove('hidden');
-    } else if (nextRankTextContainer) {
-        nextRankTextContainer.classList.add('hidden');
-    }
+    }
 };
 
 
