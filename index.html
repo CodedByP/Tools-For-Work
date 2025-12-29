@@ -6271,17 +6271,22 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
     if (responseId && categoryName) {
         const now = Date.now();
+        const COOLDOWN_PERIOD = 5000; // Set to 5 Seconds
+        
+        // Get the last time they clicked THIS specific response
         const lastCopyTime = lastCopyTimestamps[responseId] || 0;
-        const COOLDOWN_PERIOD = 5000;
+
+        // CRITICAL CHANGE: Update the timestamp immediately.
+        // This resets the timer on every click, effectively "punishing" spam.
+        lastCopyTimestamps[responseId] = now;
 
         if (now - lastCopyTime > COOLDOWN_PERIOD) {
-            lastCopyTimestamps[responseId] = now;
             
-			await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
-
+            // --- SUCCESS: Award XP and Stats ---
+            await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
             logUserEvent('copy', { responseId, categoryName, text });
 
-		if (userId && !isAnonymous) {
+            if (userId && !isAnonymous) {
                 try {
                     // 1. Existing Logic: Track per-category stats locally
                     const category = categories[categoryName];
@@ -6299,46 +6304,48 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     const todayStr = new Date().toISOString().split('T')[0];
                     const activeDayDocRef = doc(db, "leaderboard", userId, "activeDays", todayStr);
                     
-                    // --- NEW SECTION STARTS HERE ---
-                    // We need to fetch the document first to check if the week has changed
+                    // Fetch doc for logic
                     const lbDocSnap = await getDoc(leaderboardDocRef);
                     const lbData = lbDocSnap.exists() ? lbDocSnap.data() : {};
-					// --- NEW LOGIC: Track Weekly AND Monthly ---
-					const currentMonthId = getCurrentMonthId(); // Ensure this helper exists
-					
-					let updates = {};
-					
-					// 1. Weekly Logic
-					if (lbData.lastWeeklyXpId === currentWeekId) {
-					    updates.weeklyXp = increment(1);
-					} else {
-					    updates.weeklyXp = 1;
-					    updates.lastWeeklyXpId = currentWeekId;
-					}
-					
-					// 2. Monthly Logic
-					if (lbData.lastMonthlyXpId === currentMonthId) {
-					    updates.monthlyXp = increment(1);
-					} else {
-					    updates.monthlyXp = 1;
-					    updates.lastMonthlyXpId = currentMonthId;
-					}
-					
-					const batch = writeBatch(db);
-					
-					batch.update(leaderboardDocRef, {
-					    totalCopies: increment(1),
-					    [`categoryCounts.${categoryName}`]: increment(1),
-					    lastActive: serverTimestamp(),
-					    ...updates // Injects both weekly and monthly updates
-					});
+
+                    // --- LOGIC: Track Weekly AND Monthly ---
+                    // Define these variables inside the scope
+                    const currentWeekId = getCurrentWeekId(); 
+                    const currentMonthId = getCurrentMonthId();
                     
-                    // 4. Update the Active Days Sub-collection
+                    let updates = {};
+                    
+                    // Weekly Logic
+                    if (lbData.lastWeeklyXpId === currentWeekId) {
+                        updates.weeklyXp = increment(1);
+                    } else {
+                        updates.weeklyXp = 1;
+                        updates.lastWeeklyXpId = currentWeekId;
+                    }
+                    
+                    // Monthly Logic
+                    if (lbData.lastMonthlyXpId === currentMonthId) {
+                        updates.monthlyXp = increment(1);
+                    } else {
+                        updates.monthlyXp = 1;
+                        updates.lastMonthlyXpId = currentMonthId;
+                    }
+                    
+                    const batch = writeBatch(db);
+                    
+                    batch.update(leaderboardDocRef, {
+                        totalCopies: increment(1),
+                        [`categoryCounts.${categoryName}`]: increment(1),
+                        lastActive: serverTimestamp(),
+                        ...updates // Injects both weekly and monthly updates
+                    });
+                    
+                    // Update the Active Days Sub-collection
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
                     
                     await batch.commit();
                     
-                    // 5. Refresh UI (Challenges & Tracker)
+                    // Refresh UI
                     const eventsCollectionRef = getUserEventsCollectionRef(userId);
                     const snapshot = await getDocs(query(eventsCollectionRef));
                     const events = snapshot.docs.map(doc => doc.data());
@@ -6352,9 +6359,11 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
             }
             await checkAndAwardChallengeXP(userId);
         } else {
-             showMessage("Copied!", 'success');
+             // Cooldown active - feedback only
+             showMessage("Copied! (Cooldown active)", 'success');
         }
     } else {
+        // Fallback for untracked text
         showMessage("Copied to clipboard!");
     }
 };
