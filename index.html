@@ -2637,6 +2637,8 @@ let notificationQueue = [];
 let isNotificationActive = false;
 let expandedChartInstance = null; // <--- ADD THIS LINE HERE
 let expandedChartEvents = [];     // <--- AND THIS ONE
+let cachedStatsEvents = [];
+let cachedStatsUserData = {};
 
 const openExpandedAchievements = () => {
     const modal = document.getElementById('expanded-chart-modal');
@@ -6342,6 +6344,8 @@ const renderAdvancedStats = async () => {
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 
+		cachedStatsUserData = userData; 
+        cachedStatsEvents = events;
         // Render main components first
         await renderCategoryChart(events);
 		calculateAndRenderRecords(events);
