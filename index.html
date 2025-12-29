@@ -2841,7 +2841,17 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
     const modalTitle = document.getElementById('expanded-chart-title');
     const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
     
-    // Elements to toggle
+    // --- FIX START: Reset UI State ---
+    // 1. Ensure the Canvas is visible (it might have been hidden by achievements view)
+    document.getElementById('expanded-chart-canvas').classList.remove('hidden');
+
+    // 2. Explicitly HIDE Achievement elements
+    document.getElementById('expanded-achievements-controls').classList.add('hidden');
+    document.getElementById('expanded-achievements-controls').classList.remove('flex');
+    document.getElementById('expanded-achievements-grid').classList.add('hidden');
+    // --- FIX END ---
+
+    // Elements to toggle based on Chart Type
     const controlsDiv = document.getElementById('expanded-activity-controls');
     const statsDiv = document.getElementById('expanded-activity-stats');
 
@@ -2902,17 +2912,10 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         });
     }
 
-    // --- NEW ANIMATION LOGIC START ---
-    // 1. Remove the 'hidden' class to put it in the DOM (display: flex)
+    // Animation Logic
     modal.classList.remove('hidden');
-    
-    // 2. Force a browser "Reflow" (this is the magic trick)
-    // Asking for the offsetHeight forces the browser to calculate positions *before* we add the class
     void modal.offsetHeight; 
-
-    // 3. Add the visibility class to trigger the CSS transition
     modal.classList.add('modal-visible');
-    // --- NEW ANIMATION LOGIC END ---
 };
 
 // Internal function to handle rendering inside the modal
