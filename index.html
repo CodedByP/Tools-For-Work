@@ -6115,14 +6115,14 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ THE FIX: INLINE STYLES FOR NUCLEAR CONTROL ▼▼▼
-            // We are using style="..." to force the grid layout directly.
-            // grid-template-columns: 1fr 1fr; -> This explicitly demands two equal columns.
+            // ▼▼▼ THE FLEXBOX FIX ▼▼▼
+            // 1. display: flex; flex-wrap: wrap; -> This allows items to sit next to each other.
+            // 2. gap: 1rem; -> Adds space between them.
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="response-grid-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%;"></div>
+                <div class="response-flex-container" style="display: flex; flex-wrap: wrap; gap: 1.5rem; width: 100%;"></div>
             `;
-            const responsesInSection = labelSection.querySelector('div.response-grid-container');
+            const responsesInSection = labelSection.querySelector('div.response-flex-container');
 
             groupedResponses[label].forEach(response => {
                 let displayText = response.text;
@@ -6140,15 +6140,17 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // Note: We keep the Tailwind classes for styling (colors, padding), 
-                // but rely on the parent's inline style for the positioning.
+                // ▼▼▼ ITEM STYLING FIX ▼▼▼
+                // 1. width: calc(50% - 0.75rem); -> Forces the item to be exactly 50% minus half the gap.
+                // 2. min-width: 300px; -> Ensures that if the screen is super small, it stacks instead of squishing.
                 responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+                responseEl.style.cssText = `
+                    flex: 1 1 calc(50% - 1.5rem); 
+                    min-width: 300px; 
+                    background-color: ${categoryColor}; 
+                    border-color: ${categoryColor};
+                `;
                 
-                // Ensure the card fills the grid cell height
-                responseEl.style.height = "100%"; 
-                
-                responseEl.style.backgroundColor = categoryColor;
-                responseEl.style.borderColor = categoryColor;
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
