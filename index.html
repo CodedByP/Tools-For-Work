@@ -413,6 +413,45 @@
     transform: scale(0.9);
 }
 
+/* --- NEW: Level Header Advanced Styles --- */
+.next-rank-container {
+    position: relative;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+.next-rank-container:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+.lock-overlay {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background-color: #1f2937;
+    border: 2px solid #374151;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 0.7rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.prediction-text {
+    font-size: 0.7rem;
+    color: #94a3b8; /* slate-400 */
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.prediction-highlight {
+    color: #34d399; /* emerald-400 */
+    font-weight: bold;
+}		
+
 /* Dynamic Ambient Background */
 #rank-ambient-bg {
     background-size: 400% 400%;
@@ -1819,48 +1858,62 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
         <div class="bento-grid">
 
-		<div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px] overflow-hidden relative group">
-		    <div id="rank-ambient-bg" class="absolute inset-0 opacity-20 transition-all duration-1000"></div>
-		
-		    <div class="p-6 flex flex-col justify-between relative z-10 h-full">
-		        <div class="flex items-center justify-between w-full">
-		            <div class="flex items-center gap-5">
-		                <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform transition-transform duration-500 hover:scale-110 origin-left"></div>
-		                <div>
-		                    <h3 id="rank-name-redesigned" class="text-3xl font-extrabold text-white tracking-wide drop-shadow-md leading-none"></h3>
-		                    <p id="level-display-redesigned" class="text-sm font-bold text-blue-200 mt-1 uppercase tracking-wider"></p>
-		                </div>
-		            </div>
-		
-		            <div class="hidden sm:flex flex-col items-center justify-center pl-4 border-l border-white/10" id="next-rank-container">
-		                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Next Rank</span>
-		                <div id="next-rank-icon" class="next-rank-ghost"></div>
-		            </div>
-		        </div>
-		
-		        <div class="flex items-center gap-3 mt-4 mb-2">
-		             <div id="double-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold flex items-center gap-2" title="2x XP Active: Weekly Challenge">
-		                <i class="fas fa-bolt animate-pulse"></i> 2x Boost
-		            </div>
-		            <div id="triple-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/50 text-orange-400 text-xs font-bold flex items-center gap-2" title="3x XP Active: Monthly Challenge">
-		                <i class="fas fa-fire animate-pulse"></i> 3x Boost
-		            </div>
-		        </div>
-		
-		        <div class="mt-auto pt-4">
-		            <div class="flex justify-between text-xs font-bold text-gray-300 mb-2">
-		                <span id="current-xp-display"></span>
-		                <span id="xp-needed-display" class="text-gray-500"></span>
-		            </div>
-		            <div class="xp-bar-container-redesigned h-3 bg-gray-900/80 rounded-full overflow-hidden border border-gray-700/50 relative shadow-inner">
-		                <div id="xp-bar-redesigned" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 relative transition-all duration-1000">
-		                    <div class="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]"></div>
-		                </div>
-		            </div>
-		             <p id="xp-progress-text-redesigned" class="hidden"></p> 
-		        </div>
-		    </div>
-		</div>
+<div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px] overflow-hidden relative group">
+    <div id="rank-ambient-bg" class="absolute inset-0 opacity-20 transition-all duration-1000"></div>
+
+    <div class="p-6 flex flex-col justify-between relative z-10 h-full">
+        <div class="flex items-start justify-between w-full">
+            <div class="flex items-center gap-5">
+                <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform transition-transform duration-500 hover:scale-110 origin-left"></div>
+                <div>
+                    <h3 id="rank-name-redesigned" class="text-3xl font-extrabold text-white tracking-wide drop-shadow-md leading-none"></h3>
+                    <div class="flex flex-col">
+                        <p id="level-display-redesigned" class="text-sm font-bold text-blue-200 mt-1 uppercase tracking-wider"></p>
+                        <div id="level-prediction" class="prediction-text hidden">
+                            <i class="fas fa-stopwatch"></i>
+                            <span>ETA: <span id="level-prediction-days" class="prediction-highlight">--</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex flex-col items-center justify-center pl-4 border-l border-white/10" id="next-rank-container">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target</span>
+                <div class="next-rank-container cursor-help" title="Keep working to unlock this rank!">
+                    <div id="next-rank-icon" class="next-rank-ghost"></div>
+                    <div class="lock-overlay"><i class="fas fa-lock"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 mt-4 mb-2">
+             <div id="double-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold flex items-center gap-2" title="2x XP Active: Weekly Challenge">
+                <i class="fas fa-bolt animate-pulse"></i> 2x Boost
+            </div>
+            <div id="triple-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/50 text-orange-400 text-xs font-bold flex items-center gap-2" title="3x XP Active: Monthly Challenge">
+                <i class="fas fa-fire animate-pulse"></i> 3x Boost
+            </div>
+        </div>
+
+        <div class="mt-auto pt-4">
+            <div class="flex justify-between text-xs font-bold text-gray-300 mb-2">
+                <span id="current-xp-display"></span>
+                <span id="xp-needed-display" class="text-gray-500"></span>
+            </div>
+            <div class="group/bar relative">
+                <div class="xp-bar-container-redesigned h-3 bg-gray-900/80 rounded-full overflow-hidden border border-gray-700/50 relative shadow-inner">
+                    <div id="xp-bar-redesigned" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 relative transition-all duration-1000">
+                        <div class="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]"></div>
+                    </div>
+                </div>
+                <div id="xp-action-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 border border-gray-600 text-white text-xs rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-20">
+                    Calculated...
+                </div>
+            </div>
+             <p id="xp-progress-text-redesigned" class="hidden"></p> 
+        </div>
+    </div>
+</div>
 
             <div class="bento-card bento-span-2 p-6 flex flex-col">
                 <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
@@ -6457,6 +6510,9 @@ const renderLevelingSystem = (userData) => {
     const currentXpDisplay = document.getElementById('current-xp-display');
     const xpNeededDisplay = document.getElementById('xp-needed-display');
     const ambientBg = document.getElementById('rank-ambient-bg');
+    const predictionEl = document.getElementById('level-prediction');
+    const predictionDaysEl = document.getElementById('level-prediction-days');
+    const actionTooltip = document.getElementById('xp-action-tooltip');
 
     const doubleXpIndicator = document.getElementById('double-xp-indicator');
     const tripleXpIndicator = document.getElementById('triple-xp-indicator');
@@ -6465,7 +6521,6 @@ const renderLevelingSystem = (userData) => {
     let wrapperClasses = `level-badge-wrapper ${rankClass}`;
     let innerHTML = `<i class="fas ${levelInfo.rankIcon}"></i>`;
     
-    // Add special effects for high ranks
     if (["Master", "Grandmaster", "Legend", "Demigod", "Deity"].includes(rankName)) {
         wrapperClasses += ' inner-ring beveled-edge glowing-effect';
     } else {
@@ -6479,16 +6534,59 @@ const renderLevelingSystem = (userData) => {
     levelDisplayEl.textContent = `Level ${levelInfo.level}`;
     
     // 3. Render Progress Bar & Text
+    const xpRemaining = levelInfo.xpForNextLevel - levelInfo.xpProgress;
     const progressPercent = (levelInfo.xpProgress / levelInfo.xpForNextLevel) * 100;
     xpBarEl.style.width = `${progressPercent}%`;
     
     currentXpDisplay.innerHTML = `<span class="text-white">${levelInfo.xpProgress.toLocaleString()}</span> XP`;
-    xpNeededDisplay.textContent = `${(levelInfo.xpForNextLevel - levelInfo.xpProgress).toLocaleString()} to Level ${levelInfo.level + 1}`;
+    xpNeededDisplay.textContent = `${xpRemaining.toLocaleString()} to Level ${levelInfo.level + 1}`;
+
+    // --- NEW: Calculate Action Tooltip ---
+    // How many standard copies (25XP) to level up?
+    const copiesNeeded = Math.ceil(xpRemaining / XP_VALUES.COPY_RESPONSE);
+    if (actionTooltip) {
+        actionTooltip.textContent = `~${copiesNeeded} more copies to level up!`;
+    }
+
+    // --- NEW: Calculate Prediction (Velocity) ---
+    // We need to look at cachedStatsEvents to calculate daily average
+    if (cachedStatsEvents && cachedStatsEvents.length > 0) {
+        const now = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        
+        // Filter events for XP generating actions in last 30 days
+        const recentActivity = cachedStatsEvents.filter(e => 
+            e.timestamp && 
+            e.timestamp.toDate() >= thirtyDaysAgo &&
+            (e.type === 'copy' || e.type === 'create_response' || e.type === 'extract_tracking')
+        );
+
+        if (recentActivity.length > 0) {
+            // Rough estimate: Total events * approx average XP / 30 days
+            // Let's assume average event is worth ~30 XP (mix of copies and creations)
+            const estimatedDailyXP = (recentActivity.length * 30) / 30; 
+            
+            if (estimatedDailyXP > 0) {
+                const daysToLevel = Math.ceil(xpRemaining / estimatedDailyXP);
+                let timeString = "";
+                if (daysToLevel <= 1) timeString = "Today or Tomorrow!";
+                else if (daysToLevel < 30) timeString = `${daysToLevel} Days`;
+                else timeString = "a few months";
+
+                predictionDaysEl.textContent = timeString;
+                predictionEl.classList.remove('hidden');
+            } else {
+                 predictionEl.classList.add('hidden');
+            }
+        } else {
+             predictionEl.classList.add('hidden');
+        }
+    }
 
     // 4. Render Next Rank Ghost Icon
     if (nextRank) {
         const nextRankClass = `level-badge-${nextRank.name.toLowerCase().replace(' ', '-')}`;
-        // We use the same wrapper classes but stripped of animations to keep it subtle
         nextRankIconContainer.innerHTML = `
             <div class="level-badge-wrapper ${nextRankClass} border-2 border-gray-600/50" style="width: 50px; height: 50px;">
                 <i class="fas ${nextRank.icon} text-2xl opacity-50"></i>
@@ -6496,21 +6594,20 @@ const renderLevelingSystem = (userData) => {
         `;
         document.getElementById('next-rank-container').classList.remove('invisible');
     } else {
-        // Max level reached
         document.getElementById('next-rank-container').classList.add('invisible');
         xpNeededDisplay.textContent = "Max Level Reached";
     }
 
     // 5. Update Ambient Background Color based on Rank
-    let bgColors = 'from-gray-800 to-gray-900'; // Default
-    if (rankName === 'Newbie') bgColors = 'linear-gradient(to right, #3f6212, #14532d)'; // Greenish
-    if (rankName === 'Apprentice') bgColors = 'linear-gradient(to right, #7c2d12, #451a03)'; // Brownish
-    if (rankName === 'Journeyman') bgColors = 'linear-gradient(to right, #374151, #1f2937)'; // Gray
-    if (rankName === 'Artisan') bgColors = 'linear-gradient(to right, #1e3a8a, #172554)'; // Blue
-    if (rankName === 'Expert') bgColors = 'linear-gradient(to right, #4338ca, #312e81)'; // Indigo
-    if (rankName === 'Master') bgColors = 'linear-gradient(to right, #a16207, #713f12)'; // Gold
-    if (rankName === 'Grandmaster') bgColors = 'linear-gradient(to right, #7e22ce, #581c87)'; // Purple
-    if (rankName === 'Legend') bgColors = 'linear-gradient(to right, #b91c1c, #7f1d1d)'; // Red
+    let bgColors = 'from-gray-800 to-gray-900';
+    if (rankName === 'Newbie') bgColors = 'linear-gradient(to right, #3f6212, #14532d)';
+    if (rankName === 'Apprentice') bgColors = 'linear-gradient(to right, #7c2d12, #451a03)';
+    if (rankName === 'Journeyman') bgColors = 'linear-gradient(to right, #374151, #1f2937)';
+    if (rankName === 'Artisan') bgColors = 'linear-gradient(to right, #1e3a8a, #172554)';
+    if (rankName === 'Expert') bgColors = 'linear-gradient(to right, #4338ca, #312e81)';
+    if (rankName === 'Master') bgColors = 'linear-gradient(to right, #a16207, #713f12)';
+    if (rankName === 'Grandmaster') bgColors = 'linear-gradient(to right, #7e22ce, #581c87)';
+    if (rankName === 'Legend') bgColors = 'linear-gradient(to right, #b91c1c, #7f1d1d)';
     
     ambientBg.style.background = bgColors;
 
