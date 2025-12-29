@@ -319,6 +319,14 @@
     0% { transform: scale(0.8); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+@keyframes pulse-text-glow {
+    0%, 100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); }
+    50% { text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 5px currentColor; }
+}
+.new-record-glow {
+    animation: pulse-text-glow 1.5s infinite;
+}		
 		
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
@@ -1845,37 +1853,67 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			        
 			        <div class="record-card record-daily-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-day record-bg-icon text-blue-500"></i>
-			            <div class="flex justify-between items-start relative z-10">
+			            
+			            <div class="flex justify-between items-start relative z-10 mb-2">
 			                <span class="text-xs text-blue-200 uppercase font-bold tracking-wider">Daily Best</span>
-			                <span id="record-daily-date" class="text-[10px] text-blue-100 bg-blue-600/30 px-2 py-0.5 rounded-full">--</span>
+			                <span id="record-daily-date" class="text-[10px] text-blue-100 bg-blue-600/40 px-2 py-0.5 rounded-full">--</span>
 			            </div>
-			            <div class="flex items-end gap-2 mt-1 relative z-10">
+			
+			            <div class="flex items-baseline gap-1 relative z-10">
 			                <span id="record-daily" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-blue-300 mb-1">copies</span>
+			                <span class="text-xs text-blue-300">record</span>
+			            </div>
+			
+			            <div class="relative z-10 mt-3">
+			                <div class="flex justify-between text-xs mb-1">
+			                    <span id="record-daily-status" class="font-semibold text-blue-100">Today: 0</span>
+			                    <span id="record-daily-percent" class="text-blue-300">0%</span>
+			                </div>
+			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+			                    <div id="record-daily-bar" class="h-full bg-blue-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+			                </div>
 			            </div>
 			        </div>
 			
 			        <div class="record-card record-weekly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-week record-bg-icon text-purple-500"></i>
-			            <div class="flex justify-between items-start relative z-10">
+			            <div class="flex justify-between items-start relative z-10 mb-2">
 			                <span class="text-xs text-purple-200 uppercase font-bold tracking-wider">Weekly Best</span>
-			                <span id="record-weekly-date" class="text-[10px] text-purple-100 bg-purple-600/30 px-2 py-0.5 rounded-full">--</span>
+			                <span id="record-weekly-date" class="text-[10px] text-purple-100 bg-purple-600/40 px-2 py-0.5 rounded-full">--</span>
 			            </div>
-			            <div class="flex items-end gap-2 mt-1 relative z-10">
+			            <div class="flex items-baseline gap-1 relative z-10">
 			                <span id="record-weekly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-purple-300 mb-1">copies</span>
+			                <span class="text-xs text-purple-300">record</span>
+			            </div>
+			            <div class="relative z-10 mt-3">
+			                <div class="flex justify-between text-xs mb-1">
+			                    <span id="record-weekly-status" class="font-semibold text-purple-100">This Week: 0</span>
+			                    <span id="record-weekly-percent" class="text-purple-300">0%</span>
+			                </div>
+			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+			                    <div id="record-weekly-bar" class="h-full bg-purple-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+			                </div>
 			            </div>
 			        </div>
 			
 			        <div class="record-card record-monthly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
 			            <i class="fas fa-calendar-alt record-bg-icon text-yellow-500"></i>
-			            <div class="flex justify-between items-start relative z-10">
+			            <div class="flex justify-between items-start relative z-10 mb-2">
 			                <span class="text-xs text-yellow-200 uppercase font-bold tracking-wider">Monthly Best</span>
-			                <span id="record-monthly-date" class="text-[10px] text-yellow-100 bg-yellow-600/30 px-2 py-0.5 rounded-full">--</span>
+			                <span id="record-monthly-date" class="text-[10px] text-yellow-100 bg-yellow-600/40 px-2 py-0.5 rounded-full">--</span>
 			            </div>
-			            <div class="flex items-end gap-2 mt-1 relative z-10">
+			            <div class="flex items-baseline gap-1 relative z-10">
 			                <span id="record-monthly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-yellow-300 mb-1">copies</span>
+			                <span class="text-xs text-yellow-300">record</span>
+			            </div>
+			            <div class="relative z-10 mt-3">
+			                <div class="flex justify-between text-xs mb-1">
+			                    <span id="record-monthly-status" class="font-semibold text-yellow-100">This Month: 0</span>
+			                    <span id="record-monthly-percent" class="text-yellow-300">0%</span>
+			                </div>
+			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+			                    <div id="record-monthly-bar" class="h-full bg-yellow-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+			                </div>
 			            </div>
 			        </div>
 			
@@ -3294,23 +3332,9 @@ const showChallengeCompletionAnimation = (challengeId) => {
 };		
 
 const calculateAndRenderRecords = (events) => {
-    // 1. Filter for valid copy events
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
 
-    const dailyCountEl = document.getElementById('record-daily');
-    const weeklyCountEl = document.getElementById('record-weekly');
-    const monthlyCountEl = document.getElementById('record-monthly');
-    const dailyDateEl = document.getElementById('record-daily-date');
-    const weeklyDateEl = document.getElementById('record-weekly-date');
-    const monthlyDateEl = document.getElementById('record-monthly-date');
-
-    if (copyEvents.length === 0) {
-        dailyCountEl.textContent = '0'; weeklyCountEl.textContent = '0'; monthlyCountEl.textContent = '0';
-        dailyDateEl.textContent = '--'; weeklyDateEl.textContent = '--'; monthlyDateEl.textContent = '--';
-        return;
-    }
-
-    // Helper: ISO Week Key (YYYY-W##)
+    // --- Helper: Format Week Range ---
     const getWeekKey = (d) => {
         const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
@@ -3319,45 +3343,31 @@ const calculateAndRenderRecords = (events) => {
         return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
     };
 
-    // Helper: Calculate Date Range from Week Key
     const getDateRangeFromWeek = (weekKey) => {
         const [yearStr, weekStr] = weekKey.split('-W');
         const year = parseInt(yearStr);
         const week = parseInt(weekStr);
-
-        // Calculate Monday of the given ISO week
         const simple = new Date(year, 0, 1 + (week - 1) * 7);
         const dow = simple.getDay();
         const ISOweekStart = simple;
-        if (dow <= 4)
-            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else
-            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-
+        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
         const startMonth = ISOweekStart.toLocaleDateString('en-US', { month: 'short' });
         const startDay = ISOweekStart.getDate();
-
-        // Calculate Sunday (6 days later)
         const ISOweekEnd = new Date(ISOweekStart);
         ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
-        
         const endMonth = ISOweekEnd.toLocaleDateString('en-US', { month: 'short' });
         const endDay = ISOweekEnd.getDate();
-
-        // Format: "Dec 15-21, 2025" or "Dec 29 - Jan 4, 2026"
-        if (startMonth === endMonth) {
-            return `${startMonth} ${startDay}-${endDay}, ${year}`;
-        } else {
-            return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-        }
+        return (startMonth === endMonth) 
+            ? `${startMonth} ${startDay}-${endDay}, ${year}` 
+            : `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
     };
 
-    // --- Data Buckets ---
+    // --- 1. Fill Data Buckets ---
     const dailyData = {};
     const weeklyData = {};
     const monthlyData = {};
 
-    // 2. Iterate events
     copyEvents.forEach(event => {
         const date = event.timestamp.toDate();
         const dayKey = date.toISOString().split('T')[0];
@@ -3369,17 +3379,13 @@ const calculateAndRenderRecords = (events) => {
         monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
     });
 
-    // 3. Find Records
+    // --- 2. Find Records (Max Values) ---
     const findRecord = (dataObj) => {
         let maxVal = 0;
         let maxKey = null;
         for (const [key, val] of Object.entries(dataObj)) {
-            if (val > maxVal) {
-                maxVal = val;
-                maxKey = key;
-            } else if (val === maxVal && key > maxKey) {
-                maxKey = key; // Tie-breaker: most recent date
-            }
+            if (val > maxVal) { maxVal = val; maxKey = key; }
+            else if (val === maxVal && key > maxKey) { maxKey = key; }
         }
         return { val: maxVal, key: maxKey };
     };
@@ -3388,39 +3394,97 @@ const calculateAndRenderRecords = (events) => {
     const bestWeek = findRecord(weeklyData);
     const bestMonth = findRecord(monthlyData);
 
-    // 4. Format Dates
-    
-    // Daily: "Dec 25, 2025"
-    let dailyDateStr = '--';
-    if (bestDay.key) {
-        const [y, m, d] = bestDay.key.split('-');
-        const dateObj = new Date(y, m - 1, d);
-        dailyDateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
+    // --- 3. Determine "Current" Values ---
+    const now = new Date();
+    const currentDayKey = now.toISOString().split('T')[0];
+    const currentWeekKey = getWeekKey(now);
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    // Weekly: "Dec 15-21, 2025"
-    let weeklyDateStr = '--';
-    if (bestWeek.key) {
-        weeklyDateStr = getDateRangeFromWeek(bestWeek.key);
-    }
+    const currentDayVal = dailyData[currentDayKey] || 0;
+    const currentWeekVal = weeklyData[currentWeekKey] || 0;
+    const currentMonthVal = monthlyData[currentMonthKey] || 0;
 
-    // Monthly: "December 2025"
-    let monthlyDateStr = '--';
-    if (bestMonth.key) {
-        const [y, m] = bestMonth.key.split('-');
-        const dateObj = new Date(y, m - 1, 1);
-        monthlyDateStr = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    }
+    // --- 4. Render Logic (Reusable Function) ---
+    const updateUI = (type, best, current, dateFormatter) => {
+        const countEl = document.getElementById(`record-${type}`);
+        const dateEl = document.getElementById(`record-${type}-date`);
+        const statusEl = document.getElementById(`record-${type}-status`);
+        const percentEl = document.getElementById(`record-${type}-percent`);
+        const barEl = document.getElementById(`record-${type}-bar`);
 
-    // 5. Update UI
-    animateValue(dailyCountEl, 0, bestDay.val, 1500);
-    dailyDateEl.textContent = dailyDateStr;
+        // Update Record Number
+        animateValue(countEl, 0, best.val, 1500);
 
-    animateValue(weeklyCountEl, 0, bestWeek.val, 1500);
-    weeklyDateEl.textContent = weeklyDateStr;
+        // Update Record Date
+        if (best.key) {
+            dateEl.textContent = dateFormatter(best.key);
+        } else {
+            dateEl.textContent = '--';
+        }
 
-    animateValue(monthlyCountEl, 0, bestMonth.val, 1500);
-    monthlyDateEl.textContent = monthlyDateStr;
+        // --- THE HYPE LOGIC ---
+        // Calculate progress percentage (cap at 100% for bar width)
+        let percentage = best.val > 0 ? (current / best.val) * 100 : 0;
+        const displayPercent = Math.min(percentage, 100);
+        
+        barEl.style.width = `${displayPercent}%`;
+        percentEl.textContent = `${Math.floor(percentage)}%`;
+
+        const distance = best.val - current;
+
+        // Reset Styles
+        statusEl.className = "font-semibold";
+        statusEl.innerHTML = ""; // Clear content
+        barEl.className = `h-full rounded-full transition-all duration-1000 ${type === 'daily' ? 'bg-blue-400' : type === 'weekly' ? 'bg-purple-400' : 'bg-yellow-400'}`;
+        countEl.classList.remove('new-record-glow', 'text-green-400');
+
+        if (current >= best.val && best.val > 0) {
+            // CASE 1: NEW RECORD!
+            statusEl.innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> <span class="text-green-400">Current Record!</span>`;
+            barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
+            barEl.classList.add('bg-green-400'); // Green bar
+            countEl.classList.add('new-record-glow', 'text-green-400'); // Pulse the big number
+            percentEl.textContent = "100%";
+        } 
+        else if (percentage >= 80) {
+            // CASE 2: CLOSE (Within 20%)
+            statusEl.innerHTML = `<i class="fas fa-fire text-orange-500 mr-1 animate-pulse"></i> <span class="text-orange-300">${distance} away!</span>`;
+            barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
+            barEl.classList.add('bg-orange-500'); // Orange bar
+        } 
+        else {
+            // CASE 3: NORMAL
+            // Define label based on type
+            let label = "Today";
+            if (type === 'weekly') label = "This Week";
+            if (type === 'monthly') label = "This Month";
+            
+            // Set text color based on type to match theme
+            let colorClass = "text-gray-300";
+            if (type === 'daily') colorClass = "text-blue-100";
+            if (type === 'weekly') colorClass = "text-purple-100";
+            if (type === 'monthly') colorClass = "text-yellow-100";
+
+            statusEl.className = `font-semibold ${colorClass}`;
+            statusEl.textContent = `${label}: ${current}`;
+        }
+    };
+
+    // Date Formatters
+    const formatDay = (key) => {
+        const [y, m, d] = key.split('-');
+        return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    const formatWeek = (key) => getDateRangeFromWeek(key);
+    const formatMonth = (key) => {
+        const [y, m] = key.split('-');
+        return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    };
+
+    // 5. Run Updates
+    updateUI('daily', bestDay, currentDayVal, formatDay);
+    updateUI('weekly', bestWeek, currentWeekVal, formatWeek);
+    updateUI('monthly', bestMonth, currentMonthVal, formatMonth);
 };
 
 const displayToast = (notification) => {
