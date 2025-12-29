@@ -6040,6 +6040,7 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase();
 
+    // 1. Filter Logic (Unchanged)
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
@@ -6080,6 +6081,7 @@ const renderResponses = (searchQuery = '') => {
         }
     }
     
+    // 2. Heading Logic (Unchanged)
     if (responsesToRender.length > 0 || query) {
         const count = responsesToRender.length;
         const label = query ? 'Results Found' : 'Saved Replies';
@@ -6092,6 +6094,7 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
+    // 3. Rendering Logic (UPDATED FOR GRID)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
         const groupedResponses = responsesToRender.reduce((acc, response) => {
@@ -6105,14 +6108,14 @@ const renderResponses = (searchQuery = '') => {
 
         for (const label in groupedResponses) {
             const labelSection = document.createElement('div');
-            labelSection.className = 'mb-8'; 
+            labelSection.className = 'mb-8'; // More spacing between sections
             let highlightedLabel = label;
             if(query) {
                 const regex = new RegExp(query, 'gi');
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // --- THIS IS THE KEY CHANGE FOR 2 COLUMNS ---
+            // ▼▼▼ CHANGE 1: THIS MAKES IT 2 COLUMNS ▼▼▼
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"></div>
@@ -6135,13 +6138,14 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // --- ADDED h-full HERE TO MAKE CARDS EQUAL HEIGHT ---
+                // ▼▼▼ CHANGE 2: h-full makes cards equal height ▼▼▼
                 responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all h-full';
                 responseEl.style.backgroundColor = categoryColor;
                 responseEl.style.borderColor = categoryColor;
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
+                // ▼▼▼ CHANGE 3: mt-auto pushes buttons to bottom ▼▼▼
                 responseEl.innerHTML = `
                     <div class="flex justify-between items-start w-full mb-2">
                          <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
@@ -6176,7 +6180,7 @@ const renderResponses = (searchQuery = '') => {
             responsesList.appendChild(labelSection);
         }
         
-        // --- Highlighting Logic for Tutorial ---
+        // 4. Tutorial Highlighting (Unchanged)
         if (currentTutorialStep === 5 || currentTutorialStep === 6) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
