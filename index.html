@@ -6539,14 +6539,6 @@ function attachEventListeners() {
         });
     }
 
-    // 4. Close Button for the Achievement Details Modal
-    const closeAchievementModalBtn = document.getElementById('close-achievement-modal-btn');
-    if(closeAchievementModalBtn) {
-        closeAchievementModalBtn.addEventListener('click', () => {
-            document.getElementById('achievement-details-modal').classList.add('hidden');
-        });
-    }
-
 	// --- Achievement Filter Listeners ---
 const filterAllBtn = document.getElementById('ach-filter-all');
 const filterUnlockedBtn = document.getElementById('ach-filter-unlocked');
