@@ -809,8 +809,84 @@
     }
 }	
 
-/* --- Premium Modal Animation Styles --- */
+/* --- NEW: Improved Records Cards --- */
+.record-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
+.record-card:hover {
+    transform: translateY(-3px) scale(1.02);
+}
+
+/* Background Icon Watermark */
+.record-bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 5rem;
+    opacity: 0.1;
+    transform: rotate(-15deg);
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+.record-card:hover .record-bg-icon {
+    transform: rotate(0deg) scale(1.1);
+    opacity: 0.2;
+}
+
+/* Specific Gradients for Records */
+.record-daily-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.2) 100%); border-left: 4px solid #3b82f6; }
+.record-weekly-gradient { background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(126, 34, 206, 0.2) 100%); border-left: 4px solid #9333ea; }
+.record-monthly-gradient { background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(202, 138, 4, 0.2) 100%); border-left: 4px solid #eab308; }
+
+/* --- NEW: Improved Achievement Tiles --- */
+.achievement-tile {
+    background: rgba(31, 41, 55, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.achievement-tile:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-tile.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+.achievement-tile.locked:hover {
+    opacity: 0.8;
+    filter: grayscale(0.5);
+}
+
+/* Small indicator dot for unlocked items */
+.unlocked-indicator {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px;
+    height: 6px;
+    background-color: #4ade80; /* Green */
+    border-radius: 50%;
+    box-shadow: 0 0 5px #4ade80;
+}
 /* 1. Base state for the Overlay (Background) */
 #expanded-chart-modal {
     opacity: 0;
@@ -1757,25 +1833,45 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
-            <div class="bento-card bento-span-1 bento-row-span-2 p-6 flex flex-col justify-between">
-                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-medal mr-2 text-orange-400"></i> Records
-                </h3>
-                <div class="space-y-3 flex-grow flex flex-col justify-center">
-                    <div class="bg-gray-800/50 p-4 rounded-lg flex flex-col items-center justify-center border-t-4 border-blue-500 h-full">
-                        <span class="text-xs text-gray-400 uppercase mb-1">Daily Best</span>
-                        <span id="record-daily" class="text-2xl font-bold text-white">0</span>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-lg flex flex-col items-center justify-center border-t-4 border-purple-500 h-full">
-                        <span class="text-xs text-gray-400 uppercase mb-1">Weekly Best</span>
-                        <span id="record-weekly" class="text-2xl font-bold text-white">0</span>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-lg flex flex-col items-center justify-center border-t-4 border-yellow-500 h-full">
-                        <span class="text-xs text-gray-400 uppercase mb-1">Monthly Best</span>
-                        <span id="record-monthly" class="text-2xl font-bold text-white">0</span>
-                    </div>
-                </div>
-            </div>
+			<div class="bento-card bento-span-1 bento-row-span-2 p-6 flex flex-col justify-between overflow-hidden relative">
+			    <div class="flex justify-between items-center mb-4 z-10">
+			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
+			            <i class="fas fa-medal mr-2 text-orange-400"></i> Records
+			        </h3>
+			        <i class="fas fa-crown text-yellow-500/20 text-4xl absolute top-4 right-4"></i>
+			    </div>
+			
+			    <div class="space-y-4 flex-grow flex flex-col justify-center z-10">
+			        
+			        <div class="record-card record-daily-gradient p-4 rounded-xl relative group">
+			            <i class="fas fa-calendar-day record-bg-icon text-blue-500"></i>
+			            <span class="text-xs text-blue-200 uppercase font-bold tracking-wider">Daily Best</span>
+			            <div class="flex items-end gap-2 mt-1">
+			                <span id="record-daily" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
+			                <span class="text-xs text-blue-300 mb-1">copies</span>
+			            </div>
+			        </div>
+			
+			        <div class="record-card record-weekly-gradient p-4 rounded-xl relative group">
+			            <i class="fas fa-calendar-week record-bg-icon text-purple-500"></i>
+			            <span class="text-xs text-purple-200 uppercase font-bold tracking-wider">Weekly Best</span>
+			            <div class="flex items-end gap-2 mt-1">
+			                <span id="record-weekly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
+			                <span class="text-xs text-purple-300 mb-1">copies</span>
+			            </div>
+			        </div>
+			
+			        <div class="record-card record-monthly-gradient p-4 rounded-xl relative group">
+			            <i class="fas fa-calendar-alt record-bg-icon text-yellow-500"></i>
+			            <span class="text-xs text-yellow-200 uppercase font-bold tracking-wider">Monthly Best</span>
+			            <div class="flex items-end gap-2 mt-1">
+			                <span id="record-monthly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
+			                <span class="text-xs text-yellow-300 mb-1">copies</span>
+			            </div>
+			        </div>
+			
+			    </div>
+			</div>
 
             <div id="activity-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
                 <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
@@ -1812,21 +1908,31 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
-            <div class="bento-card bento-span-2 p-6 flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
-                        <i class="fas fa-trophy mr-2 text-yellow-400"></i> Trophy Case
-                    </h3>
-                    <div id="ach-progress-bar-container" class="w-1/3 text-right">
-                        <div class="text-xs text-gray-400 mb-1" id="ach-progress-text">0/0</div>
-                        <div class="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                            <div id="ach-progress-bar" class="h-full bg-yellow-400 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 overflow-y-auto max-h-[200px] scrollbar-hide">
-                </div>
-            </div>
+			<div class="bento-card bento-span-2 p-6 flex flex-col">
+			    <div class="flex justify-between items-center mb-4">
+			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
+			            <i class="fas fa-trophy mr-2 text-yellow-400"></i> Trophy Case
+			        </h3>
+			        
+			        <div class="flex bg-gray-800 rounded-lg p-1">
+			            <button id="ach-filter-all" class="text-xs px-3 py-1 rounded bg-blue-600 text-white font-semibold transition-all">All</button>
+			            <button id="ach-filter-unlocked" class="text-xs px-3 py-1 rounded text-gray-400 hover:text-white transition-all">Unlocked</button>
+			        </div>
+			    </div>
+			
+			    <div class="mb-4">
+			        <div class="flex justify-between text-xs text-gray-400 mb-1">
+			            <span>Collection Progress</span>
+			            <span id="ach-progress-text">0/0</span>
+			        </div>
+			        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+			            <div id="ach-progress-bar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-300 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+			        </div>
+			    </div>
+			
+			    <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 overflow-y-auto max-h-[220px] scrollbar-hide p-1">
+			        </div>
+			</div>
 
             <div id="category-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
                 <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
@@ -2966,6 +3072,21 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// Animation for numbers
+const animateValue = (obj, start, end, duration) => {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+};
+		
 const calculateAndSaveUserRecords = async (uid) => {
     if (!uid || isAnonymous) return; // Don't run for anonymous users
     console.log(`Calculating and saving personal records for user ${uid}...`);
@@ -3116,9 +3237,9 @@ const calculateAndRenderRecords = (events) => {
     const maxMonthly = Object.values(monthlyCounts).length > 0 ? Math.max(...Object.values(monthlyCounts)) : 0;
 
     // 4. Update the HTML elements with the calculated records
-    document.getElementById('record-daily').textContent = maxDaily.toLocaleString();
-    document.getElementById('record-weekly').textContent = maxWeekly.toLocaleString();
-    document.getElementById('record-monthly').textContent = maxMonthly.toLocaleString();
+	animateValue(document.getElementById('record-daily'), 0, maxDaily, 1500);
+    animateValue(document.getElementById('record-weekly'), 0, maxWeekly, 1500);
+    animateValue(document.getElementById('record-monthly'), 0, maxMonthly, 1500);
 };		
 
 const displayToast = (notification) => {
@@ -3635,48 +3756,53 @@ const updateUserLeaderboardEntry = async () => {
 };
 	
 
-// ▼▼▼ REPLACE THE OLD FUNCTION WITH THIS NEW, SIMPLIFIED VERSION ▼▼▼
-
 const renderFilteredAchievements = (events, userData) => {
     const userAchievements = userData.achievementsData || {};
-    
-    // Call the new helper function to get the current state of all achievements
     const allAchievements = calculateAllAchievements(events, userData);
 
-    const unlockedCount = allAchievements.filter(a => a.unlocked && a.id !== 'grand_master').length;
-    const totalCount = allAchievements.length - 1; // Exclude Grand Master from the count
+    // Calculate Counts (Exclude Grand Master for progress math usually, or keep it)
+    const unlockedCount = allAchievements.filter(a => a.unlocked).length;
+    const totalCount = allAchievements.length;
     const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
     
     document.getElementById('ach-progress-text').textContent = `${unlockedCount} / ${totalCount} Unlocked`;
     document.getElementById('ach-progress-bar').style.width = `${progress}%`;
     
     const container = document.getElementById('achievements-container');
+    
+    // Use the global variable `activeAchievementFilter`
     let filtered = activeAchievementFilter === 'unlocked' 
         ? allAchievements.filter(a => a.unlocked) 
         : allAchievements;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-400 col-span-full py-8">No achievements here yet!</p>';
+        container.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8 text-sm italic">No achievements found in this filter.</p>';
         return;
     }
     
     container.innerHTML = filtered.map(ach => {
         const badgeClass = ach.unlocked ? getAchievementClassFromColor(ach.color) : 'achievement-icon-locked';
+        // Add the 'locked' class to the tile if not unlocked
+        const tileClass = ach.unlocked ? '' : 'locked';
         const textColor = ach.unlocked ? 'text-gray-100' : 'text-gray-500';
         const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
         const unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || new Date().toISOString()) : '';
-        
+        const indicator = ach.unlocked ? '<div class="unlocked-indicator"></div>' : '';
+
         return `
-            <div class="achievement-card-redesign flex flex-col items-center text-center p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+            <div class="achievement-tile ${tileClass} achievement-card-redesign"
                  data-id="${ach.id}" data-name="${ach.name}" data-desc="${sanitizedDesc}"
                  data-icon="${ach.icon}" data-color="${ach.color || 'text-yellow-400'}"
-                 data-unlocked="${ach.unlocked}" data-unlocked-date="${unlockedDate}">
-                <div class="achievement-icon-wrapper ${badgeClass}">
+                 data-unlocked="${ach.unlocked}" data-unlocked-date="${unlockedDate}"
+                 title="${ach.name}: ${sanitizedDesc}">
+                
+                ${indicator}
+                
+                <div class="achievement-icon-wrapper ${badgeClass} transform scale-75 sm:scale-90">
                     <i class="fas ${ach.icon}"></i>
                 </div>
-                <div>
-                    <p class="font-bold ${textColor}">${ach.name}</p>
-                </div>
+                
+                <p class="font-bold ${textColor} text-[10px] sm:text-xs text-center leading-tight line-clamp-2">${ach.name}</p>
             </div>
         `;
     }).join('');
@@ -6280,6 +6406,33 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+
+	// --- Achievement Filter Listeners ---
+const filterAllBtn = document.getElementById('ach-filter-all');
+const filterUnlockedBtn = document.getElementById('ach-filter-unlocked');
+
+if (filterAllBtn && filterUnlockedBtn) {
+    filterAllBtn.addEventListener('click', () => {
+        activeAchievementFilter = 'all';
+        filterAllBtn.classList.add('bg-blue-600', 'text-white');
+        filterAllBtn.classList.remove('text-gray-400');
+        filterUnlockedBtn.classList.remove('bg-blue-600', 'text-white');
+        filterUnlockedBtn.classList.add('text-gray-400');
+        renderAdvancedStats(); 
+    });
+
+    filterUnlockedBtn.addEventListener('click', () => {
+        activeAchievementFilter = 'unlocked';
+        // Update Button Styles
+        filterUnlockedBtn.classList.add('bg-blue-600', 'text-white');
+        filterUnlockedBtn.classList.remove('text-gray-400');
+        filterAllBtn.classList.remove('bg-blue-600', 'text-white');
+        filterAllBtn.classList.add('text-gray-400');
+        
+        renderAdvancedStats();
+    });
+}
     
 
     const activityWrapper = document.getElementById('activity-card-wrapper');
