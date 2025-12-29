@@ -6108,10 +6108,10 @@ const renderResponses = (searchQuery = '') => {
             }
 
             labelSection.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-400 mb-2">${highlightedLabel}</h3>
-                <div class="space-y-4"></div>
+				<h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"></div>
             `;
-            const responsesInSection = labelSection.querySelector('div');
+            const responsesInSection = labelSection.querySelector('div.grid');
 
 
 			groupedResponses[label].forEach(response => {
@@ -6130,12 +6130,11 @@ const renderResponses = (searchQuery = '') => {
     
   					  const timesCopied = response.timesCopied || 0; // Get the count
 
-    				responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
-  					responseEl.style.backgroundColor = categoryColor;
-   					 responseEl.style.borderColor = categoryColor;
+					responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all h-full';  					responseEl.style.backgroundColor = categoryColor;
+   					responseEl.style.borderColor = categoryColor;
  				   	responseEl.dataset.id = response.id;
 					responseEl.dataset.category = response.category;
-   					 responseEl.innerHTML = `
+   					responseEl.innerHTML = `
 			        <div class="absolute top-3 left-3 flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-60 px-2 py-1 rounded-full z-10" title="${timesCopied} times copied">
 			            <i class="fas fa-copy mr-2"></i>
 			            <span>${timesCopied}</span>
