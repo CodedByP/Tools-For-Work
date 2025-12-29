@@ -4420,8 +4420,67 @@ const setupAchievementFiltering = () => {
     }
 };		
 
+const checkForGlobalAlerts = async (uid) => {
+    if (!uid || isAnonymous) return;
+
+    const userDocRef = getUserRootDocRef(uid);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    
+    // Define what we are looking for
+    const alertsToCheck = [
+        { docId: 'weekly_champion', seenField: 'lastSeenWeeklyWinnerId' },
+        { docId: 'monthly_legend', seenField: 'lastSeenMonthlyWinnerId' }
+    ];
+
+    for (const alert of alertsToCheck) {
+        const alertRef = doc(db, 'artifacts', safeAppId, 'global_alerts', alert.docId);
+        const alertSnap = await getDoc(alertRef);
+
+        if (alertSnap.exists()) {
+            const alertData = alertSnap.data();
+            
+            // Skip if no winner was found for that period
+            if (alertData.status === 'no_winner') continue;
+
+            // CHECK: Have I seen this specific period ID?
+            const lastSeenId = userData[alert.seenField];
+            
+            if (lastSeenId !== alertData.periodId) {
+                // I HAVEN'T SEEN IT! TRIGGER VISUALS!
+                
+                if (alertData.winnerId === uid) {
+                    // --- SCENARIO A: I AM THE WINNER ---
+                    triggerCelebration(); 
+                    
+                    const sound = document.getElementById('level-up-sound');
+                    if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
+                    
+                    // Show Modal
+                    const modal = document.getElementById('level-up-modal');
+                    document.getElementById('modal-level-up-icon').innerHTML = '<i class="fas fa-crown text-yellow-400"></i>';
+                    document.getElementById('modal-level-up-message').innerHTML = `
+                        You finished #1 on the <b class="capitalize">${alertData.type} leaderboard!</b><br>
+                        Reward: <span class="text-green-400 font-bold">+${alertData.xpReward.toLocaleString()} XP</span>
+                    `;
+                    modal.classList.remove('hidden');
+                    
+                } else {
+                    // --- SCENARIO B: SOMEONE ELSE WON ---
+                    showMessage(`🏆 ${alertData.winnerName} is the ${alertData.type} Champion!`, 'success');
+                }
+
+                // MARK AS SEEN (So it doesn't show again on refresh)
+                await updateDoc(userDocRef, {
+                    [alert.seenField]: alertData.periodId
+                });
+            }
+        }
+    }
+};		
+
 const checkAndDistributeRewards = async () => {
-    // 1. Define the periods to check
+    // 1. Define periods
     const periods = [
         { 
             type: 'weekly', 
@@ -4429,7 +4488,7 @@ const checkAndDistributeRewards = async () => {
             xp: XP_VALUES.WEEKLY_WINNER, 
             xpField: 'weeklyXp',
             idField: 'lastWeeklyXpId',
-            title: 'Weekly Champion' 
+            alertDocId: 'weekly_champion' // Fixed ID for the "Bulletin Board"
         },
         { 
             type: 'monthly', 
@@ -4437,27 +4496,26 @@ const checkAndDistributeRewards = async () => {
             xp: XP_VALUES.MONTHLY_WINNER, 
             xpField: 'monthlyXp',
             idField: 'lastMonthlyXpId',
-            title: 'Monthly Legend' 
+            alertDocId: 'monthly_legend'
         }
     ];
 
-    const rewardsLogRef = collection(db, 'artifacts', safeAppId, 'rewards_log');
+    const alertsCollectionRef = collection(db, 'artifacts', safeAppId, 'global_alerts');
 
     for (const period of periods) {
         try {
-            // 2. Check if we already gave out this reward (Prevent double paying)
-            const logDocId = `${period.type}_${period.id}`; // e.g. "weekly_2024-52"
-            const logDocRef = doc(rewardsLogRef, logDocId);
-            const logDoc = await getDoc(logDocRef);
+            // 2. Check the Bulletin Board First
+            const alertDocRef = doc(alertsCollectionRef, period.alertDocId);
+            const alertDoc = await getDoc(alertDocRef);
 
-            if (logDoc.exists()) {
-                continue; // Reward already distributed, skip.
+            // If the board already has a winner for THIS ID (e.g. "2024-36"), stop. calculation is done.
+            if (alertDoc.exists() && alertDoc.data().periodId === period.id) {
+                continue; 
             }
 
-            console.log(`Processing ${period.type} reward for ${period.id}...`);
+            console.log(`Calculating ${period.type} winner for ${period.id}...`);
 
             // 3. Find the Winner
-            // We look for users who have data matching the PREVIOUS period ID
             const leaderboardRef = collection(db, "leaderboard");
             const q = query(
                 leaderboardRef, 
@@ -4473,59 +4531,32 @@ const checkAndDistributeRewards = async () => {
                 const winnerData = winnerDoc.data();
                 const winnerId = winnerDoc.id;
 
-                // 4. Pay the Winner
+                // 4. Pay the Winner (Backend Math)
                 const winnerUserRef = getUserRootDocRef(winnerId);
-                const winnerUserDoc = await getDoc(winnerUserRef);
+                await updateDoc(winnerUserRef, { xp: increment(period.xp) });
+                await updateDoc(doc(db, "leaderboard", winnerId), { xp: increment(period.xp) });
+
+                // 5. POST TO BULLETIN BOARD (This triggers the visuals for everyone)
+                await setDoc(alertDocRef, {
+                    periodId: period.id, // e.g. "2024-36"
+                    winnerId: winnerId,
+                    winnerName: winnerData.displayName,
+                    xpReward: period.xp,
+                    type: period.type,
+                    postedAt: serverTimestamp()
+                });
                 
-                if (winnerUserDoc.exists()) {
-                    const currentXp = winnerUserDoc.data().xp || 0;
-                    const newXp = currentXp + period.xp;
-                    
-                    // Update User Profile (Private XP)
-                    await updateDoc(winnerUserRef, { xp: newXp });
-                    
-                    // Update Leaderboard Entry (Public XP)
-                    await updateDoc(doc(db, "leaderboard", winnerId), { xp: newXp });
-
-                    // 5. Log the Distribution (The Receipt)
-                    await setDoc(logDocRef, {
-                        winnerId: winnerId,
-                        winnerName: winnerData.displayName,
-                        amount: period.xp,
-                        distributedAt: serverTimestamp()
-                    });
-
-                    // 6. Notify the current user
-                    // If I am the winner:
-                    if (winnerId === userId) {
-                        triggerCelebration(); // Confetti!
-                        // Play sound
-                        const sound = document.getElementById('level-up-sound');
-                        if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
-                        
-                        // Show Modal
-                        document.getElementById('modal-level-up-icon').innerHTML = '<i class="fas fa-crown text-yellow-400"></i>';
-                        document.getElementById('modal-level-up-message').innerHTML = `
-                            You finished #1 on the <b>${period.type} leaderboard!</b><br>
-                            Reward: <span class="text-green-400 font-bold">+${period.xp.toLocaleString()} XP</span>
-                        `;
-                        document.getElementById('level-up-modal').classList.remove('hidden');
-                    } else {
-                        // If someone else won, show a toast
-                        showMessage(`🏆 ${winnerData.displayName} won the ${period.type} leaderboard!`, 'success');
-                    }
-                }
+                console.log(`🏆 Winner found: ${winnerData.displayName}`);
             } else {
-                // No winner found (maybe no one played last week). 
-                // Mark as done anyway so we don't keep querying.
-                await setDoc(logDocRef, { status: 'no_winner', distributedAt: serverTimestamp() });
+                // No winner, but mark as checked so we don't loop forever
+                await setDoc(alertDocRef, { periodId: period.id, status: 'no_winner' });
             }
 
         } catch (error) {
             console.error(`Error processing ${period.type} rewards:`, error);
         }
     }
-};		
+};	
 
 // --- NEW: Challenge System Configuration ---
 const CHALLENGES_CONFIG = {
@@ -8358,6 +8389,7 @@ onAuthStateChanged(auth, async (user) => {
                 await recalculateCurrentPeriodStats(userId);
             }
 			await checkAndDistributeRewards();
+			await checkForGlobalAlerts(userId);
 			await calculateAndSaveUserRecords(userId);
 			
             if (!userData.firstSignIn) {
