@@ -327,6 +327,99 @@
 .new-record-glow {
     animation: pulse-text-glow 1.5s infinite;
 }		
+
+
+/* --- Podium Styles --- */
+.podium-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+    height: 180px; /* Fixed height to align bottoms */
+}
+
+.podium-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    background: rgba(31, 41, 55, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem 1rem 0 0; /* Rounded top only */
+    padding: 1rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy spring */
+    width: 30%;
+}
+
+.podium-card:hover {
+    transform: translateY(-5px);
+    background: rgba(55, 65, 81, 0.6);
+}
+
+/* Rank Specific Heights & Colors */
+.podium-rank-1 {
+    height: 100%; /* Tallest */
+    background: linear-gradient(to top, rgba(234, 179, 8, 0.2), rgba(31, 41, 55, 0.4));
+    border-color: rgba(234, 179, 8, 0.5);
+    z-index: 10;
+}
+
+.podium-rank-2 {
+    height: 75%;
+    background: linear-gradient(to top, rgba(209, 213, 219, 0.1), rgba(31, 41, 55, 0.4));
+    border-color: rgba(209, 213, 219, 0.3);
+}
+
+.podium-rank-3 {
+    height: 60%;
+    background: linear-gradient(to top, rgba(217, 119, 6, 0.1), rgba(31, 41, 55, 0.4));
+    border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* Avatar positioning on podium */
+.podium-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Crown for #1 */
+.rank-1-crown {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    color: #fbbf24;
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.8));
+    animation: bounce 2s infinite;
+}
+
+/* Live Status Dot */
+.status-dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+.status-online { background-color: #4ade80; box-shadow: 0 0 8px #4ade80; }
+.status-offline { background-color: #6b7280; }
+
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+}		
 		
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
@@ -3284,6 +3377,17 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const getTimeAgo = (timestamp) => {
+    if (!timestamp) return 'Offline';
+    const date = timestamp.toDate();
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    if (seconds < 300) return 'Online'; // Active in last 5 mins
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+    return 'Offline';
+};		
+
 const openAchievementDetailsModal = (card) => {
     const modal = document.getElementById('achievement-details-modal');
     // Get data from the clicked card
@@ -5369,59 +5473,104 @@ const renderLeaderboard = async () => {
     const container = document.getElementById('leaderboard-container');
     if (!container) return;
 
-    container.innerHTML = '<p class="text-gray-400">Loading leaderboard...</p>';
+    // We only clear the list part, we need to rebuild the structure first if it doesn't exist
+    // But for simplicity, let's just wipe and rebuild everything
+    container.innerHTML = '<div class="flex justify-center p-8"><svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
 
     try {
         const leaderboardColRef = collection(db, "leaderboard");
-        // Query the top 10 users, ordered by XP
         const q = query(leaderboardColRef, orderBy("xp", "desc"), limit(10));
-        
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            container.innerHTML = '<p class="text-gray-400">The leaderboard is empty. Start copying to get on the board!</p>';
+            container.innerHTML = '<p class="text-gray-400 text-center">Leaderboard is empty.</p>';
             return;
         }
 
-        let leaderboardHTML = '';
-        let rank = 1;
-
-        querySnapshot.forEach(doc => {
-		const userData = doc.data();
-		
-		let rankDisplay = `<span class="leaderboard-rank font-mono text-gray-500 w-6 text-center">${rank}</span>`;
-		
-		if (rank === 1) {
-		    rankDisplay = `<div class="w-6 text-center text-yellow-400 text-lg drop-shadow-md"><i class="fas fa-crown"></i></div>`;
-		} else if (rank === 2) {
-		    rankDisplay = `<div class="w-6 text-center text-gray-300 text-lg drop-shadow-md"><i class="fas fa-medal"></i></div>`;
-		} else if (rank === 3) {
-		    rankDisplay = `<div class="w-6 text-center text-amber-600 text-lg drop-shadow-md"><i class="fas fa-medal"></i></div>`;
-		}
-		
-		leaderboardHTML += `
-		    <div class="leaderboard-entry cursor-pointer" data-userid="${doc.id}">
-		        ${rankDisplay}
-		        <div class="level-badge-wrapper ${'level-badge-' + userData.rankName.toLowerCase()}" style="width: 40px; height: 40px; margin-left: 0.5rem;">
-		            <i class="fas ${userData.rankIcon}" style="font-size: 1.25rem;"></i>
-		        </div>
-		        <div class="leaderboard-details">
-		            <p class="font-semibold text-gray-100">${userData.displayName}</p>
-		            <p class="text-sm text-gray-400">Level ${userData.level} - ${userData.rankName}</p>
-		        </div>
-		        <span class="leaderboard-xp text-emerald-400">${userData.xp.toLocaleString()} XP</span>
-		    </div>
-		`;
-            rank++;
+        const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // --- 1. Construct the Podium (Top 3) ---
+        let podiumHTML = '<div class="podium-container">';
+        
+        // Order: 2nd (Left), 1st (Center), 3rd (Right)
+        // We check if users exist at those indices
+        const podiumOrder = [1, 0, 2]; // Index in the 'users' array
+        
+        podiumOrder.forEach(idx => {
+            if (users[idx]) {
+                const u = users[idx];
+                const rank = idx + 1;
+                const isFirst = rank === 1;
+                const status = getTimeAgo(u.lastActive);
+                const isOnline = status === 'Online';
+                
+                podiumHTML += `
+                    <div class="podium-card podium-rank-${rank}" data-userid="${u.id}">
+                        ${isFirst ? '<i class="fas fa-crown rank-1-crown"></i>' : ''}
+                        
+                        <div class="podium-avatar level-badge-${u.rankName.toLowerCase()}">
+                            <i class="fas ${u.rankIcon}"></i>
+                        </div>
+                        
+                        <div class="text-center z-10">
+                            <p class="font-bold text-white text-sm truncate w-24">${u.displayName}</p>
+                            <p class="text-xs text-blue-300 font-mono font-bold">${u.xp.toLocaleString()}</p>
+                            
+                            <div class="mt-2 text-[10px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'}">
+                                <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'}"></span>
+                                ${status}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Empty placeholder if we have < 3 users to keep alignment
+                podiumHTML += `<div class="w-[30%]"></div>`;
+            }
         });
+        podiumHTML += '</div>';
 
-        container.innerHTML = leaderboardHTML;
+        // --- 2. Construct the List (Rank 4+) ---
+        let listHTML = '<div class="space-y-2 mt-4">';
+        if (users.length > 3) {
+            users.slice(3).forEach((u, index) => {
+                const rank = index + 4;
+                const status = getTimeAgo(u.lastActive);
+                const isOnline = status === 'Online';
+
+                listHTML += `
+                    <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
+                        <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
+                        
+                        <div class="level-badge-wrapper level-badge-${u.rankName.toLowerCase()} scale-75 origin-left" style="width: 40px; height: 40px;">
+                            <i class="fas ${u.rankIcon} text-lg"></i>
+                        </div>
+                        
+                        <div class="ml-2 flex-grow">
+                            <div class="flex items-center gap-2">
+                                <p class="font-semibold text-gray-200 text-sm">${u.displayName}</p>
+                                ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse" title="On Fire!"></i>' : ''}
+                            </div>
+                            <p class="text-[10px] text-gray-500 flex items-center">
+                                <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
+                                ${status}
+                            </p>
+                        </div>
+                        
+                        <span class="font-bold text-blue-400 text-sm">${u.xp.toLocaleString()}</span>
+                    </div>
+                `;
+            });
+        }
+        listHTML += '</div>';
+
+        container.innerHTML = podiumHTML + listHTML;
 
     } catch (error) {
         console.error("Error rendering leaderboard:", error);
-        container.innerHTML = '<p class="text-red-400">Could not load leaderboard data.</p>';
+        container.innerHTML = '<p class="text-red-400">Could not load leaderboard.</p>';
     }
-};		
+};	
 
 const renderCategories = () => {
     const categoryList = document.getElementById('category-list');
@@ -5829,7 +5978,8 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     
                     batch.update(leaderboardDocRef, {
                         totalCopies: increment(1),
-                        [categoryCountField]: increment(1)
+                        [categoryCountField]: increment(1),
+						lastActive: serverTimestamp()
                     });
                     
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
@@ -7791,11 +7941,13 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
     document.getElementById('show-placeholder-example-btn').addEventListener('click', showPlaceholderDemo);
 
 	document.getElementById('leaderboard-container').addEventListener('click', (e) => {
-        const entry = e.target.closest('.leaderboard-entry');
-        if (entry && entry.dataset.userid) {
-            showUserProfile(entry.dataset.userid);
-        }
-    });
+	    // Check for either the list entry OR the podium card
+	    const entry = e.target.closest('.leaderboard-entry') || e.target.closest('.podium-card');
+	    
+	    if (entry && entry.dataset.userid) {
+	        showUserProfile(entry.dataset.userid);
+	    }
+	});
 
     document.getElementById('close-profile-modal-btn').addEventListener('click', () => {
         document.getElementById('profile-modal').classList.add('hidden');
