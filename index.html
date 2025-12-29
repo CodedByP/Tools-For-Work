@@ -1551,6 +1551,12 @@ body.light-mode .highlight-target {
             to { opacity: 1; transform: translateY(0); }
         }
 
+.lb-filter-btn.active {
+    background-color: #2563eb; /* Blue-600 */
+    color: white;
+    border: 1px solid #1d4ed8;
+}		
+
 		/* Light Mode Styles for Tutorial Modal */
 body.light-mode #tutorial-modal .modal-content {
     background-color: rgba(243, 244, 246, 0.9); /* Lighter background */
@@ -2076,12 +2082,16 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
             </div>
 
             <div class="bento-card bento-span-2 bento-row-span-2 p-6 flex flex-col h-full min-h-[400px]">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
-                        <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
-                    </h3>
-                    <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Top 10</span>
-                </div>
+				<div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+				    <h3 class="text-lg font-bold text-gray-200 flex items-center">
+				        <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
+				    </h3>
+				    <div id="leaderboard-filter-group" class="flex p-1 bg-gray-800/80 rounded-lg border border-gray-700/50">
+				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all active" data-view="all">All Time</button>
+				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all" data-view="weekly">Weekly</button>
+				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all" data-view="monthly">Monthly</button>
+				    </div>
+				</div>
                 <div id="leaderboard-container" class="flex-grow overflow-y-auto space-y-2 scrollbar-hide">
                 </div>
             </div>
@@ -2943,6 +2953,7 @@ let expandedChartEvents = [];     // <--- AND THIS ONE
 let cachedStatsEvents = [];
 let cachedStatsUserData = {};
 let hasLoadedStats = false; // Prevents re-running the heavy logic
+let currentLeaderboardView = 'all';		
 
 const openExpandedAchievements = () => {
     const modal = document.getElementById('expanded-chart-modal');
@@ -5528,32 +5539,57 @@ const renderContent = () => {
 };
 
 // Add this new rendering function
-const renderLeaderboard = async () => {
+// Global variable to track current view
+let currentLeaderboardView = 'all';
+
+const renderLeaderboard = async (view = 'all') => {
+    currentLeaderboardView = view; // Update global state
     const container = document.getElementById('leaderboard-container');
     if (!container) return;
 
-    // We only clear the list part, we need to rebuild the structure first if it doesn't exist
-    // But for simplicity, let's just wipe and rebuild everything
+    // Show loading state briefly
     container.innerHTML = '<div class="flex justify-center p-8"><svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
 
     try {
+        // 1. Fetch ALL users (Since n=5, this is cheap and fast)
         const leaderboardColRef = collection(db, "leaderboard");
-        const q = query(leaderboardColRef, orderBy("xp", "desc"), limit(10));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(leaderboardColRef);
+        let users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        if (querySnapshot.empty) {
+        // 2. Sort & Filter in Memory based on View
+        const currentWeekId = getCurrentWeekId();
+        const currentMonthId = getCurrentMonthId();
+
+        if (view === 'weekly') {
+            // Sort by weeklyXp, but treat as 0 if the week ID is old
+            users.sort((a, b) => {
+                const scoreA = (a.lastWeeklyXpId === currentWeekId) ? (a.weeklyXp || 0) : 0;
+                const scoreB = (b.lastWeeklyXpId === currentWeekId) ? (b.weeklyXp || 0) : 0;
+                return scoreB - scoreA;
+            });
+        } else if (view === 'monthly') {
+            // Sort by monthlyXp
+            users.sort((a, b) => {
+                const scoreA = (a.lastMonthlyXpId === currentMonthId) ? (a.monthlyXp || 0) : 0;
+                const scoreB = (b.lastMonthlyXpId === currentMonthId) ? (b.monthlyXp || 0) : 0;
+                return scoreB - scoreA;
+            });
+        } else {
+            // Default: All Time XP
+            users.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+        }
+
+        // Take Top 10 after sorting
+        users = users.slice(0, 10);
+
+        if (users.length === 0) {
             container.innerHTML = '<p class="text-gray-400 text-center">Leaderboard is empty.</p>';
             return;
         }
 
-        const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // --- 1. Construct the Podium (Top 3) ---
-        let podiumHTML = '<div class="podium-container">';
-        
-        // Order: 2nd (Left), 1st (Center), 3rd (Right)
-        // We check if users exist at those indices
-        const podiumOrder = [1, 0, 2]; // Index in the 'users' array
+        // --- 3. Render Podium (Top 3) ---
+        let html = '<div class="podium-container">';
+        const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd
         
         podiumOrder.forEach(idx => {
             if (users[idx]) {
@@ -5563,86 +5599,76 @@ const renderLeaderboard = async () => {
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
                 
-                podiumHTML += `
+                // Determine which score to display on the card
+                let displayScore = u.xp;
+                let scoreLabel = "Total XP";
+                
+                if (view === 'weekly') {
+                    displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
+                    scoreLabel = "This Week";
+                } else if (view === 'monthly') {
+                    displayScore = (u.lastMonthlyXpId === currentMonthId) ? (u.monthlyXp || 0) : 0;
+                    scoreLabel = "This Month";
+                }
+
+                html += `
                     <div class="podium-card podium-rank-${rank}" data-userid="${u.id}">
                         ${isFirst ? '<i class="fas fa-crown rank-1-crown"></i>' : ''}
-                        
                         <div class="podium-avatar level-badge-${u.rankName.toLowerCase()}">
                             <i class="fas ${u.rankIcon}"></i>
                         </div>
-                        
                         <div class="text-center z-10">
-                            <p class="font-bold text-white text-sm truncate w-24">${u.displayName}</p>
-                            <p class="text-xs text-blue-300 font-mono font-bold">${u.xp.toLocaleString()}</p>
-                            
-                            <div class="mt-2 text-[10px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'}">
-                                <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'}"></span>
-                                ${status}
-                            </div>
+                            <p class="font-bold text-white text-xs truncate w-20">${u.displayName}</p>
+                            <p class="text-xs text-blue-300 font-mono font-bold">${displayScore.toLocaleString()}</p>
+                            <p class="text-[9px] text-gray-400 uppercase">${scoreLabel}</p>
                         </div>
                     </div>
                 `;
             } else {
-                // Empty placeholder if we have < 3 users to keep alignment
-                podiumHTML += `<div class="w-[30%]"></div>`;
+                html += `<div class="w-[30%]"></div>`;
             }
         });
-        podiumHTML += '</div>';
+        html += '</div>';
 
-// --- 2. Construct the List (Rank 4+) ---
-        let listHTML = '<div class="space-y-2 mt-4">';
-        const currentWeekId = getCurrentWeekId(); 
-
+        // --- 4. Render List (Rank 4+) ---
+        html += '<div class="space-y-2 mt-2">';
         if (users.length > 3) {
             users.slice(3).forEach((u, index) => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
-                const badgeClass = `level-badge-${u.rankName.toLowerCase()}`;
                 
-                // NEW: Calculate Weekly Score to display
-                // If the week ID matches, show the score. If old week, show 0.
-                const weeklyScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
+                let displayScore = u.xp;
+                if (view === 'weekly') displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
+                else if (view === 'monthly') displayScore = (u.lastMonthlyXpId === currentMonthId) ? (u.monthlyXp || 0) : 0;
 
-                listHTML += `
+                html += `
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
-                        <span class="font-mono text-gray-500 w-6 text-center font-bold text-lg">${rank}</span>
-                        
-                        <div class="list-avatar ${badgeClass}">
+                        <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
+                        <div class="list-avatar level-badge-${u.rankName.toLowerCase()}">
                             <i class="fas ${u.rankIcon} text-white"></i>
                         </div>
-                        
                         <div class="flex-grow min-w-0">
                             <div class="flex items-center gap-2">
                                 <p class="font-semibold text-gray-200 text-sm truncate">${u.displayName}</p>
-                                
-                                ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse" title="On Fire!"></i>' : ''}
-                                
-                                ${weeklyScore > 0 ? `<span class="text-[10px] bg-green-900/50 text-green-400 px-1.5 py-0.5 rounded border border-green-500/30 font-mono">
-                                    +${weeklyScore} this week
-                                </span>` : ''}
+                                ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse"></i>' : ''}
                             </div>
-                            
-                            <p class="text-[10px] text-gray-500 flex items-center">
-                                <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
-                                ${status}
-                            </p>
+                            <p class="text-[10px] text-gray-500">${status}</p>
                         </div>
-                        
-                        <span class="font-bold text-blue-400 text-sm font-mono whitespace-nowrap">${u.xp.toLocaleString()} XP</span>
+                        <span class="font-bold text-blue-400 text-sm font-mono whitespace-nowrap">${displayScore.toLocaleString()}</span>
                     </div>
                 `;
             });
         }
-        listHTML += '</div>';
+        html += '</div>';
 
-        container.innerHTML = podiumHTML + listHTML;
+        container.innerHTML = html;
 
     } catch (error) {
         console.error("Error rendering leaderboard:", error);
-        container.innerHTML = '<p class="text-red-400">Could not load leaderboard.</p>';
+        container.innerHTML = '<p class="text-red-400">Error loading data.</p>';
     }
-};	
+};
 
 const renderCategories = () => {
     const categoryList = document.getElementById('category-list');
@@ -6053,31 +6079,35 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     // We need to fetch the document first to check if the week has changed
                     const lbDocSnap = await getDoc(leaderboardDocRef);
                     const lbData = lbDocSnap.exists() ? lbDocSnap.data() : {};
-                    const currentWeekId = getCurrentWeekId(); // Helper function must exist
-                    
-                    let weeklyUpdate = {};
-
-                    // Logic: If the stored week ID matches the current week, add 1.
-                    // If it's a new week (or doesn't exist), reset count to 1.
-                    if (lbData.lastWeeklyXpId === currentWeekId) {
-                        weeklyUpdate = { weeklyXp: increment(1) };
-                    } else {
-                        weeklyUpdate = { 
-                            weeklyXp: 1, 
-                            lastWeeklyXpId: currentWeekId 
-                        };
-                    }
-                    // --- NEW SECTION ENDS HERE ---
-
-                    const batch = writeBatch(db);
-                    
-                    // 3. Update the Leaderboard Document
-                    batch.update(leaderboardDocRef, {
-                        totalCopies: increment(1),
-                        [categoryCountField]: increment(1),
-                        lastActive: serverTimestamp(), // Updates "Live Status"
-                        ...weeklyUpdate                // Updates "Weekly Gain"
-                    });
+					// --- NEW LOGIC: Track Weekly AND Monthly ---
+					const currentMonthId = getCurrentMonthId(); // Ensure this helper exists
+					
+					let updates = {};
+					
+					// 1. Weekly Logic
+					if (lbData.lastWeeklyXpId === currentWeekId) {
+					    updates.weeklyXp = increment(1);
+					} else {
+					    updates.weeklyXp = 1;
+					    updates.lastWeeklyXpId = currentWeekId;
+					}
+					
+					// 2. Monthly Logic
+					if (lbData.lastMonthlyXpId === currentMonthId) {
+					    updates.monthlyXp = increment(1);
+					} else {
+					    updates.monthlyXp = 1;
+					    updates.lastMonthlyXpId = currentMonthId;
+					}
+					
+					const batch = writeBatch(db);
+					
+					batch.update(leaderboardDocRef, {
+					    totalCopies: increment(1),
+					    [`categoryCounts.${categoryName}`]: increment(1),
+					    lastActive: serverTimestamp(),
+					    ...updates // Injects both weekly and monthly updates
+					});
                     
                     // 4. Update the Active Days Sub-collection
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
@@ -7154,6 +7184,27 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+	// --- Leaderboard Filter Listener ---
+const lbFilterGroup = document.getElementById('leaderboard-filter-group');
+if (lbFilterGroup) {
+    lbFilterGroup.addEventListener('click', (e) => {
+        const btn = e.target.closest('.lb-filter-btn');
+        if (btn) {
+            // 1. Visual Update
+            lbFilterGroup.querySelectorAll('.lb-filter-btn').forEach(b => {
+                b.classList.remove('active', 'bg-blue-600', 'text-white');
+                b.classList.add('text-gray-400');
+            });
+            btn.classList.add('active', 'bg-blue-600', 'text-white');
+            btn.classList.remove('text-gray-400');
+
+            // 2. Logic Update
+            const view = btn.dataset.view;
+            renderLeaderboard(view);
+        }
+    });
+}
 
     document.body.addEventListener('click', (e) => {
         const card = e.target.closest('.achievement-card-redesign');
