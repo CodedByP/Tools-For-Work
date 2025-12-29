@@ -6115,14 +6115,14 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ THE FIX IS HERE ▼▼▼
-            // We removed 'grid-cols-1' and 'lg:'. We are forcing 'grid-cols-2' ALWAYS.
-            // We also added 'w-full' to ensure it takes up the full space available.
+            // ▼▼▼ THE FIX: INLINE STYLES FOR NUCLEAR CONTROL ▼▼▼
+            // We are using style="..." to force the grid layout directly.
+            // grid-template-columns: 1fr 1fr; -> This explicitly demands two equal columns.
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="grid grid-cols-2 gap-6 w-full items-stretch"></div>
+                <div class="response-grid-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%;"></div>
             `;
-            const responsesInSection = labelSection.querySelector('div.grid');
+            const responsesInSection = labelSection.querySelector('div.response-grid-container');
 
             groupedResponses[label].forEach(response => {
                 let displayText = response.text;
@@ -6140,8 +6140,13 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // h-full ensures equal height cards in the row
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all h-full';
+                // Note: We keep the Tailwind classes for styling (colors, padding), 
+                // but rely on the parent's inline style for the positioning.
+                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+                
+                // Ensure the card fills the grid cell height
+                responseEl.style.height = "100%"; 
+                
                 responseEl.style.backgroundColor = categoryColor;
                 responseEl.style.borderColor = categoryColor;
                 responseEl.dataset.id = response.id;
