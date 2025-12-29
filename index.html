@@ -2888,7 +2888,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
@@ -3163,6 +3163,8 @@ const XP_VALUES = {
     CREATE_CATEGORY: 100,
     UNLOCK_ACHIEVEMENT: 1000,
 	FEDEX_TRACKING: 50,
+	WEEKLY_WINNER: 2000,
+    MONTHLY_WINNER: 5000
 };
 
 const BASE_XP = 100; // XP needed for level 1
@@ -4418,6 +4420,113 @@ const setupAchievementFiltering = () => {
     }
 };		
 
+const checkAndDistributeRewards = async () => {
+    // 1. Define the periods to check
+    const periods = [
+        { 
+            type: 'weekly', 
+            id: getPreviousWeekId(), 
+            xp: XP_VALUES.WEEKLY_WINNER, 
+            xpField: 'weeklyXp',
+            idField: 'lastWeeklyXpId',
+            title: 'Weekly Champion' 
+        },
+        { 
+            type: 'monthly', 
+            id: getPreviousMonthId(), 
+            xp: XP_VALUES.MONTHLY_WINNER, 
+            xpField: 'monthlyXp',
+            idField: 'lastMonthlyXpId',
+            title: 'Monthly Legend' 
+        }
+    ];
+
+    const rewardsLogRef = collection(db, 'artifacts', safeAppId, 'rewards_log');
+
+    for (const period of periods) {
+        try {
+            // 2. Check if we already gave out this reward (Prevent double paying)
+            const logDocId = `${period.type}_${period.id}`; // e.g. "weekly_2024-52"
+            const logDocRef = doc(rewardsLogRef, logDocId);
+            const logDoc = await getDoc(logDocRef);
+
+            if (logDoc.exists()) {
+                continue; // Reward already distributed, skip.
+            }
+
+            console.log(`Processing ${period.type} reward for ${period.id}...`);
+
+            // 3. Find the Winner
+            // We look for users who have data matching the PREVIOUS period ID
+            const leaderboardRef = collection(db, "leaderboard");
+            const q = query(
+                leaderboardRef, 
+                where(period.idField, "==", period.id), 
+                orderBy(period.xpField, "desc"), 
+                limit(1)
+            );
+
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                const winnerDoc = snapshot.docs[0];
+                const winnerData = winnerDoc.data();
+                const winnerId = winnerDoc.id;
+
+                // 4. Pay the Winner
+                const winnerUserRef = getUserRootDocRef(winnerId);
+                const winnerUserDoc = await getDoc(winnerUserRef);
+                
+                if (winnerUserDoc.exists()) {
+                    const currentXp = winnerUserDoc.data().xp || 0;
+                    const newXp = currentXp + period.xp;
+                    
+                    // Update User Profile (Private XP)
+                    await updateDoc(winnerUserRef, { xp: newXp });
+                    
+                    // Update Leaderboard Entry (Public XP)
+                    await updateDoc(doc(db, "leaderboard", winnerId), { xp: newXp });
+
+                    // 5. Log the Distribution (The Receipt)
+                    await setDoc(logDocRef, {
+                        winnerId: winnerId,
+                        winnerName: winnerData.displayName,
+                        amount: period.xp,
+                        distributedAt: serverTimestamp()
+                    });
+
+                    // 6. Notify the current user
+                    // If I am the winner:
+                    if (winnerId === userId) {
+                        triggerCelebration(); // Confetti!
+                        // Play sound
+                        const sound = document.getElementById('level-up-sound');
+                        if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
+                        
+                        // Show Modal
+                        document.getElementById('modal-level-up-icon').innerHTML = '<i class="fas fa-crown text-yellow-400"></i>';
+                        document.getElementById('modal-level-up-message').innerHTML = `
+                            You finished #1 on the <b>${period.type} leaderboard!</b><br>
+                            Reward: <span class="text-green-400 font-bold">+${period.xp.toLocaleString()} XP</span>
+                        `;
+                        document.getElementById('level-up-modal').classList.remove('hidden');
+                    } else {
+                        // If someone else won, show a toast
+                        showMessage(`🏆 ${winnerData.displayName} won the ${period.type} leaderboard!`, 'success');
+                    }
+                }
+            } else {
+                // No winner found (maybe no one played last week). 
+                // Mark as done anyway so we don't keep querying.
+                await setDoc(logDocRef, { status: 'no_winner', distributedAt: serverTimestamp() });
+            }
+
+        } catch (error) {
+            console.error(`Error processing ${period.type} rewards:`, error);
+        }
+    }
+};		
+
 // --- NEW: Challenge System Configuration ---
 const CHALLENGES_CONFIG = {
     dailyCopies: {
@@ -4516,6 +4625,26 @@ const getCurrentMonthId = () => {
     const now = new Date();
     // Returns a string like "2025-09"
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};	
+
+// --- Date Helpers for Rewards ---
+
+const getPreviousWeekId = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7); // Go back 7 days
+    
+    // Re-use your existing logic structure
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    return `${date.getUTCFullYear()}-${weekNo}`;
+};
+
+const getPreviousMonthId = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1); // Go back 1 month
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };		
 
 // In your <script> tag, find and UPDATE the checkAndAwardChallengeXP function...
@@ -8228,6 +8357,7 @@ onAuthStateChanged(auth, async (user) => {
 			if (!userData.statsRecalculated) {
                 await recalculateCurrentPeriodStats(userId);
             }
+			await checkAndDistributeRewards();
 			await calculateAndSaveUserRecords(userId);
 			
             if (!userData.firstSignIn) {
