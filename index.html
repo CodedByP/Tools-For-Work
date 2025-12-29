@@ -117,6 +117,36 @@
     }
 }
 
+		/* --- NEW: Response Grid Layout --- */
+.response-grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 1280px) {
+    .response-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* --- NEW: Variable Highlighting (Dark Mode Default) --- */
+.variable-highlight {
+    color: #fbbf24; /* Amber-400: Bright Yellow for Dark BG */
+    font-weight: 700;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 0 3px;
+    border-radius: 4px;
+    border: 1px dashed rgba(251, 191, 36, 0.3);
+}
+
+/* --- NEW: Variable Highlighting (Light Mode Override) --- */
+body.light-mode .variable-highlight {
+    color: #b45309; /* Amber-700: Darker Orange/Yellow for White BG */
+    background: rgba(251, 191, 36, 0.25);
+    border-color: rgba(180, 83, 9, 0.3);
+}
+
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
             padding: 0.5rem 1rem;
@@ -6036,152 +6066,153 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase();
 
+    // 1. Gather Data
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
             allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
         }
         
-        let labelMatches = [];
-        let textMatches = [];
-
-        allResponses.forEach(r => {
-            const labelMatch = r.label && r.label.toLowerCase().includes(query);
-            const textMatch = r.text && r.text.toLowerCase().includes(query);
-            
-            if (labelMatch) {
-                labelMatches.push(r);
-            } else if (textMatch) {
-                textMatches.push(r);
-            }
-        });
+        // Filter
+        responsesToRender = allResponses.filter(r => 
+            (r.label && r.label.toLowerCase().includes(query)) || 
+            (r.text && r.text.toLowerCase().includes(query))
+        );
         
-        responsesToRender = [...new Set([...labelMatches, ...textMatches])];
-		const count = responsesToRender.length;
-		headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count}</span>`;    } else {
+        const count = responsesToRender.length;
+        headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count}</span>`;    
+    } else {
         if (categories[activeCategory]) {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
-            const pinnedResponses = allResponses.filter(r => r.isPinned);
-            const unpinnedResponses = allResponses.filter(r => !r.isPinned);
+            // Sort: Pinned first, then Alphabetical
+            responsesToRender = allResponses.sort((a, b) => {
+                if (a.isPinned === b.isPinned) {
+                    return (a.label || '').localeCompare(b.label || '');
+                }
+                return a.isPinned ? -1 : 1;
+            });
             
-            unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
-            responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-			           
-			const count = responsesToRender.length;
-			headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
+            const count = responsesToRender.length;
+            headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
         } else {
             responsesToRender = [];
             headingText = 'No Active Category';
         }
     }
-	
-    if (responsesToRender.length > 0 || query) {
-        const count = responsesToRender.length;
-        const label = query ? 'Results Found' : 'Saved Replies';
-        headingText = `${query ? 'Search Results' : activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} ${label})</span>`;
-    }	
     
+    // 2. Update Header
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
-
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
+    // 3. Define Theme Classes
+    const isLightMode = document.body.classList.contains('light-mode');
+    
+    // Dynamic Classes based on Theme
+    const cardBg = isLightMode ? 'bg-white shadow-md' : 'bg-gray-800 shadow-lg';
+    const cardBorder = isLightMode ? 'border border-gray-200' : ''; // Add border in light mode for definition
+    const titleColor = isLightMode ? 'text-gray-900' : 'text-gray-100';
+    const textColor = isLightMode ? 'text-gray-700' : 'text-gray-300';
+    const badgeBg = isLightMode ? 'bg-gray-200 text-gray-600' : 'bg-black/30 text-gray-400';
+    const dividerColor = isLightMode ? 'border-gray-200' : 'border-gray-700/50';
+    const btnSecondaryBg = isLightMode ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white';
+    const pinColor = isLightMode ? 'text-gray-400 hover:text-gray-600' : 'text-gray-600 hover:text-gray-300';
+
+    // 4. Render Grid
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
-        const groupedResponses = responsesToRender.reduce((acc, response) => {
-            const label = response.label || 'Unlabeled';
-            if (!acc[label]) {
-                acc[label] = [];
-            }
-            acc[label].push(response);
-            return acc;
-        }, {});
+        
+        // Create the Grid Container
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'response-grid-container';
 
-        for (const label in groupedResponses) {
-            const labelSection = document.createElement('div');
-            labelSection.className = 'mb-6';
-            let highlightedLabel = label;
-            if(query) {
-                const regex = new RegExp(query, 'gi');
-                highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+        responsesToRender.forEach(response => {
+            // Logic to Highlight Variables visually in the card
+            let displayText = response.text;
+            
+            // Highlight Search Query if active
+            if (query) {
+                const regex = new RegExp(`(${query})`, 'gi');
+                displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
             }
 
-            labelSection.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-400 mb-2">${highlightedLabel}</h3>
-                <div class="space-y-4"></div>
+            // Highlight [Variables] using Regex
+            displayText = displayText.replace(/\[([^\]]+)\]/g, '<span class="variable-highlight">[$1]</span>');
+
+            const responseEl = document.createElement('div');
+            let categoryColor = categories[response.category]?.color || '#60a5fa';
+
+            if (isLightMode) {
+                 categoryColor = lightenColor(categoryColor);
+            }
+
+            const timesCopied = response.timesCopied || 0;
+
+            // Apply dynamic classes here
+            responseEl.className = `response-item flex flex-col p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-2xl relative group ${cardBg} ${cardBorder}`;
+            
+            responseEl.style.borderLeftColor = categoryColor;
+            
+            responseEl.dataset.id = response.id;
+            responseEl.dataset.category = response.category;
+            
+            responseEl.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                         <div class="flex items-center text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${badgeBg}" title="Used ${timesCopied} times">
+                            <i class="fas fa-history mr-1.5"></i> ${timesCopied}
+                        </div>
+                        ${query ? `<span class="text-[10px] uppercase font-bold tracking-wider text-white px-2 py-1 rounded-md" style="background-color: ${categoryColor}80">${response.category}</span>` : ''}
+                    </div>
+
+                    <button class="pin-btn p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${response.isPinned ? 'text-yellow-400' : pinColor}" title="${response.isPinned ? 'Unpin' : 'Pin'}" ${isAnonymous ? 'hidden' : ''}>
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                </div>
+
+                <h4 class="font-bold text-lg ${titleColor} mb-2 line-clamp-1" title="${response.label}">${response.label || 'Untitled Response'}</h4>
+
+                <div class="flex-grow w-full mb-4">
+                    <p class="response-text-display ${textColor} text-sm whitespace-pre-wrap leading-relaxed line-clamp-6 font-mono">${displayText}</p>
+                </div>
+
+                <div class="mt-auto pt-3 border-t ${dividerColor} flex gap-2">
+                    <button class="copy-btn flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    
+                    <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
+                        <button class="edit-btn p-2 rounded-lg ${btnSecondaryBg} transition-colors" title="Edit" data-id="${response.id}">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button class="delete-btn p-2 rounded-lg ${btnSecondaryBg} hover:!text-red-400 transition-colors" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
             `;
-            const responsesInSection = labelSection.querySelector('div');
-
-
-			groupedResponses[label].forEach(response => {
-   				 let displayText = response.text;
-   				 if (query) {
-       				 const regex = new RegExp(query, 'gi');
-       				 displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
-  				  }
-
-   					 const responseEl = document.createElement('div');
-   					 let categoryColor = categories[response.category].color || '#60a5fa';
-
-   					 if (document.body.classList.contains('light-mode')) {
-      					  categoryColor = lightenColor(categoryColor);
-				    }
-    
-  					  const timesCopied = response.timesCopied || 0; // Get the count
-
-    				responseEl.className = 'response-item flex flex-col p-4 rounded-lg border relative';
-  					responseEl.style.backgroundColor = categoryColor;
-   					 responseEl.style.borderColor = categoryColor;
- 				   	responseEl.dataset.id = response.id;
-					responseEl.dataset.category = response.category;
-   					 responseEl.innerHTML = `
-			        <div class="absolute top-3 left-3 flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-60 px-2 py-1 rounded-full z-10" title="${timesCopied} times copied">
-			            <i class="fas fa-copy mr-2"></i>
-			            <span>${timesCopied}</span>
-			        </div>
-			        
-			        <button class="pin-btn absolute top-3 right-3 p-2 rounded-full hover:bg-gray-600 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
-			            <i class="fas fa-thumbtack ${response.isPinned ? 'text-white' : 'text-gray-400'}"></i>
-			        </button>
-			        <div class="flex-grow display-mode space-y-2 w-full pt-8 sm:pt-8">
-			            <p class="response-text-display text-gray-200 whitespace-pre-wrap">${displayText}</p>
-			        </div>
-			        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-600">
-			            <button class="copy-btn bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-			                <i class="fas fa-copy"></i> Copy
-			            </button>
-			            <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
-			                <button class="edit-btn bg-yellow-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300" data-id="${response.id}">
-			                    <i class="fas fa-pencil-alt"></i> Edit
-			                </button>
-			                <button class="delete-btn bg-red-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-md active:scale-95 transition-all duration-300">
-			                    <i class="fas fa-trash"></i> Delete
-			                </button>
-			            </div>
-			        </div>
-			    `;
-			    responsesInSection.appendChild(responseEl);
-			});
-            responsesList.appendChild(labelSection);
-        }
-        if (currentTutorialStep === 5 || currentTutorialStep === 6) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                if (currentTutorialStep === 5) {
-                    // Highlight the copy, edit, and delete buttons
-                    const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
-                    buttons.forEach(button => button.classList.add('highlight-target'));
-                } else if (currentTutorialStep === 6) {
-                    // Highlight the pin button
-                    const pinButton = firstResponse.querySelector('.pin-btn');
-                    if (pinButton) pinButton.classList.add('highlight-target');
-                }
-            }
-        }		
+            gridContainer.appendChild(responseEl);
+        });
+        
+        responsesList.appendChild(gridContainer);
     } else {
-        emptyState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
     }
+    
+    // Tutorial highlighting logic
+    if (currentTutorialStep === 5 || currentTutorialStep === 6) {
+        const firstResponse = document.querySelector('.response-item');
+        if (firstResponse) {
+            if (currentTutorialStep === 5) {
+                const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
+                buttons.forEach(button => button.classList.add('highlight-target'));
+            } else if (currentTutorialStep === 6) {
+                const pinButton = firstResponse.querySelector('.pin-btn');
+                if (pinButton) pinButton.classList.add('highlight-target');
+            }
+        }
+    }   
 };
 
 const addResponse = async (text, label, category) => {
