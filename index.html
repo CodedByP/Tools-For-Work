@@ -6115,10 +6115,12 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ THE FIX IS HERE: Changed lg:grid-cols-2 to md:grid-cols-2 and added w-full ▼▼▼
+            // ▼▼▼ THE FIX IS HERE ▼▼▼
+            // We removed 'grid-cols-1' and 'lg:'. We are forcing 'grid-cols-2' ALWAYS.
+            // We also added 'w-full' to ensure it takes up the full space available.
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-stretch"></div>
+                <div class="grid grid-cols-2 gap-6 w-full items-stretch"></div>
             `;
             const responsesInSection = labelSection.querySelector('div.grid');
 
@@ -6138,7 +6140,7 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // h-full makes sure the cards stretch to equal height within the row
+                // h-full ensures equal height cards in the row
                 responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all h-full';
                 responseEl.style.backgroundColor = categoryColor;
                 responseEl.style.borderColor = categoryColor;
