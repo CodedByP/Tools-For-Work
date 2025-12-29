@@ -1908,19 +1908,19 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
-			<div class="bento-card bento-span-2 p-6 flex flex-col">
-			    <div class="flex justify-between items-center mb-4">
+			<div id="achievements-card-wrapper" class="bento-card bento-span-2 p-6 flex flex-col cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
+			    
+			    <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+			        <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
+			    </div>
+			
+			    <div class="flex justify-between items-center mb-4 relative z-20">
 			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
 			            <i class="fas fa-trophy mr-2 text-yellow-400"></i> Trophy Case
 			        </h3>
-			        
-			        <div class="flex bg-gray-800 rounded-lg p-1">
-			            <button id="ach-filter-all" class="text-xs px-3 py-1 rounded bg-blue-600 text-white font-semibold transition-all">All</button>
-			            <button id="ach-filter-unlocked" class="text-xs px-3 py-1 rounded text-gray-400 hover:text-white transition-all">Unlocked</button>
 			        </div>
-			    </div>
 			
-			    <div class="mb-4">
+			    <div class="mb-4 relative z-20">
 			        <div class="flex justify-between text-xs text-gray-400 mb-1">
 			            <span>Collection Progress</span>
 			            <span id="ach-progress-text">0/0</span>
@@ -1930,8 +1930,8 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			        </div>
 			    </div>
 			
-			    <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 overflow-y-auto max-h-[220px] scrollbar-hide p-1">
-			        </div>
+			    <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 overflow-y-auto max-h-[220px] scrollbar-hide p-1 relative z-20">
+			    </div>
 			</div>
 
             <div id="category-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
@@ -2527,6 +2527,13 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
+            <div id="expanded-achievements-controls" class="hidden flex-wrap justify-center gap-2">
+                <div class="flex p-1 bg-gray-800 rounded-full">
+                    <button id="modal-ach-filter-all" class="px-4 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white transition-all">All</button>
+                    <button id="modal-ach-filter-unlocked" class="px-4 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all">Unlocked</button>
+                </div>
+            </div>
+
             <button id="close-expanded-chart-btn" class="text-gray-400 hover:text-white transition-colors p-2 bg-gray-800 rounded-full h-10 w-10 flex items-center justify-center">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -2550,8 +2557,13 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
             </div>
         </div>
 
-        <div class="flex-grow w-full relative bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
-            <canvas id="expanded-chart-canvas"></canvas>
+        <div class="flex-grow w-full relative bg-gray-800/30 rounded-xl p-4 border border-gray-700/30 overflow-hidden flex flex-col">
+            
+            <canvas id="expanded-chart-canvas" class="w-full h-full"></canvas>
+
+            <div id="expanded-achievements-grid" class="hidden w-full h-full overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4 p-2 scrollbar-hide">
+            </div>
+
         </div>
 
         <div class="mt-4 text-center text-gray-400 text-sm">
@@ -2625,6 +2637,48 @@ let notificationQueue = [];
 let isNotificationActive = false;
 let expandedChartInstance = null; // <--- ADD THIS LINE HERE
 let expandedChartEvents = [];     // <--- AND THIS ONE
+
+const openExpandedAchievements = () => {
+    const modal = document.getElementById('expanded-chart-modal');
+    const modalTitle = document.getElementById('expanded-chart-title');
+    
+    // Toggle Visibility
+    document.getElementById('expanded-activity-controls').classList.add('hidden');
+    document.getElementById('expanded-activity-stats').classList.add('hidden');
+    document.getElementById('expanded-chart-canvas').classList.add('hidden'); // Hide Canvas
+    
+    // Show Achievement Specifics
+    document.getElementById('expanded-achievements-controls').classList.remove('hidden');
+    document.getElementById('expanded-achievements-controls').classList.add('flex');
+    document.getElementById('expanded-achievements-grid').classList.remove('hidden');
+    
+    modalTitle.textContent = "Trophy Case";
+
+    // Reset filters to 'All' visual state
+    updateModalAchFilterUI('all');
+
+    // Initial Render using Cached Data
+    // We use 'all' filter and target the new grid ID
+    renderFilteredAchievements(cachedStatsEvents, cachedStatsUserData, 'all', 'expanded-achievements-grid');
+
+    // Show Modal Animation
+    modal.classList.remove('hidden');
+    void modal.offsetHeight; 
+    modal.classList.add('modal-visible');
+};
+
+const updateModalAchFilterUI = (filter) => {
+    const allBtn = document.getElementById('modal-ach-filter-all');
+    const unlockedBtn = document.getElementById('modal-ach-filter-unlocked');
+    
+    if (filter === 'all') {
+        allBtn.className = "px-4 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white transition-all";
+        unlockedBtn.className = "px-4 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all";
+    } else {
+        unlockedBtn.className = "px-4 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white transition-all";
+        allBtn.className = "px-4 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all";
+    }
+};		
 
 const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartType = 'generic') => {
     if (!sourceChartInstance) return;
@@ -3073,6 +3127,40 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const openAchievementDetailsModal = (card) => {
+    const modal = document.getElementById('achievement-details-modal');
+    // Get data from the clicked card
+    const { name, desc, icon, color, unlockedDate, unlocked } = card.dataset;
+    const isUnlocked = unlocked === 'true';
+
+    // Populate Icon
+    const modalIcon = document.getElementById('modal-achievement-icon');
+    modalIcon.className = `text-6xl mb-4 ${isUnlocked ? color : 'text-gray-500'}`;
+    modalIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+
+    // Populate Text
+    document.getElementById('modal-achievement-title').textContent = name;
+    document.getElementById('modal-achievement-desc').textContent = desc;
+    
+    // Populate Date or Reward
+    const modalDateEl = document.getElementById('modal-achievement-date');
+    if (isUnlocked) {
+        modalDateEl.classList.remove('text-yellow-400', 'font-bold', 'text-lg');
+        if (unlockedDate) {
+            const date = new Date(unlockedDate);
+            modalDateEl.textContent = `Unlocked on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        } else {
+            modalDateEl.textContent = 'Unlocked!';
+        }
+    } else {
+        modalDateEl.classList.add('text-yellow-400', 'font-bold', 'text-lg');
+        modalDateEl.textContent = `Reward: ${XP_VALUES.UNLOCK_ACHIEVEMENT.toLocaleString()} XP`;
+    }
+
+    // Show Modal
+    modal.classList.remove('hidden');
+};
+		
 // Animation for numbers
 const animateValue = (obj, start, end, duration) => {
     let startTimestamp = null;
@@ -3756,38 +3844,43 @@ const updateUserLeaderboardEntry = async () => {
 };
 	
 
-const renderFilteredAchievements = (events, userData) => {
+const renderFilteredAchievements = (events, userData, filterType = 'all', containerId = 'achievements-container') => {
     const userAchievements = userData.achievementsData || {};
     const allAchievements = calculateAllAchievements(events, userData);
 
-    // Calculate Counts (Exclude Grand Master for progress math usually, or keep it)
-    const unlockedCount = allAchievements.filter(a => a.unlocked).length;
-    const totalCount = allAchievements.length;
-    const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
+    // Calculate Counts for Progress Bar (Only update if rendering the main dashboard widget)
+    if (containerId === 'achievements-container') {
+        const unlockedCount = allAchievements.filter(a => a.unlocked).length;
+        const totalCount = allAchievements.length;
+        const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
+        
+        document.getElementById('ach-progress-text').textContent = `${unlockedCount} / ${totalCount} Unlocked`;
+        document.getElementById('ach-progress-bar').style.width = `${progress}%`;
+    }
     
-    document.getElementById('ach-progress-text').textContent = `${unlockedCount} / ${totalCount} Unlocked`;
-    document.getElementById('ach-progress-bar').style.width = `${progress}%`;
-    
-    const container = document.getElementById('achievements-container');
-    
-    // Use the global variable `activeAchievementFilter`
-    let filtered = activeAchievementFilter === 'unlocked' 
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Filter Logic
+    let filtered = filterType === 'unlocked' 
         ? allAchievements.filter(a => a.unlocked) 
         : allAchievements;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8 text-sm italic">No achievements found in this filter.</p>';
+        container.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8 text-sm italic">No achievements found.</p>';
         return;
     }
     
     container.innerHTML = filtered.map(ach => {
         const badgeClass = ach.unlocked ? getAchievementClassFromColor(ach.color) : 'achievement-icon-locked';
-        // Add the 'locked' class to the tile if not unlocked
         const tileClass = ach.unlocked ? '' : 'locked';
         const textColor = ach.unlocked ? 'text-gray-100' : 'text-gray-500';
         const sanitizedDesc = ach.desc.replace(/"/g, '&quot;');
         const unlockedDate = ach.unlocked ? (userAchievements[ach.id]?.date || new Date().toISOString()) : '';
         const indicator = ach.unlocked ? '<div class="unlocked-indicator"></div>' : '';
+
+        // Slightly larger icons for the expanded view
+        const scaleClass = containerId === 'expanded-achievements-grid' ? 'scale-100' : 'transform scale-75 sm:scale-90';
 
         return `
             <div class="achievement-tile ${tileClass} achievement-card-redesign"
@@ -3798,7 +3891,7 @@ const renderFilteredAchievements = (events, userData) => {
                 
                 ${indicator}
                 
-                <div class="achievement-icon-wrapper ${badgeClass} transform scale-75 sm:scale-90">
+                <div class="achievement-icon-wrapper ${badgeClass} ${scaleClass}">
                     <i class="fas ${ach.icon}"></i>
                 </div>
                 
@@ -6407,6 +6500,52 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
+    document.body.addEventListener('click', (e) => {
+        const card = e.target.closest('.achievement-card-redesign');
+        if (card) {
+            // This calls the helper function we created in Part 1
+            openAchievementDetailsModal(card);
+            e.stopPropagation(); // Stop the click from bubbling up (prevents opening the expanded view)
+        }
+    });
+
+    // 2. Listener to OPEN the Expanded Achievements View
+    // This triggers when you click the background of the dashboard card
+    const achWrapper = document.getElementById('achievements-card-wrapper');
+    if (achWrapper) {
+        achWrapper.addEventListener('click', (e) => {
+            // Only open if we didn't click a specific tile (handled above) or a button
+            if (!e.target.closest('.achievement-tile') && !e.target.closest('button')) {
+                openExpandedAchievements();
+            }
+        });
+    }
+
+    // 3. Listeners for the Filter Buttons INSIDE the Expanded Modal
+    const modalAchFilterAll = document.getElementById('modal-ach-filter-all');
+    const modalAchFilterUnlocked = document.getElementById('modal-ach-filter-unlocked');
+
+    if (modalAchFilterAll && modalAchFilterUnlocked) {
+        modalAchFilterAll.addEventListener('click', () => {
+            updateModalAchFilterUI('all');
+            // Re-render using the CACHED data variables we added earlier
+            renderFilteredAchievements(cachedStatsEvents, cachedStatsUserData, 'all', 'expanded-achievements-grid');
+        });
+
+        modalAchFilterUnlocked.addEventListener('click', () => {
+            updateModalAchFilterUI('unlocked');
+            // Re-render using the CACHED data variables
+            renderFilteredAchievements(cachedStatsEvents, cachedStatsUserData, 'unlocked', 'expanded-achievements-grid');
+        });
+    }
+
+    // 4. Close Button for the Achievement Details Modal
+    const closeAchievementModalBtn = document.getElementById('close-achievement-modal-btn');
+    if(closeAchievementModalBtn) {
+        closeAchievementModalBtn.addEventListener('click', () => {
+            document.getElementById('achievement-details-modal').classList.add('hidden');
+        });
+    }
 
 	// --- Achievement Filter Listeners ---
 const filterAllBtn = document.getElementById('ach-filter-all');
