@@ -6541,47 +6541,10 @@ const renderLevelingSystem = (userData) => {
     currentXpDisplay.innerHTML = `<span class="text-white">${levelInfo.xpProgress.toLocaleString()}</span> XP`;
     xpNeededDisplay.textContent = `${xpRemaining.toLocaleString()} to Level ${levelInfo.level + 1}`;
 
-    // --- NEW: Calculate Action Tooltip ---
-    // How many standard copies (25XP) to level up?
+    // --- Action Tooltip Logic ---
     const copiesNeeded = Math.ceil(xpRemaining / XP_VALUES.COPY_RESPONSE);
     if (actionTooltip) {
         actionTooltip.textContent = `~${copiesNeeded} more copies to level up!`;
-    }
-
-    // --- NEW: Calculate Prediction (Velocity) ---
-    // We need to look at cachedStatsEvents to calculate daily average
-    if (cachedStatsEvents && cachedStatsEvents.length > 0) {
-        const now = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(now.getDate() - 30);
-        
-        // Filter events for XP generating actions in last 30 days
-        const recentActivity = cachedStatsEvents.filter(e => 
-            e.timestamp && 
-            e.timestamp.toDate() >= thirtyDaysAgo &&
-            (e.type === 'copy' || e.type === 'create_response' || e.type === 'extract_tracking')
-        );
-
-        if (recentActivity.length > 0) {
-            // Rough estimate: Total events * approx average XP / 30 days
-            // Let's assume average event is worth ~30 XP (mix of copies and creations)
-            const estimatedDailyXP = (recentActivity.length * 30) / 30; 
-            
-            if (estimatedDailyXP > 0) {
-                const daysToLevel = Math.ceil(xpRemaining / estimatedDailyXP);
-                let timeString = "";
-                if (daysToLevel <= 1) timeString = "Today or Tomorrow!";
-                else if (daysToLevel < 30) timeString = `${daysToLevel} Days`;
-                else timeString = "a few months";
-
-                predictionDaysEl.textContent = timeString;
-                predictionEl.classList.remove('hidden');
-            } else {
-                 predictionEl.classList.add('hidden');
-            }
-        } else {
-             predictionEl.classList.add('hidden');
-        }
     }
 
     // 4. Render Next Rank Ghost Icon
@@ -6611,21 +6574,69 @@ const renderLevelingSystem = (userData) => {
     
     ambientBg.style.background = bgColors;
 
-    // 6. Multipliers
+    // 6. Multipliers & Prediction Logic
     const monthId = getCurrentMonthId();
     const isTripleXpActive = userData.lastMonthlyChallengeMonth === monthId;
     const weekId = getCurrentWeekId();
     const isDoubleXpActive = userData.lastWeeklyChallengeWeek === weekId;
 
+    let currentMultiplier = 1;
+
     if (isTripleXpActive) {
         tripleXpIndicator.classList.remove('hidden');
         doubleXpIndicator.classList.add('hidden');
+        currentMultiplier = 3;
     } else if (isDoubleXpActive) {
         doubleXpIndicator.classList.remove('hidden');
         tripleXpIndicator.classList.add('hidden');
+        currentMultiplier = 2;
     } else {
         doubleXpIndicator.classList.add('hidden');
         tripleXpIndicator.classList.add('hidden');
+        currentMultiplier = 1;
+    }
+
+    // --- NEW PREDICTION LOGIC ---
+    if (cachedStatsEvents && cachedStatsEvents.length > 0) {
+        const now = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        
+        // Count XP generating actions in last 30 days
+        // We use a simplified count: 1 action = 1 "unit" of effort
+        const recentActionCount = cachedStatsEvents.filter(e => 
+            e.timestamp && 
+            e.timestamp.toDate() >= thirtyDaysAgo &&
+            (e.type === 'copy' || e.type === 'create_response' || e.type === 'extract_tracking')
+        ).length;
+
+        if (recentActionCount > 0) {
+            // Average Actions Per Day (over last 30 days)
+            const actionsPerDay = recentActionCount / 30;
+
+            // Average Base XP per action (Conservative estimate: mostly copies @ 25xp)
+            const averageBaseXP = 25; 
+
+            // Calculate Predicted Daily Velocity using CURRENT multiplier
+            const predictedDailyXP = actionsPerDay * averageBaseXP * currentMultiplier;
+            
+            if (predictedDailyXP > 0) {
+                const daysToLevel = Math.ceil(xpRemaining / predictedDailyXP);
+                let timeString = "";
+                
+                if (daysToLevel <= 1) timeString = "Today or Tomorrow!";
+                else if (daysToLevel < 30) timeString = `${daysToLevel} Days`;
+                else if (daysToLevel < 365) timeString = `${Math.ceil(daysToLevel / 30)} Months`;
+                else timeString = "a while...";
+
+                predictionDaysEl.textContent = timeString;
+                predictionEl.classList.remove('hidden');
+            } else {
+                 predictionEl.classList.add('hidden');
+            }
+        } else {
+             predictionEl.classList.add('hidden');
+        }
     }
 };
 
@@ -6651,7 +6662,6 @@ const renderAdvancedStats = async () => {
         const userDocRef = getUserRootDocRef(userId);
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() : {};
-        renderLevelingSystem(userData);
 
         const eventsCollectionRef = getUserEventsCollectionRef(userId);
         const snapshot = await getDocs(query(eventsCollectionRef));
@@ -6659,6 +6669,9 @@ const renderAdvancedStats = async () => {
 
 		cachedStatsUserData = userData; 
         cachedStatsEvents = events;
+
+		renderLevelingSystem(userData);
+
         // Render main components first
         await renderCategoryChart(events);
 		calculateAndRenderRecords(events);
