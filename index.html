@@ -5589,14 +5589,20 @@ const renderLeaderboard = async () => {
         });
         podiumHTML += '</div>';
 
-        // --- 2. Construct the List (Rank 4+) ---
+// --- 2. Construct the List (Rank 4+) ---
         let listHTML = '<div class="space-y-2 mt-4">';
+        const currentWeekId = getCurrentWeekId(); 
+
         if (users.length > 3) {
             users.slice(3).forEach((u, index) => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
                 const badgeClass = `level-badge-${u.rankName.toLowerCase()}`;
+                
+                // NEW: Calculate Weekly Score to display
+                // If the week ID matches, show the score. If old week, show 0.
+                const weeklyScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
 
                 listHTML += `
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
@@ -5606,10 +5612,17 @@ const renderLeaderboard = async () => {
                             <i class="fas ${u.rankIcon} text-white"></i>
                         </div>
                         
-                        <div class="flex-grow min-w-0"> <div class="flex items-center gap-2">
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center gap-2">
                                 <p class="font-semibold text-gray-200 text-sm truncate">${u.displayName}</p>
+                                
                                 ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse" title="On Fire!"></i>' : ''}
+                                
+                                ${weeklyScore > 0 ? `<span class="text-[10px] bg-green-900/50 text-green-400 px-1.5 py-0.5 rounded border border-green-500/30 font-mono">
+                                    +${weeklyScore} this week
+                                </span>` : ''}
                             </div>
+                            
                             <p class="text-[10px] text-gray-500 flex items-center">
                                 <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
                                 ${status}
@@ -6018,8 +6031,9 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
             logUserEvent('copy', { responseId, categoryName, text });
 
-            if (userId && !isAnonymous) {
+		if (userId && !isAnonymous) {
                 try {
+                    // 1. Existing Logic: Track per-category stats locally
                     const category = categories[categoryName];
                     if (category && category.responses) {
                         const response = category.responses.find(r => r.id === responseId);
@@ -6028,29 +6042,56 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                             saveToFirestore(categories);
                         }
                     }
+
+                    // 2. Setup References
                     const leaderboardDocRef = doc(db, "leaderboard", userId);
                     const categoryCountField = `categoryCounts.${categoryName}`;
                     const todayStr = new Date().toISOString().split('T')[0];
                     const activeDayDocRef = doc(db, "leaderboard", userId, "activeDays", todayStr);
                     
+                    // --- NEW SECTION STARTS HERE ---
+                    // We need to fetch the document first to check if the week has changed
+                    const lbDocSnap = await getDoc(leaderboardDocRef);
+                    const lbData = lbDocSnap.exists() ? lbDocSnap.data() : {};
+                    const currentWeekId = getCurrentWeekId(); // Helper function must exist
+                    
+                    let weeklyUpdate = {};
+
+                    // Logic: If the stored week ID matches the current week, add 1.
+                    // If it's a new week (or doesn't exist), reset count to 1.
+                    if (lbData.lastWeeklyXpId === currentWeekId) {
+                        weeklyUpdate = { weeklyXp: increment(1) };
+                    } else {
+                        weeklyUpdate = { 
+                            weeklyXp: 1, 
+                            lastWeeklyXpId: currentWeekId 
+                        };
+                    }
+                    // --- NEW SECTION ENDS HERE ---
+
                     const batch = writeBatch(db);
                     
+                    // 3. Update the Leaderboard Document
                     batch.update(leaderboardDocRef, {
                         totalCopies: increment(1),
                         [categoryCountField]: increment(1),
-						lastActive: serverTimestamp()
+                        lastActive: serverTimestamp(), // Updates "Live Status"
+                        ...weeklyUpdate                // Updates "Weekly Gain"
                     });
                     
+                    // 4. Update the Active Days Sub-collection
                     batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
+                    
                     await batch.commit();
-					
-				    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-				    const snapshot = await getDocs(query(eventsCollectionRef));
-				    const events = snapshot.docs.map(doc => doc.data());
-				
-				    await renderChallenges(events);
-				    await renderChallengeTracker(events);
-					
+                    
+                    // 5. Refresh UI (Challenges & Tracker)
+                    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+                    const snapshot = await getDocs(query(eventsCollectionRef));
+                    const events = snapshot.docs.map(doc => doc.data());
+                
+                    await renderChallenges(events);
+                    await renderChallengeTracker(events);
+                    
                 } catch (error) {
                     console.error("Error updating copy count:", error);
                 }
