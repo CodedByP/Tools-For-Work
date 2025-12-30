@@ -7060,7 +7060,7 @@ const renderCategoryChart = (events) => {
     const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
 
     const isLightMode = document.body.classList.contains('light-mode');
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+    const textColor = isLightMode ? '#000000' : '#ffffff';
 
     categoryChartInstance = new Chart(ctx, {
         type: 'doughnut',
@@ -7070,8 +7070,8 @@ const renderCategoryChart = (events) => {
                 label: 'Copies per Category',
                 data: data,
                 backgroundColor: backgroundColors,
-                borderColor: isLightMode ? '#f3f4f6' : '#111827',
-                borderWidth: 3
+                borderColor: isLightMode ? '#ffffff' : 'transparent',
+                borderWidth: 2
             }]
         },
         options: {
@@ -7083,7 +7083,7 @@ const renderCategoryChart = (events) => {
                     labels: {
                         color: textColor,
                         padding: 20,
-                        font: { size: 14 }
+                        font: { size: 14, weight: 'bold' }
                     }
                 },
 				tooltip: {
@@ -7138,10 +7138,9 @@ const renderActivityChart = (events, period = 'all') => {
          return;
     }
     
-    // 3. Render Dashboard Chart
-    const isLightMode = document.body.classList.contains('light-mode');
-    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+	const isLightMode = document.body.classList.contains('light-mode');
+	const textColor = isLightMode ? '#000000' : '#ffffff'; 
+	const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
 
     // Create Gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
