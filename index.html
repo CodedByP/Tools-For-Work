@@ -6655,7 +6655,6 @@ const renderResponses = (searchQuery = '') => {
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
             
             const count = responsesToRender.length;
-            // Handle header text color based on mode
             const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
             headingText = `${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">(${count} Saved)</span>`;
         } else {
@@ -6669,7 +6668,7 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // --- 2. RENDERING LOGIC (Light Mode Compatible) ---
+    // --- 2. RENDERING LOGIC (Solid Colors / No Glass) ---
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
 
@@ -6725,24 +6724,34 @@ const renderResponses = (searchQuery = '') => {
                 // --- Color & Mode Logic ---
                 let categoryColor = categories[response.category]?.color || '#60a5fa';
                 
-                // Define variables based on Light/Dark mode
-                let cardBg, titleColor, bodyTextColor, footerBg, metaTextColor, iconColor;
+                // Styles Variables
+                let cardBg, titleColor, bodyTextColor, footerBg, metaTextColor, iconColor, copyBtnBg, copyBtnText;
 
                 if (isLightMode) {
-                    categoryColor = lightenColor(categoryColor); // Use the lighter variant for border
-                    cardBg = 'rgba(255, 255, 255, 0.9)'; // White frosted glass for readability
+                    categoryColor = lightenColor(categoryColor);
+                    // Light Mode: Solid Pastel Background
+                    cardBg = categoryColor; 
                     titleColor = 'text-gray-900 group-hover:text-blue-600';
                     bodyTextColor = 'text-gray-800';
-                    footerBg = 'bg-gray-100 border-gray-200';
+                    footerBg = 'bg-white/50 border-gray-300'; // Slightly translucent footer for differentiation
                     metaTextColor = 'text-gray-600';
-                    iconColor = 'text-gray-500 hover:text-gray-900';
+                    iconColor = 'text-gray-600 hover:text-gray-900';
+                    copyBtnBg = '#2563eb'; // Blue button for contrast
+                    copyBtnText = 'text-white';
                 } else {
-                    cardBg = categoryColor + '33'; // Colored transparent glass for dark mode
+                    // Dark Mode: FULL Solid Color (No Opacity)
+                    // We use the raw category color. Since Bronco/GUTS are dark/mid-tone, this looks solid.
+                    cardBg = categoryColor; 
                     titleColor = 'text-gray-200 group-hover:text-blue-400';
                     bodyTextColor = 'text-gray-100';
-                    footerBg = 'bg-black/30 border-black/10';
+                    footerBg = 'bg-black/20 border-black/10'; // Darker footer overlay
                     metaTextColor = 'text-gray-300';
                     iconColor = 'text-gray-300 hover:text-white';
+                    
+                    // For the copy button, we make it slightly lighter or darker than the card
+                    // Or we keep it standard white/bright
+                    copyBtnBg = 'rgba(255,255,255,0.15)'; 
+                    copyBtnText = 'text-white';
                 }
 
                 const timesCopied = response.timesCopied || 0; 
@@ -6755,12 +6764,13 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                 `;
 
-                // 2. Render CARD (The Box)
+                // 2. Render CARD (The Box - Solid)
                 const cardEl = document.createElement('div');
-                cardEl.className = 'response-item w-full rounded-xl border backdrop-blur-md relative shadow-lg hover:shadow-xl transition-all flex flex-col overflow-hidden';
+                // Removed 'backdrop-blur-md'
+                cardEl.className = 'response-item w-full rounded-xl border relative shadow-md hover:shadow-lg transition-all flex flex-col overflow-hidden';
                 cardEl.style.cssText = `
                     background-color: ${cardBg};
-                    border-color: ${categoryColor};
+                    border-color: ${isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.1)'};
                 `;
                 cardEl.dataset.id = response.id;
                 cardEl.dataset.category = response.category;
@@ -6772,8 +6782,8 @@ const renderResponses = (searchQuery = '') => {
 
                     <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center">
                         
-                        <button class="copy-btn text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm" 
-                                style="background-color: ${isLightMode ? '#2563eb' : categoryColor}; filter: brightness(1.1);">
+                        <button class="copy-btn ${copyBtnText} font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:brightness-110" 
+                                style="background-color: ${copyBtnBg};">
                             <i class="fas fa-copy"></i> Copy
                         </button>
 
@@ -6782,7 +6792,7 @@ const renderResponses = (searchQuery = '') => {
                             
                             <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
                                 <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
-                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-500' : ''}"></i>
+                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
                                 </button>
                                 <button class="edit-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
                                     <i class="fas fa-pencil-alt"></i>
