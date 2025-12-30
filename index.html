@@ -3892,6 +3892,43 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- FUZZY MATCHING HELPER (Levenshtein Distance) ---
+const getLevenshteinDistance = (a, b) => {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    const matrix = [];
+
+    // Increment along the first column of each row
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    // Increment each column in the first row
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // Fill in the rest of the matrix
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    Math.min(
+                        matrix[i][j - 1] + 1, // insertion
+                        matrix[i - 1][j] + 1  // deletion
+                    )
+                );
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+};		
+
 // --- SMART MEMORY HELPERS ---
 const savePlaceholderHistory = (key, value) => {
     // Skip saving empty values or the global [Name] automation
@@ -6585,89 +6622,116 @@ const renderResponses = (searchQuery = '') => {
     
     let responsesToRender = [];
     let headingText = '';
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
 
-    // 1. Filter Logic
+    // --- 1. FILTER & SEARCH LOGIC ---
     if (query) {
         let allResponses = [];
+        // Flatten all categories into one list for searching
         for (const categoryName in categories) {
             allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
         }
-        let labelMatches = [];
-        let textMatches = [];
-        allResponses.forEach(r => {
-            const labelMatch = r.label && r.label.toLowerCase().includes(query);
-            const textMatch = r.text && r.text.toLowerCase().includes(query);
-            if (labelMatch) labelMatches.push(r);
-            else if (textMatch) textMatches.push(r);
+
+        // Fuzzy + Exact Match Filter
+        responsesToRender = allResponses.filter(r => {
+            const label = (r.label || '').toLowerCase();
+            const text = (r.text || '').toLowerCase();
+            
+            // A. Exact Match (Fastest)
+            if (label.includes(query) || text.includes(query)) return true;
+
+            // B. Fuzzy Match (Typo tolerance)
+            // Only fuzzy match if query is > 3 chars to prevent noise
+            if (query.length > 3) {
+                // Check Label words against query
+                const labelWords = label.split(' ');
+                if (labelWords.some(word => getLevenshteinDistance(word, query) <= 2)) return true;
+                
+                // We typically don't fuzzy search the entire body text for performance, 
+                // but we rely on exact match for body text.
+            }
+            return false;
         });
-        responsesToRender = [...new Set([...labelMatches, ...textMatches])];
+
         const count = responsesToRender.length;
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count}</span>`;
     } else {
+        // Standard "Browsing" View (No Search)
         if (categories[activeCategory]) {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
             const pinnedResponses = allResponses.filter(r => r.isPinned);
             const unpinnedResponses = allResponses.filter(r => !r.isPinned);
             unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
+            
             const count = responsesToRender.length;
-            headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
+            headingText = `${activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} Saved)</span>`;
         } else {
             responsesToRender = [];
             headingText = 'No Active Category';
         }
     }
     
-    // 2. Heading Logic
-    if (responsesToRender.length > 0 || query) {
-        const count = responsesToRender.length;
-        const label = query ? 'Results Found' : 'Saved Replies';
-        headingText = `${query ? 'Search Results' : activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} ${label})</span>`;
-    }       
-    
+    // Update Header Text
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
-
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (Vertical Stack)
+    // --- 2. RENDERING LOGIC (CLUSTERED) ---
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
 
-        // Group the data first
-        const groupedResponses = responsesToRender.reduce((acc, response) => {
-            const label = response.label || 'Unlabeled';
-            if (!acc[label]) acc[label] = [];
-            acc[label].push(response);
-            return acc;
-        }, {});
+        let groups = {};
+        
+        if (query) {
+            // IF SEARCHING: Group by CATEGORY
+            groups = responsesToRender.reduce((acc, response) => {
+                const key = response.category || 'Other';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(response);
+                return acc;
+            }, {});
+        } else {
+            // IF BROWSING: Keep Flat (or Group by Label if you prefer, but standard is usually flat list)
+            // We use a dummy key to run the loop once
+            groups = { 'All': responsesToRender };
+        }
 
-        // Loop through each Label Group
-        for (const label in groupedResponses) {
-            const labelSection = document.createElement('div');
-            labelSection.className = 'mb-8'; 
+        // Render Groups
+        for (const groupTitle in groups) {
+            const groupSection = document.createElement('div');
+            groupSection.className = 'mb-8 animate-fade-in'; 
             
-            let highlightedLabel = label;
-            if(query) {
-                const regex = new RegExp(query, 'gi');
-                highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+            // Only show headers if we are in "Search Mode" (Result Clustering)
+            if (query) {
+                // Determine Category Color for the header underline
+                const catColor = categories[groupTitle]?.color || '#60a5fa';
+                
+                groupSection.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4 border-b border-gray-700 pb-2">
+                        <div class="w-2 h-6 rounded-full" style="background-color: ${catColor}"></div>
+                        <h3 class="text-xl font-bold text-gray-200">${groupTitle}</h3>
+                        <span class="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded-full">${groups[groupTitle].length} matches</span>
+                    </div>
+                    <div class="vertical-list space-y-4"></div> 
+                `;
+            } else {
+                // In standard mode, just a container
+                groupSection.innerHTML = `<div class="vertical-list space-y-4"></div>`;
             }
-
-            // Create Header and a simple Vertical Container (space-y-4)
-            labelSection.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="vertical-list space-y-4"></div> 
-            `;
             
-            const responsesInSection = labelSection.querySelector('div.vertical-list');
+            const listContainer = groupSection.querySelector('div.vertical-list');
 
-            groupedResponses[label].forEach(response => {
+            groups[groupTitle].forEach(response => {
                 let displayText = response.text;
+                let displayLabel = response.label || 'Unlabeled';
+                
+                // Highlight matches in the text body if searching
                 if (query) {
-                    const regex = new RegExp(query, 'gi');
-                    displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
+                    displayLabel = displayLabel.replace(regex, `<span class="highlight">$1</span>`);
                 }
 
                 const responseEl = document.createElement('div');
@@ -6679,9 +6743,8 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // Standard full-width card
+                // Card Styling
                 responseEl.className = 'response-item w-full p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col';
-                
                 responseEl.style.cssText = `
                     background-color: ${categoryColor};
                     border-color: ${categoryColor};
@@ -6690,6 +6753,7 @@ const renderResponses = (searchQuery = '') => {
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
+                // Insert the Response Card HTML
                 responseEl.innerHTML = `
                     <div class="flex justify-between items-start w-full mb-2">
                          <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
@@ -6702,6 +6766,7 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                     
                     <div class="flex-grow display-mode space-y-2 w-full mb-4">
+                        ${response.label ? `<div class="text-sm font-bold text-white/90 mb-1 uppercase tracking-wide border-b border-white/10 pb-1 inline-block">${displayLabel}</div><br>` : ''} 
                         <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
                     </div>
 
@@ -6719,26 +6784,13 @@ const renderResponses = (searchQuery = '') => {
                         </div>
                     </div>
                 `;
-                responsesInSection.appendChild(responseEl);
+                listContainer.appendChild(responseEl);
             });
-            responsesList.appendChild(labelSection);
+            responsesList.appendChild(groupSection);
         }
         
-        // Tutorial Highlight Logic
-        if (typeof currentTutorialStep !== 'undefined' && (currentTutorialStep === 5 || currentTutorialStep === 6)) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                if (currentTutorialStep === 5) {
-                    const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
-                    buttons.forEach(button => button.classList.add('highlight-target'));
-                } else if (currentTutorialStep === 6) {
-                    const pinButton = firstResponse.querySelector('.pin-btn');
-                    if (pinButton) pinButton.classList.add('highlight-target');
-                }
-            }
-        }        
     } else {
-        emptyState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
     }
 };
 
