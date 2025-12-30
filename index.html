@@ -117,28 +117,29 @@
     }
 }
 
-/* --- Masonry Grid Fix --- */
-.masonry-container {
-    column-count: 1; /* Default mobile */
-    column-gap: 1.5rem;
-    display: block; 
+/* --- Strict Grid Layout --- */
+
+.response-group-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Default: 1 column on mobile */
+    gap: 1.5rem; /* Space between cards */
     width: 100%;
 }
 
-/* On tablets and up, create 2 columns */
+/* On Tablets and Desktops, force 2 equal columns */
 @media (min-width: 768px) {
-    .masonry-container {
-        column-count: 2;
+    .response-group-grid {
+        /* This creates 2 columns of exactly 50% width each */
+        grid-template-columns: repeat(2, 1fr); 
+        align-items: start; /* Prevents short cards from stretching weirdly */
     }
 }
 
-/* Ensure items don't break across columns */
 .response-item {
-    display: inline-flex !important; /* Forces the box to stay together */
     width: 100%;
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-    margin-bottom: 1.5rem;
+    /* Ensure the card fills its grid cell */
+    display: flex; 
+    flex-direction: column;
 }
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
@@ -6108,78 +6109,100 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (ONE BIG CONTAINER)
+    // 3. Rendering Logic (GROUPED BY LABEL)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
 
-        // Create ONE container for EVERYTHING
-        const mainContainer = document.createElement('div');
-        mainContainer.className = 'masonry-container';
-        
-        responsesToRender.forEach(response => {
-            let displayText = response.text;
-            if (query) {
+        // Group the data first
+        const groupedResponses = responsesToRender.reduce((acc, response) => {
+            const label = response.label || 'Unlabeled';
+            if (!acc[label]) acc[label] = [];
+            acc[label].push(response);
+            return acc;
+        }, {});
+
+        // Loop through each Label Group
+        for (const label in groupedResponses) {
+            const labelSection = document.createElement('div');
+            labelSection.className = 'mb-10'; // Add space between sections
+            
+            let highlightedLabel = label;
+            if(query) {
                 const regex = new RegExp(query, 'gi');
-                displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
+                highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            const responseEl = document.createElement('div');
-            let categoryColor = categories[response.category]?.color || '#60a5fa';
-
-            if (document.body.classList.contains('light-mode')) {
-                categoryColor = lightenColor(categoryColor);
-            }
- 
-            const timesCopied = response.timesCopied || 0; 
-
-            // Item classes
-            responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
-            
-            // Inline styles for color
-            responseEl.style.cssText = `
-                background-color: ${categoryColor};
-                border-color: ${categoryColor};
+            // Create the Heading and the Grid Container
+            // NOTE: We are using 'response-group-grid' here which matches our new CSS
+            labelSection.innerHTML = `
+                <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
+                <div class="response-group-grid"></div>
             `;
             
-            responseEl.dataset.id = response.id;
-            responseEl.dataset.category = response.category;
-            
-            responseEl.innerHTML = `
-                <div class="flex justify-between items-start w-full mb-2">
-                     <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
-                        <i class="fas fa-copy mr-2"></i>
-                        <span>${timesCopied}</span>
-                    </div>
-                     <button class="pin-btn p-1.5 rounded-full hover:bg-black/20 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
-                        <i class="fas fa-thumbtack ${response.isPinned ? 'text-white transform rotate-45' : 'text-gray-400/70'}"></i>
-                    </button>
-                </div>
+            const responsesInSection = labelSection.querySelector('div.response-group-grid');
+
+            groupedResponses[label].forEach(response => {
+                let displayText = response.text;
+                if (query) {
+                    const regex = new RegExp(query, 'gi');
+                    displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
+                }
+
+                const responseEl = document.createElement('div');
+                let categoryColor = categories[response.category]?.color || '#60a5fa';
+
+                if (document.body.classList.contains('light-mode')) {
+                    categoryColor = lightenColor(categoryColor);
+                }
+    
+                const timesCopied = response.timesCopied || 0; 
+
+                // Standard Flex classes for the card itself
+                responseEl.className = 'response-item p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col';
                 
-                <div class="flex-grow display-mode space-y-2 w-full mb-4">
-                    <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
-                </div>
-
-                <div class="flex justify-between items-center pt-4 border-t border-black/10 mt-auto">
-                    <button class="copy-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 hover:scale-105 shadow-sm active:scale-95 transition-all duration-200">
-                        <i class="fas fa-copy mr-2"></i> Copy
-                    </button>
-                    <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
-                        <button class="edit-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-yellow-500/80 p-2 rounded-lg transition-all duration-200" title="Edit" data-id="${response.id}">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button class="delete-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-red-500/80 p-2 rounded-lg transition-all duration-200" title="Delete">
-                            <i class="fas fa-trash"></i>
+                responseEl.style.cssText = `
+                    background-color: ${categoryColor};
+                    border-color: ${categoryColor};
+                `;
+                
+                responseEl.dataset.id = response.id;
+                responseEl.dataset.category = response.category;
+                
+                responseEl.innerHTML = `
+                    <div class="flex justify-between items-start w-full mb-2">
+                         <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
+                            <i class="fas fa-copy mr-2"></i>
+                            <span>${timesCopied}</span>
+                        </div>
+                         <button class="pin-btn p-1.5 rounded-full hover:bg-black/20 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
+                            <i class="fas fa-thumbtack ${response.isPinned ? 'text-white transform rotate-45' : 'text-gray-400/70'}"></i>
                         </button>
                     </div>
-                </div>
-            `;
-            mainContainer.appendChild(responseEl);
-        });
+                    
+                    <div class="flex-grow display-mode space-y-2 w-full mb-4">
+                        <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4 border-t border-black/10 mt-auto">
+                        <button class="copy-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 hover:scale-105 shadow-sm active:scale-95 transition-all duration-200">
+                            <i class="fas fa-copy mr-2"></i> Copy
+                        </button>
+                        <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
+                            <button class="edit-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-yellow-500/80 p-2 rounded-lg transition-all duration-200" title="Edit" data-id="${response.id}">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="delete-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-red-500/80 p-2 rounded-lg transition-all duration-200" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                responsesInSection.appendChild(responseEl);
+            });
+            responsesList.appendChild(labelSection);
+        }
         
-        // Append the big container to the list
-        responsesList.appendChild(mainContainer);
-        
-        // Tutorial Highlighting Logic
+        // Tutorial Highlighting (Kept intact)
         if (typeof currentTutorialStep !== 'undefined' && (currentTutorialStep === 5 || currentTutorialStep === 6)) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
