@@ -117,36 +117,32 @@
     }
 }
 
+/* --- Masonry Grid Fix --- */
 
-		/* --- Masonry Grid Fix --- */
-
-/* The container that holds the cards */
 .masonry-container {
-    column-count: 1; /* Default to 1 column on mobile */
-    column-gap: 1.5rem; /* Space between columns */
-    width: 100%;
+    column-count: 1; /* Mobile default */
+    column-gap: 1.5rem;
     display: block;
+    width: 100%;
 }
 
-/* Tablet and up: switch to 2 columns */
 @media (min-width: 768px) {
     .masonry-container {
-        column-count: 2;
+        column-count: 2; /* 2 Columns on tablet/desktop */
     }
 }
 
-/* The individual cards */
 .response-item {
-    /* These properties prevent the card from being cut between columns */
+    /* inline-flex makes it play nice with columns AND keeps the inner layout working */
+    display: inline-flex !important; 
+    width: 100%;
+    
+    /* These prevent the card from splitting in half across columns */
     break-inside: avoid; 
     -webkit-column-break-inside: avoid;
     
-    /* Ensure spacing */
+    /* Vertical spacing between cards */
     margin-bottom: 1.5rem;
-    
-    /* Required for column layouts to work */
-    display: inline-block; 
-    width: 100%;
 }
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
@@ -6136,7 +6132,7 @@ for (const label in groupedResponses) {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // 1. CLEANER CONTAINER (Uses the CSS class we made)
+            // 1. CONTAINER
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
                 <div class="masonry-container"></div>
@@ -6159,10 +6155,10 @@ for (const label in groupedResponses) {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // 2. CLEANER ITEM CLASS (Removed 'flex' to let CSS Columns handle layout)
-                responseEl.className = 'response-item flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+                // 2. ITEM CLASS - Added 'flex' back so internal layout works
+                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
                 
-                // 3. CLEANER STYLES (Only handling dynamic colors here now)
+                // 3. INLINE STYLES - Only colors here
                 responseEl.style.cssText = `
                     background-color: ${categoryColor};
                     border-color: ${categoryColor};
@@ -6171,7 +6167,6 @@ for (const label in groupedResponses) {
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
-                // The content inside the card
                 responseEl.innerHTML = `
                     <div class="flex justify-between items-start w-full mb-2">
                          <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
