@@ -117,29 +117,36 @@
     }
 }
 
-/* --- Strict Grid Layout --- */
+/* --- FORCE GRID LAYOUT --- */
 
-.response-group-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Default: 1 column on mobile */
-    gap: 1.5rem; /* Space between cards */
+/* Target both potential class names just to be safe */
+.response-group-grid, 
+.masonry-container {
+    display: grid !important;
+    
+    /* FORCE 2 Columns of equal width */
+    grid-template-columns: 1fr 1fr !important; 
+    
+    gap: 1.5rem;
     width: 100%;
+    align-items: start;
 }
 
-/* On Tablets and Desktops, force 2 equal columns */
-@media (min-width: 768px) {
-    .response-group-grid {
-        /* This creates 2 columns of exactly 50% width each */
-        grid-template-columns: repeat(2, 1fr); 
-        align-items: start; /* Prevents short cards from stretching weirdly */
+/* Optional: Only go back to 1 column on very small phones */
+@media (max-width: 640px) {
+    .response-group-grid, 
+    .masonry-container {
+        grid-template-columns: 1fr !important;
     }
 }
 
+/* Ensure the cards fill the grid area properly */
 .response-item {
     width: 100%;
-    /* Ensure the card fills its grid cell */
-    display: flex; 
-    flex-direction: column;
+    height: 100%;
+    /* Remove any old column-break properties that might conflict */
+    break-inside: auto; 
+    margin-bottom: 0 !important; /* Grid handles spacing, not margin */
 }
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
