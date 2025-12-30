@@ -6638,6 +6638,7 @@ const renderResponses = (searchQuery = '') => {
             
             if (label.includes(query) || text.includes(query)) return true;
 
+            // Only run fuzzy check on label if query is > 3 chars
             if (query.length > 3) {
                 const labelWords = label.split(' ');
                 if (labelWords.some(word => getLevenshteinDistance(word, query) <= 2)) return true;
@@ -6653,6 +6654,7 @@ const renderResponses = (searchQuery = '') => {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
             const pinnedResponses = allResponses.filter(r => r.isPinned);
             const unpinnedResponses = allResponses.filter(r => !r.isPinned);
+            // Sort alphabetical
             unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
             
@@ -6664,15 +6666,17 @@ const renderResponses = (searchQuery = '') => {
         }
     }
     
+    // Update Header
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // --- 2. RENDERING LOGIC (Redesigned) ---
+    // --- 2. RENDERING LOGIC (Updated Design 1) ---
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
 
+        // Clustering Logic
         let groups = {};
         if (query) {
             groups = responsesToRender.reduce((acc, response) => {
@@ -6685,10 +6689,12 @@ const renderResponses = (searchQuery = '') => {
             groups = { 'All': responsesToRender };
         }
 
+        // Render Loop
         for (const groupTitle in groups) {
             const groupSection = document.createElement('div');
             groupSection.className = 'mb-8 animate-fade-in'; 
             
+            // Search Mode Headers
             if (query) {
                 const catColor = categories[groupTitle]?.color || '#60a5fa';
                 groupSection.innerHTML = `
@@ -6697,10 +6703,10 @@ const renderResponses = (searchQuery = '') => {
                         <h3 class="text-xl font-bold text-gray-200">${groupTitle}</h3>
                         <span class="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded-full">${groups[groupTitle].length} matches</span>
                     </div>
-                    <div class="vertical-list space-y-6"></div> 
+                    <div class="vertical-list space-y-8"></div> 
                 `;
             } else {
-                groupSection.innerHTML = `<div class="vertical-list space-y-6"></div>`;
+                groupSection.innerHTML = `<div class="vertical-list space-y-8"></div>`;
             }
             
             const listContainer = groupSection.querySelector('div.vertical-list');
@@ -6713,65 +6719,69 @@ const renderResponses = (searchQuery = '') => {
                 let displayText = response.text;
                 let displayLabel = response.label || 'Unlabeled';
                 
+                // Search Highlighting
                 if (query) {
                     const regex = new RegExp(`(${query})`, 'gi');
                     displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
                     displayLabel = displayLabel.replace(regex, `<span class="highlight">$1</span>`);
                 }
 
+                // Color Logic
                 let categoryColor = categories[response.category]?.color || '#60a5fa';
                 if (document.body.classList.contains('light-mode')) {
                     categoryColor = lightenColor(categoryColor);
                 }
+                
+                // Create Glass Background (Hex + 33 = ~20% opacity) for card body
+                // We keep border solid for definition
+                const cardBg = categoryColor + '33'; 
                 const timesCopied = response.timesCopied || 0; 
 
                 // 1. Render TITLE (Outside)
-                // We show the pin icon next to the title if it's pinned
+                // Added a 'copy-trigger' class so clicking the title also copies the text
                 const titleHTML = `
-                    <div class="flex items-center gap-2 mb-2 ml-1">
-                        <h4 class="text-lg font-bold text-gray-200 tracking-tight group-hover:text-blue-400 transition-colors cursor-pointer select-none copy-trigger">${displayLabel}</h4>
+                    <div class="flex items-center gap-3 mb-2 ml-1 cursor-pointer copy-trigger w-fit">
+                        <h4 class="text-lg font-bold text-gray-200 tracking-tight group-hover:text-blue-400 transition-colors select-none">${displayLabel}</h4>
                         ${response.isPinned ? '<i class="fas fa-thumbtack text-blue-400 text-xs transform rotate-45"></i>' : ''}
                     </div>
                 `;
 
                 // 2. Render CARD (The Box)
                 const cardEl = document.createElement('div');
-                cardEl.className = 'response-item w-full rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden';
+                cardEl.className = 'response-item w-full rounded-xl border backdrop-blur-md relative shadow-lg hover:shadow-xl transition-all flex flex-col overflow-hidden';
                 cardEl.style.cssText = `
-                    background-color: ${categoryColor};
+                    background-color: ${cardBg};
                     border-color: ${categoryColor};
                 `;
                 cardEl.dataset.id = response.id;
                 cardEl.dataset.category = response.category;
 
                 cardEl.innerHTML = `
-                    <div class="p-5 flex-grow display-mode w-full">
+                    <div class="p-6 flex-grow display-mode w-full">
                         <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
                     </div>
 
-                    <div class="bg-black/20 border-t border-black/5 p-3 flex justify-between items-center">
+                    <div class="bg-black/30 border-t border-black/10 p-3 px-5 flex justify-between items-center">
                         
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center text-xs text-gray-300 bg-black/20 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
-                                <i class="fas fa-copy mr-1.5 opacity-70"></i>
-                                <span class="font-mono">${timesCopied}</span>
-                            </div>
-                            <button class="pin-btn p-1.5 rounded-lg hover:bg-black/20 text-gray-400 hover:text-white transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin to top'}" ${isAnonymous ? 'hidden' : ''}>
-                                <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
-                            </button>
-                        </div>
+                        <button class="copy-btn text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm" 
+                                style="background-color: ${categoryColor}; filter: brightness(1.1);">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
 
-                        <div class="flex items-center gap-2">
-                            <button class="copy-btn bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 px-4 rounded-lg shadow-sm active:scale-95 transition-all text-sm flex items-center">
-                                <span class="mr-2">Copy</span> <i class="fas fa-copy"></i> 
-                            </button>
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs text-gray-300 font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
                             
-                            <div class="h-4 w-px bg-white/20 mx-1 ${isAnonymous ? 'hidden' : ''}"></div> <button class="edit-btn text-gray-300 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors ${isAnonymous ? 'hidden' : ''}" title="Edit">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="delete-btn text-gray-300 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-lg transition-colors ${isAnonymous ? 'hidden' : ''}" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
+                                <button class="pin-btn text-gray-300 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
+                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-300' : ''}"></i>
+                                </button>
+                                <button class="edit-btn text-gray-300 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="delete-btn text-gray-300 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-lg transition-colors" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -6780,14 +6790,10 @@ const renderResponses = (searchQuery = '') => {
                 itemWrapper.innerHTML = titleHTML;
                 itemWrapper.appendChild(cardEl);
                 
-                // Add Click Listener to the Title (Optional quality of life)
-                // Clicking the title triggers the copy logic, same as the button
+                // Add Click Listener to the Title (Quality of Life)
                 const titleEl = itemWrapper.querySelector('.copy-trigger');
                 titleEl.addEventListener('click', () => {
-                    const text = response.text;
-                    const id = response.id;
-                    const cat = response.category;
-                    processAndCopy(text, id, cat);
+                    processAndCopy(response.text, response.id, response.category);
                 });
 
                 listContainer.appendChild(itemWrapper);
