@@ -1192,15 +1192,18 @@
     text-align: right;
 }
 
-/* --- 1. BACKGROUND THEMES --- */
-.container-bg {
+/* --- 1. BACKGROUND THEMES (Applied to BODY) --- */
+
+/* Base setup on body to cover full screen */
+body {
     min-height: 100vh;
-    transition: background 0.5s ease;
+    transition: background-color 0.5s ease, background-image 0.5s ease;
     background-attachment: fixed;
+    margin: 0; /* Important */
 }
 
 /* Theme 1: Deep Space (Default) */
-body.theme-deep-space .container-bg {
+body.theme-deep-space {
     background-color: #0d1117;
     background-image: 
         radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
@@ -1208,13 +1211,13 @@ body.theme-deep-space .container-bg {
 }
 
 /* Theme 2: Midnight */
-body.theme-midnight .container-bg {
+body.theme-midnight {
     background-color: #000000;
     background-image: radial-gradient(circle at 50% 0%, #111 0%, #000 70%);
 }
 
 /* Theme 3: Nebula */
-body.theme-nebula .container-bg {
+body.theme-nebula {
     background-color: #1a0b2e;
     background-image: 
         radial-gradient(at 10% 10%, rgba(120, 50, 220, 0.15) 0, transparent 50%),
@@ -1223,7 +1226,7 @@ body.theme-nebula .container-bg {
 }
 
 /* Theme 4: Aurora */
-body.theme-aurora .container-bg {
+body.theme-aurora {
     background-color: #022c22;
     background-image: 
         radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0, transparent 50%),
@@ -1232,11 +1235,17 @@ body.theme-aurora .container-bg {
 }
 
 /* Light Mode Override */
-body.light-mode .container-bg {
+body.light-mode {
     background-color: #f3f4f6 !important;
     background-image: 
         radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
         radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%) !important;
+}
+
+/* Remove background from the inner container so body shows through */
+.container-bg {
+    background: transparent !important; 
+    box-shadow: none !important;
 }
 
 /* --- 2. GLASSMORPHISM CARDS (Dark Mode) --- */
@@ -1776,8 +1785,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
     <link rel="manifest" href="site.webmanifest">
 </head>
-<body class="flex flex-col min-h-screen bg-gray-900 relative">
-
+<body class="flex flex-col min-h-screen relative theme-deep-space">
 	<div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-[9999]">
         <svg class="animate-spin h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
