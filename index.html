@@ -3350,16 +3350,6 @@ const updateLeaderboardData = async (uid, levelInfo) => {
     }
 };
 		
-const savedPage = localStorage.getItem('lastVisitedPage');
-if (savedPage) {
-    currentPage = savedPage;
-}		
-
-const storedTheme = localStorage.getItem('theme');
-if (storedTheme === 'light') {
-    document.body.classList.add('light-mode');
-}
-
 // Function to darken a color for light mode backgrounds
 function lightenColor(hexColor) {
     // Remove the '#' if it exists
