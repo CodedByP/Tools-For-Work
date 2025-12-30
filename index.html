@@ -117,37 +117,6 @@
     }
 }
 
-/* --- FORCE GRID LAYOUT --- */
-
-/* Target both potential class names just to be safe */
-.response-group-grid, 
-.masonry-container {
-    display: grid !important;
-    
-    /* FORCE 2 Columns of equal width */
-    grid-template-columns: 1fr 1fr !important; 
-    
-    gap: 1.5rem;
-    width: 100%;
-    align-items: start;
-}
-
-/* Optional: Only go back to 1 column on very small phones */
-@media (max-width: 640px) {
-    .response-group-grid, 
-    .masonry-container {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-/* Ensure the cards fill the grid area properly */
-.response-item {
-    width: 100%;
-    height: 100%;
-    /* Remove any old column-break properties that might conflict */
-    break-inside: auto; 
-    margin-bottom: 0 !important; /* Grid handles spacing, not margin */
-}
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
             padding: 0.5rem 1rem;
@@ -6116,7 +6085,7 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (GROUPED BY LABEL)
+    // 3. Rendering Logic (Vertical Stack)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
 
@@ -6131,7 +6100,7 @@ const renderResponses = (searchQuery = '') => {
         // Loop through each Label Group
         for (const label in groupedResponses) {
             const labelSection = document.createElement('div');
-            labelSection.className = 'mb-10'; // Add space between sections
+            labelSection.className = 'mb-8'; 
             
             let highlightedLabel = label;
             if(query) {
@@ -6139,14 +6108,13 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // Create the Heading and the Grid Container
-            // NOTE: We are using 'response-group-grid' here which matches our new CSS
+            // Create Header and a simple Vertical Container (space-y-4)
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="response-group-grid"></div>
+                <div class="vertical-list space-y-4"></div> 
             `;
             
-            const responsesInSection = labelSection.querySelector('div.response-group-grid');
+            const responsesInSection = labelSection.querySelector('div.vertical-list');
 
             groupedResponses[label].forEach(response => {
                 let displayText = response.text;
@@ -6164,8 +6132,8 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // Standard Flex classes for the card itself
-                responseEl.className = 'response-item p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col';
+                // Standard full-width card
+                responseEl.className = 'response-item w-full p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col';
                 
                 responseEl.style.cssText = `
                     background-color: ${categoryColor};
@@ -6209,7 +6177,7 @@ const renderResponses = (searchQuery = '') => {
             responsesList.appendChild(labelSection);
         }
         
-        // Tutorial Highlighting (Kept intact)
+        // Tutorial Highlight Logic
         if (typeof currentTutorialStep !== 'undefined' && (currentTutorialStep === 5 || currentTutorialStep === 6)) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
