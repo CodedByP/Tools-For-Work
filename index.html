@@ -20,6 +20,24 @@
             color: #e5e7eb;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
+		/* Light Mode Global Text Fixes */
+			body.light-mode {
+			    color: #1f2937; /* Very dark gray text */
+			}
+			body.light-mode h1, 
+			body.light-mode h2, 
+			body.light-mode h3, 
+			body.light-mode h4, 
+			body.light-mode p, 
+			body.light-mode span, 
+			body.light-mode strong {
+			    color: #111827; /* Almost black */
+			}
+			/* Exception: Keep text inside buttons/badges light if they have dark backgrounds */
+			body.light-mode button span,
+			body.light-mode .badge span {
+			    color: inherit; 
+			}
         h1, h2 {
             font-family: 'Poppins', sans-serif;
         }
@@ -64,6 +82,39 @@
 			.newly-unlocked {
 			    animation: unlock-animation 0.7s ease-out forwards;
 			}
+
+		/* --- Light Mode Stats Page Specifics --- */
+
+/* Make the big metric numbers dark */
+body.light-mode #stats-total-copies,
+body.light-mode #stats-avg-copies,
+body.light-mode #stats-busiest-day,
+body.light-mode #stats-busiest-day-count {
+    color: #111827 !important;
+}
+
+/* Make the small labels (Total, Avg/Day) dark gray */
+body.light-mode #activity-stats-display p.text-gray-500 {
+    color: #4b5563 !important;
+}
+
+/* Make the Chart Titles dark */
+body.light-mode .bento-card h3 {
+    color: #111827 !important;
+}
+
+/* Fix the "Snapshot" mini-boxes */
+body.light-mode .mini-stat-box span.text-white {
+    color: #111827 !important;
+}
+body.light-mode .mini-stat-box span.text-slate-400 {
+    color: #4b5563 !important;
+}
+
+/* Fix the "Leaderboard" list text */
+body.light-mode .leaderboard-entry p.text-gray-200 {
+    color: #111827 !important;
+}
 
 		
 #copy-toast.show {
