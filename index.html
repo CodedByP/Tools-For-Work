@@ -3239,6 +3239,7 @@ let cachedStatsUserData = {};
 let hasLoadedStats = false; // Prevents re-running the heavy logic
 let currentLeaderboardView = 'all';
 let sessionStartTime = null;
+let isSilencingUpdates = false; // New flag to stop flickering
 
 // --- SMART SCHEDULE & VISIBILITY LOGIC ---
 // 1. The Sensor: Tracks when you are actually looking at the tab
@@ -6744,9 +6745,10 @@ const renderResponses = (searchQuery = '') => {
                     displayLabel = displayLabel.replace(regex, `<span class="highlight">$1</span>`);
                 }
 
+                // --- Color & Mode Logic ---
                 let categoryColor = categories[response.category]?.color || '#60a5fa';
                 let cardBg, titleColor, bodyTextColor, footerBg, metaTextColor, iconColor;
-                const copyBtnBg = '#16a34a'; // Green Button
+                const copyBtnBg = '#16a34a'; // Green-600
 
                 if (isLightMode) {
                     categoryColor = lightenColor(categoryColor);
@@ -6815,7 +6817,7 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                 `;
                 
-                // --- CLICK HANDLER ---
+                // --- CLICK HANDLER (With Animation & No Reload) ---
                 const copyBtn = cardEl.querySelector('.copy-btn');
                 const btnIcon = copyBtn.querySelector('i');
                 const btnText = copyBtn.querySelector('span');
@@ -6824,10 +6826,10 @@ const renderResponses = (searchQuery = '') => {
                 const handleCopyAction = () => {
                     if(copyBtn.classList.contains('clicked')) return; 
 
-                    // 1. Copy & Update DB (Background)
+                    // 1. Copy & Update DB (The background update happens in processAndCopy)
                     processAndCopy(response.text, response.id, response.category);
 
-                    // 2. Optimistic Update (Visual Only)
+                    // 2. Optimistic Update (Update the number visually right now)
                     if (countSpan) {
                         let currentCount = parseInt(countSpan.textContent);
                         if (!isNaN(currentCount)) {
@@ -6835,7 +6837,7 @@ const renderResponses = (searchQuery = '') => {
                         }
                     }
 
-                    // 3. Trigger Animation
+                    // 3. Trigger Elastic Bounce Animation
                     copyBtn.classList.add('clicked');
                     const originalIconClass = btnIcon.className;
                     btnIcon.className = 'fas fa-check';
@@ -6853,7 +6855,7 @@ const renderResponses = (searchQuery = '') => {
                 itemWrapper.innerHTML = titleHTML;
                 itemWrapper.appendChild(cardEl);
                 
-                // Allow clicking title too
+                // Allow clicking title to copy as well
                 const titleEl = itemWrapper.querySelector('.copy-trigger');
                 titleEl.addEventListener('click', handleCopyAction);
 
@@ -6972,7 +6974,10 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         const response = category.responses.find(r => r.id === responseId);
                         if (response) {
                             response.timesCopied = (response.timesCopied || 0) + 1;
-                            saveToFirestore(categories);
+							isSilencingUpdates = true; // 1. Turn on Silencer
+                        	saveToFirestore(categories).then(() => {
+                            setTimeout(() => { isSilencingUpdates = false; }, 500); 
+                        });
                         }
                     }
 
@@ -9167,6 +9172,10 @@ onAuthStateChanged(auth, async (user) => {
 			await checkForUpdatesOnLoad();
             const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
             cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
+				if (isSilencingUpdates) {
+		        console.log("🤫 Silencing re-render to prevent flicker.");
+		        return; // Stop here! Do not reload the page.
+    }
                 if (doc.exists()) { categories = doc.data().categories || {}; } else { try { const blueprint = await getCannedResponsesBlueprint(); categories = JSON.parse(JSON.stringify(blueprint)); await setDoc(userCannedResponsesDocRef, { categories: categories }); console.log("Migrated default data to Firestore for new user."); } catch (error) { console.error("Error migrating data for new user:", error); } }
                 for (const key in categories) { if (!categories[key].responses) { categories[key].responses = []; } }
                 if (Object.keys(categories).length > 0) {
