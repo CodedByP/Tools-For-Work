@@ -6046,21 +6046,14 @@ const renderResponses = (searchQuery = '') => {
         for (const categoryName in categories) {
             allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
         }
-        
         let labelMatches = [];
         let textMatches = [];
-
         allResponses.forEach(r => {
             const labelMatch = r.label && r.label.toLowerCase().includes(query);
             const textMatch = r.text && r.text.toLowerCase().includes(query);
-            
-            if (labelMatch) {
-                labelMatches.push(r);
-            } else if (textMatch) {
-                textMatches.push(r);
-            }
+            if (labelMatch) labelMatches.push(r);
+            else if (textMatch) textMatches.push(r);
         });
-        
         responsesToRender = [...new Set([...labelMatches, ...textMatches])];
         const count = responsesToRender.length;
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count}</span>`;
@@ -6069,10 +6062,8 @@ const renderResponses = (searchQuery = '') => {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
             const pinnedResponses = allResponses.filter(r => r.isPinned);
             const unpinnedResponses = allResponses.filter(r => !r.isPinned);
-            
             unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-            
             const count = responsesToRender.length;
             headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
         } else {
@@ -6094,14 +6085,12 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (MASONRY LAYOUT)
+    // 3. Rendering Logic (MASONRY FIX)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
         const groupedResponses = responsesToRender.reduce((acc, response) => {
             const label = response.label || 'Unlabeled';
-            if (!acc[label]) {
-                acc[label] = [];
-            }
+            if (!acc[label]) acc[label] = [];
             acc[label].push(response);
             return acc;
         }, {});
@@ -6115,10 +6104,7 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ FIX PART 1: The Container ▼▼▼
-            // We removed the 'grid' classes entirely. 
-            // We inject style="column-count: 2" which forces the browser to split content 
-            // like a newspaper, ignoring width calculations that were breaking the Grid.
+            // USE COLUMNS INSTEAD OF GRID
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
                 <div class="masonry-container" style="column-count: 2; column-gap: 1.5rem; width: 100%; display: block;"></div>
@@ -6141,10 +6127,7 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // ▼▼▼ FIX PART 2: The Item ▼▼▼
-                // We add "break-inside: avoid" to prevent a card from being chopped in half 
-                // between column 1 and column 2. 
-                // We also set "display: inline-block" and "width: 100%" to ensure it behaves correctly in the column layout.
+                // BREAK-INSIDE: AVOID prevents cards from being cut in half
                 responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
                 responseEl.style.cssText = `
                     break-inside: avoid;
