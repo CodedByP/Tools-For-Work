@@ -23,11 +23,54 @@
         h1, h2 {
             font-family: 'Poppins', sans-serif;
         }
-        .container-bg {
-            background-color: #0d1117;
-            background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                                 radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
-        }
+/* --- BACKGROUND THEMES --- */
+
+/* 1. Base Setup (Applies to all themes) */
+.container-bg {
+    min-height: 100vh;
+    transition: background 0.5s ease;
+    background-attachment: fixed;
+}
+
+/* 2. DEEP SPACE (The default look you just deleted, moved here) */
+body.theme-deep-space .container-bg {
+    background-color: #0d1117;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+}
+
+/* 3. MIDNIGHT */
+body.theme-midnight .container-bg {
+    background-color: #000000;
+    background-image: radial-gradient(circle at 50% 0%, #111 0%, #000 70%);
+}
+
+/* 4. NEBULA */
+body.theme-nebula .container-bg {
+    background-color: #1a0b2e;
+    background-image: 
+        radial-gradient(at 10% 10%, rgba(120, 50, 220, 0.15) 0, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(200, 50, 100, 0.15) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(50, 20, 100, 0.1) 0, transparent 70%);
+}
+
+/* 5. AURORA */
+body.theme-aurora .container-bg {
+    background-color: #022c22;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.15) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(6, 78, 59, 0.3) 0, transparent 60%);
+}
+
+/* 6. LIGHT MODE OVERRIDE */
+body.light-mode .container-bg {
+    background-color: #f3f4f6 !important;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%) !important;
+}
         .link-card, .card-style, .form-container, .floating-card, .main-card, .sidebar, .modal-content {
             background-color: rgba(22, 27, 34, 0.8);
             transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
@@ -1970,6 +2013,31 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                             <i id="theme-icon-settings" class="fas fa-moon mr-2"></i> Toggle Theme
                         </button>
                     </div>
+					<div class="border-t border-gray-600 pt-6 mt-6">
+					    <span class="text-lg text-gray-300 block mb-4">Background Style <span class="text-xs text-gray-500">(Dark Mode)</span></span>
+					    
+					    <div class="grid grid-cols-2 gap-3">
+					        <button class="bg-theme-btn p-3 rounded-xl border-2 border-gray-600 hover:border-blue-500 transition-all flex items-center justify-center gap-2 group bg-gray-800" data-theme="theme-deep-space">
+					            <div class="w-4 h-4 rounded-full bg-blue-900/50 border border-blue-500"></div>
+					            <span class="text-sm font-bold text-gray-300 group-hover:text-white">Deep Space</span>
+					        </button>
+					
+					        <button class="bg-theme-btn p-3 rounded-xl border-2 border-gray-600 hover:border-blue-500 transition-all flex items-center justify-center gap-2 group bg-black" data-theme="theme-midnight">
+					            <div class="w-4 h-4 rounded-full bg-gray-900 border border-gray-500"></div>
+					            <span class="text-sm font-bold text-gray-300 group-hover:text-white">Midnight</span>
+					        </button>
+					
+					        <button class="bg-theme-btn p-3 rounded-xl border-2 border-gray-600 hover:border-blue-500 transition-all flex items-center justify-center gap-2 group bg-[#1a0b2e]" data-theme="theme-nebula">
+					            <div class="w-4 h-4 rounded-full bg-purple-600 border border-purple-400"></div>
+					            <span class="text-sm font-bold text-gray-300 group-hover:text-white">Nebula</span>
+					        </button>
+					
+					        <button class="bg-theme-btn p-3 rounded-xl border-2 border-gray-600 hover:border-teal-500 transition-all flex items-center justify-center gap-2 group bg-[#022c22]" data-theme="theme-aurora">
+					            <div class="w-4 h-4 rounded-full bg-teal-900 border border-teal-500"></div>
+					            <span class="text-sm font-bold text-gray-300 group-hover:text-white">Aurora</span>
+					        </button>
+					    </div>
+					</div>
                     <div class="flex items-center justify-between border-t border-gray-600 pt-6">
                         <span class="text-lg text-gray-300">Check for New Content</span>
                         <button id="check-updates-btn-settings" class="px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
@@ -3220,6 +3288,9 @@ const storedTheme = localStorage.getItem('theme');
 if (storedTheme === 'light') {
     document.body.classList.add('light-mode');
 }
+// Initialize Background Theme
+const storedBgTheme = localStorage.getItem('backgroundTheme') || 'theme-deep-space';
+applyBackgroundTheme(storedBgTheme);		
 
 // Function to darken a color for light mode backgrounds
 function lightenColor(hexColor) {
@@ -3452,6 +3523,35 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+		// --- Theme Handling Logic ---
+const applyBackgroundTheme = (themeName) => {
+    // 1. Remove all possible theme classes
+    document.body.classList.remove('theme-deep-space', 'theme-midnight', 'theme-nebula', 'theme-aurora');
+    
+    // 2. Add the selected theme
+    document.body.classList.add(themeName);
+    
+    // 3. Save preference
+    localStorage.setItem('backgroundTheme', themeName);
+
+    // 4. Update UI Buttons (Visual Feedback)
+    const btns = document.querySelectorAll('.bg-theme-btn');
+    if(btns.length > 0) {
+        btns.forEach(btn => {
+            // Remove old active states
+            btn.classList.remove('border-blue-500', 'border-teal-500', 'ring-2', 'ring-blue-500/50', 'ring-teal-500/50');
+            btn.classList.add('border-gray-600');
+
+            if (btn.dataset.theme === themeName) {
+                // Apply active state
+                const activeColor = themeName === 'theme-aurora' ? 'teal' : 'blue';
+                btn.classList.remove('border-gray-600');
+                btn.classList.add(`border-${activeColor}-500`, 'ring-2', `ring-${activeColor}-500/50`);
+            }
+        });
+    }
+};
 
 		const recalculateCurrentPeriodStats = async (uid) => {
     if (!uid || isAnonymous) return;
@@ -7424,6 +7524,29 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+	// Theme Selector Listeners
+document.querySelectorAll('.bg-theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+        
+        // Apply the new background
+        applyBackgroundTheme(theme);
+        
+        // Smart Logic: If they are in Light Mode, switch to Dark Mode automatically
+        // so they can actually see the new background
+        if (document.body.classList.contains('light-mode')) {
+            document.body.classList.remove('light-mode');
+            localStorage.setItem('theme', 'dark');
+            
+            // Update the Toggle Icon
+            const icon = document.getElementById('theme-icon-settings');
+            if(icon) icon.className = 'fas fa-moon mr-2';
+            
+            showMessage("Switched to Dark Mode to view theme", "success");
+        }
+    });
+});
 
 	// --- Leaderboard Filter Listener ---
 const lbFilterGroup = document.getElementById('leaderboard-filter-group');
