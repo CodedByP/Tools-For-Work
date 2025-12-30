@@ -1959,6 +1959,17 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
         </div>
 
+		<div id="smart-suggestions-wrapper" class="w-full hidden animate-fade-in mb-6">
+    <div class="flex items-center gap-2 mb-3 px-1">
+        <i class="fas fa-sparkles text-yellow-400 text-sm animate-pulse"></i>
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            Suggested for your <span id="time-of-day-label" class="text-blue-400">Routine</span>
+        </span>
+    </div>
+    <div id="smart-suggestions-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        </div>
+	</div>
+
         <div class="w-full">
             <div id="responses-container" class="w-full floating-card p-6 sm:p-8">
                 <h2 id="responses-heading" class="text-3xl font-bold text-gray-200 mb-6 hidden"></h2>
@@ -3144,7 +3155,160 @@ let expandedChartEvents = [];     // <--- AND THIS ONE
 let cachedStatsEvents = [];
 let cachedStatsUserData = {};
 let hasLoadedStats = false; // Prevents re-running the heavy logic
-let currentLeaderboardView = 'all';	
+let currentLeaderboardView = 'all';
+let sessionStartTime = null;
+
+// --- SMART SCHEDULE & VISIBILITY LOGIC ---
+// 1. The Sensor: Tracks when you are actually looking at the tab
+const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+        sessionStartTime = Date.now();
+        // Trigger the Smart Brain immediately when user returns
+        updateSmartSuggestions();
+    } else {
+        if (sessionStartTime) {
+            const durationMinutes = ((Date.now() - sessionStartTime) / 60000).toFixed(1);
+            logUserEvent('session_end', { duration: parseFloat(durationMinutes) });
+            sessionStartTime = null;
+        }
+    }
+};
+
+// 2. The Brain: Calculates specific suggestions based on hour/day
+const getContextualSuggestions = (events) => {
+    if (!events || events.length === 0) return [];
+
+    const now = new Date();
+    const currentHour = now.getHours(); // 0-23
+    const currentDay = now.getDay();    // 0-6
+
+    // Filter for only 'copy' events
+    const copyHistory = events.filter(e => e.type === 'copy' && e.timestamp);
+    const scores = {};
+
+    copyHistory.forEach(event => {
+        // Guard against missing IDs
+        const id = event.responseId; 
+        if (!id) return;
+
+        const eDate = event.timestamp.toDate();
+        const eHour = eDate.getHours();
+        const eDay = eDate.getDay();
+
+        if (!scores[id]) scores[id] = 0;
+
+        // SCORING ALGORITHM
+        // 1. Exact match (Same Day + Same 2-hour window) = 10 pts
+        if (eDay === currentDay && Math.abs(eHour - currentHour) <= 1) {
+            scores[id] += 10;
+        }
+        // 2. Routine match (Same 2-hour window, any day) = 3 pts
+        else if (Math.abs(eHour - currentHour) <= 1) {
+            scores[id] += 3;
+        }
+        // 3. Recency Boost (Used in the last 24h) = 1 pt
+        const hoursAgo = (now - eDate) / (1000 * 60 * 60);
+        if (hoursAgo < 24) {
+            scores[id] += 1;
+        }
+    });
+
+    // Sort by highest score and take top 3
+    return Object.entries(scores)
+        .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+        .slice(0, 3)
+        .map(([id]) => id);
+};
+
+// 3. The Renderer: Updates the UI
+const updateSmartSuggestions = async () => {
+    // Only run if on the Canned Responses page and user is logged in
+    if (currentPage !== 'canned-responses' || !userId || isAnonymous) return;
+
+    // Fetch history if not already cached
+    if (!cachedStatsEvents || cachedStatsEvents.length === 0) {
+        try {
+            const q = query(getUserEventsCollectionRef(userId), orderBy('timestamp', 'desc'), limit(500));
+            const snapshot = await getDocs(q);
+            cachedStatsEvents = snapshot.docs.map(doc => doc.data());
+        } catch (e) {
+            console.error("Error fetching events for suggestions:", e);
+            return;
+        }
+    }
+
+    const topResponseIds = getContextualSuggestions(cachedStatsEvents);
+    const container = document.getElementById('smart-suggestions-wrapper');
+    const list = document.getElementById('smart-suggestions-list');
+    const timeLabel = document.getElementById('time-of-day-label');
+
+    if (topResponseIds.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    // Update Time Label
+    const hour = new Date().getHours();
+    if (hour < 12) timeLabel.textContent = "Morning";
+    else if (hour < 17) timeLabel.textContent = "Afternoon";
+    else timeLabel.textContent = "Evening";
+
+    list.innerHTML = ''; 
+
+    topResponseIds.forEach(id => {
+        let foundResponse = null;
+        let foundCategory = null;
+
+        // Find the response object
+        for (const [catName, catData] of Object.entries(categories)) {
+            const match = catData.responses.find(r => r.id === id);
+            if (match) {
+                foundResponse = match;
+                foundCategory = catName;
+                break;
+            }
+        }
+
+        if (foundResponse) {
+            const btn = document.createElement('div');
+            btn.className = 'bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg';
+            
+            // Determine time context label for the specific card
+            let contextLabel = "Often used now";
+            
+            btn.innerHTML = `
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative z-10 flex flex-col h-full justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">${foundCategory}</span>
+                        <h4 class="font-bold text-gray-200 text-sm group-hover:text-blue-300 truncate">${foundResponse.label || 'Untitled'}</h4>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs text-gray-500 gap-2">
+                        <i class="fas fa-history text-blue-400"></i>
+                        <span>${contextLabel}</span>
+                    </div>
+                </div>
+            `;
+
+            btn.addEventListener('click', () => {
+                processAndCopy(foundResponse.text, foundResponse.id, foundCategory);
+                // Flash success
+                btn.className = 'bg-green-900/30 border border-green-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg transform scale-95';
+                setTimeout(() => {
+                    btn.className = 'bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg';
+                }, 400);
+            });
+
+            list.appendChild(btn);
+        }
+    });
+
+    container.classList.remove('hidden');
+};
+
+// 4. Activate Listeners
+document.addEventListener('visibilitychange', handleVisibilityChange);
+if (document.visibilityState === 'visible') sessionStartTime = Date.now();		
 
 // --- 1. DEFINE THE FUNCTION HERE (Right after Global Variables) ---
 const applyBackgroundTheme = (themeName) => {
@@ -6013,6 +6177,7 @@ const renderContent = () => {
         categoryBar.classList.remove('hidden');
         mainTitle.textContent = 'Canned Responses';
         renderCategories();
+		updateSmartSuggestions();
 
         if (!isAnonymous) {
             addCategoryBtn.classList.remove('hidden');
