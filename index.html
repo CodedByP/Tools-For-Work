@@ -5960,7 +5960,7 @@ const renderCategories = () => {
     if (!categories[activeCategory]) {
         activeCategory = categoryNames[0];
     }
-    renderResponses();
+    ();
 };
 
 
@@ -6040,7 +6040,7 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase();
 
-    // 1. Filter Logic (Unchanged)
+    // 1. Filter Logic
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
@@ -6053,8 +6053,12 @@ const renderResponses = (searchQuery = '') => {
         allResponses.forEach(r => {
             const labelMatch = r.label && r.label.toLowerCase().includes(query);
             const textMatch = r.text && r.text.toLowerCase().includes(query);
-            if (labelMatch) labelMatches.push(r);
-            else if (textMatch) textMatches.push(r);
+            
+            if (labelMatch) {
+                labelMatches.push(r);
+            } else if (textMatch) {
+                textMatches.push(r);
+            }
         });
         
         responsesToRender = [...new Set([...labelMatches, ...textMatches])];
@@ -6065,8 +6069,10 @@ const renderResponses = (searchQuery = '') => {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
             const pinnedResponses = allResponses.filter(r => r.isPinned);
             const unpinnedResponses = allResponses.filter(r => !r.isPinned);
+            
             unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
+            
             const count = responsesToRender.length;
             headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
         } else {
@@ -6075,7 +6081,7 @@ const renderResponses = (searchQuery = '') => {
         }
     }
     
-    // 2. Heading Logic (Unchanged)
+    // 2. Heading Logic
     if (responsesToRender.length > 0 || query) {
         const count = responsesToRender.length;
         const label = query ? 'Results Found' : 'Saved Replies';
@@ -6088,12 +6094,14 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (THE MASONRY FIX)
+    // 3. Rendering Logic (MASONRY LAYOUT)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
         const groupedResponses = responsesToRender.reduce((acc, response) => {
             const label = response.label || 'Unlabeled';
-            if (!acc[label]) acc[label] = [];
+            if (!acc[label]) {
+                acc[label] = [];
+            }
             acc[label].push(response);
             return acc;
         }, {});
@@ -6107,12 +6115,13 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ MASONRY CONTAINER FIX ▼▼▼
-            // We use standard CSS columns (column-count) instead of Grid.
-            // This tells the browser: "Split this div into 2 text-like columns."
+            // ▼▼▼ FIX PART 1: The Container ▼▼▼
+            // We removed the 'grid' classes entirely. 
+            // We inject style="column-count: 2" which forces the browser to split content 
+            // like a newspaper, ignoring width calculations that were breaking the Grid.
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="masonry-container" style="column-count: 2; column-gap: 1.5rem; width: 100%;"></div>
+                <div class="masonry-container" style="column-count: 2; column-gap: 1.5rem; width: 100%; display: block;"></div>
             `;
             const responsesInSection = labelSection.querySelector('div.masonry-container');
 
@@ -6132,16 +6141,17 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // ▼▼▼ MASONRY ITEM FIX ▼▼▼
-                // 1. break-inside: avoid; -> Crucial! Prevents a card from being split in half across columns.
-                // 2. margin-bottom: 1.5rem; -> Adds vertical space (gap) between items in the column.
-                // 3. display: inline-block; -> Helps some browsers render the break-avoidance correctly.
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all w-full';
+                // ▼▼▼ FIX PART 2: The Item ▼▼▼
+                // We add "break-inside: avoid" to prevent a card from being chopped in half 
+                // between column 1 and column 2. 
+                // We also set "display: inline-block" and "width: 100%" to ensure it behaves correctly in the column layout.
+                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
                 responseEl.style.cssText = `
-                    break-inside: avoid; 
-                    margin-bottom: 1.5rem; 
-                    display: inline-block; 
-                    background-color: ${categoryColor}; 
+                    break-inside: avoid;
+                    margin-bottom: 1.5rem;
+                    display: inline-block;
+                    width: 100%;
+                    background-color: ${categoryColor};
                     border-color: ${categoryColor};
                 `;
                 
@@ -6182,7 +6192,7 @@ const renderResponses = (searchQuery = '') => {
             responsesList.appendChild(labelSection);
         }
         
-        // 4. Tutorial Highlighting logic remains the same
+        // 4. Tutorial Highlighting
         if (currentTutorialStep === 5 || currentTutorialStep === 6) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
