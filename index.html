@@ -589,6 +589,29 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
     50% { transform: scale(1.2); box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.5); }
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}	
+
+/* --- Elastic Bounce Button Animation --- */
+@keyframes bounce-effect {
+    0% { transform: scale(1); }
+    30% { transform: scale(0.9); } /* Press down */
+    60% { transform: scale(1.05); } /* Overshoot/Bounce up */
+    100% { transform: scale(1); } /* Settle */
+}
+
+.anim-bounce {
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.anim-bounce.clicked {
+    animation: bounce-effect 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: #15803d !important; /* Darker Green (Success State) */
+}
+
+/* Ensure icon and text transition smoothly */
+.anim-bounce i, .anim-bounce span {
+    transition: all 0.2s ease;
+    display: inline-block; /* Required for transform to work on spans */
 }		
 
 /* --- NEW: Level Header Improvements --- */
@@ -6757,47 +6780,79 @@ const renderResponses = (searchQuery = '') => {
                 `;
 
                 // 2. Render CARD
-                const cardEl = document.createElement('div');
-                cardEl.className = 'response-item w-full rounded-xl border relative shadow-md hover:shadow-lg transition-all flex flex-col overflow-hidden';
-                cardEl.style.cssText = `
-                    background-color: ${cardBg};
-                    border-color: ${isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.1)'};
-                `;
-                cardEl.dataset.id = response.id;
-                cardEl.dataset.category = response.category;
-
-                cardEl.innerHTML = `
-                    <div class="p-6 flex-grow display-mode w-full">
-                        <p class="response-text-display ${bodyTextColor} whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
-                    </div>
-
-                    <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center">
-                        
-                        <button class="copy-btn text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:bg-green-500" 
-                                style="background-color: ${copyBtnBg};">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-
-                        <div class="flex items-center gap-4">
-                            <span class="text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
-                            
-                            <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
-                                <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
-                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
-                                </button>
-                                <button class="edit-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="delete-btn ${iconColor} hover:text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                itemWrapper.innerHTML = titleHTML;
-                itemWrapper.appendChild(cardEl);
+			// ... inside the loop ...
+			
+			// 2. Render CARD
+			const cardEl = document.createElement('div');
+			cardEl.className = 'response-item w-full rounded-xl border relative shadow-md hover:shadow-lg transition-all flex flex-col overflow-hidden';
+			cardEl.style.cssText = `
+			    background-color: ${cardBg};
+			    border-color: ${isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.1)'};
+			`;
+			cardEl.dataset.id = response.id;
+			cardEl.dataset.category = response.category;
+			
+			cardEl.innerHTML = `
+			    <div class="p-6 flex-grow display-mode w-full">
+			        <p class="response-text-display ${bodyTextColor} whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
+			    </div>
+			
+			    <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center">
+			        
+			        <button class="copy-btn anim-bounce text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:brightness-110" 
+			                style="background-color: ${copyBtnBg};">
+			            <i class="fas fa-copy"></i> <span>Copy</span>
+			        </button>
+			
+			        <div class="flex items-center gap-4">
+			            <span class="text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
+			            
+			            <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
+			                <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
+			                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
+			                </button>
+			                <button class="edit-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
+			                    <i class="fas fa-pencil-alt"></i>
+			                </button>
+			                <button class="delete-btn ${iconColor} hover:text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors" title="Delete">
+			                    <i class="fas fa-trash"></i>
+			                </button>
+			            </div>
+			        </div>
+			    </div>
+			`;
+			
+			// --- NEW: Add the Bounce Interaction Logic ---
+			const copyBtn = cardEl.querySelector('.copy-btn');
+			const btnIcon = copyBtn.querySelector('i');
+			const btnText = copyBtn.querySelector('span');
+			
+			copyBtn.addEventListener('click', () => {
+			    if(copyBtn.classList.contains('clicked')) return; // Prevent double-clicking while animating
+			
+			    // 1. Run the copy logic
+			    processAndCopy(response.text, response.id, response.category);
+			
+			    // 2. Trigger Bounce & Morph
+			    copyBtn.classList.add('clicked');
+			    
+			    // Swap Text & Icon
+			    const originalIconClass = btnIcon.className;
+			    btnIcon.className = 'fas fa-check';
+			    btnText.textContent = 'Copied!';
+			
+			    // 3. Reset after 1.5 seconds
+			    setTimeout(() => {
+			        copyBtn.classList.remove('clicked');
+			        btnIcon.className = originalIconClass;
+			        btnText.textContent = 'Copy';
+			    }, 1500);
+			});
+			
+			itemWrapper.innerHTML = titleHTML;
+			itemWrapper.appendChild(cardEl);
+			
+			// ... rest of the loop ...
                 
                 const titleEl = itemWrapper.querySelector('.copy-trigger');
                 titleEl.addEventListener('click', () => {
