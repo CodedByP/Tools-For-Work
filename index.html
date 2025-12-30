@@ -6040,7 +6040,7 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase();
 
-    // 1. Filter Logic
+    // 1. Filter Logic (Unchanged)
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
@@ -6053,12 +6053,8 @@ const renderResponses = (searchQuery = '') => {
         allResponses.forEach(r => {
             const labelMatch = r.label && r.label.toLowerCase().includes(query);
             const textMatch = r.text && r.text.toLowerCase().includes(query);
-            
-            if (labelMatch) {
-                labelMatches.push(r);
-            } else if (textMatch) {
-                textMatches.push(r);
-            }
+            if (labelMatch) labelMatches.push(r);
+            else if (textMatch) textMatches.push(r);
         });
         
         responsesToRender = [...new Set([...labelMatches, ...textMatches])];
@@ -6069,10 +6065,8 @@ const renderResponses = (searchQuery = '') => {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
             const pinnedResponses = allResponses.filter(r => r.isPinned);
             const unpinnedResponses = allResponses.filter(r => !r.isPinned);
-            
             unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
             responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-            
             const count = responsesToRender.length;
             headingText = `Responses in: ${activeCategory} <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full">${count} Saved</span>`;
         } else {
@@ -6081,7 +6075,7 @@ const renderResponses = (searchQuery = '') => {
         }
     }
     
-    // 2. Heading Logic
+    // 2. Heading Logic (Unchanged)
     if (responsesToRender.length > 0 || query) {
         const count = responsesToRender.length;
         const label = query ? 'Results Found' : 'Saved Replies';
@@ -6094,14 +6088,12 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic
+    // 3. Rendering Logic (THE MASONRY FIX)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
         const groupedResponses = responsesToRender.reduce((acc, response) => {
             const label = response.label || 'Unlabeled';
-            if (!acc[label]) {
-                acc[label] = [];
-            }
+            if (!acc[label]) acc[label] = [];
             acc[label].push(response);
             return acc;
         }, {});
@@ -6115,13 +6107,14 @@ const renderResponses = (searchQuery = '') => {
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // ▼▼▼ FIX 1: Use repeat(2, minmax(0, 1fr)) ▼▼▼
-            // This forces 2 columns and prevents content from expanding the grid cells.
+            // ▼▼▼ MASONRY CONTAINER FIX ▼▼▼
+            // We use standard CSS columns (column-count) instead of Grid.
+            // This tells the browser: "Split this div into 2 text-like columns."
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="response-grid-container" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; width: 100%;"></div>
+                <div class="masonry-container" style="column-count: 2; column-gap: 1.5rem; width: 100%;"></div>
             `;
-            const responsesInSection = labelSection.querySelector('div.response-grid-container');
+            const responsesInSection = labelSection.querySelector('div.masonry-container');
 
             groupedResponses[label].forEach(response => {
                 let displayText = response.text;
@@ -6139,11 +6132,19 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // ▼▼▼ FIX 2: overflow-hidden and w-full ▼▼▼
-                // overflow-hidden contains long text inside the box.
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all overflow-hidden w-full h-full';
-                responseEl.style.backgroundColor = categoryColor;
-                responseEl.style.borderColor = categoryColor;
+                // ▼▼▼ MASONRY ITEM FIX ▼▼▼
+                // 1. break-inside: avoid; -> Crucial! Prevents a card from being split in half across columns.
+                // 2. margin-bottom: 1.5rem; -> Adds vertical space (gap) between items in the column.
+                // 3. display: inline-block; -> Helps some browsers render the break-avoidance correctly.
+                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all w-full';
+                responseEl.style.cssText = `
+                    break-inside: avoid; 
+                    margin-bottom: 1.5rem; 
+                    display: inline-block; 
+                    background-color: ${categoryColor}; 
+                    border-color: ${categoryColor};
+                `;
+                
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
@@ -6158,7 +6159,7 @@ const renderResponses = (searchQuery = '') => {
                         </button>
                     </div>
                     
-                    <div class="flex-grow display-mode space-y-2 w-full mb-4 overflow-hidden">
+                    <div class="flex-grow display-mode space-y-2 w-full mb-4">
                         <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
                     </div>
 
@@ -6181,7 +6182,7 @@ const renderResponses = (searchQuery = '') => {
             responsesList.appendChild(labelSection);
         }
         
-        // 4. Tutorial Highlighting
+        // 4. Tutorial Highlighting logic remains the same
         if (currentTutorialStep === 5 || currentTutorialStep === 6) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
