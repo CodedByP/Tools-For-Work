@@ -117,6 +117,37 @@
     }
 }
 
+
+		/* --- Masonry Grid Fix --- */
+
+/* The container that holds the cards */
+.masonry-container {
+    column-count: 1; /* Default to 1 column on mobile */
+    column-gap: 1.5rem; /* Space between columns */
+    width: 100%;
+    display: block;
+}
+
+/* Tablet and up: switch to 2 columns */
+@media (min-width: 768px) {
+    .masonry-container {
+        column-count: 2;
+    }
+}
+
+/* The individual cards */
+.response-item {
+    /* These properties prevent the card from being cut between columns */
+    break-inside: avoid; 
+    -webkit-column-break-inside: avoid;
+    
+    /* Ensure spacing */
+    margin-bottom: 1.5rem;
+    
+    /* Required for column layouts to work */
+    display: inline-block; 
+    width: 100%;
+}
 /* --- Styles for Activity Chart Filters --- */
 .activity-filter-btn {
             padding: 0.5rem 1rem;
@@ -6095,19 +6126,20 @@ const renderResponses = (searchQuery = '') => {
             return acc;
         }, {});
 
-        for (const label in groupedResponses) {
+for (const label in groupedResponses) {
             const labelSection = document.createElement('div');
-            labelSection.className = 'mb-8'; 
+            labelSection.className = 'mb-8';
             let highlightedLabel = label;
+            
             if(query) {
                 const regex = new RegExp(query, 'gi');
                 highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // USE COLUMNS INSTEAD OF GRID
+            // 1. CLEANER CONTAINER (Uses the CSS class we made)
             labelSection.innerHTML = `
                 <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="masonry-container" style="column-count: 2; column-gap: 1.5rem; width: 100%; display: block;"></div>
+                <div class="masonry-container"></div>
             `;
             const responsesInSection = labelSection.querySelector('div.masonry-container');
 
@@ -6127,13 +6159,11 @@ const renderResponses = (searchQuery = '') => {
     
                 const timesCopied = response.timesCopied || 0; 
 
-                // BREAK-INSIDE: AVOID prevents cards from being cut in half
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+                // 2. CLEANER ITEM CLASS (Removed 'flex' to let CSS Columns handle layout)
+                responseEl.className = 'response-item flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+                
+                // 3. CLEANER STYLES (Only handling dynamic colors here now)
                 responseEl.style.cssText = `
-                    break-inside: avoid;
-                    margin-bottom: 1.5rem;
-                    display: inline-block;
-                    width: 100%;
                     background-color: ${categoryColor};
                     border-color: ${categoryColor};
                 `;
@@ -6141,6 +6171,7 @@ const renderResponses = (searchQuery = '') => {
                 responseEl.dataset.id = response.id;
                 responseEl.dataset.category = response.category;
                 
+                // The content inside the card
                 responseEl.innerHTML = `
                     <div class="flex justify-between items-start w-full mb-2">
                          <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
