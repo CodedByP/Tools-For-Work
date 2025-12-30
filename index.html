@@ -118,30 +118,26 @@
 }
 
 /* --- Masonry Grid Fix --- */
-
 .masonry-container {
-    column-count: 1; /* Mobile default */
+    column-count: 1; /* Default mobile */
     column-gap: 1.5rem;
-    display: block;
+    display: block; 
     width: 100%;
 }
 
+/* On tablets and up, create 2 columns */
 @media (min-width: 768px) {
     .masonry-container {
-        column-count: 2; /* 2 Columns on tablet/desktop */
+        column-count: 2;
     }
 }
 
+/* Ensure items don't break across columns */
 .response-item {
-    /* inline-flex makes it play nice with columns AND keeps the inner layout working */
-    display: inline-flex !important; 
+    display: inline-flex !important; /* Forces the box to stay together */
     width: 100%;
-    
-    /* These prevent the card from splitting in half across columns */
-    break-inside: avoid; 
+    break-inside: avoid;
     -webkit-column-break-inside: avoid;
-    
-    /* Vertical spacing between cards */
     margin-bottom: 1.5rem;
 }
 /* --- Styles for Activity Chart Filters --- */
@@ -6104,7 +6100,7 @@ const renderResponses = (searchQuery = '') => {
         const count = responsesToRender.length;
         const label = query ? 'Results Found' : 'Saved Replies';
         headingText = `${query ? 'Search Results' : activeCategory} <span class="ml-4 text-xl font-normal text-gray-400">(${count} ${label})</span>`;
-    }    
+    }       
     
     document.title = (query ? 'Search Results' : `${activeCategory} - Canned Responses`);
     document.getElementById('main-title').textContent = (query ? 'Search Results' : 'Canned Responses');
@@ -6112,97 +6108,79 @@ const renderResponses = (searchQuery = '') => {
     responsesHeading.innerHTML = headingText;
     responsesHeading.classList.remove('hidden');
     
-    // 3. Rendering Logic (MASONRY FIX)
+    // 3. Rendering Logic (ONE BIG CONTAINER)
     if (responsesToRender.length > 0) {
         emptyState.classList.add('hidden');
-        const groupedResponses = responsesToRender.reduce((acc, response) => {
-            const label = response.label || 'Unlabeled';
-            if (!acc[label]) acc[label] = [];
-            acc[label].push(response);
-            return acc;
-        }, {});
 
-for (const label in groupedResponses) {
-            const labelSection = document.createElement('div');
-            labelSection.className = 'mb-8';
-            let highlightedLabel = label;
-            
-            if(query) {
+        // Create ONE container for EVERYTHING
+        const mainContainer = document.createElement('div');
+        mainContainer.className = 'masonry-container';
+        
+        responsesToRender.forEach(response => {
+            let displayText = response.text;
+            if (query) {
                 const regex = new RegExp(query, 'gi');
-                highlightedLabel = label.replace(regex, `<span class="highlight">$&</span>`);
+                displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
             }
 
-            // 1. CONTAINER
-            labelSection.innerHTML = `
-                <h3 class="text-xl font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2">${highlightedLabel}</h3>
-                <div class="masonry-container"></div>
+            const responseEl = document.createElement('div');
+            let categoryColor = categories[response.category]?.color || '#60a5fa';
+
+            if (document.body.classList.contains('light-mode')) {
+                categoryColor = lightenColor(categoryColor);
+            }
+ 
+            const timesCopied = response.timesCopied || 0; 
+
+            // Item classes
+            responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+            
+            // Inline styles for color
+            responseEl.style.cssText = `
+                background-color: ${categoryColor};
+                border-color: ${categoryColor};
             `;
-            const responsesInSection = labelSection.querySelector('div.masonry-container');
-
-            groupedResponses[label].forEach(response => {
-                let displayText = response.text;
-                if (query) {
-                    const regex = new RegExp(query, 'gi');
-                    displayText = displayText.replace(regex, `<span class="highlight">$&</span>`);
-                }
-
-                const responseEl = document.createElement('div');
-                let categoryColor = categories[response.category]?.color || '#60a5fa';
-
-                if (document.body.classList.contains('light-mode')) {
-                    categoryColor = lightenColor(categoryColor);
-                }
-    
-                const timesCopied = response.timesCopied || 0; 
-
-                // 2. ITEM CLASS - Added 'flex' back so internal layout works
-                responseEl.className = 'response-item flex flex-col p-5 rounded-xl border relative shadow-sm hover:shadow-md transition-all';
+            
+            responseEl.dataset.id = response.id;
+            responseEl.dataset.category = response.category;
+            
+            responseEl.innerHTML = `
+                <div class="flex justify-between items-start w-full mb-2">
+                     <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
+                        <i class="fas fa-copy mr-2"></i>
+                        <span>${timesCopied}</span>
+                    </div>
+                     <button class="pin-btn p-1.5 rounded-full hover:bg-black/20 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
+                        <i class="fas fa-thumbtack ${response.isPinned ? 'text-white transform rotate-45' : 'text-gray-400/70'}"></i>
+                    </button>
+                </div>
                 
-                // 3. INLINE STYLES - Only colors here
-                responseEl.style.cssText = `
-                    background-color: ${categoryColor};
-                    border-color: ${categoryColor};
-                `;
-                
-                responseEl.dataset.id = response.id;
-                responseEl.dataset.category = response.category;
-                
-                responseEl.innerHTML = `
-                    <div class="flex justify-between items-start w-full mb-2">
-                         <div class="flex items-center text-xs text-gray-300 bg-gray-900 bg-opacity-40 px-2 py-1 rounded-lg" title="${timesCopied} times copied">
-                            <i class="fas fa-copy mr-2"></i>
-                            <span>${timesCopied}</span>
-                        </div>
-                         <button class="pin-btn p-1.5 rounded-full hover:bg-black/20 transition-colors duration-200" title="Pin/Unpin" ${isAnonymous ? 'hidden' : ''}>
-                            <i class="fas fa-thumbtack ${response.isPinned ? 'text-white transform rotate-45' : 'text-gray-400/70'}"></i>
+                <div class="flex-grow display-mode space-y-2 w-full mb-4">
+                    <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-black/10 mt-auto">
+                    <button class="copy-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 hover:scale-105 shadow-sm active:scale-95 transition-all duration-200">
+                        <i class="fas fa-copy mr-2"></i> Copy
+                    </button>
+                    <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
+                        <button class="edit-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-yellow-500/80 p-2 rounded-lg transition-all duration-200" title="Edit" data-id="${response.id}">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button class="delete-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-red-500/80 p-2 rounded-lg transition-all duration-200" title="Delete">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    
-                    <div class="flex-grow display-mode space-y-2 w-full mb-4">
-                        <p class="response-text-display text-gray-100 whitespace-pre-wrap leading-relaxed break-words">${displayText}</p>
-                    </div>
-
-                    <div class="flex justify-between items-center pt-4 border-t border-black/10 mt-auto">
-                        <button class="copy-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 hover:scale-105 shadow-sm active:scale-95 transition-all duration-200">
-                            <i class="fas fa-copy mr-2"></i> Copy
-                        </button>
-                        <div class="flex space-x-2 ${isAnonymous ? 'hidden' : ''}">
-                            <button class="edit-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-yellow-500/80 p-2 rounded-lg transition-all duration-200" title="Edit" data-id="${response.id}">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="delete-btn text-gray-700 dark:text-gray-300 hover:text-white hover:bg-red-500/80 p-2 rounded-lg transition-all duration-200" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                responsesInSection.appendChild(responseEl);
-            });
-            responsesList.appendChild(labelSection);
-        }
+                </div>
+            `;
+            mainContainer.appendChild(responseEl);
+        });
         
-        // 4. Tutorial Highlighting
-        if (currentTutorialStep === 5 || currentTutorialStep === 6) {
+        // Append the big container to the list
+        responsesList.appendChild(mainContainer);
+        
+        // Tutorial Highlighting Logic
+        if (typeof currentTutorialStep !== 'undefined' && (currentTutorialStep === 5 || currentTutorialStep === 6)) {
             const firstResponse = document.querySelector('.response-item');
             if (firstResponse) {
                 if (currentTutorialStep === 5) {
