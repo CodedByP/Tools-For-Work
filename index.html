@@ -1733,6 +1733,12 @@ body.light-mode #tutorial-next-btn:hover { background-color: #3b82f6; }
 #tutorial-finish-btn:hover { background-color: #22c55e; }
 body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
 
+/* Suggestion Bar Animation */
+.slide-up-fade-in {
+    transform: translate(-50%, 0) !important; /* Slide to natural position */
+    opacity: 1 !important; /* Fade in */
+}		
+
 /* Bento Grid Layout - UPDATED FOR MOBILE */
 .bento-grid {
     display: grid;
@@ -1968,44 +1974,65 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
     </div>
 </div>
-        <div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
-            <div class="main-card p-8 w-full max-w-2xl mx-auto">
-                <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
-                <p class="text-center text-gray-400 mb-8 text-lg">Extract and manage your FedEx tracking numbers easily.</p>
+		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
+		    <div class="main-card p-8 w-full max-w-2xl mx-auto relative"> <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
+		        <p class="text-center text-gray-400 mb-8 text-lg">Extract and manage your FedEx tracking numbers easily.</p>
 		
-                <div class="mb-6">
-                    <label for="input-text" class="block text-sm font-medium text-gray-300 mb-2">Paste or type your text here:</label>
-                    <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-300 text-lg" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
-                </div>
+		        <div class="mb-6">
+		            <label for="input-text" class="block text-sm font-medium text-gray-300 mb-2">Paste or type your text here:</label>
+		            <textarea id="input-text-fedex" rows="8" class="text-placeholder w-full p-4 border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 text-gray-100 transition duration-300 text-lg" placeholder="e.g., 'Your package with tracking number 794829370821 has been shipped.'"></textarea>
+		        </div>
 		
-                <div class="mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-200 mb-4">Extracted Tracking Numbers</h2>
-                    <div id="tracking-numbers-container" class="tracking-numbers-container border-2 border-dashed border-gray-700 rounded-xl p-4 scrollable-box shadow-inner">
-                        <p id="no-numbers-message" class="text-center text-gray-500 text-base">No tracking numbers found yet.</p>
-                        <div id="loading-indicator" class="hidden flex justify-center items-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span class="text-base text-gray-400">Processing...</span>
-                        </div>
-                    </div>
-                </div>
+		        <div class="mb-6">
+		            <h2 class="text-2xl font-semibold text-gray-200 mb-4">Extracted Tracking Numbers</h2>
+		            <div id="tracking-numbers-container" class="tracking-numbers-container border-2 border-dashed border-gray-700 rounded-xl p-4 scrollable-box shadow-inner">
+		                <p id="no-numbers-message" class="text-center text-gray-500 text-base">No tracking numbers found yet.</p>
+		                <div id="loading-indicator" class="hidden flex justify-center items-center">
+		                    <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+		                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+		                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+		                    </svg>
+		                    <span class="text-base text-gray-400">Processing...</span>
+		                </div>
+		            </div>
+		        </div>
 		
-                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50">
-                        Clear
-                    </button>
-                    <button id="copy-button-fedex" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300">
-                        <svg class="h-5 w-5 inline-block -mt-1 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
-                        </svg>
-                        Copy All & Open FedEx
-                    </button>
-                </div>
-            </div>
-        </div>
+		        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+		            <button id="clear-button-fedex" class="w-full sm:w-auto bg-gray-700 text-gray-200 font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50">
+		                Clear
+		            </button>
+		            <button id="copy-button-fedex" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300">
+		                <svg class="h-5 w-5 inline-block -mt-1 mr-2" fill="currentColor" viewBox="0 0 20 20">
+		                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+		                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" />
+		                </svg>
+		                Copy All & Open FedEx
+		            </button>
+		        </div>
+		    </div>
+		
+		    <div id="fedex-suggestion-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-500 ease-out translate-y-10 opacity-0 w-[90%] max-w-2xl">
+		        <div class="bg-gray-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+		            
+		            <div class="flex items-center gap-3 border-r border-white/10 pr-4 mr-2">
+		                <div class="bg-blue-600/20 p-2 rounded-lg text-blue-400">
+		                    <i class="fas fa-robot text-xl"></i>
+		                </div>
+		                <div class="flex flex-col">
+		                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Suggested</span>
+		                    <span class="text-xs text-gray-500">Based on your usage</span>
+		                </div>
+		            </div>
+		
+		            <div id="fedex-suggestion-list" class="flex flex-wrap justify-center sm:justify-start gap-2 flex-grow">
+		                </div>
+		
+		            <button id="close-suggestion-bar-btn" class="ml-2 bg-gray-800 hover:bg-red-500/20 hover:text-red-400 text-gray-400 border border-white/10 rounded-lg p-2 transition-all" title="Dismiss">
+		                <i class="fas fa-times"></i>
+		            </button>
+		        </div>
+		    </div>
+		    </div>
 
 <div id="helpful-links-app" class="w-full hidden container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
     <div class="container mx-auto px-4">
@@ -3641,6 +3668,90 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- 1. The Contextual Brain ---
+const getShippingSuggestions = () => {
+    let allResponses = [];
+    // Flatten all categories into one big list
+    for (const cat in categories) {
+        if (categories[cat].responses) {
+            allResponses.push(...categories[cat].responses.map(r => ({...r, categoryName: cat})));
+        }
+    }
+
+    // Trigger Words: It looks for these words in your responses
+    const keywords = ['fedex', 'track', 'ship', 'delivery', 'transit', 'bound', 'return', 'arrive', 'package'];
+    
+    return allResponses
+        .filter(res => {
+            const content = (res.text + " " + res.label).toLowerCase();
+            return keywords.some(k => content.includes(k));
+        })
+        // Sort by 'timesCopied' (Highest usage first)
+        .sort((a, b) => (b.timesCopied || 0) - (a.timesCopied || 0))
+        .slice(0, 3); // Grab the Top 3 best matches
+};
+
+// --- 2. Render Function (STICKY MODE) ---
+const showShippingSuggestions = () => {
+    const bar = document.getElementById('fedex-suggestion-bar');
+    const list = document.getElementById('fedex-suggestion-list');
+    const suggestions = getShippingSuggestions();
+
+    if (suggestions.length === 0) return; // Don't show if nothing matches
+
+    list.innerHTML = ''; 
+
+    suggestions.forEach(res => {
+        const btn = document.createElement('button');
+        // Styling for the suggestion buttons
+        btn.className = 'group flex flex-col items-start gap-0.5 bg-white/5 hover:bg-blue-600 border border-white/10 hover:border-blue-400 rounded-lg px-3 py-2 transition-all duration-200 text-left min-w-[120px]';
+        
+        const label = res.label.length > 18 ? res.label.substring(0, 15) + '...' : (res.label || "Untitled");
+
+        btn.innerHTML = `
+            <span class="text-xs font-bold text-gray-200 group-hover:text-white">${label}</span>
+            <span class="text-[10px] text-gray-500 group-hover:text-blue-100">
+                <i class="fas fa-copy mr-1"></i> Used ${res.timesCopied || 0}
+            </span>
+        `;
+
+        // --- CLICK HANDLER ---
+        btn.addEventListener('click', () => {
+            // 1. Copy the text (and trigger all stats/XP/Modals)
+            processAndCopy(res.text, res.id, res.categoryName);
+            
+            // 2. Visual Feedback: Briefly flash the button green
+            const originalClass = btn.className;
+            const originalHTML = btn.innerHTML;
+            
+            btn.className = 'bg-green-500 text-white border-green-400 rounded-lg px-3 py-2 text-center min-w-[120px] transition-all';
+            btn.innerHTML = '<span class="text-xs font-bold"><i class="fas fa-check"></i> Copied</span>';
+
+            // 3. Reset button after 1 second (Bar stays open!)
+            setTimeout(() => {
+                btn.className = originalClass;
+                btn.innerHTML = originalHTML;
+            }, 1000);
+        });
+
+        list.appendChild(btn);
+    });
+
+    // Show the bar
+    bar.classList.remove('hidden');
+    // Small delay to ensure the 'hidden' removal registers before animating
+    setTimeout(() => {
+        bar.classList.add('slide-up-fade-in');
+    }, 10);
+};
+
+// --- 3. Close Button Logic ---
+document.getElementById('close-suggestion-bar-btn')?.addEventListener('click', () => {
+    const bar = document.getElementById('fedex-suggestion-bar');
+    bar.classList.remove('slide-up-fade-in'); // Slide down
+    setTimeout(() => bar.classList.add('hidden'), 500); // Hide after animation
+});		
 
 		const recalculateCurrentPeriodStats = async (uid) => {
     if (!uid || isAnonymous) return;
@@ -8321,6 +8432,7 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
     const text = document.getElementById('input-text-fedex').value;
     const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
     const matches = text.match(fedexRegex) || [];
+    
     if (matches.length > 0) {
         const uniqueNumbers = [...new Set(matches)];
 
@@ -8329,20 +8441,22 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         copyToClipboard(numbersToCopy);
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
 
-        // --- FIX STARTS HERE ---
-        // Just like before, re-fetch events and re-render the challenge UI
+        // Refresh Challenges UI
         const eventsCollectionRef = getUserEventsCollectionRef(userId);
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => doc.data());
         
         await renderChallenges(events);
         await renderChallengeTracker(events);
-        // --- FIX ENDS HERE ---
 
         const numbersForUrl = uniqueNumbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
         const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
         window.open(fedexUrl, '_blank');
+        
+        // ▼▼▼ TRIGGER THE NEW FEATURE ▼▼▼
+        showShippingSuggestions(); 
+        
     } else {
         showMessage('No tracking numbers to copy.', 'error');
     }
