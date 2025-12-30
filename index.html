@@ -1811,6 +1811,56 @@ body.light-mode .bento-card {
         0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
+	/* --- Premium Placeholder Modal Styles --- */
+.glass-modal {
+    background: rgba(17, 24, 39, 0.95); /* High opacity dark background */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    border-radius: 1.5rem;
+}
+
+.premium-input {
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(75, 85, 99, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;
+}
+
+.premium-input:focus {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.history-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.history-pill:hover {
+    background: #2563eb;
+    color: white;
+    transform: scale(1.05);
+    border-color: #60a5fa;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Flash animation when filling data */
+@keyframes fill-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
+    100% { transform: scale(1); }
+}
+.fill-effect { animation: fill-pop 0.4s ease; }	
+
 /* Mini-Stat Box (Inside Snapshot) */
 .mini-stat-box {
     background: rgba(0, 0, 0, 0.2);
@@ -2567,22 +2617,31 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 
-    <div id="placeholder-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 class="text-2xl font-bold text-gray-200 mb-4">Customize Response</h3>
-            <p class="text-gray-400 text-base mb-4">Please fill in the details for the placeholders below.</p>
-            <div id="placeholder-inputs" class="space-y-4">
-                </div>
-            <div class="flex justify-end mt-6 space-x-4">
-                <button id="cancel-placeholder-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-700 transition duration-300 shadow-md">
-                    Cancel
-                </button>
-                <button id="confirm-placeholder-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300 shadow-md">
-                    Copy Response
-                </button>
+<div id="placeholder-modal" class="modal hidden z-[2000]">
+    <div class="glass-modal w-full max-w-lg p-8 transform transition-all relative mx-4">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600/20 text-blue-400 mb-4 border border-blue-500/30">
+                <i class="fas fa-magic"></i>
             </div>
+            <h3 class="text-3xl font-bold text-white tracking-tight">Customize Content</h3>
+            <p class="text-gray-400 mt-2 text-sm">Personalize the placeholders below to finish your response.</p>
+        </div>
+
+        <div id="placeholder-inputs" class="space-y-6 max-h-[60vh] overflow-y-auto scrollbar-hide pr-1">
+            </div>
+
+        <div class="flex items-center gap-4 mt-10">
+            <button id="cancel-placeholder-btn" class="flex-1 py-4 rounded-2xl bg-gray-800 text-gray-300 font-bold hover:bg-gray-700 transition-all border border-white/5">
+                Cancel
+            </button>
+            <button id="confirm-placeholder-btn" class="flex-[2] py-4 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2">
+                <span>Copy Response</span>
+                <i class="fas fa-arrow-right text-sm"></i>
+            </button>
         </div>
     </div>
+</div>
 
     <div id="edit-response-modal" class="modal hidden">
         <div class="modal-content w-full max-w-3xl" data-original-category="">
@@ -3832,6 +3891,25 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- SMART MEMORY HELPERS ---
+const savePlaceholderHistory = (key, value) => {
+    // Skip saving empty values or the global [Name] automation
+    if (!value || value.trim() === "" || key === 'Name') return;
+    
+    let history = JSON.parse(localStorage.getItem('placeholder_memory') || '{}');
+    if (!history[key]) history[key] = [];
+
+    // Add to front, remove duplicates, keep max 5
+    history[key] = [value, ...history[key].filter(v => v !== value)].slice(0, 5);
+    
+    localStorage.setItem('placeholder_memory', JSON.stringify(history));
+};
+
+const getPlaceholderHistory = (key) => {
+    const history = JSON.parse(localStorage.getItem('placeholder_memory') || '{}');
+    return history[key] || [];
+};		
 
 // --- 1. The Contextual Brain ---
 const getShippingSuggestions = () => {
@@ -6891,10 +6969,13 @@ const importData = (file) => {
     };
     reader.readAsText(file);
 };
+		
 const placeholderRegex = /\[([^\]]+)\]/g;
 const processAndCopy = (text, responseId, categoryName) => {
     const placeholderInputsContainer = document.getElementById('placeholder-inputs');
     const placeholderModal = document.getElementById('placeholder-modal');
+    
+    // Store global state for the final copy action
     currentTextToCopy = text;
     currentResponseToCopyId = responseId;
     currentResponseToCopyCategory = categoryName;
@@ -6902,101 +6983,120 @@ const processAndCopy = (text, responseId, categoryName) => {
     const matches = text.match(placeholderRegex);
     const placeholders = matches ? [...new Set(matches.map(m => m.slice(1, -1)))] : [];
 
+    // If there are placeholders (excluding the auto-filled [Name])
     if (placeholders.length > 0 && !(placeholders.length === 1 && placeholders[0] === 'Name')) {
         placeholderInputsContainer.innerHTML = '';
         
         placeholders.forEach(placeholder => {
             if (placeholder !== 'Name') {
-                const inputGroup = document.createElement('div');
-                const label = document.createElement('label');
-                label.className = 'block text-sm font-medium text-gray-400 mb-1';
-                label.textContent = placeholder;
-                inputGroup.appendChild(label);
+                const group = document.createElement('div');
+                group.className = 'group';
 
-                // If the placeholder is for a date, create the special dual-input
+                // 1. Label Row
+                const labelRow = document.createElement('div');
+                labelRow.className = 'flex justify-between items-center mb-2';
+                labelRow.innerHTML = `
+                    <label class="text-xs font-bold text-blue-400/80 uppercase tracking-widest ml-1">${placeholder}</label>
+                    <span class="text-[10px] text-gray-500 italic">Required</span>
+                `;
+                group.appendChild(labelRow);
+
+                // 2. Input Field (Handle Date vs Text)
+                const inputContainer = document.createElement('div');
+                inputContainer.className = 'relative';
+                
+                const input = document.createElement('input');
+                input.dataset.placeholder = placeholder;
+                input.className = 'premium-input w-full p-4 rounded-2xl text-white outline-none text-base';
+                
                 if (placeholder.toLowerCase().includes('date')) {
-                    const dateWrapper = document.createElement('div');
-                    dateWrapper.className = 'relative';
-
+                    // Date Logic
+                    input.type = 'text'; // Keep as text to show formatted date
+                    
+                    // Default to Today
                     const today = new Date();
-                    const formattedDate = today.toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                    input.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    
+                    // Hidden Date Picker
+                    const hiddenDate = document.createElement('input');
+                    hiddenDate.type = 'date';
+                    hiddenDate.className = 'absolute inset-0 opacity-0 cursor-pointer';
+                    hiddenDate.value = today.toISOString().split('T')[0];
+                    
+                    hiddenDate.addEventListener('change', (e) => {
+                        const dateParts = e.target.value.split('-');
+                        const selectedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        input.value = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                        input.classList.remove('fill-effect');
+                        void input.offsetWidth; 
+                        input.classList.add('fill-effect');
                     });
 
-                    // 1. The visible text input
-                    const textInput = document.createElement('input');
-                    textInput.type = 'text';
-                    textInput.value = formattedDate;
-                    textInput.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg pr-10'; // Added padding for the icon
-                    textInput.dataset.placeholder = placeholder;
-
-                    // 2. The hidden date input
-                    const dateInput = document.createElement('input');
-                    dateInput.type = 'date';
-                    dateInput.value = today.toISOString().split('T')[0]; // Set its value to YYYY-MM-DD
-                    dateInput.className = 'opacity-0 absolute top-0 left-0 w-full h-full pointer-events-none'; // Make it invisible and non-interactive
-
-                    // 3. The clickable calendar icon
-                    const calendarIcon = document.createElement('i');
-                    calendarIcon.className = 'fas fa-calendar-alt absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-white';
+                    // Icon
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-calendar-alt absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none';
                     
-                    dateWrapper.appendChild(textInput);
-                    dateWrapper.appendChild(dateInput);
-                    dateWrapper.appendChild(calendarIcon);
-                    inputGroup.appendChild(dateWrapper);
-
+                    inputContainer.appendChild(input);
+                    inputContainer.appendChild(hiddenDate);
+                    inputContainer.appendChild(icon);
                 } else {
-                    // For all other (non-date) placeholders
-                    const input = document.createElement('input');
+                    // Standard Text Logic
                     input.type = 'text';
-                    input.dataset.placeholder = placeholder;
-                    input.className = 'w-full border-2 border-gray-600 rounded-xl p-3 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg';
-                    inputGroup.appendChild(input);
+                    input.placeholder = `Enter ${placeholder}...`;
+                    inputContainer.appendChild(input);
                 }
-                placeholderInputsContainer.appendChild(inputGroup);
+                group.appendChild(inputContainer);
+
+                // 3. Smart Memory Chips
+                const history = getPlaceholderHistory(placeholder);
+                if (history.length > 0) {
+                    const chipContainer = document.createElement('div');
+                    chipContainer.className = 'flex flex-wrap gap-2 mt-3 pl-1';
+                    
+                    // Label for history
+                    const historyLabel = document.createElement('span');
+                    historyLabel.className = 'text-[10px] text-gray-500 flex items-center mr-1';
+                    historyLabel.innerHTML = '<i class="fas fa-history mr-1"></i> Recent:';
+                    chipContainer.appendChild(historyLabel);
+
+                    history.forEach(val => {
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = 'history-pill text-[10px] px-3 py-1.5 rounded-full text-gray-400 font-bold';
+                        chip.innerHTML = `${val}`; // Just the text
+                        
+                        chip.addEventListener('click', () => {
+                            input.value = val;
+                            // Trigger "Fill Pop" Animation
+                            input.classList.remove('fill-effect');
+                            void input.offsetWidth; // Force reflow
+                            input.classList.add('fill-effect');
+                            
+                            logUserEvent('memory_chip_used', { placeholder: placeholder });
+                        });
+                        chipContainer.appendChild(chip);
+                    });
+                    group.appendChild(chipContainer);
+                }
+
+                placeholderInputsContainer.appendChild(group);
             }
         });
 
-        // Event listener for the calendar icons
-        placeholderInputsContainer.querySelectorAll('.fa-calendar-alt').forEach(icon => {
-            icon.addEventListener('click', () => {
-                const dateInput = icon.previousElementSibling; // The hidden date input
-                try {
-                    dateInput.showPicker(); // Modern way to open date picker
-                } catch (error) {
-                    dateInput.click(); // Fallback for older browsers
-                }
-            });
-        });
-
-        // Event listener for when a date is changed
-        placeholderInputsContainer.querySelectorAll('input[type="date"]').forEach(dateInput => {
-            dateInput.addEventListener('change', (e) => {
-                const textInput = e.target.previousElementSibling; // The visible text input
-                const dateValue = e.target.value; // e.g., "2025-09-12"
-                
-                // Create a date object correctly to avoid timezone issues
-                const dateParts = dateValue.split('-');
-                const selectedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-
-                // Format the new date and update the visible input
-                textInput.value = selectedDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            });
-        });
-
         placeholderModal.classList.remove('hidden');
-        document.querySelector('#placeholder-inputs input')?.focus();
+        // Focus first input
+        setTimeout(() => {
+            const firstInput = placeholderInputsContainer.querySelector('input');
+            if(firstInput) firstInput.focus();
+        }, 100);
+
     } else {
+        // No placeholders (or only [Name]), copy immediately
         const finalContent = replacePlaceholders(currentTextToCopy, {});
         copyToClipboard(finalContent, responseId, categoryName);
     }
 };
+		
 const replacePlaceholders = (text, userValues) => {
     let result = text;
     result = result.replace(/\[Name\]/g, userName);
@@ -8639,20 +8739,27 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
     });
 
 document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-    const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input, textarea');
+    const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input[type="text"]');
     const userValues = {};
+    
     inputs.forEach(input => {
         const key = input.dataset.placeholder;
-        userValues[key] = input.value.trim();
+        if(key) {
+            const value = input.value.trim();
+            userValues[key] = value;
+            // SAVE TO MEMORY
+            savePlaceholderHistory(key, value);
+        }
     });
 
     const finalContent = replacePlaceholders(currentTextToCopy, userValues);
-    // Pass the stored ID and category to the final copy function
+    
+    // Copy
     copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
-
     document.getElementById('placeholder-modal').classList.add('hidden');
+    
     document.getElementById('copied-text-display').textContent = finalContent;
-
+    
     if (isTutorialActive) {
         document.getElementById('copy-success-modal').classList.remove('hidden');
         currentTutorialStep++;
