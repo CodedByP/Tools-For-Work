@@ -5091,7 +5091,7 @@ const checkForGlobalAlerts = async (uid) => {
 };		
 
 const checkAndDistributeRewards = async () => {
-    // 1. Define periods
+    // 1. Define periods using the new safe helpers
     const periods = [
         { 
             type: 'weekly', 
@@ -5099,11 +5099,11 @@ const checkAndDistributeRewards = async () => {
             xp: XP_VALUES.WEEKLY_WINNER, 
             xpField: 'weeklyXp',
             idField: 'lastWeeklyXpId',
-            alertDocId: 'weekly_champion' // Fixed ID for the "Bulletin Board"
+            alertDocId: 'weekly_champion'
         },
         { 
             type: 'monthly', 
-            id: getPreviousMonthId(), 
+            id: getPreviousMonthId(), // This now safely returns the correct past month
             xp: XP_VALUES.MONTHLY_WINNER, 
             xpField: 'monthlyXp',
             idField: 'lastMonthlyXpId',
@@ -5243,51 +5243,45 @@ const CHALLENGES_CONFIG = {
     }
 };
 		
+// --- UPDATED DATE HELPERS (Safe for Feb & 31st) ---
+
 const getCurrentDateString = () => {
     return new Date().toISOString().split('T')[0];
 };
 
-// NEW: Gets a unique ID for the current week (e.g., '2024-36')
 const getCurrentWeekId = () => {
-    const now = new Date();
-    // Create a copy to avoid modifying the original date
-    const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    // Set to the nearest Thursday: current date + 4 - current day number
+    const d = new Date();
+    // Set to nearest Thursday: current date + 4 - current day number
     // Make Sunday's day number 7
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    // Get first day of year
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    // Calculate full weeks to nearest Thursday
-    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-    // Return year and week number
-    return `${date.getUTCFullYear()}-${weekNo}`;
-};	
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${d.getUTCFullYear()}-${weekNo}`;
+};
 
 const getCurrentMonthId = () => {
-    const now = new Date();
-    // Returns a string like "2025-09"
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};	
-
-// --- Date Helpers for Rewards ---
+    const d = new Date();
+    // Returns "2025-12" today, "2026-01" tomorrow
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
 
 const getPreviousWeekId = () => {
     const d = new Date();
     d.setDate(d.getDate() - 7); // Go back 7 days
     
-    // Re-use your existing logic structure
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-    return `${date.getUTCFullYear()}-${weekNo}`;
+    // Calculate week ID for that past date
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${d.getUTCFullYear()}-${weekNo}`;
 };
 
 const getPreviousMonthId = () => {
     const d = new Date();
+    d.setDate(15); // SAFETY: Move to the 15th to avoid "31st" overflow issues
     d.setMonth(d.getMonth() - 1); // Go back 1 month
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-};		
+};
 
 // In your <script> tag, find and UPDATE the checkAndAwardChallengeXP function...
 
@@ -6378,7 +6372,7 @@ const renderLeaderboard = async (view = 'all') => {
     container.innerHTML = '<div class="flex justify-center p-8"><svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
 
     try {
-        // 1. Fetch ALL users (Since n=5, this is cheap and fast)
+		// 1. Fetch ALL users
         const leaderboardColRef = collection(db, "leaderboard");
         const querySnapshot = await getDocs(leaderboardColRef);
         let users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -6395,7 +6389,7 @@ const renderLeaderboard = async (view = 'all') => {
                 return scoreB - scoreA;
             });
         } else if (view === 'monthly') {
-            // Sort by monthlyXp
+            // Sort by monthlyXp, but treat as 0 if the month ID is old
             users.sort((a, b) => {
                 const scoreA = (a.lastMonthlyXpId === currentMonthId) ? (a.monthlyXp || 0) : 0;
                 const scoreB = (b.lastMonthlyXpId === currentMonthId) ? (b.monthlyXp || 0) : 0;
