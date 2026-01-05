@@ -9597,18 +9597,20 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(userDocRef);
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
-			
-		    if (!userData.statsBackfilled) {
-		        await backfillUserStats(userId);
-		    }
+
+			if (!userData.statsBackfilled) {
+			    await backfillUserStats(userId);
+			}
 			if (!userData.activeDaysBackfilled) {
-           		 await backfillActiveDays(userId);
-       		}
-			if (!userData.statsRecalculated) {
-                await recalculateCurrentPeriodStats(userId);
-            }
-			await checkAndDistributeRewards();
+			     await backfillActiveDays(userId);
+			}
+			
+			await checkAndDistributeRewards(); 
 			await checkForGlobalAlerts(userId);
+			
+			if (!userData.statsRecalculated) {
+			    await recalculateCurrentPeriodStats(userId);
+			}
 			await calculateAndSaveUserRecords(userId);
 			
             if (!userData.firstSignIn) {
