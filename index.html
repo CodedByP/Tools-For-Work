@@ -3168,6 +3168,41 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 </div>
+
+	<div id="insights-sidebar" class="fixed top-0 right-0 h-full w-80 bg-gray-900 border-l border-gray-700 transform translate-x-full transition-transform duration-300 z-[3000] flex flex-col shadow-2xl">
+    <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800">
+        <h3 class="font-bold text-blue-400"><i class="fas fa-lightbulb mr-2"></i>Policy Insight</h3>
+        <button id="close-insights-btn" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div id="insights-content" class="flex-grow p-5 overflow-y-auto space-y-4">
+        <div class="text-center text-gray-500 mt-10">
+            <p>No matching policy found.</p>
+        </div>
+    </div>
+    
+    <div id="insight-admin-actions" class="p-4 border-t border-gray-700 hidden">
+        <button id="edit-insight-btn" class="w-full py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-bold text-gray-300">
+            Edit This Article
+        </button>
+    </div>
+</div>
+
+<div id="ingest-modal" class="modal hidden z-[3001]">
+    <div class="modal-content w-full max-w-2xl">
+        <h3 id="ingest-modal-title" class="text-2xl font-bold text-gray-200 mb-2">Ingest Knowledge</h3>
+        <p class="text-gray-400 text-sm mb-4">Paste policy text here. The system will auto-match it to responses.</p>
+        
+        <input id="ingest-title" type="text" placeholder="Article Title (e.g. FedEx Substitution Policy)" class="w-full bg-gray-800 border-2 border-gray-600 p-3 rounded-xl mb-4 text-white outline-none focus:border-blue-500">
+        
+        <textarea id="ingest-content" rows="12" placeholder="Paste full article content here..." class="w-full bg-gray-800 border-2 border-gray-600 p-3 rounded-xl text-gray-200 outline-none focus:border-blue-500 mb-4"></textarea>
+        
+        <div class="flex justify-end gap-4">
+            <button id="close-ingest-btn" class="text-gray-400 hover:text-white font-bold">Cancel</button>
+            <button id="save-ingest-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg">Save Article</button>
+        </div>
+    </div>
+</div>
 	
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -3192,8 +3227,12 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         const auth = getAuth(app);
         const db = getFirestore(app);
         setLogLevel('debug');
+
+		const ADMIN_EMAIL = "your-email@gmail.com"; // REPLACE THIS with your email
         
         // --- Global State Variables ---
+let globalKnowledgeCache = []; // Stores the "Brain" locally
+let currentAdminUser = null;	
 let currentTutorialStep = 0;
 let categories = {};
 let activeCategory = '';
@@ -3915,6 +3954,102 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- KNOWLEDGE BASE LOGIC ---
+
+// 1. Check Admin Status
+const checkAdminStatus = (user) => {
+    currentAdminUser = user;
+    const adminSection = document.getElementById('admin-knowledge-settings');
+    
+    // Show/Hide Admin Tools in Settings based on email match
+    if (user && user.email === ADMIN_EMAIL) {
+        if(adminSection) adminSection.classList.remove('hidden');
+    } else {
+        if(adminSection) adminSection.classList.add('hidden');
+    }
+};
+
+// 2. Load the Brain (Runs on startup for everyone)
+const loadGlobalKnowledge = async () => {
+    try {
+        // We listen to it in real-time so updates propagate to the team instantly
+        onSnapshot(collection(db, 'global_knowledge'), (snapshot) => {
+            globalKnowledgeCache = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            console.log(`Loaded ${globalKnowledgeCache.length} articles into the Brain.`);
+        });
+    } catch (e) {
+        console.error("Error loading knowledge base:", e);
+    }
+};
+
+// 3. The Matching Engine (No AI, just smart counting)
+const findRelevantPolicy = (text) => {
+    if (!text || globalKnowledgeCache.length === 0) return null;
+
+    const searchTokens = text.toLowerCase().match(/\b(\w{4,})\b/g) || [];
+    let bestMatch = null;
+    let highestScore = 0;
+
+    globalKnowledgeCache.forEach(article => {
+        let score = 0;
+        // Check match against Title (worth 5 points)
+        if (article.title) {
+            searchTokens.forEach(token => {
+                if (article.title.toLowerCase().includes(token)) score += 5;
+            });
+        }
+        // Check match against Keywords/Content (worth 1 point)
+        if (article.keywords) {
+            searchTokens.forEach(token => {
+                if (article.keywords.includes(token)) score += 1;
+            });
+        }
+
+        if (score > highestScore) {
+            highestScore = score;
+            bestMatch = article;
+        }
+    });
+
+    // Only return if we have a decent confidence (e.g., score > 2)
+    return highestScore > 2 ? { ...bestMatch, score: highestScore } : null;
+};
+
+// 4. Sidebar Controller
+const showInsightsSidebar = (match) => {
+    const sidebar = document.getElementById('insights-sidebar');
+    const contentDiv = document.getElementById('insights-content');
+    
+    if (!match) {
+        // Optional: Auto-close if no match found? 
+        // For now, let's just do nothing or close it.
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('translate-x-full');
+        return;
+    }
+
+    // Populate Sidebar
+    contentDiv.innerHTML = `
+        <div class="bg-blue-900/30 border border-blue-500/30 p-3 rounded-lg mb-4">
+            <div class="flex justify-between items-start">
+                <h4 class="font-bold text-white text-lg leading-tight">${match.title}</h4>
+                <span class="text-xs font-mono text-green-400 bg-green-900/30 px-2 py-1 rounded">Match</span>
+            </div>
+            <div class="text-xs text-blue-300 mt-1">Updated: ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'N/A'}</div>
+        </div>
+        <div class="prose prose-invert prose-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+            ${match.content}
+        </div>
+    `;
+
+    // Slide it in
+    sidebar.classList.remove('translate-x-full');
+    sidebar.classList.add('translate-x-0');
+};		
 
 // --- FUZZY MATCHING HELPER (Levenshtein Distance) ---
 const getLevenshteinDistance = (a, b) => {
@@ -7217,6 +7352,9 @@ const processAndCopy = (text, responseId, categoryName) => {
         // No placeholders (or only [Name]), copy immediately
         const finalContent = replacePlaceholders(currentTextToCopy, {});
         copyToClipboard(finalContent, responseId, categoryName);
+		// This is the "magic moment" right after the copy happens
+        const insightMatch = findRelevantPolicy(finalContent);
+        showInsightsSidebar(insightMatch);
     }
 };
 		
@@ -7455,6 +7593,22 @@ const renderSettingsPage = () => {
     } else {
         importExportBtnSettings.classList.remove('hidden');
         checkUpdatesBtnSettings.classList.remove('hidden');
+    }
+	// --- [START] NEW: Inject Admin Panel HTML dynamically ---
+    const dataManagementCard = document.getElementById('tutorial-reset-section').parentNode;
+    
+    // Check if it already exists to avoid duplicates
+    if (!document.getElementById('admin-knowledge-settings')) {
+        const adminPanelHTML = `
+            <div id="admin-knowledge-settings" class="hidden w-full mt-6 border-t border-gray-600 pt-6">
+                <h3 class="text-xl font-bold text-yellow-400 mb-2"><i class="fas fa-lock mr-2"></i>Admin: Policy Brain</h3>
+                <p class="text-gray-400 text-sm mb-4">Ingest articles here. They will become instantly searchable for the entire team.</p>
+                <button id="open-ingest-btn" class="w-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-200 font-bold py-3 px-4 rounded-xl transition">
+                    <i class="fas fa-plus-circle mr-2"></i> Ingest New Policy
+                </button>
+            </div>
+        `;
+        dataManagementCard.insertAdjacentHTML('beforeend', adminPanelHTML);
     }
 };
 
@@ -8116,6 +8270,51 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
+// Sidebar Close Button
+document.getElementById('close-insights-btn')?.addEventListener('click', () => {
+    document.getElementById('insights-sidebar').classList.add('translate-x-full');
+});
+
+// Admin: Open Ingest Modal
+document.getElementById('open-ingest-btn')?.addEventListener('click', () => {
+    document.getElementById('ingest-modal').classList.remove('hidden');
+});
+
+// Admin: Close Ingest Modal
+document.getElementById('close-ingest-btn')?.addEventListener('click', () => {
+    document.getElementById('ingest-modal').classList.add('hidden');
+});
+
+// Admin: Save Article
+document.getElementById('save-ingest-btn')?.addEventListener('click', async () => {
+    const title = document.getElementById('ingest-title').value;
+    const content = document.getElementById('ingest-content').value;
+    
+    if(!title || !content) return showMessage("Please fill both fields", "error");
+    
+    // Create keywords (tokens > 4 chars)
+    const keywords = content.toLowerCase().match(/\b(\w{4,})\b/g) || [];
+    const uniqueKeywords = [...new Set(keywords)];
+
+    try {
+        await addDoc(collection(db, 'global_knowledge'), {
+            title,
+            content,
+            keywords: uniqueKeywords,
+            updatedAt: serverTimestamp(),
+            author: currentAdminUser.email
+        });
+        
+        showMessage("Policy Ingested & Synced to Team!", "success");
+        document.getElementById('ingest-modal').classList.add('hidden');
+        document.getElementById('ingest-title').value = "";
+        document.getElementById('ingest-content').value = "";
+    } catch(e) {
+        console.error(e);
+        showMessage("Error saving. Are you admin?", "error");
+    }
+});
+	
 	// Theme Selector Listeners
 document.querySelectorAll('.bg-theme-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -8879,6 +9078,8 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     
     // Copy
     copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
+	const insightMatch = findRelevantPolicy(finalContent);
+    showInsightsSidebar(insightMatch);
     document.getElementById('placeholder-modal').classList.add('hidden');
     
     document.getElementById('copied-text-display').textContent = finalContent;
@@ -9070,6 +9271,8 @@ onAuthStateChanged(auth, async (user) => {
     if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
     if (user) {
         userId = user.uid;
+		checkAdminStatus(user);
+        loadGlobalKnowledge();
 		trackedChallengeId = localStorage.getItem('trackedChallengeId');
         isAnonymous = user.isAnonymous;
         const displayName = user.displayName || user.email || 'User';
