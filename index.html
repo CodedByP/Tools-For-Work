@@ -3201,6 +3201,12 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         <p class="text-gray-400 text-sm mb-4">Paste policy text here. The system will auto-match it to responses.</p>
         
         <input id="ingest-title" type="text" placeholder="Article Title (e.g. FedEx Substitution Policy)" class="w-full bg-gray-800 border-2 border-gray-600 p-3 rounded-xl mb-4 text-white outline-none focus:border-blue-500">
+
+		<div>
+		    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Source Link (Optional)</label>
+		    <input id="ingest-url" type="url" placeholder="https://docs.google.com/... or Image URL" 
+		           class="w-full bg-gray-900 border border-gray-600 p-3 rounded-xl text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition mb-4">
+		</div>
         
         <textarea id="ingest-content" rows="12" placeholder="Paste full article content here..." class="w-full bg-gray-800 border-2 border-gray-600 p-3 rounded-xl text-gray-200 outline-none focus:border-blue-500 mb-4"></textarea>
         
@@ -4056,30 +4062,38 @@ const showInsightsSidebar = (match) => {
 
     const updatedDate = match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
     
-    contentDiv.innerHTML = `
-        <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-6">
-            <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold text-white text-xl leading-tight">${match.title}</h4>
-                <span class="text-[10px] uppercase font-bold text-green-400 bg-green-900/30 px-2 py-1 rounded border border-green-500/30 tracking-wider">
-                    New Update
-                </span>
-            </div>
-            <div class="flex items-center gap-2 text-xs text-blue-300/70">
-                <i class="far fa-clock"></i>
-                <span>Last Updated: ${updatedDate}</span>
-            </div>
-        </div>
-        
-        <div class="prose prose-invert prose-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
-            ${match.content}
-        </div>
-
-        <div class="mt-8">
-            <button id="mark-read-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fas fa-check"></i> Got it (Don't show again)
-            </button>
-        </div>
-    `;
+	const linkButton = match.sourceUrl 
+	    ? `<a href="${match.sourceUrl}" target="_blank" class="block w-full text-center mt-4 border border-gray-600 hover:bg-gray-800 text-gray-300 font-bold py-2 rounded-xl transition text-sm">
+	         <i class="fas fa-external-link-alt mr-2"></i> View Original Source
+	       </a>` 
+	    : '';
+	
+	contentDiv.innerHTML = `
+	    <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-6">
+	        <div class="flex justify-between items-start mb-2">
+	            <h4 class="font-bold text-white text-xl leading-tight">${match.title}</h4>
+	            <span class="text-[10px] uppercase font-bold text-green-400 bg-green-900/30 px-2 py-1 rounded border border-green-500/30 tracking-wider">
+	                New Update
+	            </span>
+	        </div>
+	        <div class="flex items-center gap-2 text-xs text-blue-300/70">
+	            <i class="far fa-clock"></i>
+	            <span>Last Updated: ${updatedDate}</span>
+	        </div>
+	    </div>
+	    
+	    <div class="prose prose-invert prose-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+	        ${match.content}
+	    </div>
+	
+	    ${linkButton}
+	
+	    <div class="mt-4">
+	        <button id="mark-read-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+	            <i class="fas fa-check"></i> Got it
+	        </button>
+	    </div>
+	`;
 
     // 4. Slide it in
     sidebar.classList.remove('translate-x-full');
@@ -8322,14 +8336,17 @@ document.getElementById('close-ingest-btn')?.addEventListener('click', () => {
     document.getElementById('ingest-modal').classList.add('hidden');
 });
 
-// Admin: Save Article
 document.getElementById('save-ingest-btn')?.addEventListener('click', async () => {
     const title = document.getElementById('ingest-title').value;
     const content = document.getElementById('ingest-content').value;
+    // 1. Capture the URL
+    const sourceUrl = document.getElementById('ingest-url').value.trim(); 
     
-    if(!title || !content) return showMessage("Please fill both fields", "error");
+    if(!title || !content) {
+        alert("Please provide both a title and content.");
+        return;
+    }
     
-    // Create keywords (tokens > 4 chars)
     const keywords = content.toLowerCase().match(/\b(\w{4,})\b/g) || [];
     const uniqueKeywords = [...new Set(keywords)];
 
@@ -8337,18 +8354,23 @@ document.getElementById('save-ingest-btn')?.addEventListener('click', async () =
         await addDoc(collection(db, 'global_knowledge'), {
             title,
             content,
+            sourceUrl, // 2. Save it to Firestore
             keywords: uniqueKeywords,
             updatedAt: serverTimestamp(),
             author: currentAdminUser.email
         });
         
-        showMessage("Policy Ingested & Synced to Team!", "success");
+        showMessage("Policy Saved!", "success");
         document.getElementById('ingest-modal').classList.add('hidden');
+        
+        // Clear all fields
         document.getElementById('ingest-title').value = "";
         document.getElementById('ingest-content').value = "";
+        document.getElementById('ingest-url').value = ""; 
+        
     } catch(e) {
         console.error(e);
-        showMessage("Error saving. Are you admin?", "error");
+        alert("Error saving. Do you have admin permissions?");
     }
 });
 	
