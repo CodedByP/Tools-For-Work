@@ -4143,10 +4143,6 @@ const findRelevantPolicy = (text) => {
     return highestScore > 2 ? { ...bestMatch, score: highestScore } : null;
 };
 
-// Global variable to track the current policy being viewed
-let currentPolicyId = null;
-let currentPolicyTimestamp = 0;
-
 const showInsightsSidebar = (match) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
