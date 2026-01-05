@@ -117,6 +117,93 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     color: #111827 !important;
 }
 
+	/* --- Light Mode: Placeholder Module Overrides --- */
+
+/* 1. Main Modal Background */
+body.light-mode #placeholder-modal .glass-modal {
+    background: rgba(255, 255, 255, 0.98) !important; /* Solid White */
+    border: 1px solid #e5e7eb !important;             /* Light Gray Border */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 2. Text Colors */
+body.light-mode #placeholder-modal h3 {
+    color: #111827 !important; /* Almost Black */
+}
+body.light-mode #placeholder-modal p,
+body.light-mode #placeholder-modal label,
+body.light-mode #placeholder-modal span {
+    color: #4b5563 !important; /* Dark Gray */
+}
+body.light-mode #placeholder-modal label.text-blue-400\/80 {
+    color: #2563eb !important; /* Darker Blue for Labels */
+}
+
+/* 3. Input Fields */
+body.light-mode .premium-input {
+    background-color: #f3f4f6 !important; /* Light Gray Input */
+    border-color: #d1d5db !important;
+    color: #1f2937 !important;            /* Dark Text */
+}
+body.light-mode .premium-input:focus {
+    background-color: #ffffff !important; /* White on Focus */
+    border-color: #3b82f6 !important;     /* Blue Border */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+body.light-mode .premium-input::placeholder {
+    color: #9ca3af !important;
+}
+
+/* 4. Smart Chips (Suggestions) */
+body.light-mode .suggestion-chip {
+    background-color: #e5e7eb !important;
+    border-color: #d1d5db !important;
+}
+body.light-mode .suggestion-chip button {
+    color: #374151 !important;
+}
+body.light-mode .suggestion-chip:hover {
+    background-color: #dbeafe !important; /* Light Blue Hover */
+    border-color: #bfdbfe !important;
+}
+body.light-mode .suggestion-chip button:hover {
+    color: #1e40af !important;
+}
+
+/* 5. "Ghost" Badges & Helper Buttons (Today/Tomorrow/Paste) */
+body.light-mode #placeholder-modal button.absolute {
+    background-color: #eff6ff !important; /* Very Light Blue */
+    color: #2563eb !important;            /* Strong Blue Text */
+    border-color: #bfdbfe !important;
+}
+body.light-mode #placeholder-modal button.absolute:hover {
+    background-color: #dbeafe !important;
+}
+/* Specifically for the Paste Icon inside the input */
+body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500 {
+    color: #6b7280 !important;
+}
+body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500:hover {
+    color: #111827 !important;
+}
+
+/* 6. Magic Icon Circle (Top) */
+body.light-mode #placeholder-modal .inline-flex {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #2563eb !important;
+}
+
+/* 7. Footer Buttons */
+body.light-mode #cancel-placeholder-btn {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border-color: #e5e7eb !important;
+}
+body.light-mode #cancel-placeholder-btn:hover {
+    background-color: #e5e7eb !important;
+}
+/* The main "Copy Response" button usually stays Blue, which works on light mode too */	
 		
 #copy-toast.show {
     opacity: 1;
