@@ -2319,11 +2319,19 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                         </button>
                     </div>
 					<div id="admin-knowledge-settings" class="hidden w-full mt-6 border-t border-gray-600 pt-6">
-					    <h3 class="text-xl font-bold text-yellow-400 mb-2"><i class="fas fa-lock mr-2"></i>Admin: Policy Brain</h3>
-					    <p class="text-gray-400 text-sm mb-4">Ingest articles here. They will become instantly searchable for the entire team.</p>
-					    <button id="open-ingest-btn" class="w-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-200 font-bold py-3 px-4 rounded-xl transition">
-					        <i class="fas fa-plus-circle mr-2"></i> Ingest New Policy
-					    </button>
+					    <div class="flex justify-between items-end mb-4">
+					        <div>
+					            <h3 class="text-xl font-bold text-yellow-400 mb-1"><i class="fas fa-brain mr-2"></i>Admin: Policy Brain</h3>
+					            <p class="text-gray-400 text-sm">Manage the global knowledge base for the team.</p>
+					        </div>
+					        <button id="open-ingest-btn" class="bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-200 font-bold py-2 px-4 rounded-xl transition text-sm">
+					            <i class="fas fa-plus mr-2"></i> New
+					        </button>
+					    </div>
+					
+					    <div id="admin-policy-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar bg-black/20 p-2 rounded-xl border border-white/5">
+					        <p class="text-gray-500 text-center text-sm py-4">Loading policies...</p>
+					    </div>
 					</div>
                 </div>
             </div>
@@ -4033,6 +4041,59 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const renderAdminPolicies = () => {
+    const listContainer = document.getElementById('admin-policy-list');
+    if (!listContainer) return;
+
+    if (globalKnowledgeCache.length === 0) {
+        listContainer.innerHTML = '<p class="text-gray-500 text-center text-sm py-4">No policies ingested yet.</p>';
+        return;
+    }
+
+    listContainer.innerHTML = ''; // Clear current list
+
+    // Sort by most recently updated
+    const sortedPolicies = [...globalKnowledgeCache].sort((a, b) => {
+        const timeA = a.updatedAt ? a.updatedAt.toMillis() : 0;
+        const timeB = b.updatedAt ? b.updatedAt.toMillis() : 0;
+        return timeB - timeA;
+    });
+
+    sortedPolicies.forEach(policy => {
+        const item = document.createElement('div');
+        item.className = 'flex justify-between items-center p-3 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-transparent hover:border-gray-600 transition group cursor-pointer';
+        
+        const updatedDate = policy.updatedAt ? new Date(policy.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
+
+        item.innerHTML = `
+            <div class="flex-grow min-w-0 mr-4">
+                <h4 class="font-bold text-gray-200 text-sm truncate">${policy.title}</h4>
+                <p class="text-xs text-gray-500 truncate">Updated: ${updatedDate}</p>
+            </div>
+            <button class="text-gray-400 hover:text-yellow-400 transition p-2">
+                <i class="fas fa-pencil-alt"></i>
+            </button>
+        `;
+
+        // Click Listener: Open Edit Modal
+        item.addEventListener('click', () => {
+            // 1. Set Global Edit ID
+            editingArticleId = policy.id;
+            
+            // 2. Pre-fill the Modal
+            document.getElementById('ingest-title').value = policy.title || "";
+            document.getElementById('ingest-content').value = policy.content || "";
+            document.getElementById('ingest-url').value = policy.sourceUrl || "";
+            document.getElementById('ingest-modal-title').textContent = "Edit Policy";
+            
+            // 3. Open Modal
+            document.getElementById('ingest-modal').classList.remove('hidden');
+        });
+
+        listContainer.appendChild(item);
+    });
+};		
+
 const resetIngestForm = () => {
     document.getElementById('ingest-title').value = "";
     document.getElementById('ingest-content').value = "";
@@ -4103,19 +4164,19 @@ const checkAdminStatus = (user) => {
 };
 
 // 2. Load the Brain (Runs on startup for everyone)
-const loadGlobalKnowledge = async () => {
-    try {
-        // We listen to it in real-time so updates propagate to the team instantly
-        onSnapshot(collection(db, 'global_knowledge'), (snapshot) => {
-            globalKnowledgeCache = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            console.log(`Loaded ${globalKnowledgeCache.length} articles into the Brain.`);
-        });
-    } catch (e) {
-        console.error("Error loading knowledge base:", e);
-    }
+const loadGlobalKnowledge = () => {
+    onSnapshot(collection(db, 'global_knowledge'), (snapshot) => {
+        globalKnowledgeCache = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        console.log(`🧠 Knowledge Brain loaded: ${globalKnowledgeCache.length} articles.`);
+        
+        // NEW: If we are on the settings page, refresh the list immediately
+        if (currentPage === 'settings') {
+            renderAdminPolicies();
+        }
+    });
 };
 
 // 3. The Matching Engine (No AI, just smart counting)
@@ -7806,7 +7867,10 @@ const renderSettingsPage = () => {
     }
 	if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
         const adminSection = document.getElementById('admin-knowledge-settings');
-        if (adminSection) adminSection.classList.remove('hidden');
+        if (adminSection) {
+            adminSection.classList.remove('hidden');
+            renderAdminPolicies(); // <--- ADD THIS LINE
+        }
     }
 };
 
