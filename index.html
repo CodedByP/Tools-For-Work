@@ -5484,7 +5484,7 @@ const checkForGlobalAlerts = async (uid) => {
                     
                 } else {
                     // --- SCENARIO B: SOMEONE ELSE WON ---
-                    showMessage(`🏆 ${alertData.winnerName} is the ${alertData.type} Champion!`, 'success');
+                    showMessage(`${alertData.winnerName} is the ${alertData.type} Champion!`, 'winner', 8000);
                 }
 
                 // MARK AS SEEN (So it doesn't show again on refresh)
@@ -5794,7 +5794,8 @@ const showLevelUpNotification = (level, rankName, rankIcon) => {
 
 const getAppControlDocRef = () => { return doc(db, 'artifacts', safeAppId, 'app_control', 'version_info'); };		
 		
-const showMessage = (text, type = 'success') => {
+// Updated showMessage function with custom duration support
+const showMessage = (text, type = 'success', duration = 3000) => {
     const toast = document.getElementById('copy-toast');
     const toastIcon = document.getElementById('copy-toast-icon');
     const toastMessage = document.getElementById('copy-toast-message');
@@ -5809,20 +5810,21 @@ const showMessage = (text, type = 'success') => {
     // Set icon and color based on the message type
     if (type === 'success') {
         toastIcon.innerHTML = `<i class="fas fa-check-circle text-green-400"></i>`;
-        toast.style.borderColor = '#34d399'; // A green border
+        toast.style.borderColor = '#34d399'; // Green border
     } else if (type === 'error') {
         toastIcon.innerHTML = `<i class="fas fa-times-circle text-red-400"></i>`;
-        toast.style.borderColor = '#ef4444'; // A red border
+        toast.style.borderColor = '#ef4444'; // Red border
+    } else if (type === 'winner') {
+        // NEW: Special Gold Style for Winners
+        toastIcon.innerHTML = `<i class="fas fa-trophy text-yellow-400 animate-bounce"></i>`;
+        toast.style.borderColor = '#fbbf24'; // Gold border
     }
-
-    // Update the message and show the toast
     toastMessage.textContent = text;
     toast.classList.add('show');
 
-    // Set a timer to hide the toast after 3 seconds
     messageTimeout = setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, duration);
 };
 
 const getAchievementClassFromColor = (colorClass) => {
