@@ -4042,6 +4042,18 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const closeInsightsSidebarLogic = () => {
+    const sidebar = document.getElementById('insights-sidebar');
+    // IMPORTANT: We must remove the "Open" class for the "Close" class to take effect
+    sidebar.classList.remove('translate-x-0'); 
+    sidebar.classList.add('translate-x-full');
+    
+    // Save "Seen" status if a policy is loaded
+    if (currentPolicyId) {
+        localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+    }
+};		
+
 const extractContextualSnippet = (fullText, triggerWords) => {
     if (!fullText) return "";
     
@@ -4342,17 +4354,16 @@ const showInsightsSidebar = (match) => {
         }, 50);
     }
 
+// 4. Inject the Sticky Footer Button
     if (footerDiv) {
-		footerDiv.classList.remove('hidden');
+        footerDiv.classList.remove('hidden');
         
-        // Default Button (Mark as Read)
         let footerButtonsHTML = `
             <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
                 <i class="fas fa-check"></i> <span class="hidden sm:inline">Got it</span>
             </button>
         `;
 
-        // ADMIN ONLY: Add Edit Button
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
                 <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3">
@@ -4363,36 +4374,27 @@ const showInsightsSidebar = (match) => {
 
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
 
-        // Listener: Mark as Read
+        // LISTENER 1: "Got it" Button
         document.getElementById('mark-read-btn').addEventListener('click', () => {
-            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-            sidebar.classList.add('translate-x-full');
+            closeInsightsSidebarLogic(); // Use the new clean helper
             showMessage("Marked as read.", "success");
         });
 
-        // Listener: Admin Edit (The New Part)
+        // LISTENER 2: "Edit Policy" Button
         if (document.getElementById('admin-edit-btn')) {
             document.getElementById('admin-edit-btn').addEventListener('click', () => {
-                // 1. Set Global Edit ID
                 editingArticleId = match.id;
                 
-                // 2. Pre-fill the Modal
                 document.getElementById('ingest-title').value = match.title || "";
                 document.getElementById('ingest-content').value = match.content || "";
                 document.getElementById('ingest-url').value = match.sourceUrl || "";
-                document.getElementById('ingest-modal-title').textContent = "Edit Policy"; // Change header
+                document.getElementById('ingest-modal-title').textContent = "Edit Policy";
                 
-                // 3. Open Modal & Close Sidebar
                 document.getElementById('ingest-modal').classList.remove('hidden');
-                sidebar.classList.add('translate-x-full');
+                closeInsightsSidebarLogic(); // Close sidebar cleanly so it doesn't block the modal
             });
         }
     }
-
-    // 5. Slide it in
-    sidebar.classList.remove('translate-x-full');
-    sidebar.classList.add('translate-x-0');
-};
 
 // --- FUZZY MATCHING HELPER (Levenshtein Distance) ---
 const getLevenshteinDistance = (a, b) => {
@@ -8606,12 +8608,9 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
-// Sidebar Close Button
+// Sidebar Close Button ("X" icon)
 document.getElementById('close-insights-btn')?.addEventListener('click', () => {
-    document.getElementById('insights-sidebar').classList.add('translate-x-full');
-	 if (currentPolicyId) {
-        localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-    }
+    closeInsightsSidebarLogic();
 });
 
 // Admin: Open Ingest Modal (Settings Page)
