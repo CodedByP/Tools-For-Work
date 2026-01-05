@@ -852,6 +852,79 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     text-shadow: none;
 }
 
+		/* --- Light Mode: Policy Insight Sidebar --- */
+body.light-mode #insights-sidebar {
+    background-color: #ffffff !important;
+    border-left: 1px solid #e5e7eb !important; /* Light gray border */
+    box-shadow: -10px 0 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sidebar Header & Footer Backgrounds */
+body.light-mode #insights-sidebar .border-b,
+body.light-mode #insights-sidebar .border-t {
+    border-color: #e5e7eb !important;
+    background-color: #f9fafb !important; /* Slightly off-white for contrast */
+}
+
+/* Main Content Area */
+body.light-mode #insights-content {
+    background-color: #ffffff !important;
+}
+
+/* The Info Box (New Update / Source) */
+body.light-mode #insights-sidebar .bg-gray-800\/50 {
+    background-color: #f3f4f6 !important; /* Light gray box */
+    border-color: #d1d5db !important;
+}
+
+/* Text Overrides */
+body.light-mode #insights-sidebar h3,
+body.light-mode #insights-sidebar h4 {
+    color: #111827 !important; /* Almost black */
+}
+
+body.light-mode #insights-sidebar .text-gray-500 {
+    color: #6b7280 !important; /* Medium gray */
+}
+
+/* Close Button (X) */
+body.light-mode #close-insights-btn {
+    color: #4b5563 !important;
+}
+body.light-mode #close-insights-btn:hover {
+    background-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+/* --- Light Mode: Policy Prose (The Article Text) --- */
+body.light-mode .policy-prose {
+    color: #374151 !important; /* Dark gray text for readability */
+}
+
+body.light-mode .policy-header {
+    color: #2563eb !important; /* Darker Blue for headers */
+    border-bottom-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+body.light-mode .policy-list-item {
+    color: #4b5563 !important;
+}
+
+body.light-mode .policy-list-item::before {
+    color: #2563eb !important; /* Darker Blue bullets */
+}
+
+body.light-mode .policy-strong {
+    color: #111827 !important;
+    background: rgba(0, 0, 0, 0.05) !important; /* Subtle dark highlight */
+}
+
+/* Footer Buttons (Got it / Edit) */
+body.light-mode #sidebar-footer {
+    background-color: #ffffff !important;
+    border-top-color: #e5e7eb !important;
+}
+
 /* --- Animation & Effects --- */
 .master-shine-effect::before {
     content: '';
