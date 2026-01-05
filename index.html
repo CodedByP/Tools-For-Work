@@ -1836,6 +1836,60 @@ body.light-mode .highlight-target {
             to { opacity: 1; transform: translateY(0); }
         }
 
+/* --- UI/UX FIX: Invisible Hitbox & Button improvements --- */
+/* Makes the icon inside buttons ignore mouse events so the button itself catches the click */
+button i, 
+button svg, 
+button span {
+    pointer-events: none; 
+}
+
+/* Ensure the button is the target */
+button {
+    user-select: none;
+    position: relative;
+}
+
+/* --- NEW: Smart Insight Card Styles --- */
+.insight-card {
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left-width: 4px;
+    background-color: rgba(31, 41, 55, 0.5); /* bg-gray-800/50 */
+}
+
+/* Critical / Requirements */
+.insight-must {
+    border-left-color: #3b82f6; /* blue-500 */
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* Escalation / Warnings */
+.insight-warn {
+    border-left-color: #f59e0b; /* amber-500 */
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* Deadlines / Time */
+.insight-time {
+    border-left-color: #10b981; /* emerald-500 */
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.insight-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}		
+
+		
+
 .lb-filter-btn.active {
     background-color: #2563eb; /* Blue-600 */
     color: white;
@@ -4115,6 +4169,50 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- NEW: Smart Policy Analyzer ---
+const generatePolicyCheatSheet = (text) => {
+    if (!text) return null;
+
+    // 1. Clean formatting
+    const cleanText = text.replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
+    
+    // 2. Split into sentences for analysis
+    // Look for periods followed by space, or newlines
+    const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
+
+    const insights = {
+        requirements: [],
+        warnings: [],
+        deadlines: []
+    };
+
+    // 3. The Logic Engine (Keywords Scanner)
+    sentences.forEach(sentence => {
+        const lower = sentence.toLowerCase().trim();
+        if (lower.length < 5) return; // Skip noise
+
+        // Detect "MUST" (Requirements)
+        if (lower.match(/\b(must|shall|required|mandatory|prohibited|never|policy)\b/)) {
+            insights.requirements.push(sentence.trim());
+        }
+        // Detect "WARNINGS" (Escalations, Managers)
+        else if (lower.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
+            insights.warnings.push(sentence.trim());
+        }
+        // Detect "TIME" (Deadlines, SLAs)
+        else if (lower.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days|calendar days)\b/)) {
+            insights.deadlines.push(sentence.trim());
+        }
+    });
+
+    // Limit to top 3 bullets per category to prevent overflow
+    insights.requirements = insights.requirements.slice(0, 3);
+    insights.warnings = insights.warnings.slice(0, 3);
+    insights.deadlines = insights.deadlines.slice(0, 3);
+
+    return insights;
+};		
+
 const extractContextualSnippet = (fullText, triggerWords) => {
     if (!fullText) return "";
     
@@ -4336,7 +4434,7 @@ const showInsightsSidebar = (match) => {
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
     
-    // 1. Reset state
+    // Reset state
     sidebar.classList.remove('translate-x-0');
     sidebar.classList.add('translate-x-full');
 
@@ -4356,29 +4454,66 @@ const showInsightsSidebar = (match) => {
     currentPolicyTimestamp = policyTime;
     const updatedDate = match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
 
-    // 2. Build Source Link (If available)
+    // Build Source Link
     const sourceLinkHTML = match.sourceUrl 
-        ? `<a href="${match.sourceUrl}" target="_blank" class="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition group" title="Open Source">
+        ? `<a href="${match.sourceUrl}" target="_blank" class="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition group z-50 relative pointer-events-auto" title="Open Source">
              <span class="group-hover:underline">View Source</span> <i class="fas fa-external-link-alt"></i>
            </a>`
         : '';
 
-    // 1. Run the Smart Extractor
-    const smartSnippet = extractContextualSnippet(match.content, match.triggers || []);
+    // --- EXECUTE THE NEW SMART LOGIC ---
+    const cheatSheet = generatePolicyCheatSheet(match.content);
     
-    // 2. Decide what to show (Full vs Snippet)
-    // If smartSnippet is null, it means the article is short, so show everything.
-    const displayContent = smartSnippet ? smartSnippet : match.content;
-    const isTruncated = !!smartSnippet; // Boolean flag
+    // Check if we found ANY insights. If not, fallback to full text.
+    const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
-    // 3. Render
+    let htmlContent = '';
+
+    if (hasInsights) {
+        // RENDER SMART CARDS
+        htmlContent += `<div class="mb-6 animate-fade-in">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Quick Cheat Sheet</h4>`;
+
+        if (cheatSheet.requirements.length > 0) {
+            htmlContent += `
+            <div class="insight-card insight-must">
+                <div class="insight-title text-blue-400"><i class="fas fa-check-circle"></i> Requirements</div>
+                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
+                    ${cheatSheet.requirements.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+            </div>`;
+        }
+
+        if (cheatSheet.warnings.length > 0) {
+            htmlContent += `
+            <div class="insight-card insight-warn">
+                <div class="insight-title text-amber-400"><i class="fas fa-exclamation-triangle"></i> Escalation / Warning</div>
+                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
+                    ${cheatSheet.warnings.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+            </div>`;
+        }
+
+        if (cheatSheet.deadlines.length > 0) {
+            htmlContent += `
+            <div class="insight-card insight-time">
+                <div class="insight-title text-emerald-400"><i class="fas fa-clock"></i> Timelines</div>
+                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
+                    ${cheatSheet.deadlines.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+            </div>`;
+        }
+        htmlContent += `</div>`;
+    }
+
+    // Render Title & Header
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             
             <div class="bg-gray-800/50 border border-gray-700 p-4 rounded-xl mb-6 flex-shrink-0">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-[10px] font-bold text-green-400 bg-green-900/20 px-2 py-0.5 rounded border border-green-500/20 tracking-wider">
-                        ${isTruncated ? 'Smart Snippet' : 'Full Policy'}
+                    <span class="text-[10px] font-bold ${hasInsights ? 'text-green-400 bg-green-900/20 border-green-500/20' : 'text-gray-400 bg-gray-700/50 border-gray-600'} px-2 py-0.5 rounded border tracking-wider">
+                        ${hasInsights ? 'SMART INSIGHTS' : 'FULL POLICY'}
                     </span>
                     ${sourceLinkHTML}
                 </div>
@@ -4388,88 +4523,59 @@ const showInsightsSidebar = (match) => {
                 </div>
             </div>
             
-            <div id="policy-text-container" class="policy-prose flex-grow pb-6 relative">
-                ${formatPolicyText(displayContent)}
-                
-                ${isTruncated ? `
-                    <div id="read-more-overlay" class="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent flex items-end justify-center pb-2">
-                        <button id="show-full-policy-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 px-4 rounded-full shadow-lg transition flex items-center gap-2 border border-gray-600">
-                            <i class="fas fa-expand-alt"></i> Read Full Policy
-                        </button>
-                    </div>
-                ` : ''}
+            ${htmlContent}
+
+            <div class="policy-prose flex-grow pb-6 relative">
+                ${hasInsights ? '<h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4">Full Source Text</h4>' : ''}
+                ${formatPolicyText(match.content)}
             </div>
 
         </div>
     `;
 
-    // 4. Attach Listener for "Read Full Policy"
-    if (isTruncated) {
-        setTimeout(() => {
-            document.getElementById('show-full-policy-btn').addEventListener('click', () => {
-                const container = document.getElementById('policy-text-container');
-                // Replace snippet with full content
-                container.innerHTML = formatPolicyText(match.content); 
-                // Remove the "Smart Snippet" badge logic visually (optional, or just leave it)
-            });
-        }, 50);
-    }
-
-if (footerDiv) {
+    // Footer Buttons Logic (Keep your existing footer logic)
+    if (footerDiv) {
         footerDiv.classList.remove('hidden');
         
-        // Default Button (Mark as Read)
         let footerButtonsHTML = `
-            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fas fa-check"></i> <span class="hidden sm:inline">Got it</span>
+            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95">
+                <i class="fas fa-check pointer-events-none"></i> <span class="hidden sm:inline pointer-events-none">Got it</span>
             </button>
         `;
 
-        // ADMIN ONLY: Add Edit Button
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
-                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3">
-                    <i class="fas fa-edit"></i> <span class="hidden sm:inline">Edit Policy</span>
+                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95">
+                    <i class="fas fa-edit pointer-events-none"></i> <span class="hidden sm:inline pointer-events-none">Edit</span>
                 </button>
             `;
         }
 
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
 
-        // Listener: Mark as Read
+        // Re-attach footer listeners (Same as before)
         document.getElementById('mark-read-btn').addEventListener('click', () => {
             localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-            
-            // FIX: Explicitly remove the open class so it actually slides out
             sidebar.classList.remove('translate-x-0'); 
             sidebar.classList.add('translate-x-full');
-            
             showMessage("Marked as read.", "success");
         });
 
-        // Listener: Admin Edit (The New Part)
         if (document.getElementById('admin-edit-btn')) {
             document.getElementById('admin-edit-btn').addEventListener('click', () => {
-                // 1. Set Global Edit ID
                 editingArticleId = match.id;
-                
-                // 2. Pre-fill the Modal
                 document.getElementById('ingest-title').value = match.title || "";
                 document.getElementById('ingest-content').value = match.content || "";
                 document.getElementById('ingest-url').value = match.sourceUrl || "";
-                document.getElementById('ingest-modal-title').textContent = "Edit Policy"; // Change header
-                
-                // 3. Open Modal & Close Sidebar
+                document.getElementById('ingest-modal-title').textContent = "Edit Policy";
                 document.getElementById('ingest-modal').classList.remove('hidden');
-                
-                // FIX: Explicitly remove the open class
                 sidebar.classList.remove('translate-x-0');
                 sidebar.classList.add('translate-x-full');
             });
         }
     }
 
-    // 5. Slide it in (This part stays the same, ensures it opens correctly)
+    // Slide Sidebar In
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
 };
