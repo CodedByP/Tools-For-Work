@@ -2265,6 +2265,13 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                             <i class="fas fa-book mr-2"></i> Show Me Again
                         </button>
                     </div>
+					<div id="admin-knowledge-settings" class="hidden w-full mt-6 border-t border-gray-600 pt-6">
+					    <h3 class="text-xl font-bold text-yellow-400 mb-2"><i class="fas fa-lock mr-2"></i>Admin: Policy Brain</h3>
+					    <p class="text-gray-400 text-sm mb-4">Ingest articles here. They will become instantly searchable for the entire team.</p>
+					    <button id="open-ingest-btn" class="w-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-200 font-bold py-3 px-4 rounded-xl transition">
+					        <i class="fas fa-plus-circle mr-2"></i> Ingest New Policy
+					    </button>
+					</div>
                 </div>
             </div>
         </div>
@@ -7594,21 +7601,9 @@ const renderSettingsPage = () => {
         importExportBtnSettings.classList.remove('hidden');
         checkUpdatesBtnSettings.classList.remove('hidden');
     }
-	// --- [START] NEW: Inject Admin Panel HTML dynamically ---
-    const dataManagementCard = document.getElementById('tutorial-reset-section').parentNode;
-    
-    // Check if it already exists to avoid duplicates
-    if (!document.getElementById('admin-knowledge-settings')) {
-        const adminPanelHTML = `
-            <div id="admin-knowledge-settings" class="hidden w-full mt-6 border-t border-gray-600 pt-6">
-                <h3 class="text-xl font-bold text-yellow-400 mb-2"><i class="fas fa-lock mr-2"></i>Admin: Policy Brain</h3>
-                <p class="text-gray-400 text-sm mb-4">Ingest articles here. They will become instantly searchable for the entire team.</p>
-                <button id="open-ingest-btn" class="w-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 text-yellow-200 font-bold py-3 px-4 rounded-xl transition">
-                    <i class="fas fa-plus-circle mr-2"></i> Ingest New Policy
-                </button>
-            </div>
-        `;
-        dataManagementCard.insertAdjacentHTML('beforeend', adminPanelHTML);
+	if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+        const adminSection = document.getElementById('admin-knowledge-settings');
+        if (adminSection) adminSection.classList.remove('hidden');
     }
 };
 
