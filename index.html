@@ -4041,6 +4041,35 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const extractContextualSnippet = (fullText, triggerWords) => {
+    if (!fullText) return "";
+    
+    // Split into paragraphs (looking for double line breaks)
+    const paragraphs = fullText.split(/\n\s*\n/);
+    
+    // Find the paragraph with the most trigger word matches
+    let bestParagraph = paragraphs[0]; // Default to the first paragraph (Intro) if no specific match
+    let maxMatches = 0;
+
+    paragraphs.forEach(para => {
+        const lowerPara = para.toLowerCase();
+        let matchCount = 0;
+        triggerWords.forEach(word => {
+            if (lowerPara.includes(word)) matchCount++;
+        });
+
+        if (matchCount > maxMatches) {
+            maxMatches = matchCount;
+            bestParagraph = para;
+        }
+    });
+
+    // If the article is short (< 300 chars), just return the whole thing
+    if (fullText.length < 300) return null; // Returning null signals "Show Full Text"
+
+    return bestParagraph;
+};		
+
 const renderAdminPolicies = () => {
     const listContainer = document.getElementById('admin-policy-list');
     if (!listContainer) return;
@@ -4183,33 +4212,49 @@ const loadGlobalKnowledge = () => {
 const findRelevantPolicy = (text) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
-    const searchTokens = text.toLowerCase().match(/\b(\w{4,})\b/g) || [];
+    // 1. Clean and tokenize the user's copied text
+    const searchTokens = text.toLowerCase()
+        .replace(/[^\w\s]/g, '') 
+        .split(/\s+/)
+        .filter(w => w.length > 3); // Filter out small words like "the", "and"
+
     let bestMatch = null;
     let highestScore = 0;
+    let bestTriggerWords = []; // Store the words that caused the match
 
     globalKnowledgeCache.forEach(article => {
         let score = 0;
-        // Check match against Title (worth 5 points)
+        let matchedWords = new Set(); // Use a Set to avoid duplicates
+
+        // Check Title (High Weight)
         if (article.title) {
             searchTokens.forEach(token => {
-                if (article.title.toLowerCase().includes(token)) score += 5;
+                if (article.title.toLowerCase().includes(token)) {
+                    score += 5;
+                    matchedWords.add(token);
+                }
             });
         }
-        // Check match against Keywords/Content (worth 1 point)
+        
+        // Check Content/Keywords (Standard Weight)
         if (article.keywords) {
             searchTokens.forEach(token => {
-                if (article.keywords.includes(token)) score += 1;
+                if (article.keywords.includes(token)) {
+                    score += 1;
+                    matchedWords.add(token);
+                }
             });
         }
 
         if (score > highestScore) {
             highestScore = score;
             bestMatch = article;
+            bestTriggerWords = Array.from(matchedWords);
         }
     });
 
-    // Only return if we have a decent confidence (e.g., score > 2)
-    return highestScore > 2 ? { ...bestMatch, score: highestScore } : null;
+    // Return the match AND the trigger words
+    return highestScore > 2 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
 };
 
 const showInsightsSidebar = (match) => {
@@ -4244,14 +4289,22 @@ const showInsightsSidebar = (match) => {
            </a>`
         : '';
 
-    // 3. Populate Content Area
+    // 1. Run the Smart Extractor
+    const smartSnippet = extractContextualSnippet(match.content, match.triggers || []);
+    
+    // 2. Decide what to show (Full vs Snippet)
+    // If smartSnippet is null, it means the article is short, so show everything.
+    const displayContent = smartSnippet ? smartSnippet : match.content;
+    const isTruncated = !!smartSnippet; // Boolean flag
+
+    // 3. Render
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             
             <div class="bg-gray-800/50 border border-gray-700 p-4 rounded-xl mb-6 flex-shrink-0">
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-[10px] font-bold text-green-400 bg-green-900/20 px-2 py-0.5 rounded border border-green-500/20 tracking-wider">
-                        New Update
+                        ${isTruncated ? 'Smart Snippet' : 'Full Policy'}
                     </span>
                     ${sourceLinkHTML}
                 </div>
@@ -4261,15 +4314,33 @@ const showInsightsSidebar = (match) => {
                 </div>
             </div>
             
-            <div class="policy-prose flex-grow pb-6">
-                ${formatPolicyText(match.content)}
+            <div id="policy-text-container" class="policy-prose flex-grow pb-6 relative">
+                ${formatPolicyText(displayContent)}
+                
+                ${isTruncated ? `
+                    <div id="read-more-overlay" class="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent flex items-end justify-center pb-2">
+                        <button id="show-full-policy-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 px-4 rounded-full shadow-lg transition flex items-center gap-2 border border-gray-600">
+                            <i class="fas fa-expand-alt"></i> Read Full Policy
+                        </button>
+                    </div>
+                ` : ''}
             </div>
 
         </div>
     `;
 
-    // 4. Inject the Sticky Footer Button
-    // We do this separately so it stays pinned to the bottom
+    // 4. Attach Listener for "Read Full Policy"
+    if (isTruncated) {
+        setTimeout(() => {
+            document.getElementById('show-full-policy-btn').addEventListener('click', () => {
+                const container = document.getElementById('policy-text-container');
+                // Replace snippet with full content
+                container.innerHTML = formatPolicyText(match.content); 
+                // Remove the "Smart Snippet" badge logic visually (optional, or just leave it)
+            });
+        }, 50);
+    }
+
     if (footerDiv) {
 		footerDiv.classList.remove('hidden');
         
