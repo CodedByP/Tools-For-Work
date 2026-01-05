@@ -3238,6 +3238,8 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		const ADMIN_EMAIL = "pabarca@google.com"; // REPLACE THIS with your email
         
         // --- Global State Variables ---
+let currentPolicyId = null;
+let currentPolicyTimestamp = 0;		
 let globalKnowledgeCache = []; // Stores the "Brain" locally
 let currentAdminUser = null;	
 let currentTutorialStep = 0;
@@ -4026,37 +4028,74 @@ const findRelevantPolicy = (text) => {
     return highestScore > 2 ? { ...bestMatch, score: highestScore } : null;
 };
 
-// 4. Sidebar Controller
 const showInsightsSidebar = (match) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     
-    if (!match) {
-        // Optional: Auto-close if no match found? 
-        // For now, let's just do nothing or close it.
-        sidebar.classList.remove('translate-x-0');
-        sidebar.classList.add('translate-x-full');
-        return;
+    // 1. Reset state
+    sidebar.classList.remove('translate-x-0');
+    sidebar.classList.add('translate-x-full');
+
+    if (!match) return; // Silent exit if no match
+
+    // 2. CHECK: Has the user seen this exact version before?
+    const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
+    const seenKey = `pkb_seen_${match.id}`;
+    const lastSeenTime = localStorage.getItem(seenKey);
+
+    // If they have seen this version, DO NOT open the sidebar.
+    // (Optional: You could flash a small lightbulb icon here instead)
+    if (lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
+        console.log("User has already seen this policy version. Suppressing sidebar.");
+        return; 
     }
 
-    // Populate Sidebar
+    // 3. New info found! Prepare the UI
+    currentPolicyId = match.id;
+    currentPolicyTimestamp = policyTime;
+
+    const updatedDate = match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
+    
     contentDiv.innerHTML = `
-        <div class="bg-blue-900/30 border border-blue-500/30 p-3 rounded-lg mb-4">
-            <div class="flex justify-between items-start">
-                <h4 class="font-bold text-white text-lg leading-tight">${match.title}</h4>
-                <span class="text-xs font-mono text-green-400 bg-green-900/30 px-2 py-1 rounded">Match</span>
+        <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-6">
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-white text-xl leading-tight">${match.title}</h4>
+                <span class="text-[10px] uppercase font-bold text-green-400 bg-green-900/30 px-2 py-1 rounded border border-green-500/30 tracking-wider">
+                    New Update
+                </span>
             </div>
-            <div class="text-xs text-blue-300 mt-1">Updated: ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'N/A'}</div>
+            <div class="flex items-center gap-2 text-xs text-blue-300/70">
+                <i class="far fa-clock"></i>
+                <span>Last Updated: ${updatedDate}</span>
+            </div>
         </div>
+        
         <div class="prose prose-invert prose-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
             ${match.content}
         </div>
+
+        <div class="mt-8">
+            <button id="mark-read-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> Got it (Don't show again)
+            </button>
+        </div>
     `;
 
-    // Slide it in
+    // 4. Slide it in
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
-};		
+
+    // 5. Attach listener to the new "Got it" button
+    setTimeout(() => {
+        document.getElementById('mark-read-btn').addEventListener('click', () => {
+            // Save "Seen" status
+            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+            // Close sidebar
+            sidebar.classList.add('translate-x-full');
+            showMessage("Policy marked as read.", "success");
+        });
+    }, 50);
+};
 
 // --- FUZZY MATCHING HELPER (Levenshtein Distance) ---
 const getLevenshteinDistance = (a, b) => {
@@ -8268,6 +8307,9 @@ function attachEventListeners() {
 // Sidebar Close Button
 document.getElementById('close-insights-btn')?.addEventListener('click', () => {
     document.getElementById('insights-sidebar').classList.add('translate-x-full');
+	 if (currentPolicyId) {
+        localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+    }
 });
 
 // Admin: Open Ingest Modal
