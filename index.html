@@ -9416,6 +9416,7 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
     });
 
 document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
+    // 1. Capture inputs immediately
     const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input[type="text"]');
     const userValues = {};
     
@@ -9424,19 +9425,17 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
         if(key) {
             const value = input.value.trim();
             userValues[key] = value;
-            // SAVE TO MEMORY
             savePlaceholderHistory(key, value);
         }
     });
 
     const finalContent = replacePlaceholders(currentTextToCopy, userValues);
     
-    // Copy
-    copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
-	const insightMatch = findRelevantPolicy(finalContent);
-    showInsightsSidebar(insightMatch);
+    // 2. UPDATE UI IMMEDIATELY (Fixes the issue)
+    // We hide the placeholder modal first, before doing any complex logic
     document.getElementById('placeholder-modal').classList.add('hidden');
     
+    // Update and show the Success Modal
     document.getElementById('copied-text-display').textContent = finalContent;
     
     if (isTutorialActive) {
@@ -9445,6 +9444,16 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
         showTutorialStep(currentTutorialStep);
     } else {
         document.getElementById('copy-success-modal').classList.remove('hidden');
+    }
+
+    // 3. Run Background Logic (Safe Mode)
+    // We wrap this in a try-catch so it doesn't break the UI if it fails
+    try {
+        copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
+        const insightMatch = findRelevantPolicy(finalContent);
+        showInsightsSidebar(insightMatch);
+    } catch (error) {
+        console.warn("Background task failed (copy/insights), but UI was handled:", error);
     }
 });
 
