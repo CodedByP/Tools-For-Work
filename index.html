@@ -4511,24 +4511,69 @@ const getLevenshteinDistance = (a, b) => {
     return matrix[b.length][a.length];
 };		
 
-// --- SMART MEMORY HELPERS ---
-const savePlaceholderHistory = (key, value) => {
-    // Skip saving empty values or the global [Name] automation
-    if (!value || value.trim() === "" || key === 'Name') return;
-    
-    let history = JSON.parse(localStorage.getItem('placeholder_memory') || '{}');
+// --- SMART MEMORY SYSTEM v2.0 ---
+
+const updateSmartHistory = (key, value, category, action) => {
+    // 1. Get existing brain data
+    let history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
     if (!history[key]) history[key] = [];
 
-    // Add to front, remove duplicates, keep max 5
-    history[key] = [value, ...history[key].filter(v => v !== value)].slice(0, 5);
-    
-    localStorage.setItem('placeholder_memory', JSON.stringify(history));
+    // 2. Find if this specific value already exists
+    let existingItemIndex = history[key].findIndex(item => item.val === value);
+    let item = existingItemIndex > -1 ? history[key][existingItemIndex] : null;
+
+    const now = Date.now();
+
+    // 3. APPLY LEARNING LOGIC
+    if (action === 'use') {
+        // POSITIVE REINFORCEMENT: User clicked it or typed it explicitly
+        if (item) {
+            item.score += 2; // Boost score
+            item.lastUsed = now;
+            item.category = category; // Update context
+        } else {
+            // New item starts with a base score
+            history[key].push({ val: value, score: 5, lastUsed: now, category: category });
+        }
+    } 
+    else if (action === 'ignore') {
+        // NEGATIVE REINFORCEMENT: It was shown, but user didn't pick it
+        if (item) {
+            item.score -= 0.5; // Slight penalty
+        }
+    } 
+    else if (action === 'delete') {
+        // NUCLEAR OPTION: User clicked 'X'
+        if (existingItemIndex > -1) {
+            history[key].splice(existingItemIndex, 1);
+        }
+    }
+
+    // 4. CLEANUP: Remove weak items (Score < 1) or too old (older than 7 days)
+    const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+    if (history[key]) {
+        history[key] = history[key].filter(i => i.score >= 1 && i.lastUsed > sevenDaysAgo);
+        
+        // Cap list at top 5 to keep UI clean
+        history[key].sort((a, b) => b.score - a.score); // Sort highest score first
+        history[key] = history[key].slice(0, 5);
+    }
+
+    // 5. Save
+    localStorage.setItem('smart_placeholder_memory', JSON.stringify(history));
 };
 
-const getPlaceholderHistory = (key) => {
-    const history = JSON.parse(localStorage.getItem('placeholder_memory') || '{}');
-    return history[key] || [];
-};		
+const getSmartSuggestions = (key, currentCategory) => {
+    const history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
+    if (!history[key]) return [];
+
+    // Sort by Score, but give a bonus if it matches the current category
+    return history[key].sort((a, b) => {
+        let scoreA = a.score + (a.category === currentCategory ? 2 : 0); // Context Bonus
+        let scoreB = b.score + (b.category === currentCategory ? 2 : 0);
+        return scoreB - scoreA;
+    });
+};	
 
 // --- 1. The Contextual Brain ---
 const getShippingSuggestions = () => {
@@ -7730,35 +7775,62 @@ const processAndCopy = (text, responseId, categoryName) => {
                 }
                 group.appendChild(inputContainer);
 
-                // 3. Smart Memory Chips
-                const history = getPlaceholderHistory(placeholder);
-                if (history.length > 0) {
-                    const chipContainer = document.createElement('div');
-                    chipContainer.className = 'flex flex-wrap gap-2 mt-3 pl-1';
-                    
-                    // Label for history
-                    const historyLabel = document.createElement('span');
-                    historyLabel.className = 'text-[10px] text-gray-500 flex items-center mr-1';
-                    historyLabel.innerHTML = '<i class="fas fa-history mr-1"></i> Recent:';
-                    chipContainer.appendChild(historyLabel);
+        
+               // 3. Smart Memory Chips (AI VERSION)
+                const suggestions = getSmartSuggestions(placeholder, categoryName);
 
-                    history.forEach(val => {
-                        const chip = document.createElement('button');
-                        chip.type = 'button';
-                        chip.className = 'history-pill text-[10px] px-3 py-1.5 rounded-full text-gray-400 font-bold';
-                        chip.innerHTML = `${val}`; // Just the text
+                if (suggestions.length > 0) {
+                    const chipContainer = document.createElement('div');
+                    chipContainer.className = 'mt-3 pl-1';
+                    
+                    // Wrapper for the pills
+                    const chipWrapper = document.createElement('div');
+                    chipWrapper.className = 'flex flex-wrap gap-2';
+
+                    suggestions.forEach(item => {
+                        const val = item.val; 
                         
-                        chip.addEventListener('click', () => {
+                        // Create Container for the Pill
+                        const pillDiv = document.createElement('div');
+                        pillDiv.className = 'suggestion-chip group/pill flex items-center bg-gray-700/50 hover:bg-blue-600/20 border border-gray-600 hover:border-blue-500 rounded-full transition-all duration-200';
+                        pillDiv.dataset.value = val; 
+                        pillDiv.dataset.key = placeholder;
+
+                        // 1. Value Part (Click to Fill)
+                        const valueBtn = document.createElement('button');
+                        valueBtn.type = 'button';
+                        valueBtn.className = 'px-3 py-1 text-[11px] text-gray-300 group-hover/pill:text-blue-200 font-medium border-r border-gray-600/50';
+                        valueBtn.textContent = val;
+                        
+                        valueBtn.onclick = () => {
                             input.value = val;
-                            // Trigger "Fill Pop" Animation
                             input.classList.remove('fill-effect');
-                            void input.offsetWidth; // Force reflow
+                            void input.offsetWidth; 
                             input.classList.add('fill-effect');
                             
-                            logUserEvent('memory_chip_used', { placeholder: placeholder });
-                        });
-                        chipContainer.appendChild(chip);
+                            // TEACHING MOMENT: User picked it! Boost score!
+                            updateSmartHistory(placeholder, val, categoryName, 'use');
+                        };
+
+                        // 2. Delete Part (Click to Remove)
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.className = 'px-2 py-1 text-[10px] text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-r-full transition-colors';
+                        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation(); 
+                            // TEACHING MOMENT: User deleted it!
+                            updateSmartHistory(placeholder, val, categoryName, 'delete');
+                            pillDiv.remove(); 
+                        };
+
+                        pillDiv.appendChild(valueBtn);
+                        pillDiv.appendChild(deleteBtn);
+                        chipWrapper.appendChild(pillDiv);
                     });
+                    
+                    chipContainer.appendChild(chipWrapper);
                     group.appendChild(chipContainer);
                 }
 
@@ -7774,12 +7846,17 @@ const processAndCopy = (text, responseId, categoryName) => {
         }, 100);
 
     } else {
-        // No placeholders (or only [Name]), copy immediately
+        // No placeholders, copy immediately
         const finalContent = replacePlaceholders(currentTextToCopy, {});
-        copyToClipboard(finalContent, responseId, categoryName);
-		// This is the "magic moment" right after the copy happens
-        const insightMatch = findRelevantPolicy(finalContent);
-        showInsightsSidebar(insightMatch);
+        
+        // Safety Block: Prevents UI freeze if background analysis fails
+        try {
+            copyToClipboard(finalContent, responseId, categoryName);
+            const insightMatch = findRelevantPolicy(finalContent);
+            showInsightsSidebar(insightMatch);
+        } catch (e) {
+            console.warn("Background logic error:", e);
+        }
     }
 };
 		
@@ -9500,16 +9577,33 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
     });
 
 document.getElementById('confirm-placeholder-btn').addEventListener('click', () => {
-    // 1. Capture inputs immediately
+    // 1. Capture inputs
     const inputs = document.getElementById('placeholder-inputs').querySelectorAll('input[type="text"]');
     const userValues = {};
     
+    // Get all chips currently visible on screen (these are the ones we suggested)
+    const shownChips = Array.from(document.querySelectorAll('.suggestion-chip'));
+
     inputs.forEach(input => {
         const key = input.dataset.placeholder;
         if(key) {
-            const value = input.value.trim();
-            userValues[key] = value;
-            savePlaceholderHistory(key, value);
+            const finalValue = input.value.trim();
+            userValues[key] = finalValue;
+
+            if (finalValue) {
+                // A. SAVE/BOOST the value they actually used
+                updateSmartHistory(key, finalValue, currentResponseToCopyCategory, 'use');
+
+                // B. PUNISH the values they ignored
+                // Find chips for THIS specific key that were NOT selected
+                shownChips.forEach(chip => {
+                    if (chip.dataset.key === key && chip.dataset.value !== finalValue) {
+                        // This chip was shown, but the user typed something else.
+                        // Decrease its score.
+                        updateSmartHistory(key, chip.dataset.value, currentResponseToCopyCategory, 'ignore');
+                    }
+                });
+            }
         }
     });
 
