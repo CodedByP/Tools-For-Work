@@ -3307,7 +3307,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		const ADMIN_EMAIL = "pabarca@google.com"; // REPLACE THIS with your email
         
         // --- Global State Variables ---
-let currentPolicyId = null;
+let editingArticleId = null; 
 let currentPolicyTimestamp = 0;		
 let globalKnowledgeCache = []; // Stores the "Brain" locally
 let currentAdminUser = null;	
@@ -4033,6 +4033,14 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const resetIngestForm = () => {
+    document.getElementById('ingest-title').value = "";
+    document.getElementById('ingest-content').value = "";
+    document.getElementById('ingest-url').value = "";
+    document.getElementById('ingest-modal-title').textContent = "Ingest Knowledge"; // Reset title
+    editingArticleId = null; // Important!
+};
+		
 const formatPolicyText = (text) => {
     if (!text) return '';
 
@@ -4202,20 +4210,50 @@ const showInsightsSidebar = (match) => {
     // 4. Inject the Sticky Footer Button
     // We do this separately so it stays pinned to the bottom
     if (footerDiv) {
-        footerDiv.classList.remove('hidden');
-        footerDiv.innerHTML = `
-            <button id="mark-read-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 group">
-                <span class="group-hover:hidden">Got it</span>
-                <span class="hidden group-hover:inline"><i class="fas fa-check"></i> Mark as Read</span>
+		footerDiv.classList.remove('hidden');
+        
+        // Default Button (Mark as Read)
+        let footerButtonsHTML = `
+            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> <span class="hidden sm:inline">Got it</span>
             </button>
         `;
 
-        // Add Listener to the new button
+        // ADMIN ONLY: Add Edit Button
+        if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
+            footerButtonsHTML += `
+                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3">
+                    <i class="fas fa-edit"></i> <span class="hidden sm:inline">Edit Policy</span>
+                </button>
+            `;
+        }
+
+        footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
+
+        // Listener: Mark as Read
         document.getElementById('mark-read-btn').addEventListener('click', () => {
             localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
             sidebar.classList.add('translate-x-full');
-            showMessage("Policy marked as read.", "success");
+            showMessage("Marked as read.", "success");
         });
+
+        // Listener: Admin Edit (The New Part)
+        if (document.getElementById('admin-edit-btn')) {
+            document.getElementById('admin-edit-btn').addEventListener('click', () => {
+                // 1. Set Global Edit ID
+                editingArticleId = match.id;
+                
+                // 2. Pre-fill the Modal
+                document.getElementById('ingest-title').value = match.title || "";
+                document.getElementById('ingest-content').value = match.content || "";
+                document.getElementById('ingest-url').value = match.sourceUrl || "";
+                document.getElementById('ingest-modal-title').textContent = "Edit Policy"; // Change header
+                
+                // 3. Open Modal & Close Sidebar
+                document.getElementById('ingest-modal').classList.remove('hidden');
+                sidebar.classList.add('translate-x-full');
+            });
+        }
     }
 
     // 5. Slide it in
@@ -8438,21 +8476,24 @@ document.getElementById('close-insights-btn')?.addEventListener('click', () => {
     }
 });
 
-// Admin: Open Ingest Modal
-document.getElementById('open-ingest-btn')?.addEventListener('click', () => {
-    document.getElementById('ingest-modal').classList.remove('hidden');
+// Admin: Open Ingest Modal (Settings Page)
+document.addEventListener('click', (e) => {
+    if(e.target.closest('#open-ingest-btn')) {
+        resetIngestForm(); // Ensure it's clean
+        document.getElementById('ingest-modal').classList.remove('hidden');
+    }
 });
 
 // Admin: Close Ingest Modal
 document.getElementById('close-ingest-btn')?.addEventListener('click', () => {
     document.getElementById('ingest-modal').classList.add('hidden');
+    resetIngestForm(); // Clean up on cancel too
 });
 
 document.getElementById('save-ingest-btn')?.addEventListener('click', async () => {
     const title = document.getElementById('ingest-title').value;
     const content = document.getElementById('ingest-content').value;
-    // 1. Capture the URL
-    const sourceUrl = document.getElementById('ingest-url').value.trim(); 
+    const sourceUrl = document.getElementById('ingest-url').value.trim();
     
     if(!title || !content) {
         alert("Please provide both a title and content.");
@@ -8462,23 +8503,29 @@ document.getElementById('save-ingest-btn')?.addEventListener('click', async () =
     const keywords = content.toLowerCase().match(/\b(\w{4,})\b/g) || [];
     const uniqueKeywords = [...new Set(keywords)];
 
+    const docData = {
+        title,
+        content,
+        sourceUrl,
+        keywords: uniqueKeywords,
+        updatedAt: serverTimestamp(), // This triggers the "New Update" badge for users!
+        author: currentAdminUser.email
+    };
+
     try {
-        await addDoc(collection(db, 'global_knowledge'), {
-            title,
-            content,
-            sourceUrl, // 2. Save it to Firestore
-            keywords: uniqueKeywords,
-            updatedAt: serverTimestamp(),
-            author: currentAdminUser.email
-        });
+        if (editingArticleId) {
+            // --- UPDATE EXISTING ---
+            await updateDoc(doc(db, 'global_knowledge', editingArticleId), docData);
+            showMessage("Policy Updated!", "success");
+        } else {
+            // --- CREATE NEW ---
+            await addDoc(collection(db, 'global_knowledge'), docData);
+            showMessage("Policy Ingested!", "success");
+        }
         
-        showMessage("Policy Saved!", "success");
+        // Cleanup
         document.getElementById('ingest-modal').classList.add('hidden');
-        
-        // Clear all fields
-        document.getElementById('ingest-title').value = "";
-        document.getElementById('ingest-content').value = "";
-        document.getElementById('ingest-url').value = ""; 
+        resetIngestForm(); // Helper function defined below
         
     } catch(e) {
         console.error(e);
