@@ -4352,21 +4352,6 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// 1. SMART ANALYZER: Extracts bullet points for the hover card
-const generatePolicyCheatSheet = (text) => {
-    if (!text) return null;
-    const cleanText = text.replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
-    const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
-    const requirements = [];
-
-    sentences.forEach(sentence => {
-        const lower = sentence.toLowerCase();
-        if (lower.match(/\b(must|shall|required|mandatory|prohibited|never|policy)\b/)) {
-            requirements.push(sentence.trim());
-        }
-    });
-    return { requirements: requirements.slice(0, 3) }; // Top 3 points
-};
 
 // 2. SMART LINKER: Weighted Matching Engine
 const calculatePolicyWeight = (responseText, responseCategory, policy) => {
