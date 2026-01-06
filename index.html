@@ -4371,9 +4371,6 @@ const calculatePolicyWeight = (responseText, responseCategory, policy) => {
     return score;
 };
 
-// 3. GHOST READER: Conflict Detector
-const detectPolicyConflicts = (userText, policyContent) => {
-// REPLACE your existing 'detectPolicyConflicts' function with this:
 const detectPolicyConflicts = (userText, policyContent) => {
     const conflicts = [];
     const lowerUser = userText.toLowerCase();
