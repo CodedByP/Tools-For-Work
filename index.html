@@ -854,6 +854,63 @@ body.light-mode #cancel-placeholder-btn:hover {
     100% { background-position: 0% 50%; }
 }
 
+/* --- UNIFIED SMART PILL --- */
+.smart-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.smart-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.smart-pill:active {
+    transform: translateY(0);
+}
+
+/* Status Variants */
+.pill-neutral { /* Hidden or placeholder */
+    display: none;
+}
+
+.pill-blue { /* Insight Available */
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+.pill-blue:hover {
+    background-color: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+}
+
+.pill-red { /* Conflict / Warning */
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+    animation: pulse-border-red 2s infinite;
+}
+.pill-red:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+}
+
+@keyframes pulse-border-red {
+    0% { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+    70% { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+    100% { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+		
 /* --- 1. COMPLIANCE BADGES --- */
 .compliance-badge {
     display: inline-flex;
@@ -7805,9 +7862,11 @@ const renderResponses = (searchQuery = '') => {
                 }
                 const timesCopied = response.timesCopied || 0; 
 
-                // --- SMART LOGIC ---
+                // --- NEW UNIFIED SMART LOGIC ---
                 let bestMatch = null;
                 let maxScore = 0;
+                
+                // Only run matching if cache exists
                 if (typeof globalKnowledgeCache !== 'undefined' && globalKnowledgeCache.length > 0) {
                     const matchResult = findRelevantPolicy(response.text);
                     if (matchResult) {
@@ -7817,57 +7876,30 @@ const renderResponses = (searchQuery = '') => {
                 }
                 
                 const hasMatch = bestMatch && maxScore > 12;
-                let badgeHTML = '';
+                let pillHTML = '';
                 let conflictMode = false;
-                let conflicts = [];
 
                 if (hasMatch) {
-                    const status = getComplianceStatus(response.createdAt, bestMatch.updatedAt, maxScore);
-                    conflicts = detectPolicyConflicts(response.text, bestMatch.content);
-                    if (conflicts.length > 0) conflictMode = true;
+                    // Check for conflicts
+                    const conflicts = detectPolicyConflicts(response.text, bestMatch.content);
+                    conflictMode = conflicts.length > 0;
 
-                    // Add 'cursor-pointer' and 'hover:bg...' to make it look clickable
-                    const baseBadgeClasses = "compliance-badge compliance-trigger cursor-pointer transition-colors duration-200";
-                    
-                    if (status === 'verified' && !conflictMode) {
-                        badgeHTML = `<span class="${baseBadgeClasses} compliance-verified hover:bg-green-500/20" title="Verified against: ${bestMatch.title}"><i class="fas fa-check-circle"></i> Compliant</span>`;
+                    // Generate ONE pill based on state
+                    if (conflictMode) {
+                        // High Priority: Red Pill
+                        pillHTML = `
+                            <button class="smart-pill pill-red insight-trigger" title="Policy Conflict Detected">
+                                <i class="fas fa-exclamation-triangle"></i> Review Needed
+                            </button>
+                        `;
                     } else {
-                        badgeHTML = `<span class="${baseBadgeClasses} compliance-warning hover:bg-amber-500/20" title="Policy updated since last edit"><i class="fas fa-exclamation-triangle"></i> Needs Review</span>`;
+                        // Standard Priority: Blue Pill
+                        pillHTML = `
+                            <button class="smart-pill pill-blue insight-trigger" title="View Related Policy: ${bestMatch.title}">
+                                <i class="fas fa-book-open"></i> Insight
+                            </button>
+                        `;
                     }
-                }
-
-                // --- GENERATE ICON HTML ---
-                let smartIconHTML = '';
-                if (hasMatch) {
-                    const iconClass = conflictMode ? 'pulse-alert-red text-red-500' : 'text-blue-400 glow-active';
-                    const iconType = conflictMode ? 'fa-shield-alt' : 'fa-book'; 
-                    const cheatSheet = generatePolicyCheatSheet(bestMatch.content);
-                    const mustItems = cheatSheet ? cheatSheet.requirements : [];
-
-                    smartIconHTML = `
-                    <div class="policy-group ml-auto">
-                        <button class="policy-trigger-btn p-2 rounded-lg hover:bg-white/10 transition ${iconClass}" 
-                                title="View Policy">
-                            <i class="fas ${iconType}"></i>
-                        </button>
-                        <div class="mini-policy-card ${conflictMode ? 'border-red-500/50' : ''}">
-                            <div class="mini-policy-header ${conflictMode ? 'text-red-400 border-red-500/30' : 'text-blue-400'}">
-                                <i class="fas ${conflictMode ? 'fa-exclamation-circle' : 'fa-robot'}"></i> 
-                                <span>${conflictMode ? 'Conflict Detected' : 'Policy Insight'}</span>
-                            </div>
-                            ${conflictMode ? `
-                                <div class="bg-red-900/20 p-2 rounded border border-red-500/20 mb-2">
-                                    <div class="text-xs text-red-300 font-bold flex justify-between"><span>Draft:</span> <span class="opacity-75 line-through">"${conflicts[0].userPhrase}"</span></div>
-                                    <div class="text-xs text-green-400 font-bold flex justify-between"><span>Policy:</span> <span>"${conflicts[0].policyPhrase}"</span></div>
-                                </div>
-                            ` : `
-                                <ul class="text-xs text-gray-300 space-y-2 list-disc list-inside">
-                                    ${mustItems.length > 0 ? mustItems.slice(0, 2).map(m => `<li>${m}</li>`).join('') : '<li>Click to view full policy details.</li>'}
-                                </ul>
-                            `}
-                            <div class="mt-2 pt-2 border-t border-gray-700 text-[10px] text-gray-500 text-right truncate">Linked: ${bestMatch.title}</div>
-                        </div>
-                    </div>`;
                 }
 
                 // --- CARD HTML ---
@@ -7893,10 +7925,9 @@ const renderResponses = (searchQuery = '') => {
                                     style="background-color: ${copyBtnBg};">
                                 <i class="fas fa-copy"></i> <span>Copy</span>
                             </button>
-                            ${badgeHTML} 
+                            ${pillHTML} 
                         </div>
                         <div class="flex items-center gap-4">
-                            ${smartIconHTML} 
                             <span class="usage-count-display text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
                             <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
                                 <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
@@ -7913,42 +7944,20 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                 `;
 
-                // --- 4. ATTACH LISTENERS (Strict Scope) ---
+                // --- 4. ATTACH LISTENERS ---
                 
-                // Helper to toggle the specific tooltip
-                const toggleTooltip = (show) => {
-                    const tooltip = cardEl.querySelector('.mini-policy-card');
-                    if (tooltip) {
-                        if (show) tooltip.classList.add('is-visible');
-                        else tooltip.classList.remove('is-visible');
-                    }
-                };
-
-                // Helper to handle Policy Click
-                const handlePolicyClick = (e) => {
-                    e.stopPropagation();
-                    if (bestMatch) {
-                        showInsightsSidebar(bestMatch, true); // True = Force open even if read
-                    }
-                };
-
-                // A. Icon Button Listeners
-                const policyBtn = cardEl.querySelector('.policy-trigger-btn');
-                if (policyBtn) {
-                    policyBtn.addEventListener('click', handlePolicyClick);
-                    policyBtn.addEventListener('mouseenter', () => toggleTooltip(true));
-                    policyBtn.addEventListener('mouseleave', () => toggleTooltip(false));
+                // Unified Insight Click Handler
+                const insightBtn = cardEl.querySelector('.insight-trigger');
+                if (insightBtn) {
+                    insightBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Open the sidebar manually
+                        if (bestMatch) {
+                            showInsightsSidebar(bestMatch, true); 
+                        }
+                    });
                 }
 
-                // B. Badge Listeners
-                const badgeEl = cardEl.querySelector('.compliance-trigger');
-                if (badgeEl) {
-                    badgeEl.addEventListener('click', handlePolicyClick);
-                    badgeEl.addEventListener('mouseenter', () => toggleTooltip(true));
-                    badgeEl.addEventListener('mouseleave', () => toggleTooltip(false));
-                }
-
-                // C. Copy Button Logic
                 const copyBtn = cardEl.querySelector('.copy-btn');
                 const handleCopyAction = () => {
                     if(copyBtn.classList.contains('clicked')) return; 
@@ -8244,11 +8253,11 @@ const processAndCopy = (text, responseId, categoryName) => {
                 labelRow.className = 'flex justify-between items-center mb-2';
                 labelRow.innerHTML = `
                     <label class="text-xs font-bold text-blue-400/80 uppercase tracking-widest ml-1">${placeholder}</label>
-                    <span class="text-[10px] text-gray-500 italic">Required</span>
+                    <span class="text-xs text-gray-500 italic">Required</span>
                 `;
                 group.appendChild(labelRow);
 
-                // 2. Input Field (Handle Date vs Text)
+                // 2. Input Field
                 const inputContainer = document.createElement('div');
                 inputContainer.className = 'relative';
                 
@@ -8257,19 +8266,14 @@ const processAndCopy = (text, responseId, categoryName) => {
                 input.className = 'premium-input w-full p-4 rounded-2xl text-white outline-none text-base';
                 
                 if (placeholder.toLowerCase().includes('date')) {
-                    // Date Logic
-                    input.type = 'text'; // Keep as text to show formatted date
-                    
-                    // Default to Today
+                    // Date Logic (Keep your existing date logic here)
+                    input.type = 'text';
                     const today = new Date();
                     input.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                    
-                    // Hidden Date Picker
                     const hiddenDate = document.createElement('input');
                     hiddenDate.type = 'date';
                     hiddenDate.className = 'absolute inset-0 opacity-0 cursor-pointer';
                     hiddenDate.value = today.toISOString().split('T')[0];
-                    
                     hiddenDate.addEventListener('change', (e) => {
                         const dateParts = e.target.value.split('-');
                         const selectedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
@@ -8278,72 +8282,53 @@ const processAndCopy = (text, responseId, categoryName) => {
                         void input.offsetWidth; 
                         input.classList.add('fill-effect');
                     });
-
-                    // Icon
                     const icon = document.createElement('i');
                     icon.className = 'fas fa-calendar-alt absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none';
-                    
                     inputContainer.appendChild(input);
                     inputContainer.appendChild(hiddenDate);
                     inputContainer.appendChild(icon);
                 } else {
-                    // Standard Text Logic
                     input.type = 'text';
                     input.placeholder = `Enter ${placeholder}...`;
                     inputContainer.appendChild(input);
                 }
                 group.appendChild(inputContainer);
 
-        
-               // 3. Smart Memory Chips (AI VERSION)
+                // 3. Smart Suggestions
                 const suggestions = getSmartSuggestions(placeholder, categoryName);
-
                 if (suggestions.length > 0) {
                     const chipContainer = document.createElement('div');
                     chipContainer.className = 'mt-3 pl-1';
-                    
-                    // Wrapper for the pills
                     const chipWrapper = document.createElement('div');
                     chipWrapper.className = 'flex flex-wrap gap-2';
 
-				suggestions.forEach(item => {
+                    suggestions.forEach(item => {
                         const val = item.val; 
-                        
-                        // Create Container for the Pill
                         const pillDiv = document.createElement('div');
                         pillDiv.className = 'suggestion-chip group/pill flex items-center bg-gray-700/50 hover:bg-blue-600/20 border border-gray-600 hover:border-blue-500 rounded-full transition-all duration-200';
                         pillDiv.dataset.value = val; 
                         pillDiv.dataset.key = placeholder;
 
-                        // 1. Value Part (Click to Fill)
                         const valueBtn = document.createElement('button');
                         valueBtn.type = 'button';
-                        // FIX: Remove from tab order so it doesn't block the user
                         valueBtn.tabIndex = -1; 
-                        valueBtn.className = 'px-3 py-1 text-[11px] text-gray-300 group-hover/pill:text-blue-200 font-medium border-r border-gray-600/50 focus:outline-none'; // Added focus:outline-none
+                        valueBtn.className = 'px-3 py-1 text-[11px] text-gray-300 group-hover/pill:text-blue-200 font-medium border-r border-gray-600/50 focus:outline-none';
                         valueBtn.textContent = val;
-                        
                         valueBtn.onclick = () => {
                             input.value = val;
                             input.classList.remove('fill-effect');
                             void input.offsetWidth; 
                             input.classList.add('fill-effect');
-                            
-                            // TEACHING MOMENT: User picked it! Boost score!
                             updateSmartHistory(placeholder, val, categoryName, 'use');
                         };
 
-                        // 2. Delete Part (Click to Remove)
                         const deleteBtn = document.createElement('button');
                         deleteBtn.type = 'button';
-                        // FIX: Remove from tab order
                         deleteBtn.tabIndex = -1;
                         deleteBtn.className = 'px-2 py-1 text-[10px] text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-r-full transition-colors focus:outline-none';
                         deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                        
                         deleteBtn.onclick = (e) => {
                             e.stopPropagation(); 
-                            // TEACHING MOMENT: User deleted it!
                             updateSmartHistory(placeholder, val, categoryName, 'delete');
                             pillDiv.remove(); 
                         };
@@ -8362,7 +8347,6 @@ const processAndCopy = (text, responseId, categoryName) => {
         });
 
         placeholderModal.classList.remove('hidden');
-        // Focus first input
         setTimeout(() => {
             const firstInput = placeholderInputsContainer.querySelector('input');
             if(firstInput) firstInput.focus();
@@ -8372,11 +8356,10 @@ const processAndCopy = (text, responseId, categoryName) => {
         // No placeholders, copy immediately
         const finalContent = replacePlaceholders(currentTextToCopy, {});
         
-        // Safety Block: Prevents UI freeze if background analysis fails
         try {
             copyToClipboard(finalContent, responseId, categoryName);
-            const insightMatch = findRelevantPolicy(finalContent);
-            showInsightsSidebar(insightMatch);
+            // REMOVED: showInsightsSidebar(insightMatch); <-- This line was the annoyance
+            // We now rely purely on the UI pill for discovery.
         } catch (e) {
             console.warn("Background logic error:", e);
         }
