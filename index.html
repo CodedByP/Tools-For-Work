@@ -4826,7 +4826,7 @@ const findRelevantPolicy = (text) => {
 };
 
 const showInsightsSidebar = (match, forceOpen = false) => {
-	const sidebar = document.getElementById('insights-sidebar');
+    const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
     
@@ -4841,7 +4841,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
 
-	if (!forceOpen && lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
+    if (!forceOpen && lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
         console.log("Policy already read. Suppressing auto-popup.");
         return; 
     }
@@ -4853,7 +4853,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     // Build Source Link
     const sourceLinkHTML = match.sourceUrl 
         ? `<a href="${match.sourceUrl}" target="_blank" class="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition group z-50 relative pointer-events-auto" title="Open Source">
-             <span class="group-hover:underline">View Source</span> <i class="fas fa-external-link-alt"></i>
+             <span class="group-hover:underline pointer-events-none">View Source</span> <i class="fas fa-external-link-alt pointer-events-none"></i>
            </a>`
         : '';
 
@@ -4903,20 +4903,27 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     }
 
     // Render Title & Header
+    // FIX 1: Updated Close Button with fixed width/height and center alignment
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             
-            <div class="bg-gray-800/50 border border-gray-700 p-4 rounded-xl mb-6 flex-shrink-0">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-[10px] font-bold ${hasInsights ? 'text-green-400 bg-green-900/20 border-green-500/20' : 'text-gray-400 bg-gray-700/50 border-gray-600'} px-2 py-0.5 rounded border tracking-wider">
-                        ${hasInsights ? 'SMART INSIGHTS' : 'FULL POLICY'}
-                    </span>
-                    ${sourceLinkHTML}
+            <div class="flex justify-between items-start mb-6">
+                 <div class="bg-gray-800/50 border border-gray-700 p-4 rounded-xl flex-grow mr-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold ${hasInsights ? 'text-green-400 bg-green-900/20 border-green-500/20' : 'text-gray-400 bg-gray-700/50 border-gray-600'} px-2 py-0.5 rounded border tracking-wider">
+                            ${hasInsights ? 'SMART INSIGHTS' : 'FULL POLICY'}
+                        </span>
+                        ${sourceLinkHTML}
+                    </div>
+                    <h4 class="font-bold text-gray-100 text-lg leading-tight mb-1">${match.title}</h4>
+                    <div class="text-xs text-gray-500 flex items-center gap-2">
+                        <i class="far fa-clock"></i> Updated ${updatedDate}
+                    </div>
                 </div>
-                <h4 class="font-bold text-gray-100 text-lg leading-tight mb-1">${match.title}</h4>
-                <div class="text-xs text-gray-500 flex items-center gap-2">
-                    <i class="far fa-clock"></i> Updated ${updatedDate}
-                </div>
+                
+                <button id="close-insights-btn" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 transition-all z-20 shadow-md">
+                    <i class="fas fa-times text-xl pointer-events-none"></i>
+                </button>
             </div>
             
             ${htmlContent}
@@ -4929,27 +4936,30 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         </div>
     `;
 
-    // Footer Buttons Logic (Keep your existing footer logic)
+    // Footer Buttons Logic
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
         
+        // FIX 2: Added pointer-events-none to inner elements of the buttons
         let footerButtonsHTML = `
-            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95">
-                <i class="fas fa-check pointer-events-none"></i> <span class="hidden sm:inline pointer-events-none">Got it</span>
+            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
+                <i class="fas fa-check pointer-events-none group-hover:scale-110 transition-transform"></i> 
+                <span class="pointer-events-none">Got it</span>
             </button>
         `;
 
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
-                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95">
-                    <i class="fas fa-edit pointer-events-none"></i> <span class="hidden sm:inline pointer-events-none">Edit</span>
+                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95 group">
+                    <i class="fas fa-edit pointer-events-none group-hover:scale-110 transition-transform"></i> 
+                    <span class="pointer-events-none">Edit</span>
                 </button>
             `;
         }
 
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
 
-        // Re-attach footer listeners (Same as before)
+        // Re-attach footer listeners
         document.getElementById('mark-read-btn').addEventListener('click', () => {
             localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
             sidebar.classList.remove('translate-x-0'); 
@@ -4970,6 +4980,16 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             });
         }
     }
+
+    // RE-ATTACH THE CLOSE LISTENER HERE because we overwrote the HTML innerHTML
+    // This is crucial because the previous listener was attached to the OLD close button
+    document.getElementById('close-insights-btn').addEventListener('click', () => {
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('translate-x-full');
+        if (currentPolicyId) {
+            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+        }
+    });
 
     // Slide Sidebar In
     sidebar.classList.remove('translate-x-full');
