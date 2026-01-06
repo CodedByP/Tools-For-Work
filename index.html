@@ -4861,16 +4861,18 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
-    // --- 2. Update Static Header (No Duplicates!) ---
-    headerText.textContent = match.title;
-    updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
+    // --- 2. Update Static Header ---
+    if(headerText) headerText.textContent = match.title;
+    if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
     
-    if (match.sourceUrl) {
-        sourceLinkEl.classList.remove('hidden');
-        const link = sourceLinkEl.querySelector('a');
-        link.href = match.sourceUrl;
-    } else {
-        sourceLinkEl.classList.add('hidden');
+    if (sourceLinkEl) {
+        if (match.sourceUrl) {
+            sourceLinkEl.classList.remove('hidden');
+            const link = sourceLinkEl.querySelector('a');
+            if(link) link.href = match.sourceUrl;
+        } else {
+            sourceLinkEl.classList.add('hidden');
+        }
     }
 
     // --- 3. Generate Content Body ---
@@ -4931,7 +4933,6 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
         
-        // Generate Button HTML with pointer-events-none on icons/text
         let footerButtonsHTML = `
             <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
                 <i class="fas fa-check pointer-events-none group-hover:scale-110 transition-transform"></i> 
@@ -4939,6 +4940,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             </button>
         `;
 
+        // Check global Admin User variable
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
                 <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95 group">
@@ -4948,10 +4950,12 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             `;
         }
 
-        // Set HTML
+        // Inject HTML
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
 
-        // Attach Listeners Immediately to the NEW elements
+        // --- ATTACH LISTENERS SAFELY ---
+        
+        // 1. "Got It" Button
         const markReadBtn = document.getElementById('mark-read-btn');
         if (markReadBtn) {
             markReadBtn.addEventListener('click', () => {
@@ -4962,17 +4966,21 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             });
         }
 
+        // 2. "Edit" Button (Only verify existence, don't assume)
         const adminEditBtn = document.getElementById('admin-edit-btn');
         if (adminEditBtn) {
             adminEditBtn.addEventListener('click', () => {
+                // Populate Global Edit ID
                 editingArticleId = match.id;
+                
+                // Populate Form Fields
                 document.getElementById('ingest-title').value = match.title || "";
                 document.getElementById('ingest-content').value = match.content || "";
                 document.getElementById('ingest-url').value = match.sourceUrl || "";
                 document.getElementById('ingest-modal-title').textContent = "Edit Policy";
-                document.getElementById('ingest-modal').classList.remove('hidden');
                 
-                // Close sidebar when opening edit modal
+                // Show Modal / Hide Sidebar
+                document.getElementById('ingest-modal').classList.remove('hidden');
                 sidebar.classList.remove('translate-x-0');
                 sidebar.classList.add('translate-x-full');
             });
