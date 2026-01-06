@@ -518,17 +518,17 @@ body.light-mode #cancel-placeholder-btn:hover {
 /* 2. The Popup (Hidden by default) */
 .mini-policy-card {
     position: absolute;
-    bottom: 120%; 
-    right: 0;
+    bottom: 120%; /* Sits above the icon */
+    right: 0;      /* Aligned to right edge */
     width: 300px;
-    background-color: #1f2937;
-    border: 1px solid #374151;
+    background-color: #1f2937; /* Gray-800 */
+    border: 1px solid #374151; /* Gray-700 */
     border-radius: 0.75rem;
     padding: 1rem;
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.4);
     z-index: 9999;
     
-    /* Animation settings */
+    /* Animation: Hidden State */
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
@@ -538,11 +538,11 @@ body.light-mode #cancel-placeholder-btn:hover {
 
 /* 3. The Active State (Only added via JS) */
 .mini-policy-card.is-visible {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    pointer-events: auto; /* Clickable when visible */
-}	
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+}
 
 /* --- Podium Styles --- */
 .podium-container {
@@ -930,17 +930,15 @@ body.light-mode #cancel-placeholder-btn:hover {
     top: 100%; 
     left: 0;
     width: 100%;
-    height: 30px; /* Covers the gap between icon and card */
+    height: 30px; 
     background: transparent;
 }
 
 /* Show State */
 .group:hover .mini-policy-card {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    pointer-events: auto;
-    transition-delay: 0.1s; /* Tiny delay before showing */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 /* Internal Card Styles */
@@ -4782,8 +4780,8 @@ const showInsightsSidebar = (match) => {
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
 
-    if (lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
-        console.log("User has already seen this policy version. Suppressing sidebar.");
+	if (!forceOpen && lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
+        console.log("Policy already read. Suppressing auto-popup.");
         return; 
     }
 
@@ -7700,9 +7698,7 @@ const renderResponses = (searchQuery = '') => {
         responsesToRender = allResponses.filter(r => {
             const label = (r.label || '').toLowerCase();
             const text = (r.text || '').toLowerCase();
-            
             if (label.includes(query) || text.includes(query)) return true;
-
             if (query.length > 3) {
                 const labelWords = label.split(' ');
                 if (labelWords.some(word => getLevenshteinDistance(word, query) <= 2)) return true;
@@ -7781,7 +7777,6 @@ const renderResponses = (searchQuery = '') => {
                 // Colors & Styling
                 let displayText = response.text;
                 let displayLabel = response.label || 'Unlabeled';
-                
                 if (query) {
                     const regex = new RegExp(`(${query})`, 'gi');
                     displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
@@ -7813,7 +7808,6 @@ const renderResponses = (searchQuery = '') => {
                 // --- SMART LOGIC ---
                 let bestMatch = null;
                 let maxScore = 0;
-                
                 if (typeof globalKnowledgeCache !== 'undefined' && globalKnowledgeCache.length > 0) {
                     const matchResult = findRelevantPolicy(response.text);
                     if (matchResult) {
@@ -7823,7 +7817,6 @@ const renderResponses = (searchQuery = '') => {
                 }
                 
                 const hasMatch = bestMatch && maxScore > 12;
-
                 let badgeHTML = '';
                 let conflictMode = false;
                 let conflicts = [];
@@ -7833,15 +7826,17 @@ const renderResponses = (searchQuery = '') => {
                     conflicts = detectPolicyConflicts(response.text, bestMatch.content);
                     if (conflicts.length > 0) conflictMode = true;
 
-                    // Note: 'compliance-trigger' class is used for JS hover listener
+                    // Add 'cursor-pointer' and 'hover:bg...' to make it look clickable
+                    const baseBadgeClasses = "compliance-badge compliance-trigger cursor-pointer transition-colors duration-200";
+                    
                     if (status === 'verified' && !conflictMode) {
-                        badgeHTML = `<span class="compliance-badge compliance-verified compliance-trigger cursor-pointer" title="Verified against: ${bestMatch.title}"><i class="fas fa-check-circle"></i> Compliant</span>`;
+                        badgeHTML = `<span class="${baseBadgeClasses} compliance-verified hover:bg-green-500/20" title="Verified against: ${bestMatch.title}"><i class="fas fa-check-circle"></i> Compliant</span>`;
                     } else {
-                        badgeHTML = `<span class="compliance-badge compliance-warning compliance-trigger cursor-pointer" title="Policy updated since last edit"><i class="fas fa-exclamation-triangle"></i> Needs Review</span>`;
+                        badgeHTML = `<span class="${baseBadgeClasses} compliance-warning hover:bg-amber-500/20" title="Policy updated since last edit"><i class="fas fa-exclamation-triangle"></i> Needs Review</span>`;
                     }
                 }
 
-                // --- Generate Icon HTML (Without Generic Hover Classes) ---
+                // --- GENERATE ICON HTML ---
                 let smartIconHTML = '';
                 if (hasMatch) {
                     const iconClass = conflictMode ? 'pulse-alert-red text-red-500' : 'text-blue-400 glow-active';
@@ -7849,11 +7844,9 @@ const renderResponses = (searchQuery = '') => {
                     const cheatSheet = generatePolicyCheatSheet(bestMatch.content);
                     const mustItems = cheatSheet ? cheatSheet.requirements : [];
 
-                    // FIX: Using 'policy-group' just for positioning, NOT hover effects
                     smartIconHTML = `
                     <div class="policy-group ml-auto">
                         <button class="policy-trigger-btn p-2 rounded-lg hover:bg-white/10 transition ${iconClass}" 
-                                data-policy-id="${bestMatch.id}"
                                 title="View Policy">
                             <i class="fas ${iconType}"></i>
                         </button>
@@ -7867,7 +7860,6 @@ const renderResponses = (searchQuery = '') => {
                                     <div class="text-xs text-red-300 font-bold flex justify-between"><span>Draft:</span> <span class="opacity-75 line-through">"${conflicts[0].userPhrase}"</span></div>
                                     <div class="text-xs text-green-400 font-bold flex justify-between"><span>Policy:</span> <span>"${conflicts[0].policyPhrase}"</span></div>
                                 </div>
-                                <div class="text-[10px] text-gray-400 italic mb-2">Click icon to view full policy details.</div>
                             ` : `
                                 <ul class="text-xs text-gray-300 space-y-2 list-disc list-inside">
                                     ${mustItems.length > 0 ? mustItems.slice(0, 2).map(m => `<li>${m}</li>`).join('') : '<li>Click to view full policy details.</li>'}
@@ -7878,7 +7870,7 @@ const renderResponses = (searchQuery = '') => {
                     </div>`;
                 }
 
-                // --- Render Card Structure ---
+                // --- CARD HTML ---
                 const titleHTML = `
                     <div class="flex items-center gap-3 mb-2 ml-1 cursor-pointer copy-trigger w-fit">
                         <h4 class="text-lg font-bold ${titleColor} tracking-tight transition-colors select-none">${displayLabel}</h4>
@@ -7895,7 +7887,6 @@ const renderResponses = (searchQuery = '') => {
                     <div class="p-6 flex-grow display-mode w-full">
                         <p class="response-text-display ${bodyTextColor} whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
                     </div>
-
                     <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center relative z-20">
                         <div class="flex items-center gap-3">
                             <button class="copy-btn anim-bounce text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:brightness-110" 
@@ -7904,7 +7895,6 @@ const renderResponses = (searchQuery = '') => {
                             </button>
                             ${badgeHTML} 
                         </div>
-
                         <div class="flex items-center gap-4">
                             ${smartIconHTML} 
                             <span class="usage-count-display text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
@@ -7923,9 +7913,9 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                 `;
 
-                // --- 4. ATTACH LISTENERS ---
+                // --- 4. ATTACH LISTENERS (Strict Scope) ---
                 
-                // A. Helper to toggle the specific tooltip for this card
+                // Helper to toggle the specific tooltip
                 const toggleTooltip = (show) => {
                     const tooltip = cardEl.querySelector('.mini-policy-card');
                     if (tooltip) {
@@ -7934,57 +7924,31 @@ const renderResponses = (searchQuery = '') => {
                     }
                 };
 
-                // B. Icon Button Logic
+                // Helper to handle Policy Click
+                const handlePolicyClick = (e) => {
+                    e.stopPropagation();
+                    if (bestMatch) {
+                        showInsightsSidebar(bestMatch, true); // True = Force open even if read
+                    }
+                };
+
+                // A. Icon Button Listeners
                 const policyBtn = cardEl.querySelector('.policy-trigger-btn');
-                let hoverTimeout;
-
                 if (policyBtn) {
-                    // Click: Open Sidebar
-                    policyBtn.addEventListener('click', (e) => {
-                        e.stopPropagation(); 
-                        const policyId = policyBtn.dataset.policyId;
-                        const policy = globalKnowledgeCache.find(p => p.id === policyId);
-                        if (policy) showInsightsSidebar(policy);
-                    });
-
-                    // Hover: Show Tooltip
-                    policyBtn.addEventListener('mouseenter', () => {
-                        clearTimeout(hoverTimeout);
-                        toggleTooltip(true);
-                    });
-                    
-                    policyBtn.addEventListener('mouseleave', () => {
-                        hoverTimeout = setTimeout(() => toggleTooltip(false), 200);
-                    });
+                    policyBtn.addEventListener('click', handlePolicyClick);
+                    policyBtn.addEventListener('mouseenter', () => toggleTooltip(true));
+                    policyBtn.addEventListener('mouseleave', () => toggleTooltip(false));
                 }
 
-                // C. Badge Logic (The "Needs Review" Text)
+                // B. Badge Listeners
                 const badgeEl = cardEl.querySelector('.compliance-trigger');
                 if (badgeEl) {
-                    // Click: Open Sidebar (Same as icon)
-                    badgeEl.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Find the policy ID from the sibling button
-                        const btn = cardEl.querySelector('.policy-trigger-btn');
-                        if (btn) {
-                            const policyId = btn.dataset.policyId;
-                            const policy = globalKnowledgeCache.find(p => p.id === policyId);
-                            if (policy) showInsightsSidebar(policy);
-                        }
-                    });
-
-                    // Hover: Show Tooltip
-                    badgeEl.addEventListener('mouseenter', () => {
-                        clearTimeout(hoverTimeout);
-                        toggleTooltip(true);
-                    });
-
-                    badgeEl.addEventListener('mouseleave', () => {
-                        hoverTimeout = setTimeout(() => toggleTooltip(false), 200);
-                    });
+                    badgeEl.addEventListener('click', handlePolicyClick);
+                    badgeEl.addEventListener('mouseenter', () => toggleTooltip(true));
+                    badgeEl.addEventListener('mouseleave', () => toggleTooltip(false));
                 }
 
-                // D. Standard Copy Logic
+                // C. Copy Button Logic
                 const copyBtn = cardEl.querySelector('.copy-btn');
                 const handleCopyAction = () => {
                     if(copyBtn.classList.contains('clicked')) return; 
