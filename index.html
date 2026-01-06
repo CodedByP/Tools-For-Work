@@ -4764,8 +4764,8 @@ const findRelevantPolicy = (text) => {
     return highestScore > 12 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
 };
 
-const showInsightsSidebar = (match) => {
-    const sidebar = document.getElementById('insights-sidebar');
+const showInsightsSidebar = (match, forceOpen = false) => {
+	const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
     
