@@ -4373,26 +4373,32 @@ const calculatePolicyWeight = (responseText, responseCategory, policy) => {
 
 // 3. GHOST READER: Conflict Detector
 const detectPolicyConflicts = (userText, policyContent) => {
+// REPLACE your existing 'detectPolicyConflicts' function with this:
+const detectPolicyConflicts = (userText, policyContent) => {
     const conflicts = [];
     const lowerUser = userText.toLowerCase();
     const lowerPolicy = policyContent.toLowerCase();
 
-    // Check for conflicting timeframes (e.g. "30 days" vs "10 days")
-    const timeRegex = /(\d+)\s+(day|hour|minute|week)/g;
-    let match;
+    // STRICTER Regex: Only looks for patterns like "within X days" or "limit of X days"
+    // This prevents matching random numbers.
+    const timeRegex = /(within|limit|after|every)\s+(\d+)\s+(day|hour|week|business day)/g;
 
+    let match;
     while ((match = timeRegex.exec(lowerUser)) !== null) {
-        const userTime = match[0]; 
-        const number = match[1];
-        const unit = match[2];
-        
-        // Find same unit in policy
-        const policyRegex = new RegExp(`(\\d+)\\s+${unit}`, 'g');
+        const fullPhrase = match[0]; // e.g. "after 40 days"
+        const preposition = match[1]; // "after"
+        const number = match[2]; // "40"
+        const unit = match[3]; // "days"
+
+        // Search policy for the SAME preposition and unit, but different number
+        // This ensures we compare "apples to apples" (e.g. "after" vs "after")
+        const policyRegex = new RegExp(`${preposition}\\s+(\\d+)\\s+${unit}`, 'g');
         let policyMatch;
+
         while ((policyMatch = policyRegex.exec(lowerPolicy)) !== null) {
             if (policyMatch[1] !== number) {
                 conflicts.push({
-                    userPhrase: userTime,
+                    userPhrase: fullPhrase,
                     policyPhrase: policyMatch[0]
                 });
             }
@@ -4402,14 +4408,14 @@ const detectPolicyConflicts = (userText, policyContent) => {
 };
 
 // 4. COMPLIANCE CHECKER: Timestamps
-const getComplianceStatus = (responseDate, policyTimestamp) => {
+const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     if (!policyTimestamp) return 'verified'; 
     if (!responseDate) return 'warning'; 
+    if (matchScore < 15) return 'verified';
 
     const rDate = new Date(responseDate);
     const pDate = policyTimestamp.toDate(); 
     
-    // If policy is NEWER than the response edit, it's a warning
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
@@ -4625,38 +4631,40 @@ const loadGlobalKnowledge = () => {
 };
 
 // 3. The Matching Engine (No AI, just smart counting)
+// REPLACE your existing 'findRelevantPolicy' function with this:
 const findRelevantPolicy = (text) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
-    // 1. Clean and tokenize the user's copied text
+    // 1. Clean and tokenize - Filter out generic IT words
+    const ignoredWords = ['hello', 'thank', 'you', 'please', 'kind', 'regards', 'request', 'ticket', 'order', 'status', 'update', 'google', 'team', 'email', 'contact', 'support'];
+    
     const searchTokens = text.toLowerCase()
         .replace(/[^\w\s]/g, '') 
         .split(/\s+/)
-        .filter(w => w.length > 3); // Filter out small words like "the", "and"
+        .filter(w => w.length > 3 && !ignoredWords.includes(w)); // Only keep unique, important words
 
     let bestMatch = null;
     let highestScore = 0;
-    let bestTriggerWords = []; // Store the words that caused the match
+    let bestTriggerWords = [];
 
     globalKnowledgeCache.forEach(article => {
         let score = 0;
-        let matchedWords = new Set(); // Use a Set to avoid duplicates
+        let matchedWords = new Set();
 
-        // Check Title (High Weight)
+        // Check Title (Very High Weight - The "Anchor")
         if (article.title) {
-            searchTokens.forEach(token => {
-                if (article.title.toLowerCase().includes(token)) {
-                    score += 5;
-                    matchedWords.add(token);
-                }
-            });
+            const titleWords = article.title.toLowerCase().split(/\s+/);
+            const matches = titleWords.filter(tw => text.toLowerCase().includes(tw));
+            // Exact title word match is worth a lot
+            if (matches.length >= 2) score += 10;
+            else if (matches.length === 1) score += 3;
         }
-        
-        // Check Content/Keywords (Standard Weight)
+
+        // Check Keywords (Standard Weight)
         if (article.keywords) {
             searchTokens.forEach(token => {
                 if (article.keywords.includes(token)) {
-                    score += 1;
+                    score += 2; 
                     matchedWords.add(token);
                 }
             });
@@ -4669,8 +4677,8 @@ const findRelevantPolicy = (text) => {
         }
     });
 
-    // Return the match AND the trigger words
-    return highestScore > 2 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
+    // NEW THRESHOLD: Must be > 8 (Previously 2) to filter out weak matches
+    return highestScore > 8 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
 };
 
 const showInsightsSidebar = (match) => {
@@ -7739,7 +7747,7 @@ const renderResponses = (searchQuery = '') => {
     let conflicts = [];
 
     if (hasMatch) {
-        const status = getComplianceStatus(response.createdAt, bestMatch.updatedAt);
+        const status = getComplianceStatus(response.createdAt, bestMatch.updatedAt, maxScore);
         conflicts = detectPolicyConflicts(response.text, bestMatch.content);
         if (conflicts.length > 0) conflictMode = true;
 
