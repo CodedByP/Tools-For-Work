@@ -4966,27 +4966,6 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             });
         }
 
-        // 2. "Edit" Button (Only verify existence, don't assume)
-        const adminEditBtn = document.getElementById('admin-edit-btn');
-        if (adminEditBtn) {
-            adminEditBtn.addEventListener('click', () => {
-                // Populate Global Edit ID
-                editingArticleId = match.id;
-                
-                // Populate Form Fields
-                document.getElementById('ingest-title').value = match.title || "";
-                document.getElementById('ingest-content').value = match.content || "";
-                document.getElementById('ingest-url').value = match.sourceUrl || "";
-                document.getElementById('ingest-modal-title').textContent = "Edit Policy";
-                
-                // Show Modal / Hide Sidebar
-                document.getElementById('ingest-modal').classList.remove('hidden');
-                sidebar.classList.remove('translate-x-0');
-                sidebar.classList.add('translate-x-full');
-            });
-        }
-    }
-
     // Slide Sidebar In
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
@@ -9288,6 +9267,38 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+
+const sidebarFooter = document.getElementById('sidebar-footer');
+
+if (sidebarFooter) {
+    sidebarFooter.addEventListener('click', (e) => {
+        // Check if the clicked element (or its parent) is the Admin Edit Button
+        const editBtn = e.target.closest('#admin-edit-btn');
+        
+        if (editBtn) {
+
+            if (!currentPolicyId) return;
+
+            // Find the policy data from the cache
+            const policy = globalKnowledgeCache.find(p => p.id === currentPolicyId);
+            
+            if (policy) {
+                // Populate the Edit Form
+                editingArticleId = policy.id;
+                document.getElementById('ingest-title').value = policy.title || "";
+                document.getElementById('ingest-content').value = policy.content || "";
+                document.getElementById('ingest-url').value = policy.sourceUrl || "";
+                document.getElementById('ingest-modal-title').textContent = "Edit Policy";
+                
+                // Show Modal & Close Sidebar
+                document.getElementById('ingest-modal').classList.remove('hidden');
+                document.getElementById('insights-sidebar').classList.remove('translate-x-0');
+                document.getElementById('insights-sidebar').classList.add('translate-x-full');
+            }
+        }
+    });
+}
 
 // Add a container for the warning in your HTML modal first, or inject it like this:
 const editModalTextarea = document.getElementById('edit-response-text');
