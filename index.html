@@ -7806,18 +7806,21 @@ const renderResponses = (searchQuery = '') => {
         }
     }
 
-    // C. Generate Smart Icon & Hover Card HTML
+// C. Generate Smart Icon & Hover Card HTML
     let smartIconHTML = '';
     if (hasMatch) {
         const iconClass = conflictMode ? 'pulse-alert-red text-red-500' : 'text-blue-400 glow-active';
-        const iconType = conflictMode ? 'fa-shield-alt' : 'fa-book'; // Changed icon for conflict
+        const iconType = conflictMode ? 'fa-shield-alt' : 'fa-book';
         const cheatSheet = generatePolicyCheatSheet(bestMatch.content);
         const mustItems = cheatSheet ? cheatSheet.requirements : [];
 
+        // Added 'w-fit' to the wrapper so hover only triggers on the icon itself
+        // Removed inline 'onclick' and added 'policy-trigger-btn' class
         smartIconHTML = `
-        <div class="relative group ml-auto">
-            <button class="p-2 rounded-lg hover:bg-white/10 transition ${iconClass}" 
-                    onclick="showInsightsSidebar(globalKnowledgeCache.find(p => p.id === '${bestMatch.id}'))">
+        <div class="relative group ml-auto w-fit">
+            <button class="policy-trigger-btn p-2 rounded-lg hover:bg-white/10 transition ${iconClass}" 
+                    data-policy-id="${bestMatch.id}"
+                    title="View Policy">
                 <i class="fas ${iconType}"></i>
             </button>
             <div class="mini-policy-card ${conflictMode ? 'border-red-500/50' : ''}">
@@ -7898,7 +7901,8 @@ const renderResponses = (searchQuery = '') => {
             let count = parseInt(cardEl.querySelector('.usage-count-display').textContent);
             if (!isNaN(count)) cardEl.querySelector('.usage-count-display').textContent = `${count + 1} uses`;
         }
-        
+
+		
         // Animation
         copyBtn.classList.add('clicked');
         const icon = copyBtn.querySelector('i'); const span = copyBtn.querySelector('span');
@@ -7911,6 +7915,18 @@ const renderResponses = (searchQuery = '') => {
             span.textContent = 'Copy'; 
         }, 1500);
     };
+
+	const policyBtn = cardEl.querySelector('.policy-trigger-btn');
+    if (policyBtn) {
+        policyBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop the row from toggling or doing other things
+            const policyId = policyBtn.dataset.policyId;
+            const policy = globalKnowledgeCache.find(p => p.id === policyId);
+            if (policy) {
+                showInsightsSidebar(policy);
+            }
+        });
+    }	
     
     copyBtn.addEventListener('click', handleCopyAction);
     itemWrapper.innerHTML = titleHTML;
