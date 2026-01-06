@@ -4847,13 +4847,12 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     if (!match) return; 
 
-    // --- 1. Smart Suppression Check ---
+    // --- Smart Suppression ---
     const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
 
     if (!forceOpen && lastSeenTime && parseInt(lastSeenTime) >= policyTime) {
-        console.log("Policy already read. Suppressing auto-popup.");
         return; 
     }
 
@@ -4861,7 +4860,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
-    // --- 2. Update Static Header ---
+    // --- Update Header ---
     if(headerText) headerText.textContent = match.title;
     if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
     
@@ -4875,14 +4874,13 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
     }
 
-    // --- 3. Generate Content Body ---
+    // --- Generate Content ---
     const cheatSheet = generatePolicyCheatSheet(match.content);
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
     let htmlContent = '';
 
     if (hasInsights) {
-        // Smart Cards HTML
         htmlContent += `<div class="mb-6 animate-fade-in">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Quick Cheat Sheet</h4>`;
 
@@ -4895,9 +4893,9 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 </ul>
             </div>`;
         }
-
+        // ... (Warnings and Deadlines blocks remain the same)
         if (cheatSheet.warnings.length > 0) {
-            htmlContent += `
+             htmlContent += `
             <div class="insight-card insight-warn">
                 <div class="insight-title text-amber-400"><i class="fas fa-exclamation-triangle"></i> Escalation / Warning</div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
@@ -4905,9 +4903,8 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 </ul>
             </div>`;
         }
-
         if (cheatSheet.deadlines.length > 0) {
-            htmlContent += `
+             htmlContent += `
             <div class="insight-card insight-time">
                 <div class="insight-title text-emerald-400"><i class="fas fa-clock"></i> Timelines</div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
@@ -4918,7 +4915,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         htmlContent += `</div>`;
     }
 
-    // Inject Body Content
+    // Inject Content
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             ${htmlContent}
@@ -4929,7 +4926,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         </div>
     `;
 
-    // --- 4. Update Footer & Attach Listeners ---
+    // --- Update Footer Buttons (No Listeners here anymore!) ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
         
@@ -4940,7 +4937,6 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             </button>
         `;
 
-        // Check global Admin User variable
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
                 <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95 group">
@@ -4949,23 +4945,8 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 </button>
             `;
         }
-
-        // Inject HTML
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
-
-        // --- ATTACH LISTENERS SAFELY ---
-        
-        // 1. "Got It" Button
-        const markReadBtn = document.getElementById('mark-read-btn');
-        if (markReadBtn) {
-            markReadBtn.addEventListener('click', () => {
-                localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-                sidebar.classList.remove('translate-x-0'); 
-                sidebar.classList.add('translate-x-full');
-                showMessage("Marked as read.", "success");
-            });
-        }
-	}	
+    }
 
     // Slide Sidebar In
     sidebar.classList.remove('translate-x-full');
@@ -9269,6 +9250,59 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
+	// --- UNIFIED SIDEBAR HANDLER (Fixes buttons not clicking) ---
+document.body.addEventListener('click', (e) => {
+    
+    // 1. Handle "Close" (X) Button
+    const closeBtn = e.target.closest('#close-insights-btn');
+    if (closeBtn) {
+        const sidebar = document.getElementById('insights-sidebar');
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('translate-x-full');
+        
+        // Save "seen" status when closing
+        if (currentPolicyId) {
+            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+        }
+        return; // Stop here
+    }
+
+    // 2. Handle "Edit" Button (Admin Only)
+    const editBtn = e.target.closest('#admin-edit-btn');
+    if (editBtn) {
+        if (!currentPolicyId) return;
+
+        // Find the policy data in your cache
+        const policy = globalKnowledgeCache.find(p => p.id === currentPolicyId);
+        
+        if (policy) {
+            // Populate the Edit Form
+            editingArticleId = policy.id;
+            document.getElementById('ingest-title').value = policy.title || "";
+            document.getElementById('ingest-content').value = policy.content || "";
+            document.getElementById('ingest-url').value = policy.sourceUrl || "";
+            document.getElementById('ingest-modal-title').textContent = "Edit Policy";
+            
+            // Show Modal & Close Sidebar
+            document.getElementById('ingest-modal').classList.remove('hidden');
+            document.getElementById('insights-sidebar').classList.remove('translate-x-0');
+            document.getElementById('insights-sidebar').classList.add('translate-x-full');
+        }
+        return;
+    }
+
+    // 3. Handle "Got It" Button
+    const gotItBtn = e.target.closest('#mark-read-btn');
+    if (gotItBtn) {
+        if (currentPolicyId) {
+            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
+        }
+        document.getElementById('insights-sidebar').classList.remove('translate-x-0');
+        document.getElementById('insights-sidebar').classList.add('translate-x-full');
+        showMessage("Marked as read.", "success");
+        return;
+    }
+});
 
 const sidebarFooter = document.getElementById('sidebar-footer');
 
