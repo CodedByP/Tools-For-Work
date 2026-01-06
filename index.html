@@ -2461,10 +2461,9 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         <div id="message-box" class="message-box"></div>
 
 <div id="canned-responses-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
-    <div class="w-full max-w-4xl mx-auto flex flex-col gap-8">
+    <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
         
         <div class="flex flex-col md:flex-row gap-4 w-full">
-            
             <div id="search-bar-container" class="floating-card relative p-4 flex-grow z-10">
                 <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -2484,33 +2483,38 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                     <i class="fas fa-plus mr-2"></i> Add New Response
                 </button>
             </div>
-
         </div>
 
-		<div id="smart-suggestions-wrapper" class="w-full hidden animate-fade-in mb-6">
-    <div class="flex items-center gap-2 mb-3 px-1">
-        <i class="fas fa-sparkles text-yellow-400 text-sm animate-pulse"></i>
-        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Suggested for your <span id="time-of-day-label" class="text-blue-400">Routine</span>
-        </span>
-    </div>
-    <div id="smart-suggestions-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        </div>
-	</div>
+        <div class="flex flex-col lg:flex-row gap-6 items-start relative">
 
-        <div class="w-full">
-            <div id="responses-container" class="w-full floating-card p-6 sm:p-8">
-                <h2 id="responses-heading" class="text-3xl font-bold text-gray-200 mb-6 hidden"></h2>
-                
-                <div id="responses-list" class="space-y-6">
+            <div id="smart-suggestions-wrapper" class="w-full lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-6 hidden animate-fade-in transition-all z-0">
+                <div class="floating-card p-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                    <div class="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+                        <i class="fas fa-sparkles text-yellow-400 text-sm animate-pulse"></i>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            Suggested <span id="time-of-day-label" class="text-blue-400">Now</span>
+                        </span>
                     </div>
-
-                <div id="empty-state" class="text-center text-gray-400 mt-8 hidden">
-                    <p class="text-lg">No canned responses in this category. Add one above!</p>
+                    
+                    <div id="smart-suggestions-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                        </div>
                 </div>
             </div>
-        </div>
 
+            <div class="w-full min-w-0 flex-grow">
+                <div id="responses-container" class="w-full floating-card p-6 sm:p-8">
+                    <h2 id="responses-heading" class="text-3xl font-bold text-gray-200 mb-6 hidden"></h2>
+                    
+                    <div id="responses-list" class="space-y-6">
+                        </div>
+
+                    <div id="empty-state" class="text-center text-gray-400 mt-8 hidden">
+                        <p class="text-lg">No canned responses in this category. Add one above!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
