@@ -7863,6 +7863,12 @@ const renderResponses = (searchQuery = '') => {
     
     listContainer.appendChild(itemWrapper);
 });
+	responsesList.appendChild(groupSection);
+  }
+} else {
+    emptyState.classList.remove('hidden');
+}
+};
 			
 const addResponse = async (text, label, category) => {
     if (isAnonymous) {
