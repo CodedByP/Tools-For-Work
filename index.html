@@ -4627,55 +4627,106 @@ const loadGlobalKnowledge = () => {
     });
 };
 
-// 3. The Matching Engine (No AI, just smart counting)
-// REPLACE your existing 'findRelevantPolicy' function with this:
+// --- 1. CONFIGURATION: Common words to ignore (Stopwords) ---
+const STOP_WORDS = new Set([
+    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'hello', 'thanks', 'thank', 'kind', 'regards', 'best', 'sincerely'
+]);
+
+// --- 2. HELPER: A lightweight stemmer (converts 'shipping' -> 'ship') ---
+const getRootWord = (word) => {
+    if (word.length < 4) return word;
+    if (word.endsWith('ing')) return word.slice(0, -3);
+    if (word.endsWith('ed')) return word.slice(0, -2);
+    if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
+    if (word.endsWith('ly')) return word.slice(0, -2);
+    return word;
+};
+
+// --- 3. HELPER: Generate Bigrams (Word Pairs) ---
+// Input: "return shipping label" -> ["return shipping", "shipping label"]
+const getBigrams = (tokens) => {
+    const bigrams = [];
+    for (let i = 0; i < tokens.length - 1; i++) {
+        bigrams.push(`${tokens[i]} ${tokens[i+1]}`);
+    }
+    return bigrams;
+};
+
+// --- 4. THE SMART ENGINE ---
 const findRelevantPolicy = (text) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
-    // 1. Clean and tokenize - Filter out generic IT words
-    const ignoredWords = ['hello', 'thank', 'you', 'please', 'kind', 'regards', 'request', 'ticket', 'order', 'status', 'update', 'google', 'team', 'email', 'contact', 'support'];
-    
-    const searchTokens = text.toLowerCase()
-        .replace(/[^\w\s]/g, '') 
+    // A. Clean and Tokenize User Text
+    const rawTokens = text.toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
         .split(/\s+/)
-        .filter(w => w.length > 3 && !ignoredWords.includes(w)); // Only keep unique, important words
+        .filter(w => w.length > 2 && !STOP_WORDS.has(w)); // Filter noise
+
+    // B. Create "Smart" User Features
+    const userRoots = rawTokens.map(getRootWord); // ['return', 'ship', 'label']
+    const userBigrams = getBigrams(rawTokens);    // ['return shipping', 'shipping label']
 
     let bestMatch = null;
     let highestScore = 0;
     let bestTriggerWords = [];
 
-    globalKnowledgeCache.forEach(article => {
+    globalKnowledgeCache.forEach(policy => {
         let score = 0;
-        let matchedWords = new Set();
+        let matchedTriggers = new Set();
 
-        // Check Title (Very High Weight - The "Anchor")
-        if (article.title) {
-            const titleWords = article.title.toLowerCase().split(/\s+/);
-            const matches = titleWords.filter(tw => text.toLowerCase().includes(tw));
-            // Exact title word match is worth a lot
-            if (matches.length >= 2) score += 10;
-            else if (matches.length === 1) score += 3;
+        // --- C. NEGATIVE MATCHING (Instant Disqualification) ---
+        // You can add a 'negativeKeywords' array to your policy objects in Firestore later.
+        // If the policy has exclusions and the user text contains them, skip immediately.
+        if (policy.negativeKeywords && policy.negativeKeywords.some(neg => text.toLowerCase().includes(neg))) {
+            return; 
         }
 
-        // Check Keywords (Standard Weight)
-        if (article.keywords) {
-            searchTokens.forEach(token => {
-                if (article.keywords.includes(token)) {
-                    score += 2; 
-                    matchedWords.add(token);
+        // --- D. SCORING LAYERS ---
+
+        // Layer 1: Title Analysis (The "Anchor")
+        if (policy.title) {
+            const titleTokens = policy.title.toLowerCase().split(/\s+/).map(getRootWord);
+            titleTokens.forEach(tWord => {
+                if (userRoots.includes(tWord)) {
+                    score += 15; // Huge bonus for matching the title intent
+                    matchedTriggers.add(tWord);
                 }
             });
         }
 
+        // Layer 2: Bigram Matching (Context is King)
+        // We scan the policy content for bigrams found in the user text.
+        // "return label" (2 words) is worth 4x more than just "return".
+        const policyContentLower = (policy.content || "").toLowerCase();
+        userBigrams.forEach(bigram => {
+            if (policyContentLower.includes(bigram)) {
+                score += 8; // High score for matching a phrase
+                matchedTriggers.add(bigram);
+            }
+        });
+
+        // Layer 3: Root Word Matching (Standard Keywords)
+        // If we matched a bigram, we don't double count the single words to prevent inflation
+        if (policy.keywords) {
+            policy.keywords.forEach(kw => {
+                const rootKw = getRootWord(kw.toLowerCase());
+                if (userRoots.includes(rootKw)) {
+                    score += 2;
+                    matchedTriggers.add(kw);
+                }
+            });
+        }
+
+        // --- E. WINNER SELECTION ---
         if (score > highestScore) {
             highestScore = score;
-            bestMatch = article;
-            bestTriggerWords = Array.from(matchedWords);
+            bestMatch = policy;
+            bestTriggerWords = Array.from(matchedTriggers);
         }
     });
 
-    // NEW THRESHOLD: Must be > 8 (Previously 2) to filter out weak matches
-    return highestScore > 8 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
+    // Threshold: Must have a significant score to trigger (avoids random noise)
+    return highestScore > 12 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
 };
 
 const showInsightsSidebar = (match) => {
