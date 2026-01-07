@@ -3929,42 +3929,49 @@ const showClipboardToast = (numbers) => {
     const toast = document.getElementById('clipboard-toast');
     const textEl = document.getElementById('clipboard-toast-text');
     
-    // Update Text
+    // 1. Reset: Clear any existing timer so it doesn't vanish mid-read
+    if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
+
+    // 2. Update Content
     textEl.textContent = `Found ${numbers.length} numbers. Click to process.`;
     
-    // Show Toast
+    // 3. Show Toast
     toast.classList.add('visible');
 
-    // --- ONE-CLICK ACTION ---
-    // We remove old listeners to prevent duplicates, then add the new one
+    // 4. Clean Listeners: Clone the node to wipe old event listeners
     const newToast = toast.cloneNode(true);
     toast.parentNode.replaceChild(newToast, toast);
     
+    // 5. AUTO-DISMISS: Hide automatically after 8 seconds if ignored
+    clipboardToastTimeout = setTimeout(() => {
+        newToast.classList.remove('visible');
+    }, 8000);
+
+    // 6. Click Handler
     newToast.addEventListener('click', async () => {
-        // 1. Hide Toast
+        // Stop the auto-dismiss timer (since user clicked)
+        if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
+
+        // HIDE INSTANTLY
         newToast.classList.remove('visible');
 
-        // 2. Format Data (Join with tabs/commas)
+        // Execute Logic
         const numbersToCopy = numbers.join('\t');
-        
-        // 3. Copy to Clipboard (Re-write sanitized data)
         await copyToClipboard(numbersToCopy);
 
-        // 4. Construct FedEx URL (Bulk Track)
         const numbersForUrl = numbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
         const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
         
-        // 5. Open FedEx
         window.open(fedexUrl, '_blank');
 
-        // 6. Analytics & XP
         logUserEvent('smart_clipboard_trigger', { count: numbers.length });
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'Smart Extraction');
         
+        // Show success message at top right
         showMessage(`Processed ${numbers.length} numbers!`, 'success');
     });
-};		
+};	
 
 // --- SMART SCHEDULE & VISIBILITY LOGIC ---
 // 1. The Sensor: Tracks when you are actually looking at the tab
