@@ -210,6 +210,33 @@ body.light-mode #cancel-placeholder-btn:hover {
     transform: translateY(0);
 }
 
+/* --- Ghost Reader Highlight Animation --- */
+@keyframes ghost-highlight {
+    0% { background-color: rgba(253, 224, 71, 0); }
+    10% { background-color: rgba(253, 224, 71, 0.4); transform: scale(1.02); }
+    80% { background-color: rgba(253, 224, 71, 0.4); transform: scale(1.02); }
+    100% { background-color: rgba(253, 224, 71, 0); transform: scale(1); }
+}
+
+.ghost-active {
+    animation: ghost-highlight 2.5s ease-out forwards;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
+    color: #fef08a !important; /* Force light yellow text for contrast */
+}
+
+/* --- Confidence Meter Bars --- */
+.conf-bar {
+    width: 4px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: #374151; /* Default gray */
+    transition: all 0.3s ease;
+}
+.conf-low .bar-1 { background-color: #9ca3af; }
+.conf-med .bar-1, .conf-med .bar-2 { background-color: #fbbf24; }
+.conf-high .bar-1, .conf-high .bar-2, .conf-high .bar-3 { background-color: #34d399; }
+		
 /* --- Progressive Disclosure Styles --- */
 .policy-drawer-btn {
     display: flex;
@@ -4494,7 +4521,61 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const scrollToSnippet = (textSnippet) => {
+    if (!textSnippet) return;
 
+    // 1. Expand the Drawer if closed
+    const wrapper = document.getElementById('full-policy-wrapper');
+    const toggleBtn = document.getElementById('toggle-policy-btn');
+    
+    if (wrapper && wrapper.classList.contains('slide-down-enter')) {
+        wrapper.classList.remove('slide-down-enter');
+        wrapper.classList.add('slide-down-active');
+        if(toggleBtn) {
+            toggleBtn.querySelector('span').textContent = "Hide Full Policy";
+            toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
+        }
+    }
+
+    // 2. Find the text in the source
+    // We strip formatting to match the clean snippet against the HTML content
+    const sourceContainer = wrapper.querySelector('.policy-prose');
+    if (!sourceContainer) return;
+
+    // This is a simple but effective text search using TreeWalker to find the text node
+    const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    let targetNode = null;
+
+    // Clean up previous highlights
+    document.querySelectorAll('.ghost-active').forEach(el => {
+        el.classList.remove('ghost-active');
+        // Unwrap text if needed, but for simplicity just removing class is enough usually
+    });
+
+    while(node = walker.nextNode()) {
+        if (node.textContent.includes(textSnippet)) {
+            targetNode = node;
+            break;
+        }
+    }
+
+    if (targetNode) {
+        // 3. Highlight and Scroll
+        const span = document.createElement('span');
+        span.className = 'ghost-active';
+        span.textContent = targetNode.textContent;
+        targetNode.parentNode.replaceChild(span, targetNode);
+
+        setTimeout(() => {
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300); // Small delay to allow drawer animation to start
+    } else {
+        // Fallback: If exact match fails (due to formatting), just scroll to top of source
+        wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+		
 // 2. SMART LINKER: Weighted Matching Engine
 const calculatePolicyWeight = (responseText, responseCategory, policy) => {
     let score = 0;
@@ -4876,14 +4957,13 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
     
-    // Header Elements
     const headerText = document.getElementById('sidebar-header-text');
     const updatedDateEl = document.getElementById('sidebar-updated-date');
     const sourceLinkEl = document.getElementById('sidebar-source-link');
 
     if (!match) return; 
 
-    // --- Smart Suppression ---
+    // Smart Suppression
     const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
@@ -4895,6 +4975,34 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
+    // --- 1. NEW: Confidence Score Logic ---
+    // Default to 'Med' if score is missing (legacy support)
+    const score = match.score || 20; 
+    let confClass = 'conf-med';
+    let confLabel = 'Medium Match';
+    let confColor = 'text-yellow-400';
+
+    if (score >= 30) {
+        confClass = 'conf-high';
+        confLabel = 'High Confidence';
+        confColor = 'text-emerald-400';
+    } else if (score < 15) {
+        confClass = 'conf-low';
+        confLabel = 'Low Confidence';
+        confColor = 'text-gray-400';
+    }
+
+    const confidenceHTML = `
+        <div class="flex items-center gap-2 ml-2 border-l border-gray-700 pl-3" title="Match Score: ${score}">
+            <div class="flex gap-0.5 items-end ${confClass}">
+                <div class="conf-bar bar-1"></div>
+                <div class="conf-bar bar-2" style="height: 14px;"></div>
+                <div class="conf-bar bar-3" style="height: 18px;"></div>
+            </div>
+            <span class="text-[10px] font-bold uppercase ${confColor} tracking-wider">${confLabel}</span>
+        </div>
+    `;
+
     // --- Update Header ---
     if(headerText) headerText.textContent = match.title;
     if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
@@ -4909,7 +5017,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
     }
 
-    // --- Generate Content ---
+    // --- Generate Content & Ghost Reader Links ---
     const cheatSheet = generatePolicyCheatSheet(match.content);
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
@@ -4917,19 +5025,34 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     if (hasInsights) {
         htmlContent += `<div class="mb-2 animate-fade-in">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <i class="fas fa-bolt text-yellow-500"></i> Quick Cheat Sheet
-            </h4>`;
+            <div class="flex justify-between items-end mb-3">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-bolt text-yellow-500"></i> Quick Cheat Sheet
+                </h4>
+                ${confidenceHTML}
+            </div>`;
+
+        // Helper to generate clickable list items
+        const renderListItems = (items) => {
+            return items.map(item => {
+                // Escape single quotes for the inline onclick handler
+                const safeItem = item.replace(/'/g, "\\'"); 
+                return `<li class="hover:text-white transition-colors" title="Click to find in text" 
+                        onclick="event.stopPropagation(); scrollToSnippet('${safeItem}')">
+                        ${item}
+                    </li>`;
+            }).join('');
+        };
 
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
             <div class="insight-card insight-must group cursor-pointer hover:ring-1 hover:ring-blue-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-blue-400 flex justify-between">
                     <span><i class="fas fa-check-circle"></i> Requirements</span>
-                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${cheatSheet.requirements.map(item => `<li>${item}</li>`).join('')}
+                    ${renderListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
         }
@@ -4938,10 +5061,10 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             <div class="insight-card insight-warn group cursor-pointer hover:ring-1 hover:ring-amber-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-amber-400 flex justify-between">
                     <span><i class="fas fa-exclamation-triangle"></i> Warnings</span>
-                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${cheatSheet.warnings.map(item => `<li>${item}</li>`).join('')}
+                    ${renderListItems(cheatSheet.warnings)}
                 </ul>
             </div>`;
         }
@@ -4950,18 +5073,16 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             <div class="insight-card insight-time group cursor-pointer hover:ring-1 hover:ring-emerald-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-emerald-400 flex justify-between">
                     <span><i class="fas fa-clock"></i> Timelines</span>
-                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${cheatSheet.deadlines.map(item => `<li>${item}</li>`).join('')}
+                    ${renderListItems(cheatSheet.deadlines)}
                 </ul>
             </div>`;
         }
         htmlContent += `</div>`;
     }
 
-    // --- Inject Body Content (With Progressive Disclosure) ---
-    // Note: If NO insights, we show text by default (slide-down-active). If YES insights, we hide it (slide-down-enter).
     const hiddenClass = hasInsights ? 'slide-down-enter' : 'slide-down-active';
     const btnText = hasInsights ? 'Read Full Policy' : 'Hide Full Policy';
     const btnIcon = hasInsights ? 'fa-chevron-down' : 'fa-chevron-up';
@@ -4979,14 +5100,17 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
             <div id="full-policy-wrapper" class="${hiddenClass}">
                 <div class="policy-prose flex-grow pb-6 relative pt-2 border-t border-gray-800">
-                    <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest mb-4">Source Text</h4>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest">Source Text</h4>
+                        ${!hasInsights ? confidenceHTML : ''} 
+                    </div>
                     ${formatPolicyText(match.content)}
                 </div>
             </div>
         </div>
     `;
 
-    // --- Attach Listener for Toggle Button ---
+    // --- Attach Toggle Listener ---
     const toggleBtn = document.getElementById('toggle-policy-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
@@ -5007,7 +5131,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         });
     }
 
-    // --- Update Footer Buttons ---
+    // --- Footer Buttons ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
         footerDiv.className = "p-4 border-t border-gray-800 bg-gray-900 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex-shrink-0 relative";
