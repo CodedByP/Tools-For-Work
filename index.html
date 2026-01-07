@@ -1223,6 +1223,49 @@ body.light-mode #cancel-placeholder-btn:hover {
     text-shadow: none;
 }
 
+/* --- ULTIMATE SIDEBAR FIX --- */
+
+/* 1. Structural Stability (The Sandwich) */
+#insights-sidebar {
+    display: flex;
+    flex-direction: column;
+    isolation: isolate; /* Creates a clean stacking context */
+}
+
+/* 2. Header & Footer Dominance */
+#insights-sidebar > div:first-child, /* Header */
+#sidebar-footer {
+    position: relative;
+    z-index: 50 !important; /* Sit above the content */
+    flex-shrink: 0; /* Prevent them from being squished */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 3. Scrollable Content (The Meat) */
+#insights-content {
+    position: relative;
+    z-index: 10;
+    flex: 1;        /* Take available space */
+    min-height: 0;  /* CRITICAL: Prevents invisible overflow blocking buttons */
+    overflow-y: auto;
+}
+
+/* 4. The "Invisible Hitbox" (Your List #1) */
+/* This makes the icon/text "ghosts" so clicks pass through to the button */
+#insights-sidebar button i, 
+#insights-sidebar button svg, 
+#insights-sidebar button span {
+    pointer-events: none; 
+}
+
+/* 5. Force Interactive Buttons */
+#insights-sidebar button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 60; /* Higher than header/footer background */
+}		
+
 		/* --- Light Mode: Policy Insight Sidebar --- */
 body.light-mode #insights-sidebar {
     background-color: #ffffff !important;
