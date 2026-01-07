@@ -117,6 +117,39 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     color: #111827 !important;
 }
 
+/* --- Smart Clipboard Toast --- */
+#clipboard-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); /* Start hidden below screen */
+    background: rgba(31, 41, 55, 0.95); /* Dark background */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(59, 130, 246, 0.5); /* Blue border */
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    z-index: 5000;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy enter */
+    opacity: 0;
+    pointer-events: none;
+}
+
+#clipboard-toast.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#clipboard-toast:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    border-color: #60a5fa;
+    cursor: pointer;
+}		
+
 	/* --- Light Mode: Placeholder Module Overrides --- */
 
 /* 1. Main Modal Background */
@@ -3766,6 +3799,19 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 </div>
+
+	<div id="clipboard-toast">
+    <div class="bg-blue-600/20 p-2 rounded-lg text-blue-400">
+        <i class="fas fa-magic text-xl animate-pulse"></i>
+    </div>
+    <div>
+        <h4 class="font-bold text-white text-sm">FedEx Numbers Detected</h4>
+        <p id="clipboard-toast-text" class="text-xs text-gray-400">Found 3 numbers. Click to process.</p>
+    </div>
+    <div class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-1 px-3 rounded transition-colors ml-2">
+        <i class="fas fa-play mr-1"></i> Run
+    </div>
+</div>
 	
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -3845,6 +3891,80 @@ let hasLoadedStats = false; // Prevents re-running the heavy logic
 let currentLeaderboardView = 'all';
 let sessionStartTime = null;
 let isSilencingUpdates = false; // New flag to stop flickering
+let lastProcessedClipboard = "";		
+
+
+const initSmartClipboard = () => {
+    // 1. The Trigger: When the window gains focus (user tabs back in)
+    window.addEventListener('focus', async () => {
+        // Only run if user is logged in
+        if (!userId || isAnonymous) return;
+
+        try {
+            // 2. Read Clipboard
+            const text = await navigator.clipboard.readText();
+
+            // 3. Logic Filter: Don't process if empty or same as last time
+            if (!text || text === lastProcessedClipboard) return;
+
+            // 4. Regex Match (Using your existing FedEx pattern)
+            const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
+            const matches = text.match(fedexRegex) || [];
+            const uniqueMatches = [...new Set(matches)];
+
+            // 5. Threshold Check: Must be > 1 number
+            if (uniqueMatches.length > 1) {
+                showClipboardToast(uniqueMatches);
+                lastProcessedClipboard = text; // Mark as "seen"
+            }
+
+        } catch (err) {
+            // This usually happens if the user denies permission or browser blocks it
+            console.log("Clipboard access denied or empty:", err);
+        }
+    });
+};
+
+const showClipboardToast = (numbers) => {
+    const toast = document.getElementById('clipboard-toast');
+    const textEl = document.getElementById('clipboard-toast-text');
+    
+    // Update Text
+    textEl.textContent = `Found ${numbers.length} numbers. Click to process.`;
+    
+    // Show Toast
+    toast.classList.add('visible');
+
+    // --- ONE-CLICK ACTION ---
+    // We remove old listeners to prevent duplicates, then add the new one
+    const newToast = toast.cloneNode(true);
+    toast.parentNode.replaceChild(newToast, toast);
+    
+    newToast.addEventListener('click', async () => {
+        // 1. Hide Toast
+        newToast.classList.remove('visible');
+
+        // 2. Format Data (Join with tabs/commas)
+        const numbersToCopy = numbers.join('\t');
+        
+        // 3. Copy to Clipboard (Re-write sanitized data)
+        await copyToClipboard(numbersToCopy);
+
+        // 4. Construct FedEx URL (Bulk Track)
+        const numbersForUrl = numbers.join(',');
+        const encodedNumbers = encodeURIComponent(numbersForUrl);
+        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
+        
+        // 5. Open FedEx
+        window.open(fedexUrl, '_blank');
+
+        // 6. Analytics & XP
+        logUserEvent('smart_clipboard_trigger', { count: numbers.length });
+        await awardXP(XP_VALUES.FEDEX_TRACKING, 'Smart Extraction');
+        
+        showMessage(`Processed ${numbers.length} numbers!`, 'success');
+    });
+};		
 
 // --- SMART SCHEDULE & VISIBILITY LOGIC ---
 // 1. The Sensor: Tracks when you are actually looking at the tab
@@ -10644,6 +10764,7 @@ onAuthStateChanged(auth, async (user) => {
         userId = user.uid;
 		checkAdminStatus(user);
         loadGlobalKnowledge();
+		initSmartClipboard();
 		trackedChallengeId = localStorage.getItem('trackedChallengeId');
         isAnonymous = user.isAnonymous;
         const displayName = user.displayName || user.email || 'User';
