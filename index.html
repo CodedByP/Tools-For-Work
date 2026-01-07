@@ -4575,6 +4575,7 @@ const scrollToSnippet = (textSnippet) => {
         wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
+window.scrollToSnippet = scrollToSnippet;		
 		
 // 2. SMART LINKER: Weighted Matching Engine
 const calculatePolicyWeight = (responseText, responseCategory, policy) => {
