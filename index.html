@@ -117,15 +117,15 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     color: #111827 !important;
 }
 
-/* --- Smart Clipboard Toast --- */
+/* --- Smart Clipboard Toast (Bottom Right) --- */
 #clipboard-toast {
     position: fixed;
     bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px); /* Start hidden below screen */
-    background: rgba(31, 41, 55, 0.95); /* Dark background */
+    right: 2rem; /* Changed from left: 50% to right: 2rem */
+    transform: translateY(100px); /* Only translate Y now */
+    background: rgba(31, 41, 55, 0.95);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(59, 130, 246, 0.5); /* Blue border */
+    border: 1px solid rgba(59, 130, 246, 0.5);
     border-radius: 1rem;
     padding: 1rem 1.5rem;
     display: flex;
@@ -133,13 +133,13 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     gap: 1rem;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
     z-index: 5000;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy enter */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     opacity: 0;
     pointer-events: none;
 }
 
 #clipboard-toast.visible {
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0); /* Removed translateX(-50%) */
     opacity: 1;
     pointer-events: auto;
 }
@@ -148,7 +148,7 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
     border-color: #60a5fa;
     cursor: pointer;
-}		
+}	
 
 	/* --- Light Mode: Placeholder Module Overrides --- */
 
@@ -3925,12 +3925,12 @@ const initSmartClipboard = () => {
         }
     });
 };
-
+		
 const showClipboardToast = (numbers) => {
     const toast = document.getElementById('clipboard-toast');
     const textEl = document.getElementById('clipboard-toast-text');
     
-    // 1. Reset: Clear any existing timer so it doesn't vanish mid-read
+    // 1. Reset: Clear timer
     if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
 
     // 2. Update Content
@@ -3939,24 +3939,20 @@ const showClipboardToast = (numbers) => {
     // 3. Show Toast
     toast.classList.add('visible');
 
-    // 4. Clean Listeners: Clone the node to wipe old event listeners
+    // 4. Clean Listeners
     const newToast = toast.cloneNode(true);
     toast.parentNode.replaceChild(newToast, toast);
     
-    // 5. AUTO-DISMISS: Hide automatically after 8 seconds if ignored
+    // 5. AUTO-DISMISS: 5 Seconds
     clipboardToastTimeout = setTimeout(() => {
         newToast.classList.remove('visible');
-    }, 8000);
+    }, 5000); // <--- Changed to 5000
 
     // 6. Click Handler
     newToast.addEventListener('click', async () => {
-        // Stop the auto-dismiss timer (since user clicked)
         if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
-
-        // HIDE INSTANTLY
         newToast.classList.remove('visible');
 
-        // Execute Logic
         const numbersToCopy = numbers.join('\t');
         await copyToClipboard(numbersToCopy);
 
@@ -3969,11 +3965,9 @@ const showClipboardToast = (numbers) => {
         logUserEvent('smart_clipboard_trigger', { count: numbers.length });
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'Smart Extraction');
         
-        // Show success message at top right
         showMessage(`Processed ${numbers.length} numbers!`, 'success');
     });
-};	
-
+};
 // --- SMART SCHEDULE & VISIBILITY LOGIC ---
 // 1. The Sensor: Tracks when you are actually looking at the tab
 const handleVisibilityChange = () => {
