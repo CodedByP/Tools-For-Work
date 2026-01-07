@@ -210,6 +210,42 @@ body.light-mode #cancel-placeholder-btn:hover {
     transform: translateY(0);
 }
 
+/* --- Progressive Disclosure Styles --- */
+.policy-drawer-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    color: #94a3b8; /* gray-400 */
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: 1px solid #374151; /* gray-700 */
+    background: linear-gradient(to bottom, rgba(17, 24, 39, 0), rgba(17, 24, 39, 1));
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.policy-drawer-btn:hover {
+    color: #e2e8f0; /* gray-200 */
+    background: rgba(31, 41, 55, 0.5); /* gray-800/50 */
+}
+
+/* Animation for expanding */
+.slide-down-enter {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0, 1, 0, 1), opacity 0.5s ease-in-out;
+}
+
+.slide-down-active {
+    max-height: 2000px; /* Arbitrary large height */
+    opacity: 1;
+}		
+
 /* Add these styles for the level-up modal */
 #level-up-modal .modal-content {
     position: relative; /* This is the key change to allow flexbox centering */
@@ -4847,7 +4883,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     if (!match) return; 
 
-    // --- 1. Smart Suppression ---
+    // --- Smart Suppression ---
     const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
@@ -4856,11 +4892,10 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         return; 
     }
 
-    // --- CRITICAL: Set Global State for Edit Logic ---
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
-    // --- 2. Update Header ---
+    // --- Update Header ---
     if(headerText) headerText.textContent = match.title;
     if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
     
@@ -4874,20 +4909,25 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
     }
 
-    // --- 3. Generate Content ---
+    // --- Generate Content ---
     const cheatSheet = generatePolicyCheatSheet(match.content);
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
     let htmlContent = '';
 
     if (hasInsights) {
-        htmlContent += `<div class="mb-6 animate-fade-in">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Quick Cheat Sheet</h4>`;
+        htmlContent += `<div class="mb-2 animate-fade-in">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <i class="fas fa-bolt text-yellow-500"></i> Quick Cheat Sheet
+            </h4>`;
 
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
-            <div class="insight-card insight-must">
-                <div class="insight-title text-blue-400"><i class="fas fa-check-circle"></i> Requirements</div>
+            <div class="insight-card insight-must group cursor-pointer hover:ring-1 hover:ring-blue-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
+                <div class="insight-title text-blue-400 flex justify-between">
+                    <span><i class="fas fa-check-circle"></i> Requirements</span>
+                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
                     ${cheatSheet.requirements.map(item => `<li>${item}</li>`).join('')}
                 </ul>
@@ -4895,8 +4935,11 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
         if (cheatSheet.warnings.length > 0) {
              htmlContent += `
-            <div class="insight-card insight-warn">
-                <div class="insight-title text-amber-400"><i class="fas fa-exclamation-triangle"></i> Escalation / Warning</div>
+            <div class="insight-card insight-warn group cursor-pointer hover:ring-1 hover:ring-amber-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
+                <div class="insight-title text-amber-400 flex justify-between">
+                    <span><i class="fas fa-exclamation-triangle"></i> Warnings</span>
+                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
                     ${cheatSheet.warnings.map(item => `<li>${item}</li>`).join('')}
                 </ul>
@@ -4904,8 +4947,11 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
         if (cheatSheet.deadlines.length > 0) {
              htmlContent += `
-            <div class="insight-card insight-time">
-                <div class="insight-title text-emerald-400"><i class="fas fa-clock"></i> Timelines</div>
+            <div class="insight-card insight-time group cursor-pointer hover:ring-1 hover:ring-emerald-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
+                <div class="insight-title text-emerald-400 flex justify-between">
+                    <span><i class="fas fa-clock"></i> Timelines</span>
+                    <i class="fas fa-chevron-down opacity-0 group-hover:opacity-100 text-xs transition-opacity" title="Read Context"></i>
+                </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
                     ${cheatSheet.deadlines.map(item => `<li>${item}</li>`).join('')}
                 </ul>
@@ -4914,20 +4960,56 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         htmlContent += `</div>`;
     }
 
+    // --- Inject Body Content (With Progressive Disclosure) ---
+    // Note: If NO insights, we show text by default (slide-down-active). If YES insights, we hide it (slide-down-enter).
+    const hiddenClass = hasInsights ? 'slide-down-enter' : 'slide-down-active';
+    const btnText = hasInsights ? 'Read Full Policy' : 'Hide Full Policy';
+    const btnIcon = hasInsights ? 'fa-chevron-down' : 'fa-chevron-up';
+
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             ${htmlContent}
-            <div class="policy-prose flex-grow pb-6 relative">
-                ${hasInsights ? '<h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4">Full Source Text</h4>' : ''}
-                ${formatPolicyText(match.content)}
+            
+            ${hasInsights ? `
+            <button id="toggle-policy-btn" class="policy-drawer-btn mb-4 group">
+                <span>${btnText}</span>
+                <i class="fas ${btnIcon} ml-2 group-hover:translate-y-0.5 transition-transform"></i>
+            </button>
+            ` : ''}
+
+            <div id="full-policy-wrapper" class="${hiddenClass}">
+                <div class="policy-prose flex-grow pb-6 relative pt-2 border-t border-gray-800">
+                    <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest mb-4">Source Text</h4>
+                    ${formatPolicyText(match.content)}
+                </div>
             </div>
         </div>
     `;
 
-    // --- 4. Update Footer Buttons ---
+    // --- Attach Listener for Toggle Button ---
+    const toggleBtn = document.getElementById('toggle-policy-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const wrapper = document.getElementById('full-policy-wrapper');
+            const isHidden = wrapper.classList.contains('slide-down-enter');
+            
+            if (isHidden) {
+                wrapper.classList.remove('slide-down-enter');
+                wrapper.classList.add('slide-down-active');
+                toggleBtn.querySelector('span').textContent = "Hide Full Policy";
+                toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
+            } else {
+                wrapper.classList.remove('slide-down-active');
+                wrapper.classList.add('slide-down-enter');
+                toggleBtn.querySelector('span').textContent = "Read Full Policy";
+                toggleBtn.querySelector('i').className = "fas fa-chevron-down ml-2";
+            }
+        });
+    }
+
+    // --- Update Footer Buttons ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
-        // IMPORTANT: Added 'z-50' to footer and 'pointer-events-none' to inner spans/icons
         footerDiv.className = "p-4 border-t border-gray-800 bg-gray-900 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex-shrink-0 relative";
         
         let footerButtonsHTML = `
