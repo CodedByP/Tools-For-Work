@@ -3850,7 +3850,6 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-		window.my_db = db;
         setLogLevel('debug');
 
 		const ADMIN_EMAIL = "pabarca@google.com"; // REPLACE THIS with your email
