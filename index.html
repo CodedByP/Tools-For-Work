@@ -4737,31 +4737,51 @@ const detectPolicyConflicts = (userText, policyContent) => {
     const lowerUser = userText.toLowerCase();
     const lowerPolicy = policyContent.toLowerCase();
 
-    // STRICTER Regex: Only looks for patterns like "within X days" or "limit of X days"
-    // This prevents matching random numbers.
-    const timeRegex = /(within|limit|after|every)\s+(\d+)\s+(day|hour|week|business day)/g;
+    const contextPatterns = [
+        { name: 'Return Window', keywords: 'return|complete|due', regex: /(?:return|complete|due).{0,50}?(\d+)\s+days/g },
+        { name: 'Chargeback', keywords: 'charge|cost|bill', regex: /(?:charge|cost|bill).{0,50}?(\d+)\s+days/g },
+        { name: 'Reminder', keywords: 'reminder|follow', regex: /(?:reminder|follow).{0,50}?(\d+)\s+days/g }
+    ];
 
-    let match;
-    while ((match = timeRegex.exec(lowerUser)) !== null) {
-        const fullPhrase = match[0]; // e.g. "after 40 days"
-        const preposition = match[1]; // "after"
-        const number = match[2]; // "40"
-        const unit = match[3]; // "days"
+    contextPatterns.forEach(pattern => {
+        // 1. User Search
+        pattern.regex.lastIndex = 0;
+        let userMatch;
+        while ((userMatch = pattern.regex.exec(lowerUser)) !== null) {
+            const userNum = userMatch[1]; // e.g. "40"
+            const userContext = pattern.name;
 
-        // Search policy for the SAME preposition and unit, but different number
-        // This ensures we compare "apples to apples" (e.g. "after" vs "after")
-        const policyRegex = new RegExp(`${preposition}\\s+(\\d+)\\s+${unit}`, 'g');
-        let policyMatch;
+            // 2. Policy Search (Targeted)
+            // We create a dynamic regex to search the policy ONLY for the same context
+            const policyRegex = new RegExp(`(?:${pattern.keywords}).{0,60}?(\\d+)\\s+days`, 'g');
+            let policyMatch;
+            
+            while ((policyMatch = policyRegex.exec(lowerPolicy)) !== null) {
+                const policyNum = policyMatch[1]; // e.g. "14"
 
-        while ((policyMatch = policyRegex.exec(lowerPolicy)) !== null) {
-            if (policyMatch[1] !== number) {
-                conflicts.push({
-                    userPhrase: fullPhrase,
-                    policyPhrase: policyMatch[0]
-                });
+                // 3. The Comparison
+                if (userNum !== policyNum) {
+                    
+                    // 4. The "Safety Net" (From my previous suggestion)
+                    // If the numbers don't match, check if the user text contains the CORRECT number
+                    // explicitly associated with the days unit nearby.
+                    // This saves us if the user wrote: "40 days for chargeback (standard is 14 days)"
+                    const redeemingContext = new RegExp(`${policyNum}\\s+days`, 'i');
+                    
+                    if (!redeemingContext.test(lowerUser)) {
+                        conflicts.push({
+                            userPhrase: userMatch[0],
+                            policyPhrase: policyMatch[0],
+                            context: userContext, // "Chargeback"
+                            expected: policyNum,
+                            found: userNum
+                        });
+                    }
+                }
             }
         }
-    }
+    });
+
     return conflicts;
 };
 
