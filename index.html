@@ -5047,14 +5047,15 @@ const findRelevantPolicy = (text) => {
             if (!hasAnchor) return; // SKIP: Text is missing the required context key
         }
 
-        // --- D. CRITICAL: NEGATIVE MATCHING (The "Kill Switch") ---
-        // If text contains ANY negative keyword from the policy, disqualify immediately.
-        if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
-            const hasNegative = policy.negativeKeywords.some(neg => 
-                lowerText.includes(neg.toLowerCase())
-            );
-            if (hasNegative) return; // SKIP: Context is wrong (e.g. "Ticket" but "Locker" is negative)
-        }
+		// --- D. CRITICAL: NEGATIVE MATCHING (Whole Word Version) ---
+		if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
+		    const hasNegative = policy.negativeKeywords.some(neg => {
+		        // This regex ensures we match "gng" but not "bringing"
+		        const regex = new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i');
+		        return regex.test(lowerText);
+		    });
+		    if (hasNegative) return; 
+		}
 
         // --- E. SCORING LAYERS ---
 
