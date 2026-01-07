@@ -4046,43 +4046,50 @@ const handleVisibilityChange = () => {
 const getContextualSuggestions = (events) => {
     if (!events || events.length === 0) return [];
 
+    const lastCopiedId = sessionStorage.getItem('last_copied_id');
+    const suggestions = {}; // Stores scores: { responseId: score }
+
+    // --- STRATEGY 1: SEQUENCE ANALYSIS (The "Next Step") ---
+    if (lastCopiedId) {
+        // Iterate through history to find what usually follows 'lastCopiedId'
+        // Events are usually sorted newest-first. So if events[i+1] is the trigger, events[i] is the reaction.
+        for (let i = 0; i < events.length - 1; i++) {
+            const reaction = events[i];
+            const trigger = events[i+1]; 
+            
+            if (trigger.type === 'copy' && trigger.responseId === lastCopiedId) {
+                if (reaction.type === 'copy' && reaction.responseId) {
+                    // Strong Signal: You did this immediately after
+                    suggestions[reaction.responseId] = (suggestions[reaction.responseId] || 0) + 10;
+                }
+            }
+        }
+    }
+
+    // --- STRATEGY 2: TIME ROUTINE (Fallback) ---
+    // Only matters if we didn't find a strong sequence
     const now = new Date();
-    const currentHour = now.getHours(); // 0-23
-    const currentDay = now.getDay();    // 0-6
-
-    // Filter for only 'copy' events
-    const copyHistory = events.filter(e => e.type === 'copy' && e.timestamp);
-    const scores = {};
-
-    copyHistory.forEach(event => {
-        // Guard against missing IDs
-        const id = event.responseId; 
-        if (!id) return;
-
-        const eDate = event.timestamp.toDate();
-        const eHour = eDate.getHours();
-        const eDay = eDate.getDay();
-
-        if (!scores[id]) scores[id] = 0;
-
-        // SCORING ALGORITHM
-        // 1. Exact match (Same Day + Same 2-hour window) = 10 pts
-        if (eDay === currentDay && Math.abs(eHour - currentHour) <= 1) {
-            scores[id] += 10;
+    const currentHour = now.getHours();
+    
+    events.filter(e => e.type === 'copy').forEach(e => {
+        if (!e.timestamp || !e.responseId) return;
+        const eDate = e.timestamp.toDate();
+        
+        // If used within this 2-hour window in the past
+        if (Math.abs(eDate.getHours() - currentHour) <= 1) {
+            suggestions[e.responseId] = (suggestions[e.responseId] || 0) + 2;
         }
-        // 2. Routine match (Same 2-hour window, any day) = 3 pts
-        else if (Math.abs(eHour - currentHour) <= 1) {
-            scores[id] += 3;
-        }
-        // 3. Recency Boost (Used in the last 24h) = 1 pt
-        const hoursAgo = (now - eDate) / (1000 * 60 * 60);
-        if (hoursAgo < 24) {
-            scores[id] += 1;
+        // Recency Bonus (Used today gets a small bump)
+        if ((now - eDate) < 24 * 60 * 60 * 1000) {
+            suggestions[e.responseId] = (suggestions[e.responseId] || 0) + 1;
         }
     });
 
-    // Sort by highest score and take top 3
-    return Object.entries(scores)
+    // Remove the item we *just* copied (so it doesn't suggest doing the same thing twice)
+    if (lastCopiedId) delete suggestions[lastCopiedId];
+
+    // Sort by score and take top 3
+    return Object.entries(suggestions)
         .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
         .slice(0, 3)
         .map(([id]) => id);
@@ -4090,12 +4097,12 @@ const getContextualSuggestions = (events) => {
 
 // 3. The Renderer: Updates the UI
 const updateSmartSuggestions = async () => {
-    // Only run if on the Canned Responses page and user is logged in
+    // Only run on the right page
     if (currentPage !== 'canned-responses' || !userId || isAnonymous) return;
 
-    // Fetch history if not already cached
+    // Safety check for data
     if (!cachedStatsEvents || cachedStatsEvents.length === 0) {
-        try {
+         try {
             const q = query(getUserEventsCollectionRef(userId), orderBy('timestamp', 'desc'), limit(500));
             const snapshot = await getDocs(q);
             cachedStatsEvents = snapshot.docs.map(doc => doc.data());
@@ -4109,17 +4116,39 @@ const updateSmartSuggestions = async () => {
     const container = document.getElementById('smart-suggestions-wrapper');
     const list = document.getElementById('smart-suggestions-list');
     const timeLabel = document.getElementById('time-of-day-label');
+    const icon = container.querySelector('i.fa-sparkles'); 
 
     if (topResponseIds.length === 0) {
         container.classList.add('hidden');
         return;
     }
 
-    // Update Time Label
-    const hour = new Date().getHours();
-    if (hour < 12) timeLabel.textContent = "Morning";
-    else if (hour < 17) timeLabel.textContent = "Afternoon";
-    else timeLabel.textContent = "Evening";
+    // --- DYNAMIC HEADER LOGIC ---
+    const lastCopiedId = sessionStorage.getItem('last_copied_id');
+    
+    if (lastCopiedId) {
+        // Mode: SEQUENCE (Green)
+        timeLabel.textContent = "Suggested Next Step";
+        timeLabel.className = "text-emerald-400 font-bold"; 
+        if(icon) {
+            icon.className = "fas fa-forward text-emerald-400 text-sm animate-pulse";
+        }
+        // Add a subtle green border to the container
+        container.querySelector('.floating-card').classList.add('border-emerald-500/30');
+    } else {
+        // Mode: ROUTINE (Blue/Default)
+        const hour = new Date().getHours();
+        let timeText = "Daily Routine";
+        if (hour < 12) timeText = "Morning Routine";
+        else if (hour < 17) timeText = "Afternoon Flow";
+        
+        timeLabel.textContent = timeText;
+        timeLabel.className = "text-blue-400 font-bold";
+        if(icon) {
+            icon.className = "fas fa-history text-blue-400 text-sm";
+        }
+        container.querySelector('.floating-card').classList.remove('border-emerald-500/30');
+    }
 
     list.innerHTML = ''; 
 
@@ -4127,7 +4156,7 @@ const updateSmartSuggestions = async () => {
         let foundResponse = null;
         let foundCategory = null;
 
-        // Find the response object
+        // Find the response data
         for (const [catName, catData] of Object.entries(categories)) {
             const match = catData.responses.find(r => r.id === id);
             if (match) {
@@ -4139,20 +4168,24 @@ const updateSmartSuggestions = async () => {
 
         if (foundResponse) {
             const btn = document.createElement('div');
-            btn.className = 'bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg';
+            // Add hover animation
+            btn.className = 'bg-gray-800 border border-gray-700 hover:border-emerald-500/50 hover:bg-gray-700 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg transform hover:translate-x-1';
             
-            // Determine time context label for the specific card
-            let contextLabel = "Often used now";
-            
+            // Smart Label
+            let contextLabel = "Commonly used now";
+            if (lastCopiedId) contextLabel = "Often used next";
+
             btn.innerHTML = `
-                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative z-10 flex flex-col h-full justify-between">
                     <div>
-                        <span class="text-[10px] uppercase font-bold text-gray-500 mb-1 block tracking-wider">${foundCategory}</span>
-                        <h4 class="font-bold text-gray-200 text-sm group-hover:text-blue-300 truncate">${foundResponse.label || 'Untitled'}</h4>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">${foundCategory}</span>
+                            ${lastCopiedId ? '<i class="fas fa-link text-[10px] text-emerald-500/50"></i>' : ''}
+                        </div>
+                        <h4 class="font-bold text-gray-200 text-sm group-hover:text-white truncate">${foundResponse.label || 'Untitled'}</h4>
                     </div>
-                    <div class="mt-3 flex items-center text-xs text-gray-500 gap-2">
-                        <i class="fas fa-history text-blue-400"></i>
+                    <div class="mt-2 flex items-center text-[10px] text-gray-500 gap-2 border-t border-gray-700/50 pt-2">
+                        <i class="fas fa-magic ${lastCopiedId ? 'text-emerald-400/70' : 'text-blue-400/70'}"></i>
                         <span>${contextLabel}</span>
                     </div>
                 </div>
@@ -4160,10 +4193,14 @@ const updateSmartSuggestions = async () => {
 
             btn.addEventListener('click', () => {
                 processAndCopy(foundResponse.text, foundResponse.id, foundCategory);
-                // Flash success
-                btn.className = 'bg-green-900/30 border border-green-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg transform scale-95';
+                
+                // Flash Green on Click
+                btn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+                btn.classList.add('bg-emerald-900/50', 'border-emerald-500');
+                
                 setTimeout(() => {
-                    btn.className = 'bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg';
+                    btn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+                    btn.classList.remove('bg-emerald-900/50', 'border-emerald-500');
                 }, 400);
             });
 
@@ -7430,30 +7467,43 @@ const showTutorialStep = async (stepIndex) => {
 		
 
 const logUserEvent = async (eventType, eventData = {}) => {
-    if (!userId || isAnonymous) return; // Don't log for anonymous users
+    if (!userId || isAnonymous) return; 
+    
+    // --- NEW: Track the "Previous" action for sequence learning ---
+    // We save this to the browser's temporary memory (Session Storage)
+    if (eventType === 'copy' && eventData.responseId) {
+        sessionStorage.setItem('last_copied_id', eventData.responseId);
+        
+        // Trigger an immediate refresh of the suggestions box
+        // We use a small timeout to let the UI settle
+        setTimeout(updateSmartSuggestions, 500); 
+    }
+    // --- END NEW ---
+
     try {
         const eventsCollectionRef = getUserEventsCollectionRef(userId);
-	    const cleanedEventData = {};
-	    for (const key in eventData) {
-	        if (eventData[key] !== undefined) {
-	            cleanedEventData[key] = eventData[key];
-	        }
-        }	
+        
+        // Clean undefined data before sending to Firestore
+        const cleanedEventData = {};
+        for (const key in eventData) {
+            if (eventData[key] !== undefined) {
+                cleanedEventData[key] = eventData[key];
+            }
+        }   
+
         await addDoc(eventsCollectionRef, {
             type: eventType,
             timestamp: serverTimestamp(),
-            ...eventData
+            ...cleanedEventData
         });
 
-        // --- Add Globetrotter Logic ---
+        // (Keep your existing Globetrotter logic here...)
         if (eventType === 'copy' && eventData.categoryName) {
             let categoriesUsed = JSON.parse(sessionStorage.getItem('categoriesUsedInSession') || '[]');
             if (!categoriesUsed.includes(eventData.categoryName)) {
                 categoriesUsed.push(eventData.categoryName);
                 sessionStorage.setItem('categoriesUsedInSession', JSON.stringify(categoriesUsed));
-                // If this is the second unique category, log the milestone
                 if (categoriesUsed.length >= 2) {
-                    // Log a specific event for this so we only unlock it once
                     const events = await getDocs(query(eventsCollectionRef));
                     const hasMilestone = events.docs.some(doc => doc.data().type === 'globetrotter_milestone');
                     if (!hasMilestone) {
@@ -7462,9 +7512,9 @@ const logUserEvent = async (eventType, eventData = {}) => {
                 }
             }
         }
+
     } catch (error) {
         console.error("Error logging user event:", error);
-        // We don't show a message to the user for this, as it's a background task.
     }
 };
 
