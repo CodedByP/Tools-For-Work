@@ -5471,26 +5471,26 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     }
 
 	    // --- Footer Buttons ---
-	if (footerDiv) {
-	    footerDiv.classList.remove('hidden');
-	
-	    let footerButtonsHTML = `
-	        <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group relative z-10">
-	            <i class="fas fa-times pointer-events-none"></i> 
-	            <span class="pointer-events-none">Close Insight</span>
-	        </button>
-	    `;
+// --- Inside showInsightsSidebar function ---
+if (footerDiv) {
+    footerDiv.classList.remove('hidden');
+    let footerButtonsHTML = `
+        <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group relative z-10">
+            <i class="fas fa-times pointer-events-none"></i> 
+            <span class="pointer-events-none">Close Insight</span>
+        </button>
+    `;
 
-        if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
-            footerButtonsHTML += `
-                <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95 group relative z-10">
-                    <i class="fas fa-edit pointer-events-none group-hover:scale-110 transition-transform"></i> 
-                    <span class="pointer-events-none">Edit</span>
-                </button>
-            `;
-        }
-        footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
+    if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
+        footerButtonsHTML += `
+            <button id="admin-edit-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 ml-3 transform active:scale-95 group relative z-10">
+                <i class="fas fa-edit pointer-events-none"></i> 
+                <span class="pointer-events-none">Edit</span>
+            </button>
+        `;
     }
+    footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
+}
 	
 	document.body.classList.add('sidebar-active');
     sidebar.classList.remove('translate-x-full');
