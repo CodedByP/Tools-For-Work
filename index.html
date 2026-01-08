@@ -5115,7 +5115,7 @@ const renderAdminPolicies = () => {
         `;
 
         // Click Listener: Open Edit Modal
-        item.addEventListener('click', () => {
+item.addEventListener('click', () => {
             // 1. Set Global Edit ID
             editingArticleId = policy.id;
             
@@ -5124,6 +5124,10 @@ const renderAdminPolicies = () => {
             document.getElementById('ingest-content').value = policy.content || "";
             document.getElementById('ingest-url').value = policy.sourceUrl || "";
             document.getElementById('ingest-modal-title').textContent = "Edit Policy";
+            
+            document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
+            document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
+            // ------------------------------------------
             
             // 3. Open Modal
             document.getElementById('ingest-modal').classList.remove('hidden');
