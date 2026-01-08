@@ -9807,98 +9807,65 @@ function attachEventListeners() {
 
 document.body.addEventListener('click', (e) => {
     
-    // 1. Handle "Close" (X) Button
+    // 1. Handle "Close" (X) Button at top
     const closeBtn = e.target.closest('#close-insights-btn');
     if (closeBtn) {
+        document.body.classList.remove('sidebar-active'); // Added to slide back
         const sidebar = document.getElementById('insights-sidebar');
         sidebar.classList.remove('translate-x-0');
         sidebar.classList.add('translate-x-full');
-        if (currentPolicyId) {
-            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-        }
         return; 
     }
 
     // 2. Handle "Edit" Button (Admin Only)
     const editBtn = e.target.closest('#admin-edit-btn');
     if (editBtn) {
-        console.log("Edit button clicked!"); // Debug 1
-        
-        if (!currentPolicyId) {
-            console.error("Error: No current policy ID found."); 
-            return;
-        }
-
-        // Find the policy data
+        if (!currentPolicyId) return;
         const policy = globalKnowledgeCache.find(p => p.id === currentPolicyId);
-        
         if (policy) {
-            console.log("Policy found:", policy.title); // Debug 2
-            
-            // Populate Global State
             editingArticleId = policy.id;
-            
-            // Populate Fields
-            const titleInput = document.getElementById('ingest-title');
-            const contentInput = document.getElementById('ingest-content');
-            const urlInput = document.getElementById('ingest-url');
-            
-            if(titleInput) titleInput.value = policy.title || "";
-            if(contentInput) contentInput.value = policy.content || "";
-            if(urlInput) urlInput.value = policy.sourceUrl || "";
+            document.getElementById('ingest-title').value = policy.title || "";
+            document.getElementById('ingest-content').value = policy.content || "";
+            document.getElementById('ingest-url').value = policy.sourceUrl || "";
             document.getElementById('ingest-modal-title').textContent = "Edit Policy";
-			document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
-    		document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
+            document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
+            document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
             
-            // Show Modal & Close Sidebar
             document.getElementById('ingest-modal').classList.remove('hidden');
-            document.getElementById('insights-sidebar').classList.remove('translate-x-0');
+            document.body.classList.remove('sidebar-active'); // Slide back
             document.getElementById('insights-sidebar').classList.add('translate-x-full');
-        } else {
-            console.error("Error: Policy not found in cache for ID:", currentPolicyId);
         }
         return;
     }
 
-    // 3. Handle "Got It" Button
-// --- Inside the body click listener (attachEventListeners function) ---
+    // 3. Handle the Footer Close Button
+    const footerCloseBtn = e.target.closest('#close-sidebar-footer-btn');
+    if (footerCloseBtn) {
+        document.body.classList.remove('sidebar-active'); // Slide content back
+        const sidebar = document.getElementById('insights-sidebar');
+        sidebar.classList.remove('translate-x-0');
+        sidebar.classList.add('translate-x-full');
+        return;
+    }
+}); // <--- THIS WAS MISSING: Closes the body click listener
 
-// 3. Handle the Footer Close Button
-const footerCloseBtn = e.target.closest('#close-sidebar-footer-btn');
-if (footerCloseBtn) {
-    // 1. Slide the content back to the right
-    document.body.classList.remove('sidebar-active');
-     const sidebar = document.getElementById('insights-sidebar');
-    sidebar.classList.remove('translate-x-0');
-    sidebar.classList.add('translate-x-full');
-    return;
-}
-
+// Keep this outside the body click listener
 const sidebarFooter = document.getElementById('sidebar-footer');
-
 if (sidebarFooter) {
     sidebarFooter.addEventListener('click', (e) => {
-        // Check if the clicked element (or its parent) is the Admin Edit Button
         const editBtn = e.target.closest('#admin-edit-btn');
-        
         if (editBtn) {
-
             if (!currentPolicyId) return;
-
-            // Find the policy data from the cache
             const policy = globalKnowledgeCache.find(p => p.id === currentPolicyId);
-            
             if (policy) {
-                // Populate the Edit Form
                 editingArticleId = policy.id;
                 document.getElementById('ingest-title').value = policy.title || "";
                 document.getElementById('ingest-content').value = policy.content || "";
                 document.getElementById('ingest-url').value = policy.sourceUrl || "";
                 document.getElementById('ingest-modal-title').textContent = "Edit Policy";
                 
-                // Show Modal & Close Sidebar
                 document.getElementById('ingest-modal').classList.remove('hidden');
-                document.getElementById('insights-sidebar').classList.remove('translate-x-0');
+                document.body.classList.remove('sidebar-active');
                 document.getElementById('insights-sidebar').classList.add('translate-x-full');
             }
         }
