@@ -149,15 +149,19 @@ body.sidebar-active #app-body-container {
 }
 
 #insights-sidebar button {
+    pointer-events: auto !important;
     cursor: pointer !important;
     position: relative;
-    z-index: 70; /* Ensure buttons are above all background layers */
+    z-index: 100; /* Force it to the very front */
+    overflow: hidden; /* Keeps the click within the rounded corners */
 }
 
-/* Ensure the icons don't steal the click */
+/* Force icons and text inside buttons to "ignore" the mouse so the button catches it */
 #insights-sidebar button i, 
-#insights-sidebar button span {
-    pointer-events: none;
+#insights-sidebar button span, 
+#insights-sidebar button svg {
+    pointer-events: none !important;
+    user-select: none;
 }
 		
 /* --- Smart Clipboard Toast (Bottom Right) --- */
