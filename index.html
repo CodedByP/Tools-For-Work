@@ -8405,7 +8405,6 @@ const renderResponses = (searchQuery = '') => {
                 if (insightBtn) {
                     insightBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        // Open the sidebar manually
                         if (bestMatch) {
                             showInsightsSidebar(bestMatch, true); 
                         }
@@ -8812,8 +8811,6 @@ const processAndCopy = (text, responseId, categoryName) => {
         
         try {
             copyToClipboard(finalContent, responseId, categoryName);
-            // REMOVED: showInsightsSidebar(insightMatch); <-- This line was the annoyance
-            // We now rely purely on the UI pill for discovery.
         } catch (e) {
             console.warn("Background logic error:", e);
         }
@@ -10735,8 +10732,6 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     // We wrap this in a try-catch so it doesn't break the UI if it fails
     try {
         copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
-        const insightMatch = findRelevantPolicy(finalContent);
-        showInsightsSidebar(insightMatch);
     } catch (error) {
         console.warn("Background task failed (copy/insights), but UI was handled:", error);
     }
