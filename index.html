@@ -1281,11 +1281,36 @@ body.light-mode #cancel-placeholder-btn:hover {
 
 /* 2. Header & Footer Dominance */
 #insights-sidebar > div:first-child, /* Header */
+/* 1. Force the Footer to the very front */
 #sidebar-footer {
     position: relative;
-    z-index: 50 !important; /* Sit above the content */
-    flex-shrink: 0; /* Prevent them from being squished */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 9999 !important; /* Higher than everything else */
+    pointer-events: auto !important;
+    background: #111827;
+    width: 100%;
+    display: flex;
+    /* This prevents the scrollbar from overlapping the footer area */
+    overflow: visible !important; 
+}
+
+/* 2. Fix the Button Hitbox */
+#close-sidebar-footer-btn {
+    position: relative;
+    z-index: 10000 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Ensure it fills the footer width */
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* 3. The "Ghost" Fix - Ensure no invisible content from above covers the footer */
+#insights-content {
+    margin-bottom: 0;
+    padding-bottom: 20px;
+    /* This ensures the scrollable area ends strictly above the footer */
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
 }
 
 /* 3. Scrollable Content (The Meat) */
@@ -5492,14 +5517,14 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 // --- Inside showInsightsSidebar function ---
 if (footerDiv) {
     footerDiv.classList.remove('hidden');
-    let footerButtonsHTML = `
-        <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group relative z-10">
-            <i class="fas fa-times pointer-events-none"></i> 
-            <span class="pointer-events-none">Close Insight</span>
-        </button>
+    footerDiv.innerHTML = `
+        <div style="width: 100%; display: flex;">
+            <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
+                <i class="fas fa-times"></i> 
+                <span>Close Insight</span>
+            </button>
+        </div>
     `;
-
-    footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
 }
 	
 	document.body.classList.add('sidebar-active');
