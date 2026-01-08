@@ -5575,6 +5575,21 @@ const getLevenshteinDistance = (a, b) => {
 // --- SMART MEMORY SYSTEM v2.0 ---
 
 const updateSmartHistory = (key, value, category, action) => {
+    // --- SENSITIVE/UNIQUE DATA FILTER ---
+    // We don't want to save data that is unique to every ticket (clutter).
+    const blacklist = [
+        'trackingnumber', 
+        'returntrackingnumber', 
+        'fedex tracking', 
+        'date', 
+        'screenshot', 
+        'screenshotlink',
+        'ticketnumber'
+    ];
+    
+    // Check if the current placeholder should be ignored
+    if (blacklist.includes(key.toLowerCase().trim())) return;
+
     // 1. Get existing brain data
     let history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
     if (!history[key]) history[key] = [];
@@ -5587,36 +5602,30 @@ const updateSmartHistory = (key, value, category, action) => {
 
     // 3. APPLY LEARNING LOGIC
     if (action === 'use') {
-        // POSITIVE REINFORCEMENT: User clicked it or typed it explicitly
         if (item) {
-            item.score += 2; // Boost score
+            item.score += 2; 
             item.lastUsed = now;
-            item.category = category; // Update context
+            item.category = category; 
         } else {
-            // New item starts with a base score
             history[key].push({ val: value, score: 5, lastUsed: now, category: category });
         }
     } 
     else if (action === 'ignore') {
-        // NEGATIVE REINFORCEMENT: It was shown, but user didn't pick it
         if (item) {
-            item.score -= 0.5; // Slight penalty
+            item.score -= 0.5; 
         }
     } 
     else if (action === 'delete') {
-        // NUCLEAR OPTION: User clicked 'X'
         if (existingItemIndex > -1) {
             history[key].splice(existingItemIndex, 1);
         }
     }
 
-    // 4. CLEANUP: Remove weak items (Score < 1) or too old (older than 7 days)
+    // 4. CLEANUP
     const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
     if (history[key]) {
         history[key] = history[key].filter(i => i.score >= 1 && i.lastUsed > sevenDaysAgo);
-        
-        // Cap list at top 5 to keep UI clean
-        history[key].sort((a, b) => b.score - a.score); // Sort highest score first
+        history[key].sort((a, b) => b.score - a.score);
         history[key] = history[key].slice(0, 5);
     }
 
