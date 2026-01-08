@@ -3988,42 +3988,96 @@ const showClipboardToast = (numbers) => {
     const toast = document.getElementById('clipboard-toast');
     const textEl = document.getElementById('clipboard-toast-text');
     
-    // 1. Reset: Clear timer
     if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
 
-    // 2. Update Content
     textEl.textContent = `Found ${numbers.length} numbers. Click to process.`;
-    
-    // 3. Show Toast
     toast.classList.add('visible');
 
-    // 4. Clean Listeners
     const newToast = toast.cloneNode(true);
     toast.parentNode.replaceChild(newToast, toast);
     
-    // 5. AUTO-DISMISS: 5 Seconds
     clipboardToastTimeout = setTimeout(() => {
         newToast.classList.remove('visible');
-    }, 8000); // <--- Changed to 5000
+    }, 8000); 
 
-    // 6. Click Handler
-    newToast.addEventListener('click', async () => {
+    newToast.addEventListener('click', async (e) => {
+        // Prevent re-triggering if clicking a specific suggestion button later
+        if (e.target.closest('.quick-res-btn')) return;
+
         if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
-        newToast.classList.remove('visible');
 
+        // --- 1. THE CORE ACTIONS ---
         const numbersToCopy = numbers.join('\t');
         await copyToClipboard(numbersToCopy);
 
         const numbersForUrl = numbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
         const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-        
         window.open(fedexUrl, '_blank');
 
-        logUserEvent('smart_clipboard_trigger', { count: numbers.length });
+        // --- 2. LOG CHALLENGE PROGRESS ---
+        // This is what makes it count for "Logistics Expert"
+        logUserEvent('extract_tracking', { count: numbers.length });
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'Smart Extraction');
         
-        showMessage(`Processed ${numbers.length} numbers!`, 'success');
+        // Refresh UI if on Stats page
+        if (currentPage === 'my-stats') renderAdvancedStats();
+
+        // --- 3. THE COOL PART: RECOMMEND RESPONSES ---
+        const suggestions = getShippingSuggestions(); // Uses your existing logic
+        if (suggestions.length > 0) {
+            // Transform the toast into a mini-menu
+            newToast.style.width = 'auto';
+            newToast.style.maxWidth = '400px';
+            newToast.style.flexDirection = 'column';
+            newToast.style.alignItems = 'stretch';
+            
+            let suggestionHTML = `
+                <div class="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
+                    <i class="fas fa-magic text-blue-400 text-xs"></i>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Recommended Responses</span>
+                </div>
+                <div class="flex flex-col gap-2">
+            `;
+
+            suggestions.forEach(res => {
+                suggestionHTML += `
+                    <button class="quick-res-btn text-left p-2 rounded bg-white/5 hover:bg-blue-600 transition-all border border-white/5 flex justify-between items-center group" 
+                            data-id="${res.id}" data-cat="${res.categoryName}">
+                        <span class="text-xs font-semibold text-gray-200 truncate pr-2">${res.label}</span>
+                        <i class="fas fa-copy text-[10px] text-gray-500 group-hover:text-white"></i>
+                    </button>
+                `;
+            });
+
+            suggestionHTML += `</div>`;
+            newToast.innerHTML = suggestionHTML;
+
+            // Add listeners to these new mini-buttons
+            newToast.querySelectorAll('.quick-res-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const resId = btn.dataset.id;
+                    const catName = btn.dataset.cat;
+                    const responseObj = categories[catName].responses.find(r => r.id === resId);
+                    
+                    if (responseObj) {
+                        processAndCopy(responseObj.text, resId, catName);
+                        newToast.classList.remove('visible'); // Close after copying response
+                    }
+                });
+            });
+
+            // Extend visibility so you have time to choose
+            clipboardToastTimeout = setTimeout(() => {
+                newToast.classList.remove('visible');
+            }, 10000); 
+
+        } else {
+            // Fallback if no recommendations: just show success and close
+            showMessage(`Processed ${numbers.length} numbers!`, 'success');
+            newToast.classList.remove('visible');
+        }
     });
 };
 // --- SMART SCHEDULE & VISIBILITY LOGIC ---
