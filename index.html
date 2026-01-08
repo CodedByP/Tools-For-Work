@@ -117,6 +117,35 @@ body.light-mode .leaderboard-entry p.text-gray-200 {
     color: #111827 !important;
 }
 
+/* Container for everything EXCEPT the sidebar */
+#app-body-container {
+    transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+}
+
+/* When sidebar is active, push content left */
+body.sidebar-active #app-body-container {
+    margin-right: 450px; /* Matches your sidebar width */
+}
+
+/* Fix the button detection issues */
+#insights-sidebar {
+    pointer-events: auto !important;
+    visibility: visible;
+}
+
+#insights-sidebar button {
+    cursor: pointer !important;
+    position: relative;
+    z-index: 70; /* Ensure buttons are above all background layers */
+}
+
+/* Ensure the icons don't steal the click */
+#insights-sidebar button i, 
+#insights-sidebar button span {
+    pointer-events: none;
+}
+		
 /* --- Smart Clipboard Toast (Bottom Right) --- */
 #clipboard-toast {
     position: fixed;
@@ -2510,7 +2539,8 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     <link rel="manifest" href="site.webmanifest">
 </head>
 <body class="flex flex-col min-h-screen relative theme-deep-space">
-	<div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-[9999]">
+    <div id="app-body-container" class="flex flex-col min-h-screen">
+		<div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-[9999]">
         <svg class="animate-spin h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -5440,17 +5470,16 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         });
     }
 
-    // --- Footer Buttons ---
-    if (footerDiv) {
-        footerDiv.classList.remove('hidden');
-        footerDiv.className = "p-4 border-t border-gray-800 bg-gray-900 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex-shrink-0 relative";
-        
-        let footerButtonsHTML = `
-            <button id="mark-read-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group relative z-10">
-                <i class="fas fa-check pointer-events-none group-hover:scale-110 transition-transform"></i> 
-                <span class="pointer-events-none">Got it</span>
-            </button>
-        `;
+	    // --- Footer Buttons ---
+	if (footerDiv) {
+	    footerDiv.classList.remove('hidden');
+	
+	    let footerButtonsHTML = `
+	        <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group relative z-10">
+	            <i class="fas fa-times pointer-events-none"></i> 
+	            <span class="pointer-events-none">Close Insight</span>
+	        </button>
+	    `;
 
         if (currentAdminUser && currentAdminUser.email === ADMIN_EMAIL) {
             footerButtonsHTML += `
@@ -5462,7 +5491,8 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
         footerDiv.innerHTML = `<div class="flex">${footerButtonsHTML}</div>`;
     }
-
+	
+	document.body.classList.add('sidebar-active');
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
 };
@@ -9831,17 +9861,18 @@ document.body.addEventListener('click', (e) => {
     }
 
     // 3. Handle "Got It" Button
-    const gotItBtn = e.target.closest('#mark-read-btn');
-    if (gotItBtn) {
-        if (currentPolicyId) {
-            localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
-        }
-        document.getElementById('insights-sidebar').classList.remove('translate-x-0');
-        document.getElementById('insights-sidebar').classList.add('translate-x-full');
-        showMessage("Marked as read.", "success");
-        return;
-    }
-});
+// --- Inside the body click listener (attachEventListeners function) ---
+
+// 3. Handle the Footer Close Button
+const footerCloseBtn = e.target.closest('#close-sidebar-footer-btn');
+if (footerCloseBtn) {
+    // 1. Slide the content back to the right
+    document.body.classList.remove('sidebar-active');
+     const sidebar = document.getElementById('insights-sidebar');
+    sidebar.classList.remove('translate-x-0');
+    sidebar.classList.add('translate-x-full');
+    return;
+}
 
 const sidebarFooter = document.getElementById('sidebar-footer');
 
@@ -9915,6 +9946,7 @@ editModalTextarea.addEventListener('input', () => {
 document.getElementById('close-insights-btn')?.addEventListener('click', () => {
     const sidebar = document.getElementById('insights-sidebar');
     // FIX: Remove the 'open' class AND add the 'closed' class
+	document.body.classList.remove('sidebar-active');
     sidebar.classList.remove('translate-x-0');
     sidebar.classList.add('translate-x-full');
     
