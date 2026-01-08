@@ -141,14 +141,19 @@ body.sidebar-active #app-body-container {
         filter: blur(2px) grayscale(0.5); /* Optional: just dim the background instead */
     }
 }
-
-#sidebar-footer { border: 2px solid red !important; }
-#close-sidebar-footer-btn { border: 2px solid yellow !important; }
 		
 /* Fix the button detection issues */
 #insights-sidebar {
-    pointer-events: auto !important;
-    visibility: visible;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 450px;
+    z-index: 999999 !important; /* Extreme priority */
+    background-color: #1f2937;
+    pointer-events: none; /* Mouse "passes through" the sidebar container... */
 }
 
 #insights-sidebar button {
@@ -1287,42 +1292,37 @@ body.light-mode #cancel-placeholder-btn:hover {
 /* 1. Force the Footer to the very front */
 #sidebar-footer {
     position: relative;
-    z-index: 9999 !important; /* Higher than everything else */
-    pointer-events: auto !important;
-    background: #111827;
+    z-index: 1000;
+    background: #111827; /* Solid color to block anything behind it */
+    padding: 1.5rem;
     width: 100%;
-    display: flex;
-    /* This prevents the scrollbar from overlapping the footer area */
-    overflow: visible !important; 
+    margin-top: auto; /* Pushes it to the absolute bottom */
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
+
+/* 2. The Children: Re-enable mouse events for specific areas */
+#insights-content, 
+#sidebar-footer,
+#close-insights-btn {
+    pointer-events: auto !important; /* ...but stops here so you can click! */
+}		
 
 /* 2. Fix the Button Hitbox */
 #close-sidebar-footer-btn {
-    position: relative;
-    z-index: 10000 !important;
+    width: 100% !important;
     display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 100%; /* Ensure it fills the footer width */
-    cursor: pointer !important;
-    pointer-events: auto !important;
-}
-
-/* 3. The "Ghost" Fix - Ensure no invisible content from above covers the footer */
-#insights-content {
-    margin-bottom: 0;
-    padding-bottom: 20px;
-    /* This ensures the scrollable area ends strictly above the footer */
-    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
-}
-
-/* 3. Scrollable Content (The Meat) */
-#insights-content {
     position: relative;
-    z-index: 10;
-    flex: 1;        /* Take available space */
-    min-height: 0;  /* CRITICAL: Prevents invisible overflow blocking buttons */
+    z-index: 2000;
+    /* Ensure the button doesn't get "squished" by the sidebar edge */
+    margin-right: 0; 
+}
+
+#insights-content {
+    flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    /* This creates a "gap" on the right so the scrollbar doesn't cover the footer */
+    scrollbar-gutter: stable; 
 }
 
 /* 4. The "Invisible Hitbox" (Your List #1) */
