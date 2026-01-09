@@ -5593,20 +5593,15 @@ const getLevenshteinDistance = (a, b) => {
 // --- SMART MEMORY SYSTEM v2.0 ---
 
 const updateSmartHistory = (key, value, category, action) => {
-    // --- SENSITIVE/UNIQUE DATA FILTER ---
-    // We don't want to save data that is unique to every ticket (clutter).
-    const blacklist = [
-        'trackingnumber', 
-        'returntrackingnumber', 
-        'fedex tracking', 
-        'date', 
-        'screenshot', 
-        'screenshotlink',
-        'ticketnumber'
+    const lowerKey = key.toLowerCase().trim();
+    
+    const blacklistKeywords = [
+        'tracking', 'number', 'date', 'screenshot', 'link', 'url', 'asset', 'ticket'
     ];
     
-    // Check if the current placeholder should be ignored
-    if (blacklist.includes(key.toLowerCase().trim())) return;
+    const isBlacklisted = blacklistKeywords.some(keyword => lowerKey.includes(keyword));
+    
+    if (isBlacklisted) return;
 
     // 1. Get existing brain data
     let history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
@@ -8866,6 +8861,9 @@ const processAndCopy = (text, responseId, categoryName) => {
                 const input = document.createElement('input');
                 input.dataset.placeholder = placeholder;
                 input.className = 'premium-input w-full p-4 rounded-2xl text-white outline-none text-base';
+
+				input.setAttribute('autocomplete', 'one-time-code'); // 'off' is often ignored by Chrome, this is more effective
+				input.setAttribute('spellcheck', 'false');
                 
                 if (placeholder.toLowerCase().includes('date')) {
                     // Date Logic (Keep your existing date logic here)
