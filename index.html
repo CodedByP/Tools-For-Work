@@ -141,6 +141,20 @@ body.sidebar-active #app-body-container {
         filter: blur(2px) grayscale(0.5); /* Optional: just dim the background instead */
     }
 }
+
+/* Locate this in your <style> tag and add it */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    color: transparent;
+    background: transparent;
+    cursor: pointer;
+}		
 		
 /* Fix the button detection issues */
 #insights-sidebar {
@@ -8859,8 +8873,17 @@ const processAndCopy = (text, responseId, categoryName) => {
                     const today = new Date();
                     input.value = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     const hiddenDate = document.createElement('input');
-                    hiddenDate.type = 'date';
-                    hiddenDate.className = 'absolute inset-0 opacity-0 cursor-pointer';
+					hiddenDate.type = 'date';
+					hiddenDate.className = 'absolute inset-0 opacity-0 cursor-pointer';
+					hiddenDate.addEventListener('click', (e) => {
+					    try {
+					        if (hiddenDate.showPicker) {
+					            hiddenDate.showPicker();
+					        }
+					    } catch (err) {
+					        // Fallback for older browsers
+					    }
+					});
                     hiddenDate.value = today.toISOString().split('T')[0];
                     hiddenDate.addEventListener('change', (e) => {
                         const dateParts = e.target.value.split('-');
