@@ -3932,20 +3932,24 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                    class="w-full bg-gray-900 border border-gray-600 p-3 rounded-xl text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition mb-4">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-xs font-bold text-emerald-400 uppercase mb-1">Required Anchors (Comma separated)</label>
-                <input id="ingest-anchors" type="text" placeholder="e.g. locker, gng, vending" 
-                       class="w-full bg-gray-900 border border-emerald-500/30 p-3 rounded-xl text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
-                       title="Policy will ONLY show if the response contains one of these words.">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-red-400 uppercase mb-1">Negative Keywords (Comma separated)</label>
-                <input id="ingest-negative" type="text" placeholder="e.g. resolved, completed" 
-                       class="w-full bg-gray-900 border border-red-500/30 p-3 rounded-xl text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition"
-                       title="Policy will HIDE if the response contains one of these words.">
-            </div>
-        </div>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+		    <div>
+		        <label class="block text-xs font-bold text-blue-400 uppercase mb-1">Target Categories (Optional)</label>
+		        <input id="ingest-categories" type="text" placeholder="e.g. PAR, GUTS" 
+		               class="w-full bg-gray-900 border border-blue-500/30 p-3 rounded-xl text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+		               title="Policy will ONLY show if the response belongs to one of these categories. Leave empty for all.">
+		    </div>
+		    <div>
+		        <label class="block text-xs font-bold text-emerald-400 uppercase mb-1">Required Anchors</label>
+		        <input id="ingest-anchors" type="text" placeholder="e.g. locker, vending" 
+		               class="w-full bg-gray-900 border border-emerald-500/30 p-3 rounded-xl text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+		    </div>
+		    <div>
+		        <label class="block text-xs font-bold text-red-400 uppercase mb-1">Negative Keywords</label>
+		        <input id="ingest-negative" type="text" placeholder="e.g. resolved" 
+		               class="w-full bg-gray-900 border border-red-500/30 p-3 rounded-xl text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+		    </div>
+		</div>
         
         <textarea id="ingest-content" rows="12" placeholder="Paste full article content here..." class="w-full bg-gray-800 border-2 border-gray-600 p-3 rounded-xl text-gray-200 outline-none focus:border-blue-500 mb-4"></textarea>
         
@@ -5214,6 +5218,7 @@ item.addEventListener('click', () => {
             document.getElementById('ingest-modal-title').textContent = "Edit Policy";
             
             document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
+			document.getElementById('ingest-categories').value = (policy.targetCategories || []).join(', ');
             document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
             // ------------------------------------------
             
@@ -5228,6 +5233,7 @@ item.addEventListener('click', () => {
 const resetIngestForm = () => {
     document.getElementById('ingest-title').value = "";
     document.getElementById('ingest-content').value = "";
+	document.getElementById('ingest-categories').value = "";
     document.getElementById('ingest-url').value = "";
     document.getElementById('ingest-anchors').value = ""; // <--- Added
     document.getElementById('ingest-negative').value = ""; // <--- Added
@@ -5337,96 +5343,77 @@ const getBigrams = (tokens) => {
     return bigrams;
 };
 
-// --- 4. THE SMART ENGINE v2.0 ---
-const findRelevantPolicy = (text) => {
+// --- UPDATED BRAIN: Category Aware ---
+const findRelevantPolicy = (text, currentCategory) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
-    // A. Clean and Tokenize User Text
+    // A. Clean and Tokenize
     const lowerText = text.toLowerCase();
-    const rawTokens = lowerText
-        .replace(/[^\w\s]/g, '') // Remove punctuation
-        .split(/\s+/)
-        .filter(w => w.length > 2 && !STOP_WORDS.has(w)); // Filter noise
-
-    // B. Create "Smart" User Features
+    const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
     const userRoots = rawTokens.map(getRootWord); 
     const userBigrams = getBigrams(rawTokens);    
 
     let bestMatch = null;
     let highestScore = 0;
-    let bestTriggerWords = [];
 
     globalKnowledgeCache.forEach(policy => {
-        let score = 0;
-        let matchedTriggers = new Set();
-
-        // --- C. CRITICAL: ANCHOR CHECK (The "Must Have" Layer) ---
-        // If policy has anchors, the text MUST contain at least one to even be considered.
-        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
-            const hasAnchor = policy.requiredAnchors.some(anchor => 
-                lowerText.includes(anchor.toLowerCase())
-            );
-            if (!hasAnchor) return; // SKIP: Text is missing the required context key
+        // --- 1. CATEGORY GATEKEEPER (The New Fix) ---
+        // If the policy lists specific categories, and our current one isn't in it -> SKIP.
+        if (policy.targetCategories && policy.targetCategories.length > 0) {
+            // We use uppercase comparison to be safe (e.g. "par" matches "PAR")
+            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
+            if (!currentCategory || !normalizedTargets.includes(currentCategory.toUpperCase())) {
+                return; // Hard Stop
+            }
         }
 
-		// --- D. CRITICAL: NEGATIVE MATCHING (Whole Word Version) ---
-		if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
-		    const hasNegative = policy.negativeKeywords.some(neg => {
-		        // This regex ensures we match "gng" but not "bringing"
-		        const regex = new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i');
-		        return regex.test(lowerText);
-		    });
-		    if (hasNegative) return; 
-		}
+        // --- 2. ANCHOR CHECK ---
+        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
+            const hasAnchor = policy.requiredAnchors.some(anchor => lowerText.includes(anchor.toLowerCase()));
+            if (!hasAnchor) return;
+        }
 
-        // --- E. SCORING LAYERS ---
+        // --- 3. NEGATIVE CHECK ---
+        if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
+            const hasNegative = policy.negativeKeywords.some(neg => {
+                const regex = new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i');
+                return regex.test(lowerText);
+            });
+            if (hasNegative) return; 
+        }
 
-        // Layer 1: Title Analysis (The "Anchor")
+        // --- 4. SCORING ---
+        let score = 0;
+
+        // Title Match
         if (policy.title) {
             const titleTokens = policy.title.toLowerCase().split(/\s+/).map(getRootWord);
             titleTokens.forEach(tWord => {
-                if (userRoots.includes(tWord)) {
-                    score += 15; 
-                    matchedTriggers.add(tWord);
-                }
+                if (userRoots.includes(tWord)) score += 15;
             });
         }
 
-        // Layer 2: Bigram Matching (Context is King)
+        // Bigram Match
         const policyContentLower = (policy.content || "").toLowerCase();
         userBigrams.forEach(bigram => {
-            if (policyContentLower.includes(bigram)) {
-                score += 8; 
-                matchedTriggers.add(bigram);
-            }
+            if (policyContentLower.includes(bigram)) score += 8;
         });
 
-        // Layer 3: Root Word Matching with UNIQUE BOOST
-        // We punish common words like "ticket" or "regards" by giving them low scores
+        // Keyword Match
         if (policy.keywords) {
             policy.keywords.forEach(kw => {
                 const rootKw = getRootWord(kw.toLowerCase());
-                if (userRoots.includes(rootKw)) {
-                    // Reduce weight for very common support words
-                    const isCommon = ['ticket', 'order', 'request', 'status', 'regards', 'thanks'].includes(rootKw);
-                    const weight = isCommon ? 1 : 4; // Rare words are worth 4x more
-                    
-                    score += weight;
-                    matchedTriggers.add(kw);
-                }
+                if (userRoots.includes(rootKw)) score += 4;
             });
         }
 
-        // --- F. WINNER SELECTION ---
         if (score > highestScore) {
             highestScore = score;
             bestMatch = policy;
-            bestTriggerWords = Array.from(matchedTriggers);
         }
     });
 
-    // Threshold: Must have a significant score to trigger
-    return highestScore > 12 ? { ...bestMatch, score: highestScore, triggers: bestTriggerWords } : null;
+    return highestScore > 12 ? { ...bestMatch, score: highestScore } : null;
 };
 
 const showInsightsSidebar = (match, forceOpen = false) => {
@@ -8568,18 +8555,21 @@ const renderResponses = (searchQuery = '') => {
                 }
                 const timesCopied = response.timesCopied || 0; 
 
-                // --- NEW UNIFIED SMART LOGIC ---
-                let bestMatch = null;
-                let maxScore = 0;
-                
-                // Only run matching if cache exists
-                if (typeof globalKnowledgeCache !== 'undefined' && globalKnowledgeCache.length > 0) {
-                    const matchResult = findRelevantPolicy(response.text);
-                    if (matchResult) {
-                        bestMatch = matchResult;
-                        maxScore = matchResult.score;
-                    }
-                }
+				// --- NEW UNIFIED SMART LOGIC ---
+				let bestMatch = null;
+				let maxScore = 0;
+				
+				if (typeof globalKnowledgeCache !== 'undefined' && globalKnowledgeCache.length > 0) {
+				    // OLD LINE: const matchResult = findRelevantPolicy(response.text);
+				    
+				    // NEW LINE: Pass the category!
+				    const matchResult = findRelevantPolicy(response.text, response.category);
+				    
+				    if (matchResult) {
+				        bestMatch = matchResult;
+				        maxScore = matchResult.score;
+				    }
+				}
                 
                 const hasMatch = bestMatch && maxScore > 12;
                 let pillHTML = '';
@@ -10125,6 +10115,8 @@ document.getElementById('save-ingest-btn')?.addEventListener('click', async () =
     // NEW: Parse Tags
     const anchorsRaw = document.getElementById('ingest-anchors').value;
     const negativesRaw = document.getElementById('ingest-negative').value;
+	const categoriesRaw = document.getElementById('ingest-categories').value;
+	const targetCategories = categoriesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
     const requiredAnchors = anchorsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
     const negativeKeywords = negativesRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
@@ -10142,8 +10134,9 @@ document.getElementById('save-ingest-btn')?.addEventListener('click', async () =
         content,
         sourceUrl,
         keywords: uniqueKeywords,
-        requiredAnchors,   // <--- Added
-        negativeKeywords,  // <--- Added
+		targetCategories,
+        requiredAnchors,   
+        negativeKeywords,  
         updatedAt: serverTimestamp(),
         author: currentAdminUser.email
     };
