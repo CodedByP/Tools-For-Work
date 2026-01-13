@@ -5372,7 +5372,7 @@ const getBigrams = (tokens) => {
     return bigrams;
 };
 
-// --- UPDATED BRAIN: Category Aware ---
+// --- UPDATED BRAIN v3.0: Title Veto & Category Aware ---
 const findRelevantPolicy = (text, currentCategory) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
@@ -5382,53 +5382,69 @@ const findRelevantPolicy = (text, currentCategory) => {
     const userRoots = rawTokens.map(getRootWord); 
     const userBigrams = getBigrams(rawTokens);    
 
+    // --- CONFIG: Scopes that trigger a VETO ---
+    // If a Title has one of these, the User Text MUST also have it.
+    const TITLE_SCOPES = [
+        'break/fix', 'break fix', 'lost', 'stolen', 'repair', 
+        'return', 'remote', 'onsite', 'security key', 'titan',
+        'mac', 'windows', 'linux', 'vip', 'director'
+    ];
+
     let bestMatch = null;
     let highestScore = 0;
 
     globalKnowledgeCache.forEach(policy => {
-        // --- 1. CATEGORY GATEKEEPER (The New Fix) ---
-        // If the policy lists specific categories, and our current one isn't in it -> SKIP.
-        if (policy.targetCategories && policy.targetCategories.length > 0) {
-            // We use uppercase comparison to be safe (e.g. "par" matches "PAR")
-            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
-            if (!currentCategory || !normalizedTargets.includes(currentCategory.toUpperCase())) {
+        const policyTitleLower = (policy.title || "").toLowerCase();
+
+        // --- 1. TITLE VETO (The New Fix) ---
+        // Does the title mention a specific scope?
+        const titleTriggers = TITLE_SCOPES.filter(t => policyTitleLower.includes(t));
+        
+        if (titleTriggers.length > 0) {
+            // The title is specific. Does the user text match that specificity?
+            const userHasContext = titleTriggers.some(t => lowerText.includes(t));
+            
+            // If the user text is missing the key concept from the title -> REJECT IT.
+            if (!userHasContext) {
                 return; // Hard Stop
             }
         }
 
-        // --- 2. ANCHOR CHECK ---
-        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
-            const hasAnchor = policy.requiredAnchors.some(anchor => lowerText.includes(anchor.toLowerCase()));
-            if (!hasAnchor) return;
+        // --- 2. CATEGORY GATEKEEPER ---
+        if (policy.targetCategories && policy.targetCategories.length > 0) {
+            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
+            if (!currentCategory || !normalizedTargets.includes(currentCategory.toUpperCase())) {
+                return; 
+            }
         }
 
-        // --- 3. NEGATIVE CHECK ---
+        // --- 3. ANCHOR & NEGATIVE CHECKS (Existing Logic) ---
+        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
+            if (!policy.requiredAnchors.some(a => lowerText.includes(a.toLowerCase()))) return;
+        }
         if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
             const hasNegative = policy.negativeKeywords.some(neg => {
-                const regex = new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i');
-                return regex.test(lowerText);
+                return new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i').test(lowerText);
             });
             if (hasNegative) return; 
         }
 
-        // --- 4. SCORING ---
+        // --- 4. SCORING (Existing Logic) ---
         let score = 0;
 
-        // Title Match
-        if (policy.title) {
-            const titleTokens = policy.title.toLowerCase().split(/\s+/).map(getRootWord);
-            titleTokens.forEach(tWord => {
-                if (userRoots.includes(tWord)) score += 15;
-            });
-        }
+        // Title Matches
+        const titleTokens = policyTitleLower.split(/\s+/).map(getRootWord);
+        titleTokens.forEach(tWord => {
+            if (userRoots.includes(tWord)) score += 15;
+        });
 
-        // Bigram Match
+        // Content Matches
         const policyContentLower = (policy.content || "").toLowerCase();
         userBigrams.forEach(bigram => {
             if (policyContentLower.includes(bigram)) score += 8;
         });
-
-        // Keyword Match
+        
+        // Keyword Matches
         if (policy.keywords) {
             policy.keywords.forEach(kw => {
                 const rootKw = getRootWord(kw.toLowerCase());
