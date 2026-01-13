@@ -4611,6 +4611,7 @@ const closeExpandedChart = () => {
     }
 };
 
+
 // --- CONFIG: Smart Synonym Dictionary ---
 // Maps a "Policy Word" to accepted "User Variations"
 const SYNONYM_MAP = {
@@ -5074,7 +5075,7 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v2.0 ---
+// --- UPDATED: Smart Policy Analyzer v3.0 (With Scope Filtering) ---
 const generatePolicyCheatSheet = (policyText, userResponseText) => {
     if (!policyText) return null;
 
@@ -5083,6 +5084,25 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
     const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
     const lowerUserText = (userResponseText || '').toLowerCase();
 
+	const SCOPE_TRIGGERS = [
+	    // Hardware & Repair
+	    'break/fix', 'break fix', 'repair', 'ricoh', 'printer', 
+	    'av', 'audio', 'conference', 'headset',
+	
+	    // Logistics
+	    'remote', 'shipping', 'mail', 'locker', 'vending',
+	    'security key', 'titan', 'yubikey', 
+	
+	    // Location
+	    'onsite', 'desk', 
+	
+	    // People
+	    'vip', 'director', 'vp', 'executive',
+	
+	    // OS / Platforms
+	    'mac', 'apple', 'windows', 'pc', 'linux', 'glinux'
+	];
+
     const insights = {
         requirements: [],
         warnings: [],
@@ -5090,31 +5110,42 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
     };
 
     sentences.forEach(sentence => {
-        const lower = sentence.toLowerCase().trim();
-        if (lower.length < 10) return; // Skip short noise
+        const lowerSentence = sentence.toLowerCase().trim();
+        if (lowerSentence.length < 10) return; // Skip short noise
 
-        // LOGIC: Categorize sentences
+        // --- NEW: SCOPE FILTERING ---
+        // 1. Find which triggers exist in this policy sentence
+        const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
+
+        // 2. If triggers exist, check if the user's text matches the context
+        if (triggersInSentence.length > 0) {
+            // Check if ANY of the triggers are present in the user's text
+            const userHasContext = triggersInSentence.some(t => lowerUserText.includes(t));
+            
+            // If the policy is talking about "break/fix" but the user text ISN'T, skip this sentence.
+            if (!userHasContext) {
+                return; 
+            }
+        }
+
+        // LOGIC: Categorize sentences (Existing Logic)
         let category = null;
-        if (lower.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) {
+        if (lowerSentence.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) {
             category = 'requirements';
-        } else if (lower.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
+        } else if (lowerSentence.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
             category = 'warnings';
-        } else if (lower.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) {
+        } else if (lowerSentence.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) {
             category = 'deadlines';
         }
 
         if (category) {
-            // --- NEW: SMART GAP ANALYSIS ---
+            // Gap Analysis (Existing Logic)
             const concepts = extractKeyConcepts(sentence);
             let isMissing = false;
 
             if (concepts.length > 0) {
-                // Check if concepts (OR their synonyms) exist in user text
                 const foundCount = concepts.filter(concept => {
-                    // 1. Direct Match?
                     if (lowerUserText.includes(concept)) return true;
-
-                    // 2. Synonym Match?
                     const synonyms = SYNONYM_MAP[concept];
                     if (synonyms) {
                         return synonyms.some(syn => lowerUserText.includes(syn));
@@ -5122,7 +5153,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
                     return false;
                 }).length;
 
-                // Threshold: If less than 50% of the key concepts are found, flag it.
                 if (foundCount < Math.ceil(concepts.length * 0.5)) {
                     isMissing = true;
                 }
@@ -5141,8 +5171,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
     insights.deadlines = insights.deadlines.slice(0, 3);
 
     return insights;
-};		
-
+};
 const extractContextualSnippet = (fullText, triggerWords) => {
     if (!fullText) return "";
     
