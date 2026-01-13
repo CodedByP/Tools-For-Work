@@ -5433,8 +5433,6 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
-	const userText = window.currentUserResponseText || "";
-    const cheatSheet = generatePolicyCheatSheet(match.content, userText);
     
     const headerText = document.getElementById('sidebar-header-text');
     const updatedDateEl = document.getElementById('sidebar-updated-date');
@@ -5500,8 +5498,10 @@ if (sourceLinkEl) {
         }
     }
 
-    // --- Generate Content & Ghost Reader Links ---
-    const cheatSheet = generatePolicyCheatSheet(match.content);
+// --- Generate Content & Ghost Reader Links ---
+    
+    const userText = window.currentUserResponseText || "";
+    const cheatSheet = generatePolicyCheatSheet(match.content, userText);    
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
     let htmlContent = '';
