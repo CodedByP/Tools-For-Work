@@ -5493,44 +5493,46 @@ if (sourceLinkEl) {
 
     let htmlContent = '';
 
+  // --- RENDERER: Visual Feedback for Missing Items ---
+    const renderSmartListItems = (items) => {
+        return items.map(item => {
+            const safeText = item.text.replace(/'/g, "\\'");
+            
+            if (item.isMissing) {
+                // RED ALERT: Concept missing
+                return `
+                    <li class="relative pl-0 py-1 transition-colors cursor-pointer group" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
+                        <div class="flex items-start gap-2">
+                            <div class="mt-1 min-w-[14px] text-center">
+                                 <i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse" title="Concept missing from your response"></i>
+                            </div>
+                            <span class="text-gray-300 group-hover:text-white decoration-red-500/40 underline decoration-dotted underline-offset-4 text-sm">${item.text}</span>
+                        </div>
+                    </li>`;
+            } else {
+                // GREEN CHECK: Requirement met
+                return `
+                    <li class="text-gray-400 hover:text-white py-1 transition-colors cursor-pointer flex items-start gap-2" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
+                        <div class="mt-1 min-w-[14px] text-center">
+                            <i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>
+                        </div>
+                        <span class="text-sm">${item.text}</span>
+                    </li>`;
+            }
+        }).join('');
+    };
+
     if (hasInsights) {
+        // 1. HEADER for Insight Section
         htmlContent += `<div class="mb-2 animate-fade-in">
             <div class="flex justify-between items-end mb-3">
                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <i class="fas fa-bolt text-yellow-500"></i> Quick Cheat Sheet
+                    <i class="fas fa-bolt text-yellow-500"></i> Policy Analysis
                 </h4>
                 ${confidenceHTML}
             </div>`;
 
-			// --- RENDERER: Visual Feedback for Missing Items ---
-			const renderSmartListItems = (items) => {
-			    return items.map(item => {
-			        const safeText = item.text.replace(/'/g, "\\'");
-			        
-			        if (item.isMissing) {
-			            // RED ALERT: Concept missing
-			            return `
-			                <li class="relative pl-0 py-1 transition-colors cursor-pointer group" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
-			                    <div class="flex items-start gap-2">
-			                        <div class="mt-1 min-w-[14px] text-center">
-			                             <i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse" title="Concept missing from your response"></i>
-			                        </div>
-			                        <span class="text-gray-300 group-hover:text-white decoration-red-500/40 underline decoration-dotted underline-offset-4 text-sm">${item.text}</span>
-			                    </div>
-			                </li>`;
-			        } else {
-			            // GREEN CHECK: Requirement met
-			            return `
-			                <li class="text-gray-400 hover:text-white py-1 transition-colors cursor-pointer flex items-start gap-2" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
-			                    <div class="mt-1 min-w-[14px] text-center">
-			                        <i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>
-			                    </div>
-			                    <span class="text-sm">${item.text}</span>
-			                </li>`;
-			        }
-			    }).join('');
-			};
-
+        // 2. Render Categories
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
             <div class="insight-card insight-must group cursor-pointer hover:ring-1 hover:ring-blue-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
@@ -5538,7 +5540,7 @@ if (sourceLinkEl) {
                     <span><i class="fas fa-check-circle"></i> Requirements</span>
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
-                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
+                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
                     ${renderSmartListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
@@ -5550,8 +5552,8 @@ if (sourceLinkEl) {
                     <span><i class="fas fa-exclamation-triangle"></i> Warnings</span>
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
-                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${renderSmartListItems(cheatSheet.requirements)} 
+                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
+                    ${renderSmartListItems(cheatSheet.warnings)} 
                 </ul>
             </div>`;
         }
@@ -5562,12 +5564,31 @@ if (sourceLinkEl) {
                     <span><i class="fas fa-clock"></i> Timelines</span>
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
-                <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${renderSmartListItems(cheatSheet.requirements)}
+                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
+                    ${renderSmartListItems(cheatSheet.deadlines)}
                 </ul>
             </div>`;
         }
         htmlContent += `</div>`;
+
+    } else {
+        // --- SCENARIO B: NO RULES DETECTED (Everything looks good) ---
+        htmlContent += `
+        <div class="mb-4 animate-fade-in">
+             <div class="flex justify-between items-end mb-3">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Policy Analysis</h4>
+                ${confidenceHTML}
+            </div>
+            <div class="insight-card border-l-4 border-emerald-500 bg-emerald-900/10 p-4 rounded-r-xl flex items-center gap-4">
+                <div class="bg-emerald-900/30 p-3 rounded-full text-emerald-400">
+                    <i class="fas fa-shield-alt text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-400 text-sm">Everything looks good</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">No warnings or strict requirements detected.</p>
+                </div>
+            </div>
+        </div>`;
     }
 
     const hiddenClass = hasInsights ? 'slide-down-enter' : 'slide-down-active';
