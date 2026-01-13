@@ -5590,30 +5590,41 @@ const getLevenshteinDistance = (a, b) => {
     return matrix[b.length][a.length];
 };		
 
-// --- SMART MEMORY SYSTEM v2.0 ---
-
 const updateSmartHistory = (key, value, category, action) => {
     const lowerKey = key.toLowerCase().trim();
     
+    // 1. Define inputs we NEVER want to remember (One-off data)
     const blacklistKeywords = [
         'tracking', 'number', 'date', 'screenshot', 'link', 'url', 'asset', 'ticket'
     ];
     
     const isBlacklisted = blacklistKeywords.some(keyword => lowerKey.includes(keyword));
     
-    if (isBlacklisted) return;
+    // 2. AGGRESSIVE CLEANUP: If this key is blacklisted, ensure it is WIPED from memory
+    if (isBlacklisted) {
+        let history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
+        // If we find data for this blacklisted key, delete it to fix the "stuck suggestions" issue
+        if (history[key]) {
+            delete history[key]; 
+            localStorage.setItem('smart_placeholder_memory', JSON.stringify(history));
+            console.log(`🧹 Auto-cleaned blacklisted history for: ${key}`);
+        }
+        return; // Stop here, do not save the new value
+    }
 
-    // 1. Get existing brain data
+    // --- Standard Logic Below (Unchanged) ---
+
+    // 3. Get existing brain data
     let history = JSON.parse(localStorage.getItem('smart_placeholder_memory') || '{}');
     if (!history[key]) history[key] = [];
 
-    // 2. Find if this specific value already exists
+    // 4. Find if this specific value already exists
     let existingItemIndex = history[key].findIndex(item => item.val === value);
     let item = existingItemIndex > -1 ? history[key][existingItemIndex] : null;
 
     const now = Date.now();
 
-    // 3. APPLY LEARNING LOGIC
+    // 5. APPLY LEARNING LOGIC
     if (action === 'use') {
         if (item) {
             item.score += 2; 
@@ -5634,15 +5645,15 @@ const updateSmartHistory = (key, value, category, action) => {
         }
     }
 
-    // 4. CLEANUP
+    // 6. CLEANUP (Remove low scores or old items)
     const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
     if (history[key]) {
         history[key] = history[key].filter(i => i.score >= 1 && i.lastUsed > sevenDaysAgo);
         history[key].sort((a, b) => b.score - a.score);
-        history[key] = history[key].slice(0, 5);
+        history[key] = history[key].slice(0, 5); // Keep top 5 only
     }
 
-    // 5. Save
+    // 7. Save
     localStorage.setItem('smart_placeholder_memory', JSON.stringify(history));
 };
 
