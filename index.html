@@ -4607,6 +4607,33 @@ const closeExpandedChart = () => {
     }
 };
 
+// --- CONFIG: Smart Synonym Dictionary ---
+// Maps a "Policy Word" to accepted "User Variations"
+const SYNONYM_MAP = {
+    // Identity
+    'user': ['customer', 'requester', 'employee', 'client'],
+    'customer': ['user', 'requester', 'employee'],
+    'name': ['identity', 'who'],
+
+    // Hardware/Items
+    'asset': ['device', 'hardware', 'equipment', 'item', 'laptop', 'phone', 'machine', 'unit'],
+    'device': ['asset', 'hardware', 'equipment', 'item', 'unit'],
+    'tag': ['id', 'serial', 'number', 'sticker', 'asset tag'],
+    'serial': ['sn', 's/n', 'service tag'],
+
+    // Logistics
+    'tracking': ['fedex', 'track', 'shipment', 'waybill', 'tracking number'],
+    'shipment': ['package', 'box', 'order', 'delivery', 'tracking'],
+    'delivered': ['arrived', 'received', 'signed for', 'completed'],
+    'return': ['send back', 'rma', 'mail back', 'revert'],
+
+    // Actions/Status
+    'ticket': ['case', 'request', 'incident', 'order'],
+    'escalate': ['manager', 'supervisor', 'lead', 'boss', 'route'],
+    'contact': ['reach out', 'email', 'message', 'ping', 'call'],
+    'resolved': ['closed', 'completed', 'finished', 'done', 'fixed']
+};
+		
 // --- NEW: Leveling System Configuration ---		
 const XP_VALUES = {
     COPY_RESPONSE: 25,
@@ -4890,6 +4917,20 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- HELPER: Extract Key Concepts ---
+const extractKeyConcepts = (sentence) => {
+    // Words to ignore (Stopwords) - Common English filler
+    const ignoreList = new Set([
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'must', 'should', 'shall', 'required', 'policy', 'please', 'ensure', 'make', 'sure', 'include', 'provide', 'state'
+    ]);
+
+    // Clean and tokenize
+    return sentence.toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !ignoreList.has(w)); // Keep words > 2 chars
+};		
+
 const scrollToSnippet = (textSnippet) => {
     if (!textSnippet) return;
 
@@ -5029,16 +5070,14 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- NEW: Smart Policy Analyzer ---
-const generatePolicyCheatSheet = (text) => {
-    if (!text) return null;
+// --- UPDATED: Smart Policy Analyzer v2.0 ---
+const generatePolicyCheatSheet = (policyText, userResponseText) => {
+    if (!policyText) return null;
 
     // 1. Clean formatting
-    const cleanText = text.replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
-    
-    // 2. Split into sentences for analysis
-    // Look for periods followed by space, or newlines
+    const cleanText = policyText.replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
     const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
+    const lowerUserText = (userResponseText || '').toLowerCase();
 
     const insights = {
         requirements: [],
@@ -5046,26 +5085,53 @@ const generatePolicyCheatSheet = (text) => {
         deadlines: []
     };
 
-    // 3. The Logic Engine (Keywords Scanner)
     sentences.forEach(sentence => {
         const lower = sentence.toLowerCase().trim();
-        if (lower.length < 5) return; // Skip noise
+        if (lower.length < 10) return; // Skip short noise
 
-        // Detect "MUST" (Requirements)
-        if (lower.match(/\b(must|shall|required|mandatory|prohibited|never|policy)\b/)) {
-            insights.requirements.push(sentence.trim());
+        // LOGIC: Categorize sentences
+        let category = null;
+        if (lower.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) {
+            category = 'requirements';
+        } else if (lower.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
+            category = 'warnings';
+        } else if (lower.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) {
+            category = 'deadlines';
         }
-        // Detect "WARNINGS" (Escalations, Managers)
-        else if (lower.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
-            insights.warnings.push(sentence.trim());
-        }
-        // Detect "TIME" (Deadlines, SLAs)
-        else if (lower.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days|calendar days)\b/)) {
-            insights.deadlines.push(sentence.trim());
+
+        if (category) {
+            // --- NEW: SMART GAP ANALYSIS ---
+            const concepts = extractKeyConcepts(sentence);
+            let isMissing = false;
+
+            if (concepts.length > 0) {
+                // Check if concepts (OR their synonyms) exist in user text
+                const foundCount = concepts.filter(concept => {
+                    // 1. Direct Match?
+                    if (lowerUserText.includes(concept)) return true;
+
+                    // 2. Synonym Match?
+                    const synonyms = SYNONYM_MAP[concept];
+                    if (synonyms) {
+                        return synonyms.some(syn => lowerUserText.includes(syn));
+                    }
+                    return false;
+                }).length;
+
+                // Threshold: If less than 50% of the key concepts are found, flag it.
+                if (foundCount < Math.ceil(concepts.length * 0.5)) {
+                    isMissing = true;
+                }
+            }
+
+            insights[category].push({
+                text: sentence.trim(),
+                isMissing: isMissing 
+            });
         }
     });
 
-    // Limit to top 3 bullets per category to prevent overflow
+    // Limit to top 3
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
@@ -5367,6 +5433,8 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
+	const userText = window.currentUserResponseText || "";
+    const cheatSheet = generatePolicyCheatSheet(match.content, userText);
     
     const headerText = document.getElementById('sidebar-header-text');
     const updatedDateEl = document.getElementById('sidebar-updated-date');
@@ -5447,17 +5515,34 @@ if (sourceLinkEl) {
                 ${confidenceHTML}
             </div>`;
 
-        // Helper to generate clickable list items
-        const renderListItems = (items) => {
-            return items.map(item => {
-                // Escape single quotes for the inline onclick handler
-                const safeItem = item.replace(/'/g, "\\'"); 
-                return `<li class="hover:text-white transition-colors" title="Click to find in text" 
-                        onclick="event.stopPropagation(); scrollToSnippet('${safeItem}')">
-                        ${item}
-                    </li>`;
-            }).join('');
-        };
+			// --- RENDERER: Visual Feedback for Missing Items ---
+			const renderSmartListItems = (items) => {
+			    return items.map(item => {
+			        const safeText = item.text.replace(/'/g, "\\'");
+			        
+			        if (item.isMissing) {
+			            // RED ALERT: Concept missing
+			            return `
+			                <li class="relative pl-0 py-1 transition-colors cursor-pointer group" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
+			                    <div class="flex items-start gap-2">
+			                        <div class="mt-1 min-w-[14px] text-center">
+			                             <i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse" title="Concept missing from your response"></i>
+			                        </div>
+			                        <span class="text-gray-300 group-hover:text-white decoration-red-500/40 underline decoration-dotted underline-offset-4 text-sm">${item.text}</span>
+			                    </div>
+			                </li>`;
+			        } else {
+			            // GREEN CHECK: Requirement met
+			            return `
+			                <li class="text-gray-400 hover:text-white py-1 transition-colors cursor-pointer flex items-start gap-2" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
+			                    <div class="mt-1 min-w-[14px] text-center">
+			                        <i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>
+			                    </div>
+			                    <span class="text-sm">${item.text}</span>
+			                </li>`;
+			        }
+			    }).join('');
+			};
 
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
@@ -5467,7 +5552,7 @@ if (sourceLinkEl) {
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${renderListItems(cheatSheet.requirements)}
+                    ${renderSmartListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
         }
@@ -5479,7 +5564,7 @@ if (sourceLinkEl) {
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${renderListItems(cheatSheet.warnings)}
+                    ${renderSmartListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
         }
@@ -5491,7 +5576,7 @@ if (sourceLinkEl) {
                     <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
                 </div>
                 <ul class="list-disc list-outside ml-4 text-sm text-gray-300 space-y-1">
-                    ${renderListItems(cheatSheet.deadlines)}
+                    ${renderSmartListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
         }
@@ -8569,14 +8654,15 @@ const renderResponses = (searchQuery = '') => {
                 
                 // Unified Insight Click Handler
                 const insightBtn = cardEl.querySelector('.insight-trigger');
-                if (insightBtn) {
-                    insightBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (bestMatch) {
-                            showInsightsSidebar(bestMatch, true); 
-                        }
-                    });
-                }
+				if (insightBtn) {
+				    insightBtn.addEventListener('click', (e) => {
+				        e.stopPropagation();
+				        if (bestMatch) {
+				            window.currentUserResponseText = response.text; 
+				            showInsightsSidebar(bestMatch, true); 
+				        }
+				    });
+				}
 
                 const copyBtn = cardEl.querySelector('.copy-btn');
                 const handleCopyAction = () => {
