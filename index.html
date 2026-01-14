@@ -2993,7 +2993,18 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 					            <i class="fas fa-plus mr-2"></i> New
 					        </button>
 					    </div>
-					
+					<div class="mb-4 relative">
+				        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+				            <i class="fas fa-search text-gray-500"></i>
+				        </div>
+				        <input type="text" 
+				               id="admin-policy-search" 
+				               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl pl-10 p-3 focus:ring-yellow-500 focus:border-yellow-500 block transition-all" 
+				               placeholder="Search by title, category, or keywords...">
+				        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+				            <span id="admin-search-count" class="text-xs text-gray-500 font-mono"></span>
+				        </div>
+				    </div>
 					    <div id="admin-policy-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar bg-black/20 p-2 rounded-xl border border-white/5">
 					        <p class="text-gray-500 text-center text-sm py-4">Loading policies...</p>
 					    </div>
@@ -5342,6 +5353,7 @@ const renderAdminPolicies = () => {
     const listContainer = document.getElementById('admin-policy-list');
     if (!listContainer) return;
 
+    // 1. Empty State
     if (globalKnowledgeCache.length === 0) {
         listContainer.innerHTML = '<p class="text-gray-500 text-center text-sm py-4">No policies ingested yet.</p>';
         return;
@@ -5349,6 +5361,7 @@ const renderAdminPolicies = () => {
 
     listContainer.innerHTML = ''; 
 
+    // 2. Sort by Date (Keep existing logic)
     const sortedPolicies = [...globalKnowledgeCache].sort((a, b) => {
         const timeA = a.updatedAt ? a.updatedAt.toMillis() : 0;
         const timeB = b.updatedAt ? b.updatedAt.toMillis() : 0;
@@ -5357,14 +5370,29 @@ const renderAdminPolicies = () => {
 
     sortedPolicies.forEach(policy => {
         const item = document.createElement('div');
-        item.className = 'flex justify-between items-center p-3 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-transparent hover:border-gray-600 transition group cursor-pointer';
         
+        // --- 3. SEARCH INTEGRATION STARTS HERE ---
+        // A. Add "admin-policy-item" class so the search bar can find this element
+        item.className = 'admin-policy-item flex justify-between items-center p-3 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-transparent hover:border-gray-600 transition group cursor-pointer';
+        
+        // B. Add Data Attributes for the Filter Logic
+        // We clean the text to prevent errors
+        item.dataset.title = (policy.title || "").toLowerCase();
+        item.dataset.content = (policy.content || "").toLowerCase(); 
+        item.dataset.categories = (policy.targetCategories || []).join(' ').toLowerCase();
+        // --- SEARCH INTEGRATION ENDS ---
+
         const updatedDate = policy.updatedAt ? new Date(policy.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
 
         item.innerHTML = `
             <div class="flex-grow min-w-0 mr-4 edit-trigger">
                 <h4 class="font-bold text-gray-200 text-sm truncate">${policy.title}</h4>
-                <p class="text-xs text-gray-500 truncate">Updated: ${updatedDate}</p>
+                <div class="flex items-center gap-2">
+                    <p class="text-xs text-gray-500 truncate">Updated: ${updatedDate}</p>
+                    ${(policy.targetCategories || []).map(cat => 
+                        `<span class="text-[9px] bg-blue-900/30 text-blue-300 px-1.5 rounded border border-blue-500/20">${cat}</span>`
+                    ).join('')}
+                </div>
             </div>
             <div class="flex gap-2">
                 <button class="edit-btn text-gray-400 hover:text-yellow-400 transition p-2" title="Edit Article">
@@ -5383,9 +5411,11 @@ const renderAdminPolicies = () => {
             document.getElementById('ingest-content').value = policy.content || "";
             document.getElementById('ingest-url').value = policy.sourceUrl || "";
             document.getElementById('ingest-modal-title').textContent = "Edit Policy";
+            // Safe handling for arrays
             document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
             document.getElementById('ingest-categories').value = (policy.targetCategories || []).join(', ');
             document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
+            
             document.getElementById('ingest-modal').classList.remove('hidden');
         };
 
@@ -5395,12 +5425,15 @@ const renderAdminPolicies = () => {
         // LISTENER: Delete
         item.querySelector('.delete-policy-btn').addEventListener('click', (e) => {
             e.stopPropagation(); // Prevents opening the edit modal
-            deletePolicyArticle(policy.id, policy.title);
+            if(confirm(`Delete "${policy.title}"?`)) {
+                 // Assuming deletePolicyArticle is defined elsewhere in your code
+                 deletePolicyArticle(policy.id, policy.title); 
+            }
         });
 
         listContainer.appendChild(item);
     });
-};	
+};
 
 const resetIngestForm = () => {
     document.getElementById('ingest-title').value = "";
@@ -10185,8 +10218,42 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
-// --- MAGIC DRAFTER LOGIC ---
+// --- ADMIN SEARCH LOGIC ---
+    const adminSearchInput = document.getElementById('admin-policy-search');
+    
+    if (adminSearchInput) {
+        adminSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const policyItems = document.querySelectorAll('.admin-policy-item'); // We will add this class next
+            let visibleCount = 0;
 
+            policyItems.forEach(item => {
+                // Get the searchable data from the DOM attributes we stored
+                const title = (item.dataset.title || '').toLowerCase();
+                const content = (item.dataset.content || '').toLowerCase();
+                const categories = (item.dataset.categories || '').toLowerCase();
+
+                // Check for match
+                if (title.includes(searchTerm) || 
+                    content.includes(searchTerm) || 
+                    categories.includes(searchTerm)) {
+                    
+                    item.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Update the counter
+            const countLabel = document.getElementById('admin-search-count');
+            if (countLabel) {
+                countLabel.textContent = searchTerm ? `${visibleCount} matches` : '';
+            }
+        });
+    }
+	
+// --- MAGIC DRAFTER LOGIC ---
 const magicDraftBtn = document.getElementById('open-magic-draft-btn');
 const magicDraftModal = document.getElementById('magic-draft-modal');
 const magicInput = document.getElementById('magic-input-text');
