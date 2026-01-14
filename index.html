@@ -4033,6 +4033,32 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
+			<div class="mt-4">
+			    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">3. Desired Tone</label>
+			    <div class="grid grid-cols-3 gap-2">
+			        <label class="cursor-pointer relative group">
+			            <input type="radio" name="magic-tone" value="Standard" checked class="peer hidden">
+			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-500 hover:bg-gray-800">
+			                <div class="text-xs font-bold">Standard</div>
+			            </div>
+			        </label>
+			        
+			        <label class="cursor-pointer relative group">
+			            <input type="radio" name="magic-tone" value="Empathetic" class="peer hidden">
+			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-500 hover:bg-gray-800">
+			                <div class="text-xs font-bold">Empathetic</div>
+			            </div>
+			        </label>
+			        
+			        <label class="cursor-pointer relative group">
+			            <input type="radio" name="magic-tone" value="Firm" class="peer hidden">
+			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-500 hover:bg-gray-800">
+			                <div class="text-xs font-bold">Firm / Strict</div>
+			            </div>
+			        </label>
+			    </div>
+			</div>
+
             <div id="magic-policy-status" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                 <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400 shrink-0">
                     <i class="fas fa-brain text-lg animate-pulse"></i>
@@ -10213,65 +10239,92 @@ if (magicInput) {
     });
 }
 
-// 3. "Go" Button Logic
-if (magicGoBtn) {
-    magicGoBtn.addEventListener('click', async () => {
-        const text = magicInput.value;
-        const category = document.getElementById('magic-category-select').value;
-        
-        if (!text.trim()) {
-            // Shake animation or error
-            magicInput.classList.add('ring-2', 'ring-red-500');
-            setTimeout(() => magicInput.classList.remove('ring-2', 'ring-red-500'), 500);
-            return;
-        }
-
-        // A. Find Policy
-        const policy = findRelevantPolicy(text, category);
-
-        // B. Construct Prompt
-        let prompt = `Act as an expert IT Support Specialist for Google. \n\n`;
-        prompt += `USER SITUATION / TICKET:\n"${text}"\n\n`;
-        
-        if (policy) {
-            prompt += `⚠️ STRICT POLICY RULES TO FOLLOW:\n`;
-            prompt += `Title: ${policy.title}\n`;
-            prompt += `Content: ${policy.content}\n\n`;
-        }
-
-        prompt += `TASK:\n`;
-        prompt += `Draft a polite, professional response. If policy rules are provided above, you MUST follow them. Use placeholders like [Customer Name] where needed. Keep it concise.`;
-
-        // C. Copy & Launch
-        try {
-            await navigator.clipboard.writeText(prompt);
+// 3. "Go" Button Logic (UPDATED v2.0)
+    if (magicGoBtn) {
+        magicGoBtn.addEventListener('click', async () => {
+            const text = magicInput.value;
+            const category = document.getElementById('magic-category-select').value;
             
-            // Visual Feedback on Button
-            const originalHTML = magicGoBtn.innerHTML;
-            magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Copied!</span>`;
-            magicGoBtn.classList.remove('from-purple-600', 'to-indigo-600');
-            magicGoBtn.classList.add('bg-green-600');
+            // 1. Get the Selected Tone
+            const toneElement = document.querySelector('input[name="magic-tone"]:checked');
+            const tone = toneElement ? toneElement.value : 'Standard';
 
-            showMessage("Prompt copied! Opening Gemini...", "success");
+            if (!text.trim()) {
+                magicInput.classList.add('ring-2', 'ring-red-500');
+                setTimeout(() => magicInput.classList.remove('ring-2', 'ring-red-500'), 500);
+                return;
+            }
+
+            // 2. Find Policy (Using your specific brain logic)
+            const policy = findRelevantPolicy(text, category);
+
+            // 3. CONSTRUCT THE SUPER PROMPT
+            let prompt = `Act as an expert IT Support Specialist for Google. \n\n`;
             
-            setTimeout(() => {
-                window.open('https://gemini.google.com/app', '_blank');
-                magicDraftModal.classList.add('hidden');
+            // A. Context
+            prompt += `--- CONTEXT ---\n`;
+            prompt += `USER TICKET/SITUATION:\n"${text}"\n`;
+            if (policy) {
+                prompt += `RELEVANT POLICY TITLE: ${policy.title}\n`;
+                prompt += `POLICY RULES: ${policy.content}\n`;
+            }
+            prompt += `\n`;
+
+            // B. Tone Instruction (Feature #1)
+            prompt += `--- TONE & STYLE ---\n`;
+            if (tone === 'Firm') {
+                prompt += `• Tone: FIRM, AUTHORITATIVE, and DIRECT.\n`;
+                prompt += `• Intent: Enforce policy strictly. Do not apologize excessively. State the rules clearly.\n`;
+            } else if (tone === 'Empathetic') {
+                prompt += `• Tone: WARM, APOLOGETIC, and PATIENT.\n`;
+                prompt += `• Intent: De-escalate the situation. Acknowledge the user's frustration. Use phrases like "I understand" and "I apologize for the delay."\n`;
+            } else {
+                prompt += `• Tone: PROFESSIONAL, HELPFUL, and CONCISE.\n`;
+                prompt += `• Intent: Standard support resolution. Be polite but efficient.\n`;
+            }
+            prompt += `\n`;
+
+            // C. Chain of Thought (Feature #3)
+            prompt += `--- INSTRUCTIONS ---\n`;
+            prompt += `Think step-by-step before generating the draft:\n`;
+            prompt += `1. ANALYZE: Check if the User Situation provided contains all necessary info (e.g., shipping address, asset tag, dates) required by the Policy.\n`;
+            prompt += `2. DECISION: \n`;
+            prompt += `   - If info is MISSING: Draft a reply asking for those specific details.\n`;
+            prompt += `   - If info is PRESENT: Draft the final resolution email.\n`;
+            prompt += `3. FORMAT: Use placeholders like [Customer Name] or [Date] where needed.\n`;
+            
+            prompt += `\n--- OUTPUT ---\n`;
+            prompt += `Provide ONLY the final email draft. Do not show your thinking steps.`;
+
+            // D. Copy & Launch
+            try {
+                await navigator.clipboard.writeText(prompt);
                 
-                // Reset Button styling
-                setTimeout(() => {
-                    magicGoBtn.innerHTML = originalHTML;
-                    magicGoBtn.classList.add('from-purple-600', 'to-indigo-600');
-                    magicGoBtn.classList.remove('bg-green-600');
-                }, 500);
-            }, 800);
+                // Visual Feedback
+                const originalHTML = magicGoBtn.innerHTML;
+                magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Copied!</span>`;
+                magicGoBtn.classList.remove('from-purple-600', 'to-indigo-600');
+                magicGoBtn.classList.add('bg-green-600');
 
-        } catch (err) {
-            console.error("Clipboard failed:", err);
-            showMessage("Could not copy. Please manually copy.", "error");
-        }
-    });
-}
+                showMessage("Prompt copied! Opening Gemini...", "success");
+                
+                setTimeout(() => {
+                    window.open('https://gemini.google.com/app', '_blank');
+                    magicDraftModal.classList.add('hidden');
+                    
+                    setTimeout(() => {
+                        magicGoBtn.innerHTML = originalHTML;
+                        magicGoBtn.classList.add('from-purple-600', 'to-indigo-600');
+                        magicGoBtn.classList.remove('bg-green-600');
+                    }, 500);
+                }, 800);
+
+            } catch (err) {
+                console.error("Clipboard failed:", err);
+                showMessage("Could not copy. Please manually copy.", "error");
+            }
+        });
+    }
 
 // 4. Close Handlers
 document.getElementById('close-magic-draft-btn')?.addEventListener('click', () => {
