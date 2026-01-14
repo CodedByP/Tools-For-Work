@@ -5489,22 +5489,24 @@ const getBigrams = (tokens) => {
     return bigrams;
 };
 
-// --- UPDATED BRAIN v3.0: Title Veto & Category Aware ---
+// --- UPDATED BRAIN v6.0: The Hybrid Engine ---
 const findRelevantPolicy = (text, currentCategory) => {
     if (!text || globalKnowledgeCache.length === 0) return null;
 
-    // A. Clean and Tokenize
     const lowerText = text.toLowerCase();
+    
+    // 1. Clean & Tokenize
+    // Filter out small words (is, the, at) to reduce noise
     const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
     const userRoots = rawTokens.map(getRootWord); 
     const userBigrams = getBigrams(rawTokens);    
 
-    // --- CONFIG: Scopes that trigger a VETO ---
-    // If a Title has one of these, the User Text MUST also have it.
-    const TITLE_SCOPES = [
-        'break/fix', 'break fix', 'lost', 'stolen', 'repair', 
-        'return', 'remote', 'onsite', 'security key', 'titan',
-        'mac', 'windows', 'linux', 'vip', 'director'
+    // --- CONFIG: VETO LIST (The "Bouncer") ---
+    // If a Policy Title has one of these, the User Text *MUST* have it.
+    const RESTRICTIVE_SCOPES = [
+        'onsite', 'remote', 'break/fix', 'repair', 'lost', 'stolen', 
+        'mailroom', 'shipping', 'receiving', 'audit', 'return',
+        'vip', 'director', 'executive', 'security key'
     ];
 
     let bestMatch = null;
@@ -5512,62 +5514,60 @@ const findRelevantPolicy = (text, currentCategory) => {
 
     globalKnowledgeCache.forEach(policy => {
         const policyTitleLower = (policy.title || "").toLowerCase();
-
-        // --- 1. TITLE VETO (The New Fix) ---
-        // Does the title mention a specific scope?
-        const titleTriggers = TITLE_SCOPES.filter(t => policyTitleLower.includes(t));
-        
-        if (titleTriggers.length > 0) {
-            // The title is specific. Does the user text match that specificity?
-            const userHasContext = titleTriggers.some(t => lowerText.includes(t));
-            
-            // If the user text is missing the key concept from the title -> REJECT IT.
-            if (!userHasContext) {
-                return; // Hard Stop
-            }
-        }
-
-        // --- 2. CATEGORY GATEKEEPER ---
-        if (policy.targetCategories && policy.targetCategories.length > 0) {
-            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
-            if (!currentCategory || !normalizedTargets.includes(currentCategory.toUpperCase())) {
-                return; 
-            }
-        }
-
-        // --- 3. ANCHOR & NEGATIVE CHECKS (Existing Logic) ---
-        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
-            if (!policy.requiredAnchors.some(a => lowerText.includes(a.toLowerCase()))) return;
-        }
-        if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
-            const hasNegative = policy.negativeKeywords.some(neg => {
-                return new RegExp(`\\b${neg.toLowerCase()}\\b`, 'i').test(lowerText);
-            });
-            if (hasNegative) return; 
-        }
-
-        // --- 4. SCORING (Existing Logic) ---
         let score = 0;
 
-        // Title Matches
+        // --- A. VETO CHECK (Crucial for accuracy) ---
+        const foundScopes = RESTRICTIVE_SCOPES.filter(scope => policyTitleLower.includes(scope));
+        if (foundScopes.length > 0) {
+            // If the policy is restrictive, check if user text complies
+            const matchesScope = foundScopes.some(scope => lowerText.includes(scope));
+            if (!matchesScope) return; // HARD STOP: User didn't say the magic word.
+        }
+
+        // --- B. CATEGORY FILTER ---
+        if (policy.targetCategories && policy.targetCategories.length > 0) {
+            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
+            // If categories don't match, penalize heavily or skip
+            if (currentCategory && !normalizedTargets.includes(currentCategory.toUpperCase())) {
+                return; // HARD STOP: Wrong Category
+            }
+        }
+
+        // --- C. ANCHOR CHECK (Existing Feature) ---
+        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
+             const hasAnchor = policy.requiredAnchors.some(a => lowerText.includes(a.toLowerCase()));
+             if (!hasAnchor) return; // HARD STOP: Missing required anchor
+        }
+
+        // --- D. SCORING ENGINE ---
+
+        // 1. Title Match (Weighted heavily like Option B)
         const titleTokens = policyTitleLower.split(/\s+/).map(getRootWord);
         titleTokens.forEach(tWord => {
-            if (userRoots.includes(tWord)) score += 15;
+            if (userRoots.includes(tWord)) {
+                // Rare words (mailroom) get more points than common words (check)
+                score += (tWord.length > 4) ? 40 : 15; 
+            }
         });
 
-        // Content Matches
+        // 2. Exact Title Phrase (The "Jackpot")
+        if (lowerText.includes(policyTitleLower)) {
+            score += 100;
+        }
+
+        // 3. Content Matches (Using Bigrams for Context)
         const policyContentLower = (policy.content || "").toLowerCase();
         userBigrams.forEach(bigram => {
-            if (policyContentLower.includes(bigram)) score += 8;
+            if (policyContentLower.includes(bigram)) score += 10;
         });
-        
-        // Keyword Matches
-        if (policy.keywords) {
-            policy.keywords.forEach(kw => {
-                const rootKw = getRootWord(kw.toLowerCase());
-                if (userRoots.includes(rootKw)) score += 4;
-            });
-        }
+
+        // 4. Root Word Density (Fallback)
+        userRoots.forEach(root => {
+            if (policyContentLower.includes(root)) score += 2;
+        });
+
+        // Debugging (Optional: View in Console)
+        // console.log(`Policy: ${policy.title} | Score: ${score}`);
 
         if (score > highestScore) {
             highestScore = score;
@@ -5575,7 +5575,8 @@ const findRelevantPolicy = (text, currentCategory) => {
         }
     });
 
-    return highestScore > 12 ? { ...bestMatch, score: highestScore } : null;
+    // Threshold: Score must be significant to recommend
+    return highestScore > 25 ? { ...bestMatch, score: highestScore } : null;
 };
 
 const showInsightsSidebar = (match, forceOpen = false) => {
@@ -10167,9 +10168,11 @@ const magicGoBtn = document.getElementById('magic-go-btn');
 
 // 1. Open Logic
 if (magicDraftBtn) {
-    magicDraftBtn.addEventListener('click', () => {
-        // A. Populate Categories Dropdown
-        const catSelect = document.getElementById('magic-category-select');
+	magicDraftBtn.addEventListener('click', async () => {
+	    
+	    showMessage("Syncing latest policies...", "info");
+	    await loadGlobalKnowledge();
+	        const catSelect = document.getElementById('magic-category-select');
         catSelect.innerHTML = '<option value="">-- Auto Detect --</option>';
         Object.keys(categories).forEach(cat => {
             const option = document.createElement('option');
