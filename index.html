@@ -5008,7 +5008,32 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// --- HELPER: Extract Key Concepts ---
+const deletePolicyArticle = async (policyId, title) => {
+    // 1. Confirm deletion
+    const confirmed = confirm(`Are you sure you want to delete the policy: "${title}"?\n\nThis will remove the Insight link for all canned responses matching this article.`);
+    
+    if (!confirmed) return;
+
+    try {
+        // 2. Reference the specific document in global_knowledge
+        const policyDocRef = doc(db, 'global_knowledge', policyId);
+        
+        // 3. Delete from Firebase
+        await deleteDoc(policyDocRef);
+        
+        // 4. Feedback
+        showMessage("Policy Article Deleted", "success");
+        
+        // Note: Your existing onSnapshot listener on 'global_knowledge' 
+        // will automatically detect this and refresh the cache/UI.
+        
+    } catch (error) {
+        console.error("Error deleting policy article:", error);
+        showMessage("Failed to delete article. Check permissions.", "error");
+    }
+};
+
+		
 const extractKeyConcepts = (sentence) => {
     // Words to ignore (Stopwords) - Common English filler
     const ignoreList = new Set([
@@ -5296,9 +5321,8 @@ const renderAdminPolicies = () => {
         return;
     }
 
-    listContainer.innerHTML = ''; // Clear current list
+    listContainer.innerHTML = ''; 
 
-    // Sort by most recently updated
     const sortedPolicies = [...globalKnowledgeCache].sort((a, b) => {
         const timeA = a.updatedAt ? a.updatedAt.toMillis() : 0;
         const timeB = b.updatedAt ? b.updatedAt.toMillis() : 0;
@@ -5312,38 +5336,45 @@ const renderAdminPolicies = () => {
         const updatedDate = policy.updatedAt ? new Date(policy.updatedAt.toDate()).toLocaleDateString() : 'Unknown';
 
         item.innerHTML = `
-            <div class="flex-grow min-w-0 mr-4">
+            <div class="flex-grow min-w-0 mr-4 edit-trigger">
                 <h4 class="font-bold text-gray-200 text-sm truncate">${policy.title}</h4>
                 <p class="text-xs text-gray-500 truncate">Updated: ${updatedDate}</p>
             </div>
-            <button class="text-gray-400 hover:text-yellow-400 transition p-2">
-                <i class="fas fa-pencil-alt"></i>
-            </button>
+            <div class="flex gap-2">
+                <button class="edit-btn text-gray-400 hover:text-yellow-400 transition p-2" title="Edit Article">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+                <button class="delete-policy-btn text-gray-500 hover:text-red-500 transition p-2" title="Delete Article">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
         `;
 
-        // Click Listener: Open Edit Modal
-item.addEventListener('click', () => {
-            // 1. Set Global Edit ID
+        // LISTENER: Edit (clicking the text or pencil)
+        const triggerEdit = () => {
             editingArticleId = policy.id;
-            
-            // 2. Pre-fill the Modal
             document.getElementById('ingest-title').value = policy.title || "";
             document.getElementById('ingest-content').value = policy.content || "";
             document.getElementById('ingest-url').value = policy.sourceUrl || "";
             document.getElementById('ingest-modal-title').textContent = "Edit Policy";
-            
             document.getElementById('ingest-anchors').value = (policy.requiredAnchors || []).join(', ');
-			document.getElementById('ingest-categories').value = (policy.targetCategories || []).join(', ');
+            document.getElementById('ingest-categories').value = (policy.targetCategories || []).join(', ');
             document.getElementById('ingest-negative').value = (policy.negativeKeywords || []).join(', ');
-            // ------------------------------------------
-            
-            // 3. Open Modal
             document.getElementById('ingest-modal').classList.remove('hidden');
+        };
+
+        item.querySelector('.edit-trigger').addEventListener('click', triggerEdit);
+        item.querySelector('.edit-btn').addEventListener('click', triggerEdit);
+
+        // LISTENER: Delete
+        item.querySelector('.delete-policy-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents opening the edit modal
+            deletePolicyArticle(policy.id, policy.title);
         });
 
         listContainer.appendChild(item);
     });
-};		
+};	
 
 const resetIngestForm = () => {
     document.getElementById('ingest-title').value = "";
