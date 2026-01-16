@@ -9728,8 +9728,6 @@ const renderCategoryChart = (events) => {
 const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
     const ctxEl = document.getElementById('activityChart');
-    
-    // Safety Check
     if (!container || !ctxEl) return;
 
     const ctx = ctxEl.getContext('2d');
@@ -9737,7 +9735,7 @@ const renderActivityChart = (events, period = 'all') => {
     // 1. PROCESS DATA
     const processed = processActivityData(events, period);
 
-    // 2. UPDATE STATS (Safe Updates)
+    // 2. UPDATE STATS
     const totalEl = document.getElementById('stats-total-copies');
     const avgEl = document.getElementById('stats-avg-copies');
     const peakDateEl = document.getElementById('stats-busiest-day');
@@ -9745,12 +9743,10 @@ const renderActivityChart = (events, period = 'all') => {
 
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
-    
     if (peakDateEl) {
         peakDateEl.textContent = processed.peakDate;
         if(processed.total > 0) peakDateEl.classList.remove('hidden');
     }
-
     if (peakCountEl) {
         peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
     }
@@ -9789,9 +9785,16 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
+            // --- THE EXPANSION FIX ---
+            onClick: (e) => {
+                // Manually trigger the expansion logic on the parent wrapper
+                const wrapper = document.getElementById('activity-card-wrapper');
+                if (wrapper) wrapper.click();
+            },
+            
             onHover: (event, chartElement) => {
                 const target = event.native ? event.native.target : event.target;
-                if(target) target.style.cursor = 'pointer'; // Always show pointer to indicate clickability
+                if(target) target.style.cursor = 'pointer'; 
             },
             plugins: {
                 legend: { display: false },
