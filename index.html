@@ -9726,61 +9726,62 @@ const renderCategoryChart = (events) => {
     });
 };
 
-// FIND and REPLACE the entire renderActivityChart function
 const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
     const ctxEl = document.getElementById('activityChart');
+    
+    // Safety Check: If the chart canvas is missing, stop immediately
     if (!container || !ctxEl) return;
 
     const ctx = ctxEl.getContext('2d');
-    
-    // Elements for the interactive header
     const labelEl = document.getElementById('chart-label');
     const valueEl = document.getElementById('chart-value');
 
-    // 1. PROCESS REAL DATA (Keep this from your old code)
+    // 1. PROCESS DATA
+    // We assume you have this helper function from your original code
     const processed = processActivityData(events, period);
 
-    // 2. UPDATE DASHBOARD STATS (Keep this from your old code)
-    if (document.getElementById('stats-total-copies')) {
-        document.getElementById('stats-total-copies').textContent = processed.total.toLocaleString();
-        document.getElementById('stats-avg-copies').textContent = processed.avg;
-        document.getElementById('stats-busiest-day').textContent = processed.peakDate;
-        document.getElementById('stats-busiest-day-count').textContent = processed.peakCount > 0 ? processed.peakCount : '0';
-        
-        // Un-hide busy day if valid
-        const busyDayEl = document.getElementById('stats-busiest-day');
-        if(processed.total > 0) busyDayEl.classList.remove('hidden');
+    // 2. UPDATE STATS (THE FIX: Safe Updates)
+    // We assign variables first, then check if they exist before setting text.
+    const totalEl = document.getElementById('stats-total-copies');
+    const avgEl = document.getElementById('stats-avg-copies');
+    const peakDateEl = document.getElementById('stats-busiest-day'); // This was likely causing the crash
+    const peakCountEl = document.getElementById('stats-busiest-day-count');
+
+    if (totalEl) totalEl.textContent = processed.total.toLocaleString();
+    if (avgEl) avgEl.textContent = processed.avg;
+    
+    // Only update the "Date" text if the element actually exists in HTML
+    if (peakDateEl) {
+        peakDateEl.textContent = processed.peakDate;
+        if(processed.total > 0) peakDateEl.classList.remove('hidden');
     }
 
-    // 3. HANDLE NO DATA STATE
-    if (processed.total === 0 && period !== 'all') {
-         // Optional: Clear chart or show empty state, but for stock look, 
-         // we usually prefer showing a flat line rather than removing the canvas.
+    if (peakCountEl) {
+        peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
     }
 
-    // 4. SETUP STOCK MARKET STYLING (The new Green Look)
+    // 3. GREEN STOCK MARKET STYLING
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); // Green-500
-    gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); 
+    gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)'); 
 
-    // Destroy old instance to prevent glitches
     if (window.activityChartInstance) {
         window.activityChartInstance.destroy();
     }
 
-    // 5. RENDER CHART
+    // 4. RENDER CHART
     window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: processed.labels, // <--- USING REAL LABELS
+            labels: processed.labels, 
             datasets: [{
                 label: 'Copies',
-                data: processed.data, // <--- USING REAL DATA
+                data: processed.data,
                 borderColor: '#22c55e',       
                 backgroundColor: gradient,    
                 borderWidth: 3,
-                pointBackgroundColor: '#1f2937', // Matches card bg
+                pointBackgroundColor: '#1f2937', 
                 pointBorderColor: '#22c55e',
                 pointBorderWidth: 2,
                 pointHoverBackgroundColor: '#22c55e',
@@ -9794,38 +9795,39 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- INTERACTIVE CLICK LOGIC ---
+            // --- CLICK INTERACTION ---
             onClick: (e, activeElements) => {
-                if (!labelEl || !valueEl) return;
-
                 if (activeElements.length > 0) {
                     const index = activeElements[0].index;
-                    const day = processed.labels[index]; // Use real labels
-                    const count = processed.data[index]; // Use real data
+                    const day = processed.labels[index];
+                    const count = processed.data[index];
 
-                    // Update Title Text
-                    labelEl.textContent = `${day}'s Activity`;
-                    labelEl.classList.add('text-green-400');
+                    // Safely update Label if it exists
+                    if (labelEl) {
+                        labelEl.textContent = `${day}'s Activity`;
+                        labelEl.classList.add('text-green-400');
+                        setTimeout(() => labelEl.classList.remove('text-green-400'), 500);
+                    }
                     
-                    // Update Value Text
-                    valueEl.textContent = `${count} Copies`;
-                    valueEl.classList.add('scale-110', 'text-white');
-                    valueEl.classList.remove('text-green-500');
-
-                    setTimeout(() => {
-                        labelEl.classList.remove('text-green-400');
-                        valueEl.classList.remove('scale-110', 'text-white');
-                        valueEl.classList.add('text-green-500');
-                    }, 500);
+                    // Safely update Value if it exists
+                    if (valueEl) {
+                        valueEl.textContent = `${count} Copies`;
+                        valueEl.classList.add('scale-110', 'text-white');
+                        valueEl.classList.remove('text-green-500');
+                        setTimeout(() => {
+                            valueEl.classList.remove('scale-110', 'text-white');
+                            valueEl.classList.add('text-green-500');
+                        }, 500);
+                    }
                 } else {
-                    // Reset to default if clicking background
-                    labelEl.textContent = 'Weekly Performance';
-                    // Calculate percent change or just show total if preferred
-                    valueEl.textContent = `Total: ${processed.total}`;
+                    // Reset
+                    if (labelEl) labelEl.textContent = 'Weekly Performance';
+                    if (valueEl) valueEl.textContent = `Total: ${processed.total}`;
                 }
             },
             onHover: (event, chartElement) => {
-                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                const target = event.native ? event.native.target : event.target;
+                if(target) target.style.cursor = chartElement[0] ? 'pointer' : 'default';
             },
             plugins: {
                 legend: { display: false },
