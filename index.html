@@ -3216,12 +3216,10 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			            <h3 class="text-lg font-bold text-gray-200 flex items-center">
 			                <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
 			            </h3>
-			            <p id="chart-label" class="text-xs text-gray-500 mt-1 transition-colors duration-300">Weekly Performance</p>
+			            <p class="text-xs text-gray-500 mt-1">Weekly Performance</p>
 			        </div>
 			
 			        <div class="flex flex-col items-end gap-2">
-			            <span id="chart-value" class="text-green-500 font-bold text-sm bg-green-500/10 px-2 py-0.5 rounded transition-all duration-300 opacity-100">+12.5%</span>
-			            
 			            <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right pointer-events-auto border border-gray-700">
 			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="7">7D</button>
 			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="30">30D</button>
@@ -3237,15 +3235,16 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			    <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3 relative z-20">
 			        <div>
 			            <p class="text-xs text-gray-500">Total</p>
-			            <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">1,240</p>
+			            <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">--</p>
 			        </div>
 			        <div>
 			            <p class="text-xs text-gray-500">Avg/Day</p>
-			            <p id="stats-avg-copies" class="text-lg font-bold text-white leading-tight">45</p>
+			            <p id="stats-avg-copies" class="text-lg font-bold text-white leading-tight">--</p>
 			        </div>
 			        <div>
 			            <p class="text-xs text-gray-500">Peak</p>
-			            <p id="stats-busiest-day-count" class="text-lg font-bold text-white leading-tight">92</p>
+			            <p id="stats-busiest-day" class="text-xs text-gray-400 hidden">--</p>
+			            <p id="stats-busiest-day-count" class="text-lg font-bold text-white leading-tight">--</p>
 			        </div>
 			    </div>
 			</div>
