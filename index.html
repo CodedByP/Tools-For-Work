@@ -4591,17 +4591,16 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
     const modalTitle = document.getElementById('expanded-chart-title');
     const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
     
-    // --- FIX START: Reset UI State ---
-    // 1. Ensure the Canvas is visible (it might have been hidden by achievements view)
+    // 1. SHOW MODAL FIRST (Critical Fix: Canvas needs dimensions to render)
+    modal.classList.remove('hidden');
+    
+    // 2. Reset UI State
     document.getElementById('expanded-chart-canvas').classList.remove('hidden');
-
-    // 2. Explicitly HIDE Achievement elements
     document.getElementById('expanded-achievements-controls').classList.add('hidden');
     document.getElementById('expanded-achievements-controls').classList.remove('flex');
     document.getElementById('expanded-achievements-grid').classList.add('hidden');
-    // --- FIX END ---
 
-    // Elements to toggle based on Chart Type
+    // 3. Setup Controls
     const controlsDiv = document.getElementById('expanded-activity-controls');
     const statsDiv = document.getElementById('expanded-activity-stats');
 
@@ -4609,7 +4608,7 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
 
     if (expandedChartInstance) expandedChartInstance.destroy();
 
-    // --- CASE A: ACTIVITY CHART (Interactive) ---
+    // --- CASE A: ACTIVITY CHART ---
     if (chartType === 'activity' && eventsData) {
         controlsDiv.classList.remove('hidden');
         controlsDiv.classList.add('flex');
@@ -4617,9 +4616,13 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         statsDiv.classList.add('grid');
         
         expandedChartEvents = eventsData;
+        
+        // RENDER NOW (Since modal is visible, this will work immediately)
         renderExpandedActivityChart('all');
 
+        // Setup Filter Click Listeners
         const filterGroup = document.getElementById('modal-activity-filter-group');
+        // cloneNode removal logic to prevent duplicate listeners
         const newFilterGroup = filterGroup.cloneNode(true);
         filterGroup.parentNode.replaceChild(newFilterGroup, filterGroup);
         
@@ -4640,17 +4643,14 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         statsDiv.classList.add('hidden');
         statsDiv.classList.remove('grid');
 
+        // Logic for other charts...
         const config = sourceChartInstance.config;
         const newOptions = {
             ...config.options,
             maintainAspectRatio: false,
             responsive: true,
             plugins: {
-                ...config.options.plugins,
-                legend: {
-                    display: true,
-                    labels: { color: '#e5e7eb', font: { size: 14 } }
-                }
+                legend: { display: true, labels: { color: '#e5e7eb', font: { size: 14 } } }
             },
             scales: config.options.scales
         };
@@ -4662,10 +4662,11 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
         });
     }
 
-    // Animation Logic
-    modal.classList.remove('hidden');
-    void modal.offsetHeight; 
-    modal.classList.add('modal-visible');
+    // 4. Trigger Animation (Fade In)
+    // Small delay ensures the browser registers the display:block before fading opacity
+    requestAnimationFrame(() => {
+        modal.classList.add('modal-visible');
+    });
 };
 
 // Internal function to handle rendering inside the modal
@@ -9765,19 +9766,15 @@ const renderCategoryChart = (events) => {
 
 const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
-    
-    // Safety Check
     if (!container) return;
 
-    // 1. Reset Canvas (Keep standard canvas so tooltips work)
+    // Reset Canvas
     container.innerHTML = '<canvas id="activityChart"></canvas>';
-    
     const ctx = document.getElementById('activityChart').getContext('2d');
 
-    // 2. Process Data
     const processed = processActivityData(events, period);
 
-    // 3. Update Bottom Stats
+    // Update Bottom Stats...
     const totalEl = document.getElementById('stats-total-copies');
     const avgEl = document.getElementById('stats-avg-copies');
     const peakCountEl = document.getElementById('stats-busiest-day-count');
@@ -9786,8 +9783,6 @@ const renderActivityChart = (events, period = 'all') => {
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
     if (peakCountEl) peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
-    
-    // Manage Peak Date visibility
     if (peakLabelEl) {
         if (processed.peakDate && processed.peakDate !== '--') {
             peakLabelEl.textContent = processed.peakDate;
@@ -9797,16 +9792,13 @@ const renderActivityChart = (events, period = 'all') => {
         }
     }
 
-    // 4. Style Setup (Green Stock Market Look)
+    // Gradient Style
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); 
     gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)'); 
 
-    if (window.activityChartInstance) {
-        window.activityChartInstance.destroy();
-    }
+    if (window.activityChartInstance) window.activityChartInstance.destroy();
 
-    // 5. Render Chart
     window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -9831,28 +9823,22 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- THE REAL FIX ---
-            // Instead of trying to bubble the event, we call the expansion logic DIRECTLY.
+            // --- FIX FOR CLICKING THE CHART ITSELF ---
             onClick: (e) => {
-                if (window.activityChartInstance && typeof openExpandedChart === 'function') {
-                    openExpandedChart(
-                        window.activityChartInstance, 
-                        'Activity Analysis', 
-                        events, // Pass the raw events data we already have here
-                        'activity'
-                    );
+                // If the user clicks the GRAPH, we manually run the open function
+                if (typeof openExpandedChart === 'function') {
+                    openExpandedChart(window.activityChartInstance, 'Activity Analysis', events, 'activity');
                 }
             },
 
-            // Make cursor look clickable so user knows they can expand
             onHover: (event, chartElement) => {
+                // Force pointer cursor so user knows it's clickable
                 const target = event.native ? event.native.target : event.target;
                 if(target) target.style.cursor = 'pointer'; 
             },
 
             plugins: {
                 legend: { display: false },
-                // Tooltips are ENABLED so you can see data
                 tooltip: {
                     mode: 'index',
                     intersect: false,
@@ -10777,20 +10763,24 @@ if (filterAllBtn && filterUnlockedBtn) {
 }
     
 
-    const activityWrapper = document.getElementById('activity-card-wrapper');
-    if (activityWrapper) {
-        activityWrapper.addEventListener('click', async (e) => {
-            // Prevent triggering if clicking the dashboard filter buttons
-            if (e.target.closest('.activity-filter-btn')) return;
-            if (userId) {
-                const eventsCollectionRef = getUserEventsCollectionRef(userId);
-                const snapshot = await getDocs(query(eventsCollectionRef));
-                const currentEvents = snapshot.docs.map(doc => doc.data());
-                
-                openExpandedChart(activityChartInstance, 'Activity Analysis', currentEvents, 'activity');
-            }
-        });
-    }
+// This handles clicks on the TEXT or BACKGROUND of the card
+const activityWrapper = document.getElementById('activity-card-wrapper');
+if (activityWrapper) {
+    activityWrapper.addEventListener('click', async (e) => {
+        // Don't trigger if they clicked a filter button
+        if (e.target.closest('.activity-filter-btn')) return;
+        
+        // This handles the background click
+        if (userId && window.activityChartInstance) {
+             // Retrieve events safely
+             const eventsCollectionRef = getUserEventsCollectionRef(userId);
+             const snapshot = await getDocs(query(eventsCollectionRef));
+             const currentEvents = snapshot.docs.map(doc => doc.data());
+             
+             openExpandedChart(window.activityChartInstance, 'Activity Analysis', currentEvents, 'activity');
+        }
+    });
+}
 
     // 2. Category Chart Click
     const categoryWrapper = document.getElementById('category-card-wrapper');
