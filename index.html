@@ -9648,9 +9648,13 @@ const renderCategoryChart = (events) => {
     const container = document.getElementById('category-chart-container');
     if (!container) return;
 
- 
-	container.innerHTML = '<canvas id="activityChart" class="pointer-events-none"></canvas>';
-    const ctx = document.getElementById('categoryChart').getContext('2d');
+    // --- FIX 1: Correct ID is 'categoryChart', NOT 'activityChart' ---
+    // --- FIX 2: Removed 'pointer-events-none' so you can hover over the doughnut slices ---
+    container.innerHTML = '<canvas id="categoryChart"></canvas>';
+    
+    const ctxElement = document.getElementById('categoryChart');
+    if (!ctxElement) return; // Safety check
+    const ctx = ctxElement.getContext('2d');
 
     if (categoryChartInstance) {
         categoryChartInstance.destroy();
@@ -9670,7 +9674,6 @@ const renderCategoryChart = (events) => {
     const labels = Object.keys(categoryCounts);
     const data = Object.values(categoryCounts);
     
-    // Use your existing category colors for the chart
     const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
 
     const isLightMode = document.body.classList.contains('light-mode');
@@ -9700,23 +9703,13 @@ const renderCategoryChart = (events) => {
                         font: { size: 14, weight: 'bold' }
                     }
                 },
-				tooltip: {
+                tooltip: {
                     callbacks: {
                         label: function(context) {
-                            // Get the raw value (number of copies)
                             const value = context.raw;
-                            
-                            // Calculate the total of all copies
                             const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                            
-                            // Calculate the percentage
                             const percentage = ((value / total) * 100).toFixed(1) + '%';
-                            
-                            // Get the category label
-                            const label = context.label || '';
-                            
-                            // Return the new label string
-                            return `${label}: ${value} (${percentage})`;
+                            return `${context.label}: ${value} (${percentage})`;
                         }
                     }
                 }
@@ -9730,6 +9723,9 @@ const renderActivityChart = (events, period = 'all') => {
     
     // Safety Check
     if (!container) return;
+
+    // --- FIX: Add 'pointer-events-none' ---
+    // This allows clicks to pass THROUGH the graph and hit the card, triggering expansion.
     container.innerHTML = '<canvas id="activityChart" class="pointer-events-none"></canvas>';
     
     const ctx = document.getElementById('activityChart').getContext('2d');
@@ -9737,7 +9733,7 @@ const renderActivityChart = (events, period = 'all') => {
     // 1. PROCESS DATA
     const processed = processActivityData(events, period);
 
-    // 2. UPDATE STATS
+    // 2. UPDATE STATS (Safe Updates)
     const totalEl = document.getElementById('stats-total-copies');
     const avgEl = document.getElementById('stats-avg-copies');
     const peakDateEl = document.getElementById('stats-busiest-day');
@@ -9746,7 +9742,7 @@ const renderActivityChart = (events, period = 'all') => {
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
     
-    // Hide Date text (Cleaner look)
+    // Hide Date text (Cleaner look as requested)
     if (peakDateEl) peakDateEl.classList.add('hidden');
 
     if (peakCountEl) {
@@ -9777,8 +9773,8 @@ const renderActivityChart = (events, period = 'all') => {
                 pointBorderColor: '#22c55e',
                 pointBorderWidth: 2,
                 
-                // Visuals only (since user can't hover)
-                pointRadius: 0, // Hide dots for cleaner look until expanded (optional)
+                // Visuals only (dots hidden until hover, but hover disabled via pointer-events-none)
+                pointRadius: 0, 
                 pointHitRadius: 0,
                 
                 fill: true,                   
@@ -9794,7 +9790,7 @@ const renderActivityChart = (events, period = 'all') => {
             
             plugins: {
                 legend: { display: false },
-                tooltip: { enabled: false } // Disable tooltips since we can't hover
+                tooltip: { enabled: false } // Disable tooltips
             },
             scales: {
                 x: {
