@@ -3205,40 +3205,50 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 			    </div>
 			</div>
 
-            <div id="activity-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
-                <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                    <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
-                </div>
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 relative z-20">
-                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
-                        <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
-                    </h3>
-                    <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right pointer-events-auto">
-                        <button class="activity-filter-btn px-3 py-1 text-xs" data-period="7">7D</button>
-                        <button class="activity-filter-btn px-3 py-1 text-xs" data-period="30">30D</button>
-                        <button class="activity-filter-btn px-3 py-1 text-xs active" data-period="all">All</button>
-                    </div>
-                </div>
-                <div id="activity-chart-container" class="relative h-48 w-full">
-                    <canvas id="activityChart"></canvas>
-                </div>
-                <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3 relative z-20">
-                    <div>
-                        <p class="text-xs text-gray-500">Total</p>
-                        <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">--</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Avg/Day</p>
-                        <p id="stats-avg-copies" class="text-lg font-bold text-white leading-tight">--</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Peak</p>
-                        <p id="stats-busiest-day" class="text-lg font-bold text-white leading-tight hidden">--</p>
-                        <p id="stats-busiest-day-count" class="text-lg font-bold text-white leading-tight">--</p>
-                    </div>
-                </div>
-            </div>
+			<div id="activity-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50 flex flex-col">
+			    
+			    <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+			        <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
+			    </div>
+			
+			    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-start mb-4 gap-4 relative z-20">
+			        <div>
+			            <h3 class="text-lg font-bold text-gray-200 flex items-center">
+			                <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
+			            </h3>
+			            <p id="chart-label" class="text-xs text-gray-500 mt-1 transition-colors duration-300">Weekly Performance</p>
+			        </div>
+			
+			        <div class="flex flex-col items-end gap-2">
+			            <span id="chart-value" class="text-green-500 font-bold text-sm bg-green-500/10 px-2 py-0.5 rounded transition-all duration-300 opacity-100">+12.5%</span>
+			            
+			            <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right pointer-events-auto border border-gray-700">
+			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="7">7D</button>
+			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="30">30D</button>
+			                <button class="activity-filter-btn px-3 py-1 text-xs text-white bg-gray-700 rounded-full shadow-sm" data-period="all">All</button>
+			            </div>
+			        </div>
+			    </div>
+			
+			    <div id="activity-chart-container" class="relative w-full flex-grow min-h-[220px]">
+			        <canvas id="activityChart"></canvas>
+			    </div>
+			
+			    <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3 relative z-20">
+			        <div>
+			            <p class="text-xs text-gray-500">Total</p>
+			            <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">1,240</p>
+			        </div>
+			        <div>
+			            <p class="text-xs text-gray-500">Avg/Day</p>
+			            <p id="stats-avg-copies" class="text-lg font-bold text-white leading-tight">45</p>
+			        </div>
+			        <div>
+			            <p class="text-xs text-gray-500">Peak</p>
+			            <p id="stats-busiest-day-count" class="text-lg font-bold text-white leading-tight">92</p>
+			        </div>
+			    </div>
+			</div>
 
 			<div id="achievements-card-wrapper" class="bento-card bento-span-2 p-6 flex flex-col cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
 			    
@@ -3288,7 +3298,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
 
-        </div> </div> </div> ```
+        </div> </div> </div> 
 
 <div id="profile-modal" class="modal hidden">
         <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-2xl p-0 overflow-hidden modal-scroll-fix shadow-2xl rounded-xl">    
@@ -9719,87 +9729,133 @@ const renderCategoryChart = (events) => {
 // FIND and REPLACE the entire renderActivityChart function
 const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
-    if (!container) return;
+    const ctxEl = document.getElementById('activityChart');
+    if (!container || !ctxEl) return;
 
-    // Destroy old if exists
-    if (activityChartInstance) {
-        activityChartInstance.destroy();
-    }
+    const ctx = ctxEl.getContext('2d');
     
-    container.innerHTML = '<canvas id="activityChart"></canvas>';
-    const ctx = document.getElementById('activityChart').getContext('2d');
+    // Elements for the interactive header
+    const labelEl = document.getElementById('chart-label');
+    const valueEl = document.getElementById('chart-value');
 
-    // 1. Get Processed Data using the Helper
+    // 1. PROCESS REAL DATA (Keep this from your old code)
     const processed = processActivityData(events, period);
 
-    // 2. Update Dashboard Stats
-    document.getElementById('stats-total-copies').textContent = processed.total.toLocaleString();
-    document.getElementById('stats-avg-copies').textContent = processed.avg;
-    document.getElementById('stats-busiest-day').textContent = processed.peakDate;
-    document.getElementById('stats-busiest-day-count').textContent = processed.peakCount > 0 ? `(${processed.peakCount} copies)` : '';
-
-    if (processed.total === 0 && period !== 'all') {
-         container.innerHTML = '<p class="text-center text-gray-400 mt-12">No activity recorded for this period.</p>';
-         return;
+    // 2. UPDATE DASHBOARD STATS (Keep this from your old code)
+    if (document.getElementById('stats-total-copies')) {
+        document.getElementById('stats-total-copies').textContent = processed.total.toLocaleString();
+        document.getElementById('stats-avg-copies').textContent = processed.avg;
+        document.getElementById('stats-busiest-day').textContent = processed.peakDate;
+        document.getElementById('stats-busiest-day-count').textContent = processed.peakCount > 0 ? processed.peakCount : '0';
+        
+        // Un-hide busy day if valid
+        const busyDayEl = document.getElementById('stats-busiest-day');
+        if(processed.total > 0) busyDayEl.classList.remove('hidden');
     }
-    
-	const isLightMode = document.body.classList.contains('light-mode');
-	const textColor = isLightMode ? '#000000' : '#ffffff'; 
-	const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
 
-    // Create Gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue fade
-    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    // 3. HANDLE NO DATA STATE
+    if (processed.total === 0 && period !== 'all') {
+         // Optional: Clear chart or show empty state, but for stock look, 
+         // we usually prefer showing a flat line rather than removing the canvas.
+    }
 
-    activityChartInstance = new Chart(ctx, {
+    // 4. SETUP STOCK MARKET STYLING (The new Green Look)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); // Green-500
+    gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+
+    // Destroy old instance to prevent glitches
+    if (window.activityChartInstance) {
+        window.activityChartInstance.destroy();
+    }
+
+    // 5. RENDER CHART
+    window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: processed.labels,
+            labels: processed.labels, // <--- USING REAL LABELS
             datasets: [{
                 label: 'Copies',
-                data: processed.data,
-                fill: true,
-                backgroundColor: gradient, // Use gradient fill
-                borderColor: '#3b82f6', // Solid blue line
-                borderWidth: 2,
-                pointBackgroundColor: '#1d4ed8',
-                pointBorderColor: '#ffffff',
-                pointHoverBackgroundColor: '#ffffff',
-                pointHoverBorderColor: '#3b82f6',
-                tension: 0.4 // Makes lines smoother (curved)
+                data: processed.data, // <--- USING REAL DATA
+                borderColor: '#22c55e',       
+                backgroundColor: gradient,    
+                borderWidth: 3,
+                pointBackgroundColor: '#1f2937', // Matches card bg
+                pointBorderColor: '#22c55e',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: '#22c55e',
+                pointHoverBorderColor: '#fff',
+                pointHoverRadius: 6,
+                fill: true,                   
+                tension: 0.4                  
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                x: { 
-                    type: 'category', 
-                    ticks: { color: textColor, font: { family: 'Inter', size: 11 } }, 
-                    grid: { display: false } // Hide X grid
-                },
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { color: textColor, font: { family: 'Inter', size: 11 }, maxTicksLimit: 5 }, 
-                    grid: { color: gridColor, borderDash: [5, 5] }, // Dashed Y grid
-                    border: { display: false } // Remove axis line
+            maintainAspectRatio: false, 
+            
+            // --- INTERACTIVE CLICK LOGIC ---
+            onClick: (e, activeElements) => {
+                if (!labelEl || !valueEl) return;
+
+                if (activeElements.length > 0) {
+                    const index = activeElements[0].index;
+                    const day = processed.labels[index]; // Use real labels
+                    const count = processed.data[index]; // Use real data
+
+                    // Update Title Text
+                    labelEl.textContent = `${day}'s Activity`;
+                    labelEl.classList.add('text-green-400');
+                    
+                    // Update Value Text
+                    valueEl.textContent = `${count} Copies`;
+                    valueEl.classList.add('scale-110', 'text-white');
+                    valueEl.classList.remove('text-green-500');
+
+                    setTimeout(() => {
+                        labelEl.classList.remove('text-green-400');
+                        valueEl.classList.remove('scale-110', 'text-white');
+                        valueEl.classList.add('text-green-500');
+                    }, 500);
+                } else {
+                    // Reset to default if clicking background
+                    labelEl.textContent = 'Weekly Performance';
+                    // Calculate percent change or just show total if preferred
+                    valueEl.textContent = `Total: ${processed.total}`;
                 }
+            },
+            onHover: (event, chartElement) => {
+                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                    titleColor: '#fff',
-                    bodyColor: '#cbd5e1',
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    titleColor: '#22c55e',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(34, 197, 94, 0.3)',
+                    borderWidth: 1,
                     padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false // Remove color box in tooltip
+                    displayColors: false,
                 }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#6b7280', font: { size: 10 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { display: false },
+                    beginAtZero: true
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
         }
     });
