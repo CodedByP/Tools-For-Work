@@ -9648,8 +9648,8 @@ const renderCategoryChart = (events) => {
     const container = document.getElementById('category-chart-container');
     if (!container) return;
 
-    // Clear previous chart and messages
-    container.innerHTML = '<canvas id="categoryChart"></canvas>';
+ 
+	container.innerHTML = '<canvas id="activityChart" class="pointer-events-none"></canvas>';
     const ctx = document.getElementById('categoryChart').getContext('2d');
 
     if (categoryChartInstance) {
@@ -9727,10 +9727,12 @@ const renderCategoryChart = (events) => {
 
 const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
-    const ctxEl = document.getElementById('activityChart');
-    if (!container || !ctxEl) return;
-
-    const ctx = ctxEl.getContext('2d');
+    
+    // Safety Check
+    if (!container) return;
+    container.innerHTML = '<canvas id="activityChart" class="pointer-events-none"></canvas>';
+    
+    const ctx = document.getElementById('activityChart').getContext('2d');
 
     // 1. PROCESS DATA
     const processed = processActivityData(events, period);
@@ -9744,7 +9746,7 @@ const renderActivityChart = (events, period = 'all') => {
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
     
-    // Hide the "Date" text since we just want the number (cleaner look)
+    // Hide Date text (Cleaner look)
     if (peakDateEl) peakDateEl.classList.add('hidden');
 
     if (peakCountEl) {
@@ -9774,9 +9776,11 @@ const renderActivityChart = (events, period = 'all') => {
                 pointBackgroundColor: '#1f2937', 
                 pointBorderColor: '#22c55e',
                 pointBorderWidth: 2,
-                pointHoverBackgroundColor: '#22c55e',
-                pointHoverBorderColor: '#fff',
-                pointHoverRadius: 6,
+                
+                // Visuals only (since user can't hover)
+                pointRadius: 0, // Hide dots for cleaner look until expanded (optional)
+                pointHitRadius: 0,
+                
                 fill: true,                   
                 tension: 0.4                  
             }]
@@ -9785,31 +9789,12 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- FIX: REMOVE 'onClick' and 'interaction' ---
-            // By deleting these, we let Chart.js bubble the event naturally.
+            // Disable all events so Chart.js uses 0 resources for interaction
+            events: [], 
             
-            onHover: (event, chartElement) => {
-                const target = event.native ? event.native.target : event.target;
-                if(target) target.style.cursor = 'pointer'; 
-            },
             plugins: {
                 legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    titleColor: '#22c55e',
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(34, 197, 94, 0.3)',
-                    borderWidth: 1,
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.y + ' Copies';
-                        }
-                    }
-                }
+                tooltip: { enabled: false } // Disable tooltips since we can't hover
             },
             scales: {
                 x: {
@@ -9824,13 +9809,6 @@ const renderActivityChart = (events, period = 'all') => {
             }
         }
     });
-
-    // --- FORCE CLICK FIX ---
-    // This manually ensures the click reaches your Bento Card Wrapper
-    ctxEl.onclick = function() {
-        const wrapper = document.getElementById('activity-card-wrapper');
-        if (wrapper) wrapper.click();
-    };
 };
 
 const renderLevelingSystem = (userData) => {
