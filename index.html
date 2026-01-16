@@ -9730,28 +9730,23 @@ const renderActivityChart = (events, period = 'all') => {
     const container = document.getElementById('activity-chart-container');
     const ctxEl = document.getElementById('activityChart');
     
-    // Safety Check: If the chart canvas is missing, stop immediately
+    // Safety Check
     if (!container || !ctxEl) return;
 
     const ctx = ctxEl.getContext('2d');
-    const labelEl = document.getElementById('chart-label');
-    const valueEl = document.getElementById('chart-value');
 
     // 1. PROCESS DATA
-    // We assume you have this helper function from your original code
     const processed = processActivityData(events, period);
 
-    // 2. UPDATE STATS (THE FIX: Safe Updates)
-    // We assign variables first, then check if they exist before setting text.
+    // 2. UPDATE STATS (Safe Updates)
     const totalEl = document.getElementById('stats-total-copies');
     const avgEl = document.getElementById('stats-avg-copies');
-    const peakDateEl = document.getElementById('stats-busiest-day'); // This was likely causing the crash
+    const peakDateEl = document.getElementById('stats-busiest-day');
     const peakCountEl = document.getElementById('stats-busiest-day-count');
 
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
     
-    // Only update the "Date" text if the element actually exists in HTML
     if (peakDateEl) {
         peakDateEl.textContent = processed.peakDate;
         if(processed.total > 0) peakDateEl.classList.remove('hidden');
@@ -9795,39 +9790,9 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- CLICK INTERACTION ---
-            onClick: (e, activeElements) => {
-                if (activeElements.length > 0) {
-                    const index = activeElements[0].index;
-                    const day = processed.labels[index];
-                    const count = processed.data[index];
-
-                    // Safely update Label if it exists
-                    if (labelEl) {
-                        labelEl.textContent = `${day}'s Activity`;
-                        labelEl.classList.add('text-green-400');
-                        setTimeout(() => labelEl.classList.remove('text-green-400'), 500);
-                    }
-                    
-                    // Safely update Value if it exists
-                    if (valueEl) {
-                        valueEl.textContent = `${count} Copies`;
-                        valueEl.classList.add('scale-110', 'text-white');
-                        valueEl.classList.remove('text-green-500');
-                        setTimeout(() => {
-                            valueEl.classList.remove('scale-110', 'text-white');
-                            valueEl.classList.add('text-green-500');
-                        }, 500);
-                    }
-                } else {
-                    // Reset
-                    if (labelEl) labelEl.textContent = 'Weekly Performance';
-                    if (valueEl) valueEl.textContent = `Total: ${processed.total}`;
-                }
-            },
             onHover: (event, chartElement) => {
                 const target = event.native ? event.native.target : event.target;
-                if(target) target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                if(target) target.style.cursor = 'pointer'; // Always show pointer to indicate clickability
             },
             plugins: {
                 legend: { display: false },
@@ -9841,6 +9806,11 @@ const renderActivityChart = (events, period = 'all') => {
                     borderWidth: 1,
                     padding: 10,
                     displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' Copies';
+                        }
+                    }
                 }
             },
             scales: {
