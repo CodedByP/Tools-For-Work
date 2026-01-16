@@ -9724,7 +9724,7 @@ const renderActivityChart = (events, period = 'all') => {
     // Safety Check
     if (!container) return;
 
-    // 1. Reset Canvas (Removed 'pointer-events-none' so tooltips work again)
+    // 1. Reset Canvas (Keep standard canvas so tooltips work)
     container.innerHTML = '<canvas id="activityChart"></canvas>';
     
     const ctx = document.getElementById('activityChart').getContext('2d');
@@ -9732,17 +9732,17 @@ const renderActivityChart = (events, period = 'all') => {
     // 2. Process Data
     const processed = processActivityData(events, period);
 
-    // 3. Update Bottom Stats (Total, Avg, Peak)
+    // 3. Update Bottom Stats
     const totalEl = document.getElementById('stats-total-copies');
     const avgEl = document.getElementById('stats-avg-copies');
     const peakCountEl = document.getElementById('stats-busiest-day-count');
-    const peakLabelEl = document.getElementById('stats-busiest-day'); // The small date text
+    const peakLabelEl = document.getElementById('stats-busiest-day');
 
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
     if (peakCountEl) peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
     
-    // Show the peak date label if data exists
+    // Manage Peak Date visibility
     if (peakLabelEl) {
         if (processed.peakDate && processed.peakDate !== '--') {
             peakLabelEl.textContent = processed.peakDate;
@@ -9752,7 +9752,7 @@ const renderActivityChart = (events, period = 'all') => {
         }
     }
 
-    // 4. Style Setup
+    // 4. Style Setup (Green Stock Market Look)
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); 
     gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)'); 
@@ -9761,7 +9761,7 @@ const renderActivityChart = (events, period = 'all') => {
         window.activityChartInstance.destroy();
     }
 
-    // 5. Render Chart with "The Bridge" Logic
+    // 5. Render Chart
     window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -9777,7 +9777,7 @@ const renderActivityChart = (events, period = 'all') => {
                 pointBorderWidth: 2,
                 pointHoverBackgroundColor: '#22c55e',
                 pointHoverBorderColor: '#fff',
-                pointHoverRadius: 6, // Make points pop on hover
+                pointHoverRadius: 6,
                 fill: true,                   
                 tension: 0.4                  
             }]
@@ -9786,14 +9786,20 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- THE BRIDGE FIX ---
-            // We capture the click inside the chart, and manually click the parent card
+            // --- THE REAL FIX ---
+            // Instead of trying to bubble the event, we call the expansion logic DIRECTLY.
             onClick: (e) => {
-                const wrapper = document.getElementById('activity-card-wrapper');
-                if (wrapper) wrapper.click();
+                if (window.activityChartInstance && typeof openExpandedChart === 'function') {
+                    openExpandedChart(
+                        window.activityChartInstance, 
+                        'Activity Analysis', 
+                        events, // Pass the raw events data we already have here
+                        'activity'
+                    );
+                }
             },
 
-            // Make cursor look clickable
+            // Make cursor look clickable so user knows they can expand
             onHover: (event, chartElement) => {
                 const target = event.native ? event.native.target : event.target;
                 if(target) target.style.cursor = 'pointer'; 
@@ -9801,7 +9807,7 @@ const renderActivityChart = (events, period = 'all') => {
 
             plugins: {
                 legend: { display: false },
-                // Restore Tooltips (Information)
+                // Tooltips are ENABLED so you can see data
                 tooltip: {
                     mode: 'index',
                     intersect: false,
