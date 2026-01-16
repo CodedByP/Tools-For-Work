@@ -9743,10 +9743,10 @@ const renderActivityChart = (events, period = 'all') => {
 
     if (totalEl) totalEl.textContent = processed.total.toLocaleString();
     if (avgEl) avgEl.textContent = processed.avg;
-    if (peakDateEl) {
-        peakDateEl.textContent = processed.peakDate;
-        if(processed.total > 0) peakDateEl.classList.remove('hidden');
-    }
+    
+    // Hide the "Date" text since we just want the number (cleaner look)
+    if (peakDateEl) peakDateEl.classList.add('hidden');
+
     if (peakCountEl) {
         peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
     }
@@ -9785,12 +9785,8 @@ const renderActivityChart = (events, period = 'all') => {
             responsive: true,
             maintainAspectRatio: false, 
             
-            // --- THE EXPANSION FIX ---
-            onClick: (e) => {
-                // Manually trigger the expansion logic on the parent wrapper
-                const wrapper = document.getElementById('activity-card-wrapper');
-                if (wrapper) wrapper.click();
-            },
+            // --- FIX: REMOVE 'onClick' and 'interaction' ---
+            // By deleting these, we let Chart.js bubble the event naturally.
             
             onHover: (event, chartElement) => {
                 const target = event.native ? event.native.target : event.target;
@@ -9825,14 +9821,16 @@ const renderActivityChart = (events, period = 'all') => {
                     ticks: { display: false },
                     beginAtZero: true
                 }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
             }
         }
     });
+
+    // --- FORCE CLICK FIX ---
+    // This manually ensures the click reaches your Bento Card Wrapper
+    ctxEl.onclick = function() {
+        const wrapper = document.getElementById('activity-card-wrapper');
+        if (wrapper) wrapper.click();
+    };
 };
 
 const renderLevelingSystem = (userData) => {
