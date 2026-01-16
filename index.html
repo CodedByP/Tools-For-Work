@@ -4670,51 +4670,96 @@ const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartT
 
 // Internal function to handle rendering inside the modal
 const renderExpandedActivityChart = (period) => {
-    const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
+    const ctxElement = document.getElementById('expanded-chart-canvas');
+    if (!ctxElement) return;
+    
+    const ctx = ctxElement.getContext('2d');
     
     // 1. Process Data
     const processed = processActivityData(expandedChartEvents, period);
 
-    // 2. Update Modal Stats
+    // 2. Update Modal Stats text
     document.getElementById('modal-stats-total').textContent = processed.total.toLocaleString();
     document.getElementById('modal-stats-avg').textContent = processed.avg;
     document.getElementById('modal-stats-peak-date').textContent = processed.peakDate;
     document.getElementById('modal-stats-peak-count').textContent = processed.peakCount > 0 ? `${processed.peakCount} copies` : '--';
 
-    // 3. Render Chart
+    // 3. Destroy old instance if it exists
     if (expandedChartInstance) expandedChartInstance.destroy();
+
+    // 4. Create the Green Stock Market Gradient (Same as dashboard)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400); // Taller gradient for the modal
+    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); // Green-500
+    gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
 
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
 
+    // 5. Render as LINE Chart
     expandedChartInstance = new Chart(ctx, {
-        type: 'bar', // Bar chart looks nice for detailed daily analysis
+        type: 'line', // <--- CHANGED FROM 'bar' TO 'line'
         data: {
             labels: processed.labels,
             datasets: [{
                 label: 'Copies',
                 data: processed.data,
-                backgroundColor: 'rgba(59, 130, 246, 0.6)', // Blue bars
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1,
-                borderRadius: 4
+                // --- GREEN STYLING MATCH ---
+                borderColor: '#22c55e',       
+                backgroundColor: gradient,    
+                borderWidth: 3,
+                pointBackgroundColor: '#111827', // Dark background for points
+                pointBorderColor: '#22c55e',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: '#22c55e',
+                pointHoverBorderColor: '#fff',
+                pointRadius: 4, // Slightly larger points for the expanded view
+                pointHoverRadius: 8,
+                fill: true,                   
+                tension: 0.4 // Smooth curves
             }]
         },
         options: {
             maintainAspectRatio: false,
             responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             scales: {
-                x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
+                x: { 
+                    ticks: { color: textColor, maxRotation: 45, minRotation: 0 }, 
+                    grid: { color: gridColor, display: false } // Hide X grid for cleaner look
+                },
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: textColor }, 
+                    grid: { color: gridColor, borderDash: [5, 5] } // Dashed grid lines
+                }
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    titleColor: '#22c55e', // Green title
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(34, 197, 94, 0.3)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
                     callbacks: {
                         title: function(context) {
-                            const originalDate = new Date(processed.rawSortedDates[context[0].dataIndex] + 'T00:00:00');
-                            return originalDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                            // Show full date in tooltip
+                            const dateIndex = context[0].dataIndex;
+                            const originalDateStr = processed.rawSortedDates[dateIndex]; 
+                            if(originalDateStr) {
+                               const d = new Date(originalDateStr + 'T00:00:00');
+                               return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                            }
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            return `${context.parsed.y} Copies`;
                         }
                     }
                 }
