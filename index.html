@@ -9615,14 +9615,14 @@ const renderSettingsPage = () => {
     }
 };
 
-// This calculates chart data AND stats for any given period
+// --- UPDATED CALCULATION LOGIC ---
 const processActivityData = (events, period) => {
     const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
     const now = new Date();
     let startDate = new Date();
     let filteredEvents = [];
 
-    // Filter Logic
+    // 1. Filter Logic (Keep this as is)
     if (period === '7') {
         startDate.setDate(now.getDate() - 6);
         startDate.setHours(0, 0, 0, 0);
@@ -9634,36 +9634,28 @@ const processActivityData = (events, period) => {
     } else if (period === 'month') {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else { // 'all'
+    } else { 
         filteredEvents = copyEvents;
     }
 
-    // Group by Date
+    // 2. Group by Date
     const activityByDay = filteredEvents.reduce((acc, event) => {
         const date = event.timestamp.toDate().toISOString().split('T')[0];
         acc[date] = (acc[date] || 0) + 1;
         return acc;
     }, {});
 
-    // Sort Dates
+    // 3. NEW CALCULATION: Divisor is now the number of active days found
     const sortedDates = Object.keys(activityByDay).sort();
+    const totalCopies = filteredEvents.length;
     
-    // Calculate Stats
-    let totalCopies = filteredEvents.length;
-    
-    // Calculate number of days in the range (for average)
-    let daysDivisor = 1;
-    if (period === 'all') {
-        daysDivisor = Object.keys(activityByDay).length || 1;
-    } else if (period === '7') { daysDivisor = 7; }
-    else if (period === '30') { daysDivisor = 30; }
-    else if (period === 'month') { daysDivisor = now.getDate(); }
+    // This is the core fix: Count unique days that actually have data
+    const activeDaysCount = sortedDates.length;
+    const avgCopies = activeDaysCount > 0 ? (totalCopies / activeDaysCount).toFixed(1) : '0.0';
 
-    let avgCopies = (totalCopies / daysDivisor).toFixed(1);
-
+    // 4. Peak Calculation (Keep this as is)
     let peakCount = 0;
     let peakDate = '--';
-
     for (const date in activityByDay) {
         if (activityByDay[date] > peakCount) {
             peakCount = activityByDay[date];
@@ -9672,21 +9664,17 @@ const processActivityData = (events, period) => {
         }
     }
 
-    // Prepare Chart Data
-    const chartLabels = sortedDates.map(date => {
-        const d = new Date(date + 'T00:00:00');
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    });
-    const chartData = sortedDates.map(date => activityByDay[date]);
-
     return {
-        labels: chartLabels,
-        data: chartData,
+        labels: sortedDates.map(date => {
+            const d = new Date(date + 'T00:00:00');
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }),
+        data: sortedDates.map(date => activityByDay[date]),
         total: totalCopies,
-        avg: avgCopies,
+        avg: avgCopies, // Now based on active days!
         peakDate: peakDate,
         peakCount: peakCount,
-        rawSortedDates: sortedDates // useful for tooltips
+        rawSortedDates: sortedDates
     };
 };
 
