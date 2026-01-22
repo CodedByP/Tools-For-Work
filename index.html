@@ -5977,7 +5977,7 @@ const updateSmartHistory = (key, value, category, action) => {
     
     // 1. Define inputs we NEVER want to remember (One-off data)
     const blacklistKeywords = [
-        'tracking', 'number', 'date', 'screenshot', 'link', 'url', 'asset', 'ticket'
+        'tracking', 'number', 'date', 'screenshot', 'link', 'url', 'ticket'
     ];
     
     const isBlacklisted = blacklistKeywords.some(keyword => lowerKey.includes(keyword));
