@@ -10320,17 +10320,28 @@ const magicGoBtn = document.getElementById('magic-go-btn');
 
 // 1. Open Logic
 if (magicDraftBtn) {
-	magicDraftBtn.addEventListener('click', async () => {
-	    
-	    showMessage("Syncing latest policies...", "info");
-	    await loadGlobalKnowledge();
-	        const catSelect = document.getElementById('magic-category-select');
+    magicDraftBtn.addEventListener('click', async () => {
+        
+        showMessage("Syncing latest policies...", "info");
+        await loadGlobalKnowledge();
+        
+        const catSelect = document.getElementById('magic-category-select');
         catSelect.innerHTML = '<option value="">-- Auto Detect --</option>';
+        
         Object.keys(categories).forEach(cat => {
             const option = document.createElement('option');
             option.value = cat;
             option.textContent = cat;
-            if (cat === activeCategory) option.selected = true;
+            
+            // --- UPDATED LOGIC HERE ---
+            // If "GUTS" exists in your categories, set it as selected by default.
+            // If GUTS doesn't exist for some reason, fall back to the active category.
+            if (cat === "GUTS") {
+                option.selected = true;
+            } else if (!Object.keys(categories).includes("GUTS") && cat === activeCategory) {
+                option.selected = true;
+            }
+            
             catSelect.appendChild(option);
         });
 
@@ -10339,26 +10350,47 @@ if (magicDraftBtn) {
         document.getElementById('magic-policy-status').classList.add('hidden');
         magicDraftModal.classList.remove('hidden');
         
-        // C. Focus Input (Small delay for animation)
         setTimeout(() => magicInput.focus(), 50);
     });
 }
 
-// 2. Real-time Brain Scan (Typing Listener)
+// 2. Real-time Brain Scan (Typing Listener) - Existing
 if (magicInput) {
     magicInput.addEventListener('input', (e) => {
         const text = e.target.value;
         const category = document.getElementById('magic-category-select').value;
         
-        // RUN THE BRAIN
         const policy = findRelevantPolicy(text, category);
-        
         const statusEl = document.getElementById('magic-policy-status');
         const nameEl = document.getElementById('magic-policy-name');
 
         if (policy) {
             statusEl.classList.remove('hidden');
             nameEl.textContent = policy.title;
+        } else {
+            statusEl.classList.add('hidden');
+        }
+    });
+}
+
+// --- NEW: Category Change Listener ---
+const magicCatSelect = document.getElementById('magic-category-select');
+if (magicCatSelect) {
+    magicCatSelect.addEventListener('change', () => {
+        // Manually trigger the scan when the dropdown changes
+        const text = document.getElementById('magic-input-text').value;
+        const category = magicCatSelect.value;
+        
+        const policy = findRelevantPolicy(text, category);
+        const statusEl = document.getElementById('magic-policy-status');
+        const nameEl = document.getElementById('magic-policy-name');
+
+        if (policy) {
+            statusEl.classList.remove('hidden');
+            nameEl.textContent = policy.title;
+            // Add a small visual "pulse" to show it re-scanned
+            statusEl.classList.add('animate-pulse');
+            setTimeout(() => statusEl.classList.remove('animate-pulse'), 500);
         } else {
             statusEl.classList.add('hidden');
         }
