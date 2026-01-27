@@ -5159,18 +5159,7 @@ const scrollToSnippet = (textSnippet) => {
         }
     });
 
-    // 2. Open the drawer IF it's closed
-    const wasClosed = wrapper.classList.contains('slide-down-enter');
-    if (wasClosed) {
-        wrapper.classList.remove('slide-down-enter');
-        wrapper.classList.add('slide-down-active');
-        if (toggleBtn) {
-            toggleBtn.querySelector('span').textContent = "Hide Full Policy";
-            toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
-        }
-    }
-
-    // 3. Find the text node using TreeWalker
+    // 2. Find text node
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
     let node, targetNode = null;
     while (node = walker.nextNode()) {
@@ -5186,26 +5175,46 @@ const scrollToSnippet = (textSnippet) => {
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // 4. THE FIX: COORDINATE MATH
-        // We wait 500ms to match your 0.5s CSS transition exactly.
-        const scrollDelay = wasClosed ? 500 : 50;
-        
-        setTimeout(() => {
-            // Calculate coordinates relative to the scrolling container
+        // 3. Force Open the drawer
+        if (wrapper.classList.contains('slide-down-enter')) {
+            wrapper.classList.remove('slide-down-enter');
+            wrapper.classList.add('slide-down-active');
+            if (toggleBtn) {
+                toggleBtn.querySelector('span').textContent = "Hide Full Policy";
+                toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
+            }
+        }
+
+        // 4. THE "TRACKING" SCROLL (Crucial Fix)
+        // This loop runs during the expansion animation to keep the text in view
+        let startTime = Date.now();
+        const duration = 600; // Lasts slightly longer than your 500ms CSS transition
+
+        const performScroll = () => {
             const containerRect = scrollContainer.getBoundingClientRect();
             const spanRect = span.getBoundingClientRect();
             
-            // Screen position of span - screen position of container + existing scroll amount
+            // Calculate current position relative to container
             const targetScrollTop = (spanRect.top - containerRect.top) + scrollContainer.scrollTop;
 
             scrollContainer.scrollTo({
-                top: targetScrollTop - 60, // -60px ensures the text isn't hidden under the header
-                behavior: 'smooth'
+                top: targetScrollTop - 100, // Keep text centered, not at the very top
+                behavior: 'auto' // Use 'auto' during tracking for instant adjustment
             });
-        }, scrollDelay);
+
+            // Keep tracking until the 0.5s animation is finished
+            if (Date.now() - startTime < duration) {
+                requestAnimationFrame(performScroll);
+            } else {
+                // Final smooth adjustment to "settle" the view
+                scrollContainer.scrollTo({ top: targetScrollTop - 100, behavior: 'smooth' });
+            }
+        };
+
+        requestAnimationFrame(performScroll);
     }
 };
-window.scrollToSnippet = scrollToSnippet;	
+window.scrollToSnippet = scrollToSnippet;
 		
 // 2. SMART LINKER: Weighted Matching Engine
 const calculatePolicyWeight = (responseText, responseCategory, policy) => {
@@ -5777,7 +5786,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     // --- RENDERER: Visual Feedback (Placeholder aware) ---
     const renderSmartListItems = (items) => {
         return items.map(item => {
-            const safeText = item.text.replace(/'/g, "\\'");
+            const safeText = item.text.replace(/['"]/g, '').replace(/\n/g, ' ').trim();
             
             let icon = '';
             let textClass = '';
