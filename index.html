@@ -329,10 +329,11 @@ body.light-mode #cancel-placeholder-btn:hover {
 }
 
 .ghost-active {
-    animation: ghost-highlight 2.5s ease-out forwards;
+    background-color: rgba(253, 224, 71, 0.4); /* Yellow Highlight */
+    transition: background-color 0.5s ease;
     border-radius: 4px;
-    box-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
-    color: #fef08a !important; /* Force light yellow text for contrast */
+    padding: 2px 0;
+    color: #111827 !important; /* Dark text for contrast */
 }
 
 /* --- Confidence Meter Bars --- */
@@ -5142,14 +5143,13 @@ const extractKeyConcepts = (sentence) => {
 const scrollToSnippet = (textSnippet) => {
     if (!textSnippet) return;
 
-    // 1. Find the wrapper and container
     const wrapper = document.getElementById('full-policy-wrapper');
     const toggleBtn = document.getElementById('toggle-policy-btn');
     const sourceContainer = document.querySelector('.policy-prose');
     
     if (!wrapper || !sourceContainer) return;
 
-    // 2. FORCE the Drawer to open so the element is visible/scrollable
+    // 1. Force the policy drawer open
     if (wrapper.classList.contains('slide-down-enter')) {
         wrapper.classList.remove('slide-down-enter');
         wrapper.classList.add('slide-down-active');
@@ -5159,20 +5159,20 @@ const scrollToSnippet = (textSnippet) => {
         }
     }
 
-    // 3. Clean up any existing highlights
+    // 2. Clean previous highlights and normalize text nodes
     document.querySelectorAll('.ghost-active').forEach(el => {
         const parent = el.parentNode;
         parent.replaceChild(document.createTextNode(el.textContent), el);
-        parent.normalize(); // Merges adjacent text nodes
+        parent.normalize(); 
     });
 
-    // 4. Find the text node using TreeWalker
+    // 3. Search text nodes using TreeWalker
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
     let node;
     let targetNode = null;
 
     while (node = walker.nextNode()) {
-        // We use include and trim to catch sentences even if formatting changed slightly
+        // Match even if capitalization or surrounding whitespace differs
         if (node.textContent.toLowerCase().includes(textSnippet.toLowerCase().trim())) {
             targetNode = node;
             break;
@@ -5180,19 +5180,19 @@ const scrollToSnippet = (textSnippet) => {
     }
 
     if (targetNode) {
-        // 5. Wrap the matching text in a highlight span
+        // 4. Inject the highlight span
         const span = document.createElement('span');
         span.className = 'ghost-active';
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // 6. Smooth Scroll with a slight delay for the expansion animation
+        // 5. Scroll to center after the drawer begins opening
         setTimeout(() => {
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 150); 
     }
 };
-window.scrollToSnippet = scrollToSnippet;		
+window.scrollToSnippet = scrollToSnippet;	
 		
 // 2. SMART LINKER: Weighted Matching Engine
 const calculatePolicyWeight = (responseText, responseCategory, policy) => {
