@@ -5146,8 +5146,9 @@ const scrollToSnippet = (textSnippet) => {
     const wrapper = document.getElementById('full-policy-wrapper');
     const toggleBtn = document.getElementById('toggle-policy-btn');
     const sourceContainer = document.querySelector('.policy-prose');
+    const insightsContent = document.getElementById('insights-content'); // The scrollable container
     
-    if (!wrapper || !sourceContainer) return;
+    if (!wrapper || !sourceContainer || !insightsContent) return;
 
     // 1. Clean previous highlights
     document.querySelectorAll('.ghost-active').forEach(el => {
@@ -5156,7 +5157,7 @@ const scrollToSnippet = (textSnippet) => {
         parent.normalize(); 
     });
 
-    // 2. Open the drawer IF it's closed
+    // 2. Open the drawer
     const wasClosed = wrapper.classList.contains('slide-down-enter');
     if (wasClosed) {
         wrapper.classList.remove('slide-down-enter');
@@ -5185,26 +5186,21 @@ const scrollToSnippet = (textSnippet) => {
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // --- THE CRITICAL FIX: The Delay Logic ---
-        // If the drawer was closed, we need to wait for the animation.
-        // Even if it was open, requestAnimationFrame ensures the DOM is painted.
-        const delay = wasClosed ? 300 : 50; 
-
+        // 4. THE MANUAL SCROLL CALCULATION
+        // Wait for the animation to start so we have a valid height
         setTimeout(() => {
-            span.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center',
-                inline: 'nearest' 
+            // Get the distance from the top of the SCROLLABLE container to the SPAN
+            const topPos = span.offsetTop;
+            
+            // Manually set the scroll position of the sidebar container
+            insightsContent.scrollTo({
+                top: topPos - 100, // Subtract 100px so it's not jammed against the header
+                behavior: 'smooth'
             });
-            
-            // Visual pulse to show the user where they landed
-            span.style.transition = 'all 0.5s ease';
-            span.style.backgroundColor = 'rgba(253, 224, 71, 0.8)'; // Brighter yellow
-            setTimeout(() => {
-                span.style.backgroundColor = 'rgba(253, 224, 71, 0.3)'; // Fade back to soft
-            }, 1000);
-            
-        }, delay);
+
+            // Re-trigger the pulse for visibility
+            span.classList.add('ghost-active'); 
+        }, wasClosed ? 350 : 50); // Give it time to expand
     }
 };
 window.scrollToSnippet = scrollToSnippet;	
