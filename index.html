@@ -5142,55 +5142,54 @@ const extractKeyConcepts = (sentence) => {
 const scrollToSnippet = (textSnippet) => {
     if (!textSnippet) return;
 
-    // 1. Expand the Drawer if closed
+    // 1. Find the wrapper and container
     const wrapper = document.getElementById('full-policy-wrapper');
     const toggleBtn = document.getElementById('toggle-policy-btn');
+    const sourceContainer = document.querySelector('.policy-prose');
     
-    if (wrapper && wrapper.classList.contains('slide-down-enter')) {
+    if (!wrapper || !sourceContainer) return;
+
+    // 2. FORCE the Drawer to open so the element is visible/scrollable
+    if (wrapper.classList.contains('slide-down-enter')) {
         wrapper.classList.remove('slide-down-enter');
         wrapper.classList.add('slide-down-active');
-        if(toggleBtn) {
+        if (toggleBtn) {
             toggleBtn.querySelector('span').textContent = "Hide Full Policy";
             toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
         }
     }
 
-    // 2. Find the text in the source
-    // We strip formatting to match the clean snippet against the HTML content
-    const sourceContainer = wrapper.querySelector('.policy-prose');
-    if (!sourceContainer) return;
+    // 3. Clean up any existing highlights
+    document.querySelectorAll('.ghost-active').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize(); // Merges adjacent text nodes
+    });
 
-    // This is a simple but effective text search using TreeWalker to find the text node
+    // 4. Find the text node using TreeWalker
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
     let node;
     let targetNode = null;
 
-    // Clean up previous highlights
-    document.querySelectorAll('.ghost-active').forEach(el => {
-        el.classList.remove('ghost-active');
-        // Unwrap text if needed, but for simplicity just removing class is enough usually
-    });
-
-    while(node = walker.nextNode()) {
-        if (node.textContent.includes(textSnippet)) {
+    while (node = walker.nextNode()) {
+        // We use include and trim to catch sentences even if formatting changed slightly
+        if (node.textContent.toLowerCase().includes(textSnippet.toLowerCase().trim())) {
             targetNode = node;
             break;
         }
     }
 
     if (targetNode) {
-        // 3. Highlight and Scroll
+        // 5. Wrap the matching text in a highlight span
         const span = document.createElement('span');
         span.className = 'ghost-active';
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
+        // 6. Smooth Scroll with a slight delay for the expansion animation
         setTimeout(() => {
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300); // Small delay to allow drawer animation to start
-    } else {
-        // Fallback: If exact match fails (due to formatting), just scroll to top of source
-        wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150); 
     }
 };
 window.scrollToSnippet = scrollToSnippet;		
@@ -5859,7 +5858,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const btnText = hasInsights ? 'Read Full Policy' : 'Hide Full Policy';
     const btnIcon = hasInsights ? 'fa-chevron-down' : 'fa-chevron-up';
 
-    contentDiv.innerHTML = `
+	contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
             ${isSnippetMode ? `
                 <div class="mb-3 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded text-[10px] text-blue-400 font-bold uppercase w-fit">
@@ -5881,14 +5880,14 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest">Source Text</h4>
                     </div>
-                    ${formatPolicyText(contentToDisplay)}
+                    ${formatPolicyText(match.content)}
                 </div>
             </div>
         </div>
     `;
 
     // Toggle Listener
-    const toggleBtn = document.getElementById('toggle-policy-btn');
+	const toggleBtn = document.getElementById('toggle-policy-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             const wrapper = document.getElementById('full-policy-wrapper');
