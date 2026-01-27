@@ -5386,49 +5386,49 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v4.0 (Concept & Logic Aware) ---
-const generatePolicyCheatSheet = (policyText, userResponseText) => {
+// --- UPDATED: Smart Policy Analyzer v5.0 (Category Aware) ---
+// Now accepts 'currentCategory' to filter out irrelevant rules
+const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
     const cleanText = policyText.replace(/\*\*/g, '');
     const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
     const lowerUserText = (userResponseText || '').toLowerCase();
-    
-    // 1. PLACEHOLDER INTENT (Existing)
+    const safeCategory = (currentCategory || '').toUpperCase();
+
+    // 1. EXCLUSION RULES (The Fix)
+    // If we are in 'BRONCO', ignore rules containing these keywords
+    const CATEGORY_EXCLUSIONS = {
+        'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation'],
+        // You can add other categories here later
+        // 'PAR': ['tracking', 'shipment'] 
+    };
+
+    // 2. CONCEPT VALIDATORS (Keep your existing list)
+    const CONCEPT_VALIDATORS = {
+        'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
+        'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
+        'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
+        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset'],
+        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device'],
+        'return': ['empty slots', 'available slots', 'space'],
+        'space': ['empty slots', 'available slots'],
+        'ticket': ['request', 'order', 'case', 'incident'],
+        'validation': ['received', 'confirmed', 'processing'],
+        'acknowledge': ['received', 'thank you', 'hello'],
+        'number': ['request', 'order', /\d+/],
+        'understanding': ['received', 'request', 'noted', 'regarding'],
+        'confirm': ['received', 'acknowledged', 'thank you'],
+        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
+        'structured': ['hello', 'hi', 'dear']
+    };
+
+    // 3. PLACEHOLDER INTENT (Keep existing)
     const PLACEHOLDER_ROLES = {
         'tracking': ['[trackingnumber]', '[fedex tracking]'],
         'customer': ['[customer\'s name]', '[user]'],
         'asset': ['[asset tag]', '[device model]'],
         'date': ['[date]', '[time]']
-    };
-
-const CONCEPT_VALIDATORS = {
-        // Math & Stats
-        'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
-        
-        // Status & Operations
-        'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
-        'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
-        
-        // Hardware
-        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset'],
-        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device'],
-        
-        // Logistics
-        'return': ['empty slots', 'available slots', 'space'],
-        'space': ['empty slots', 'available slots'],
-
-        // Tickets & Acknowledgment
-        'ticket': ['request', 'order', 'case', 'incident'],
-        'validation': ['received', 'confirmed', 'processing'],
-        'acknowledge': ['received', 'thank you', 'hello'],
-        'number': ['request', 'order', /\d+/],
-
-        // Communication & Soft Skills (NEW FIX)
-        'understanding': ['received', 'request', 'noted', 'regarding'],
-        'confirm': ['received', 'acknowledged', 'thank you'],
-        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
-        'structured': ['hello', 'hi', 'dear'] // A greeting implies structure
     };
 
     const SCOPE_TRIGGERS = [
@@ -5444,7 +5444,14 @@ const CONCEPT_VALIDATORS = {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
 
-        // Scope Check
+        // --- EXCLUSION CHECK ---
+        // If we are in BRONCO, and the sentence talks about "DSS" or "SLA", skip it entirely.
+        if (CATEGORY_EXCLUSIONS[safeCategory]) {
+            const shouldSkip = CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord));
+            if (shouldSkip) return; 
+        }
+
+        // --- SCOPE CHECK ---
         const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
         if (triggersInSentence.length > 0) {
             if (!triggersInSentence.some(t => lowerUserText.includes(t))) return; 
@@ -5456,42 +5463,30 @@ const CONCEPT_VALIDATORS = {
         else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) category = 'deadlines';
 
         if (category) {
-            // A. Standard Keyword Matching
             const concepts = extractKeyConcepts(sentence);
             let matchCount = 0;
             const totalConcepts = concepts.length;
 
             concepts.forEach(concept => {
-                // 1. Direct Match?
                 if (lowerUserText.includes(concept)) {
                     matchCount++;
-                } 
-                // 2. Concept Validation Match? (The Fix)
-                else if (CONCEPT_VALIDATORS[concept]) {
-                    // Check if ANY of the validators for this concept exist in user text
+                } else if (CONCEPT_VALIDATORS[concept]) {
                     const validators = CONCEPT_VALIDATORS[concept];
                     const isValidated = validators.some(val => {
                         if (val instanceof RegExp) return val.test(lowerUserText);
                         return lowerUserText.includes(val);
                     });
-                    
                     if (isValidated) matchCount++;
                 }
             });
 
-            // B. Percentage Override (Keep existing)
             const policyPercentages = sentence.match(/\d+%/g);
             const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
 
-            // C. Final Status Decision
             let status = 'missing';
-            
-            // If we matched > 50% of concepts OR satisfied the Concept Validators
             if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
                 status = 'met';
-            } 
-            // Fallback for placeholders
-            else {
+            } else {
                 const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
                     lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
                 );
@@ -5506,7 +5501,6 @@ const CONCEPT_VALIDATORS = {
         }
     });
 
-    // Limit output
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
@@ -5932,8 +5926,13 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     // --- 2. Generate Cheat Sheet & Content ---
     const userText = window.currentUserResponseText || "";
-    // Pass userText so the cheat sheet knows if placeholders are being used!
-    const cheatSheet = generatePolicyCheatSheet(match.content, userText);   
+
+	const activeResponseEl = document.querySelector(`.response-item[data-id="${currentEditingId || ''}"]`) 
+	                         || document.querySelector('.response-item'); // Fallback
+	
+	const categoryContext = activeResponseEl ? activeResponseEl.dataset.category : activeCategory;
+	
+	const cheatSheet = generatePolicyCheatSheet(match.content, userText, categoryContext);
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
     // Snippet Mode Check
