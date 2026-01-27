@@ -5282,88 +5282,74 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
 const generatePolicyCheatSheet = (policyText, userResponseText) => {
     if (!policyText) return null;
 
-    // 1. Clean formatting
-    const cleanText = policyText.replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
+    // 1. Setup & Roles Mapping
+    const cleanText = policyText.replace(/\*\*/g, '');
     const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
     const lowerUserText = (userResponseText || '').toLowerCase();
-
-	const SCOPE_TRIGGERS = [
-	    // Hardware & Repair
-	    'break/fix', 'break fix', 'repair', 'ricoh', 'printer', 
-	    'av', 'audio', 'conference', 'headset',
-	
-	    // Logistics
-	    'remote', 'shipping', 'mail', 'locker', 'vending',
-	    'security key', 'titan', 'yubikey', 
-	
-	    // Location
-	    'onsite', 'desk', 
-	
-	    // People
-	    'vip', 'director', 'vp', 'executive',
-	
-	    // OS / Platforms
-	    'mac', 'apple', 'windows', 'pc', 'linux', 'glinux'
-	];
-
-    const insights = {
-        requirements: [],
-        warnings: [],
-        deadlines: []
+    
+    // This tells the AI which brackets satisfy which concepts
+    const PLACEHOLDER_ROLES = {
+        'tracking': ['[trackingnumber]', '[fedex tracking]', '[returntrackingnumber]'],
+        'customer': ['[customer\'s name]', '[requester name]', '[user]'],
+        'asset': ['[asset tag]', '[asset number]', '[device model]', '[serial]', '[asset/accessory]'],
+        'location': ['[desk location]', '[site code]', '[pickup location]'],
+        'date': ['[date]', '[appointment time]', '[time]']
     };
+
+    const SCOPE_TRIGGERS = [
+        'break/fix', 'break fix', 'repair', 'ricoh', 'printer', 
+        'av', 'audio', 'conference', 'headset', 'remote', 'shipping', 
+        'mail', 'locker', 'vending', 'security key', 'titan', 'yubikey', 
+        'onsite', 'desk', 'vip', 'director', 'vp', 'executive',
+        'mac', 'apple', 'windows', 'pc', 'linux', 'glinux'
+    ];
+
+    const insights = { requirements: [], warnings: [], deadlines: [] };
 
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase().trim();
-        if (lowerSentence.length < 10) return; // Skip short noise
+        if (lowerSentence.length < 10) return;
 
-        // --- NEW: SCOPE FILTERING ---
-        // 1. Find which triggers exist in this policy sentence
+        // --- 2. SCOPE FILTERING (Keep your existing feature) ---
         const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
-
-        // 2. If triggers exist, check if the user's text matches the context
         if (triggersInSentence.length > 0) {
-            // Check if ANY of the triggers are present in the user's text
             const userHasContext = triggersInSentence.some(t => lowerUserText.includes(t));
-            
-            // If the policy is talking about "break/fix" but the user text ISN'T, skip this sentence.
-            if (!userHasContext) {
-                return; 
-            }
+            if (!userHasContext) return; 
         }
 
-        // LOGIC: Categorize sentences (Existing Logic)
+        // --- 3. CATEGORIZATION ---
         let category = null;
-        if (lowerSentence.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) {
-            category = 'requirements';
-        } else if (lowerSentence.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) {
-            category = 'warnings';
-        } else if (lowerSentence.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) {
-            category = 'deadlines';
-        }
+        if (lowerSentence.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) category = 'requirements';
+        else if (lowerSentence.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) category = 'warnings';
+        else if (lowerSentence.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) category = 'deadlines';
 
         if (category) {
-            // Gap Analysis (Existing Logic)
             const concepts = extractKeyConcepts(sentence);
-            let isMissing = false;
+            let status = 'met'; 
 
             if (concepts.length > 0) {
-                const foundCount = concepts.filter(concept => {
-                    if (lowerUserText.includes(concept)) return true;
-                    const synonyms = SYNONYM_MAP[concept];
-                    if (synonyms) {
-                        return synonyms.some(syn => lowerUserText.includes(syn));
+                const foundTextCount = concepts.filter(c => lowerUserText.includes(c)).length;
+                
+                // --- 4. SMART PLACEHOLDER CHECK ---
+                const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => {
+                    // If the policy sentence mentions a role (like "tracking")
+                    if (lowerSentence.includes(role)) {
+                        // Check if the user text has one of the mapped brackets
+                        return PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p));
                     }
                     return false;
-                }).length;
+                });
 
-                if (foundCount < Math.ceil(concepts.length * 0.5)) {
-                    isMissing = true;
+                if (foundTextCount < Math.ceil(concepts.length * 0.5)) {
+                    // Logic: If text is missing, check if a placeholder is acting as a proxy
+                    status = hasPlaceholderIntent ? 'pending' : 'missing';
                 }
             }
 
             insights[category].push({
                 text: sentence.trim(),
-                isMissing: isMissing 
+                status: status, // New structured status
+                isMissing: status === 'missing' // Keep this for backward compatibility with your CSS
             });
         }
     });
@@ -5609,14 +5595,12 @@ const findRelevantPolicy = (text, currentCategory) => {
 
     const lowerText = text.toLowerCase();
     
-    // 1. Clean & Tokenize
-    // Filter out small words (is, the, at) to reduce noise
+    // 1. Clean & Tokenize (Existing scoring setup)
     const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
     const userRoots = rawTokens.map(getRootWord); 
-    const userBigrams = getBigrams(rawTokens);    
+    const userBigrams = getBigrams(rawTokens);
 
-    // --- CONFIG: VETO LIST (The "Bouncer") ---
-    // If a Policy Title has one of these, the User Text *MUST* have it.
+    // 2. Strict Scopes (Your "Bouncer" list)
     const RESTRICTIVE_SCOPES = [
         'onsite', 'remote', 'break/fix', 'repair', 'lost', 'stolen', 
         'mailroom', 'shipping', 'receiving', 'audit', 'return',
@@ -5625,72 +5609,77 @@ const findRelevantPolicy = (text, currentCategory) => {
 
     let bestMatch = null;
     let highestScore = 0;
+    let bestSnippet = null;
 
     globalKnowledgeCache.forEach(policy => {
         const policyTitleLower = (policy.title || "").toLowerCase();
+        const policyContentLower = (policy.content || "").toLowerCase();
         let score = 0;
 
-        // --- A. VETO CHECK (Crucial for accuracy) ---
+        // --- A. VETO CHECK (Existing logic) ---
         const foundScopes = RESTRICTIVE_SCOPES.filter(scope => policyTitleLower.includes(scope));
         if (foundScopes.length > 0) {
-            // If the policy is restrictive, check if user text complies
             const matchesScope = foundScopes.some(scope => lowerText.includes(scope));
-            if (!matchesScope) return; // HARD STOP: User didn't say the magic word.
+            if (!matchesScope) return; 
         }
 
-        // --- B. CATEGORY FILTER ---
+        // --- B. CATEGORY FILTER (Existing logic) ---
         if (policy.targetCategories && policy.targetCategories.length > 0) {
             const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
-            // If categories don't match, penalize heavily or skip
-            if (currentCategory && !normalizedTargets.includes(currentCategory.toUpperCase())) {
-                return; // HARD STOP: Wrong Category
-            }
+            if (currentCategory && !normalizedTargets.includes(currentCategory.toUpperCase())) return;
         }
 
-        // --- C. ANCHOR CHECK (Existing Feature) ---
+        // --- C. ANCHOR CHECK (Existing logic) ---
         if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
              const hasAnchor = policy.requiredAnchors.some(a => lowerText.includes(a.toLowerCase()));
-             if (!hasAnchor) return; // HARD STOP: Missing required anchor
+             if (!hasAnchor) return; 
         }
 
-        // --- D. SCORING ENGINE ---
-
-        // 1. Title Match (Weighted heavily like Option B)
-        const titleTokens = policyTitleLower.split(/\s+/).map(getRootWord);
-        titleTokens.forEach(tWord => {
-            if (userRoots.includes(tWord)) {
-                // Rare words (mailroom) get more points than common words (check)
-                score += (tWord.length > 4) ? 40 : 15; 
-            }
-        });
-
-        // 2. Exact Title Phrase (The "Jackpot")
-        if (lowerText.includes(policyTitleLower)) {
-            score += 100;
-        }
-
-        // 3. Content Matches (Using Bigrams for Context)
-        const policyContentLower = (policy.content || "").toLowerCase();
-        userBigrams.forEach(bigram => {
-            if (policyContentLower.includes(bigram)) score += 10;
-        });
-
-        // 4. Root Word Density (Fallback)
+        // --- D. SCORING ENGINE (Enhanced with Snippet Logic) ---
+        // 1. Title Match
+        if (lowerText.includes(policyTitleLower)) score += 100;
+        
+        // 2. Token overlap
         userRoots.forEach(root => {
             if (policyContentLower.includes(root)) score += 2;
         });
 
-        // Debugging (Optional: View in Console)
-        // console.log(`Policy: ${policy.title} | Score: ${score}`);
+        // 3. Bigram context
+        userBigrams.forEach(bigram => {
+            if (policyContentLower.includes(bigram)) score += 10;
+        });
 
+        // --- E. SNIPPET-LEVEL ANCHOR EXTRACTION ---
+        const paragraphs = policy.content.split(/\n\s*\n/);
+        let policyBestSnippet = null;
+        let snippetMaxMatches = 0;
+
+        paragraphs.forEach(para => {
+            const lowerPara = para.toLowerCase();
+            // Look for long-tail matches (words > 4 chars) to identify specific sections
+            const paraWords = lowerPara.match(/\b(\w{5,})\b/g) || []; 
+            let matches = 0;
+            paraWords.forEach(word => {
+                if (lowerText.includes(word)) matches++;
+            });
+
+            if (matches > snippetMaxMatches) {
+                snippetMaxMatches = matches;
+                policyBestSnippet = para;
+            }
+        });
+
+        // 4. Final Match Selection
         if (score > highestScore) {
             highestScore = score;
             bestMatch = policy;
+            // Only use the snippet if it clearly identifies a specific sub-section
+            bestSnippet = (snippetMaxMatches >= 3) ? policyBestSnippet : null;
         }
     });
 
-    // Threshold: Score must be significant to recommend
-    return highestScore > 25 ? { ...bestMatch, score: highestScore } : null;
+    // Threshold check
+    return highestScore > 25 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
 };
 
 const showInsightsSidebar = (match, forceOpen = false) => {
@@ -5704,7 +5693,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     if (!match) return; 
 
-    // Smart Suppression
+    // Smart Suppression logic
     const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
@@ -5716,8 +5705,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
-    // --- 1. NEW: Confidence Score Logic ---
-    // Default to 'Med' if score is missing (legacy support)
+    // --- 1. Confidence Score Logic ---
     const score = match.score || 20; 
     let confClass = 'conf-med';
     let confLabel = 'Medium Match';
@@ -5748,7 +5736,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     if(headerText) headerText.textContent = match.title;
     if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
     
-if (sourceLinkEl) {
+    if (sourceLinkEl) {
         if (match.sourceUrl) {
             sourceLinkEl.classList.remove('hidden');
             const link = sourceLinkEl.querySelector('a');
@@ -5762,45 +5750,47 @@ if (sourceLinkEl) {
         }
     }
 
-// --- Generate Content & Ghost Reader Links ---
-    
+    // --- 2. Generate Cheat Sheet & Content ---
     const userText = window.currentUserResponseText || "";
-    const cheatSheet = generatePolicyCheatSheet(match.content, userText);    
+    // Pass userText so the cheat sheet knows if placeholders are being used!
+    const cheatSheet = generatePolicyCheatSheet(match.content, userText);   
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
+
+    // Snippet Mode Check
+    const contentToDisplay = match.focusedSnippet ? match.focusedSnippet : match.content;
+    const isSnippetMode = !!match.focusedSnippet;
 
     let htmlContent = '';
 
-  // --- RENDERER: Visual Feedback for Missing Items ---
+    // --- RENDERER: Visual Feedback (Placeholder aware) ---
     const renderSmartListItems = (items) => {
         return items.map(item => {
             const safeText = item.text.replace(/'/g, "\\'");
             
-            if (item.isMissing) {
-                // RED ALERT: Concept missing
-                return `
-                    <li class="relative pl-0 py-1 transition-colors cursor-pointer group" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
-                        <div class="flex items-start gap-2">
-                            <div class="mt-1 min-w-[14px] text-center">
-                                 <i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse" title="Concept missing from your response"></i>
-                            </div>
-                            <span class="text-gray-300 group-hover:text-white decoration-red-500/40 underline decoration-dotted underline-offset-4 text-sm">${item.text}</span>
-                        </div>
-                    </li>`;
+            let icon = '';
+            let textClass = '';
+
+            // Handle the 3-state logic from Step 2
+            if (item.status === 'missing') {
+                icon = '<i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse"></i>';
+                textClass = 'text-gray-300 underline decoration-red-500/40';
+            } else if (item.status === 'pending') {
+                icon = '<i class="fas fa-keyboard text-blue-400 text-xs"></i>';
+                textClass = 'text-blue-200/80 italic';
             } else {
-                // GREEN CHECK: Requirement met
-                return `
-                    <li class="text-gray-400 hover:text-white py-1 transition-colors cursor-pointer flex items-start gap-2" onclick="event.stopPropagation(); scrollToSnippet('${safeText}')">
-                        <div class="mt-1 min-w-[14px] text-center">
-                            <i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>
-                        </div>
-                        <span class="text-sm">${item.text}</span>
-                    </li>`;
+                icon = '<i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>';
+                textClass = 'text-gray-400';
             }
+
+            return `
+                <li class="py-1 cursor-pointer group flex items-start gap-2" onclick="scrollToSnippet('${safeText}')">
+                    <div class="mt-1 min-w-[14px] text-center">${icon}</div>
+                    <span class="text-sm ${textClass}">${item.text}</span>
+                </li>`;
         }).join('');
     };
 
     if (hasInsights) {
-        // 1. HEADER for Insight Section
         htmlContent += `<div class="mb-2 animate-fade-in">
             <div class="flex justify-between items-end mb-3">
                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
@@ -5809,13 +5799,12 @@ if (sourceLinkEl) {
                 ${confidenceHTML}
             </div>`;
 
-        // 2. Render Categories
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
             <div class="insight-card insight-must group cursor-pointer hover:ring-1 hover:ring-blue-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-blue-400 flex justify-between">
                     <span><i class="fas fa-check-circle"></i> Requirements</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
                 </div>
                 <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
                     ${renderSmartListItems(cheatSheet.requirements)}
@@ -5827,7 +5816,7 @@ if (sourceLinkEl) {
             <div class="insight-card insight-warn group cursor-pointer hover:ring-1 hover:ring-amber-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-amber-400 flex justify-between">
                     <span><i class="fas fa-exclamation-triangle"></i> Warnings</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
                 </div>
                 <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
                     ${renderSmartListItems(cheatSheet.warnings)} 
@@ -5839,7 +5828,7 @@ if (sourceLinkEl) {
             <div class="insight-card insight-time group cursor-pointer hover:ring-1 hover:ring-emerald-500 transition-all" onclick="document.getElementById('toggle-policy-btn').click();">
                 <div class="insight-title text-emerald-400 flex justify-between">
                     <span><i class="fas fa-clock"></i> Timelines</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50" title="Find in Source"></i>
+                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
                 </div>
                 <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
                     ${renderSmartListItems(cheatSheet.deadlines)}
@@ -5847,9 +5836,7 @@ if (sourceLinkEl) {
             </div>`;
         }
         htmlContent += `</div>`;
-
     } else {
-        // --- SCENARIO B: NO RULES DETECTED (Everything looks good) ---
         htmlContent += `
         <div class="mb-4 animate-fade-in">
              <div class="flex justify-between items-end mb-3">
@@ -5874,6 +5861,12 @@ if (sourceLinkEl) {
 
     contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
+            ${isSnippetMode ? `
+                <div class="mb-3 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded text-[10px] text-blue-400 font-bold uppercase w-fit">
+                    📍 Precision Snippet
+                </div>
+            ` : ''}
+            
             ${htmlContent}
             
             ${hasInsights ? `
@@ -5887,21 +5880,19 @@ if (sourceLinkEl) {
                 <div class="policy-prose flex-grow pb-6 relative pt-2 border-t border-gray-800">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest">Source Text</h4>
-                        ${!hasInsights ? confidenceHTML : ''} 
                     </div>
-                    ${formatPolicyText(match.content)}
+                    ${formatPolicyText(contentToDisplay)}
                 </div>
             </div>
         </div>
     `;
 
-    // --- Attach Toggle Listener ---
+    // Toggle Listener
     const toggleBtn = document.getElementById('toggle-policy-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             const wrapper = document.getElementById('full-policy-wrapper');
             const isHidden = wrapper.classList.contains('slide-down-enter');
-            
             if (isHidden) {
                 wrapper.classList.remove('slide-down-enter');
                 wrapper.classList.add('slide-down-active');
@@ -5916,21 +5907,19 @@ if (sourceLinkEl) {
         });
     }
 
-	    // --- Footer Buttons ---
-// --- Inside showInsightsSidebar function ---
-if (footerDiv) {
-    footerDiv.classList.remove('hidden');
-    footerDiv.innerHTML = `
-        <div style="width: 100%; display: flex;">
-            <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
-                <i class="fas fa-times"></i> 
-                <span>Close Insight</span>
-            </button>
-        </div>
-    `;
-}
-	
-	document.body.classList.add('sidebar-active');
+    if (footerDiv) {
+        footerDiv.classList.remove('hidden');
+        footerDiv.innerHTML = `
+            <div style="width: 100%; display: flex;">
+                <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
+                    <i class="fas fa-times"></i> 
+                    <span>Close Insight</span>
+                </button>
+            </div>
+        `;
+    }
+    
+    document.body.classList.add('sidebar-active');
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
 };
