@@ -5345,9 +5345,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
         'date': ['[date]', '[time]']
     };
 
-    // 2. NEW: CONCEPT VALIDATORS (The Logic Brain)
-// 2. NEW: CONCEPT VALIDATORS (The Logic Brain)
-    const CONCEPT_VALIDATORS = {
+const CONCEPT_VALIDATORS = {
         // Math & Stats
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         
@@ -5359,15 +5357,21 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
         'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset'],
         'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device'],
         
-        // Logistics (The Fix for "Empty Slots")
+        // Logistics
         'return': ['empty slots', 'available slots', 'space'],
         'space': ['empty slots', 'available slots'],
 
-        // Tickets & Acknowledgment (The Fix for this new issue)
-        'ticket': ['request', 'order', 'case', 'incident'],     // "Received your request" = Ticket Found
-        'validation': ['received', 'confirmed', 'processing'],   // "We have received" = Validated
-        'acknowledge': ['received', 'thank you', 'hello'],       // Standard greeting = Acknowledged
-        'number': ['request', 'order', /\d+/]                    // Contextual match
+        // Tickets & Acknowledgment
+        'ticket': ['request', 'order', 'case', 'incident'],
+        'validation': ['received', 'confirmed', 'processing'],
+        'acknowledge': ['received', 'thank you', 'hello'],
+        'number': ['request', 'order', /\d+/],
+
+        // Communication & Soft Skills (NEW FIX)
+        'understanding': ['received', 'request', 'noted', 'regarding'],
+        'confirm': ['received', 'acknowledged', 'thank you'],
+        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
+        'structured': ['hello', 'hi', 'dear'] // A greeting implies structure
     };
 
     const SCOPE_TRIGGERS = [
