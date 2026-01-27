@@ -329,13 +329,13 @@ body.light-mode #cancel-placeholder-btn:hover {
 }
 
 .ghost-active {
-    background-color: rgba(253, 224, 71, 0.4); /* Yellow Highlight */
-    transition: background-color 0.5s ease;
+    background-color: rgba(253, 224, 71, 0.6); /* Brighter yellow */
     border-radius: 4px;
-    padding: 2px 0;
+    padding: 2px 4px;
     color: #111827 !important; /* Dark text for contrast */
+    box-shadow: 0 0 15px rgba(253, 224, 71, 0.4);
+    display: inline; /* Ensure it stays inline with text flow */
 }
-
 /* --- Confidence Meter Bars --- */
 .conf-bar {
     width: 4px;
@@ -5146,18 +5146,20 @@ const scrollToSnippet = (textSnippet) => {
     const wrapper = document.getElementById('full-policy-wrapper');
     const toggleBtn = document.getElementById('toggle-policy-btn');
     const sourceContainer = document.querySelector('.policy-prose');
-    const insightsContent = document.getElementById('insights-content'); // The scrollable container
+    const scrollContainer = document.getElementById('insights-content'); 
     
-    if (!wrapper || !sourceContainer || !insightsContent) return;
+    if (!wrapper || !sourceContainer || !scrollContainer) return;
 
     // 1. Clean previous highlights
     document.querySelectorAll('.ghost-active').forEach(el => {
         const parent = el.parentNode;
-        parent.replaceChild(document.createTextNode(el.textContent), el);
-        parent.normalize(); 
+        if (parent) {
+            parent.replaceChild(document.createTextNode(el.textContent), el);
+            parent.normalize(); 
+        }
     });
 
-    // 2. Open the drawer
+    // 2. Open the drawer IF it's closed
     const wasClosed = wrapper.classList.contains('slide-down-enter');
     if (wasClosed) {
         wrapper.classList.remove('slide-down-enter');
@@ -5168,11 +5170,9 @@ const scrollToSnippet = (textSnippet) => {
         }
     }
 
-    // 3. Find the text node
+    // 3. Find the text node using TreeWalker
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    let targetNode = null;
-
+    let node, targetNode = null;
     while (node = walker.nextNode()) {
         if (node.textContent.toLowerCase().includes(textSnippet.toLowerCase().trim())) {
             targetNode = node;
@@ -5186,21 +5186,23 @@ const scrollToSnippet = (textSnippet) => {
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // 4. THE MANUAL SCROLL CALCULATION
-        // Wait for the animation to start so we have a valid height
+        // 4. THE FIX: COORDINATE MATH
+        // We wait 500ms to match your 0.5s CSS transition exactly.
+        const scrollDelay = wasClosed ? 500 : 50;
+        
         setTimeout(() => {
-            // Get the distance from the top of the SCROLLABLE container to the SPAN
-            const topPos = span.offsetTop;
+            // Calculate coordinates relative to the scrolling container
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const spanRect = span.getBoundingClientRect();
             
-            // Manually set the scroll position of the sidebar container
-            insightsContent.scrollTo({
-                top: topPos - 100, // Subtract 100px so it's not jammed against the header
+            // Screen position of span - screen position of container + existing scroll amount
+            const targetScrollTop = (spanRect.top - containerRect.top) + scrollContainer.scrollTop;
+
+            scrollContainer.scrollTo({
+                top: targetScrollTop - 60, // -60px ensures the text isn't hidden under the header
                 behavior: 'smooth'
             });
-
-            // Re-trigger the pulse for visibility
-            span.classList.add('ghost-active'); 
-        }, wasClosed ? 350 : 50); // Give it time to expand
+        }, scrollDelay);
     }
 };
 window.scrollToSnippet = scrollToSnippet;	
