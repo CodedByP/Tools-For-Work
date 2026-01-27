@@ -5518,50 +5518,78 @@ const resetIngestForm = () => {
     editingArticleId = null; 
 };
 		
+// --- NEW: Clean Readability Parser ---
 const formatPolicyText = (text) => {
     if (!text) return '';
 
-    // 1. Escape HTML first (safety)
-    let safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    // 2. Split into lines to process structure
-    const lines = safeText.split('\n');
-    let formattedHTML = '';
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false; // Tracks if we are currently inside a list
 
     lines.forEach(line => {
-        let trimmed = line.trim();
-        
-        if (!trimmed) {
-            // Empty line = spacing
-            formattedHTML += '<div class="h-4"></div>';
-        } 
-        else if (trimmed.startsWith('**') || trimmed.endsWith(':')) {
-            // Header detection (Starts with ** OR ends with :)
-            const cleanHeader = trimmed.replace(/\*\*/g, '').replace(/:$/, '');
-            formattedHTML += `<span class="policy-header">${cleanHeader}</span>`;
-        } 
-        else if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-            // List detection
-            const cleanItem = trimmed.substring(1).trim();
-            formattedHTML += `<div class="policy-list-item">${applyInlineStyles(cleanItem)}</div>`;
-        } 
-        else if (/^\d+\./.test(trimmed)) {
-             // Numbered List detection (1. Item)
-             formattedHTML += `<div class="policy-list-item">${applyInlineStyles(trimmed)}</div>`;
+        let cleanLine = line.trim();
+
+        // 1. Handle Empty Lines (Spacing)
+        if (!cleanLine) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += '<div class="h-4"></div>'; // Adds breathing room between paragraphs
+            return;
         }
+
+        // 2. Headers (## Title or Title:)
+        // Detects lines starting with '#' OR lines that end with ':' (common in policies)
+        if (cleanLine.startsWith('#') || (cleanLine.endsWith(':') && cleanLine.length < 60)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            
+            // Remove the symbols (# and :) to keep it clean
+            const headerContent = cleanLine.replace(/^[#\s]+/, '').replace(/:$/, '');
+            
+            // Render as a nice blue header with an underline
+            html += `<h4 class="text-blue-400 font-bold text-lg mt-6 mb-3 border-b border-gray-700 pb-2">${applyInlineStyles(headerContent)}</h4>`;
+        }
+        
+        // 3. Bullet Lists (- Item or * Item)
+        else if (cleanLine.match(/^[-•*]\s/)) {
+            // Start a list if we aren't in one
+            if (!inList) { html += '<ul class="list-disc pl-5 space-y-2 mb-4 text-gray-300 marker:text-blue-500">'; inList = true; }
+            
+            // Remove the bullet symbol
+            const itemContent = cleanLine.replace(/^[-•*]\s+/, '');
+            html += `<li class="leading-relaxed pl-1">${applyInlineStyles(itemContent)}</li>`;
+        }
+        
+        // 4. Numbered Lists (1. Item)
+        else if (cleanLine.match(/^\d+\.\s/)) {
+             if (!inList) { html += '<ul class="list-decimal pl-5 space-y-2 mb-4 text-gray-300 marker:text-blue-500">'; inList = true; }
+             
+             // Remove the number symbol (let HTML handle the numbering)
+             const itemContent = cleanLine.replace(/^\d+\.\s+/, '');
+             html += `<li class="leading-relaxed pl-1">${applyInlineStyles(itemContent)}</li>`;
+        }
+
+        // 5. Standard Paragraphs
         else {
-            // Standard Paragraph
-            formattedHTML += `<p class="mb-2">${applyInlineStyles(trimmed)}</p>`;
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p class="text-gray-300 leading-7 mb-3 text-[15px] font-light">${applyInlineStyles(cleanLine)}</p>`;
         }
     });
 
-    return formattedHTML;
+    if (inList) html += '</ul>'; // Close any open list at the end
+    return html;
 };
 
-// Helper to bold text inside paragraphs (e.g. *bold* or **bold**)
-const applyInlineStyles = (line) => {
-    return line.replace(/\*\*([^*]+)\*\*/g, '<span class="policy-strong">$1</span>')
-               .replace(/\*([^*]+)\*/g, '<span class="policy-strong">$1</span>');
+// Helper to style Bold, Italic, and Links inside the text
+const applyInlineStyles = (text) => {
+    return text
+        // Safety: Escape HTML to prevent injection
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        
+        // Bold (**text** or *text*) -> White & Bold (No symbols shown)
+        .replace(/\*\*([^*]+)\*\*/g, '<span class="text-white font-bold">$1</span>')
+        .replace(/\*([^*]+)\*/g, '<span class="text-white font-bold">$1</span>')
+        
+        // Links (http...) -> Clickable Blue Link
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>');
 };		
 
 // --- KNOWLEDGE BASE LOGIC ---
