@@ -5235,7 +5235,7 @@ const extractKeyConcepts = (sentence) => {
         .filter(w => w.length > 2 && !ignoreList.has(w)); // Keep words > 2 chars
 };		
 
-const scrollToSnippet = (textSnippet) => {
+const scrollToSnippet = (textSnippet, occurrenceIndex = 0) => {
     if (!textSnippet) return;
 
     const wrapper = document.getElementById('full-policy-wrapper');
@@ -5250,31 +5250,30 @@ const scrollToSnippet = (textSnippet) => {
         el.classList.remove('ghost-active');
     });
 
-    // 2. Normalize snippet for search (remove punctuation/symbols to match the clean text)
+    // 2. Normalize snippet for search
     const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
     const searchStr = normalize(textSnippet);
 
-    // 3. Find the target element
-    // FIX: Now looks for standard tags (p, li, h4) instead of old classes
+    // 3. Find ALL matches
     const blocks = sourceContainer.querySelectorAll('p, li, h4');
-    let targetElement = null;
+    const matches = [];
 
-    // We start with a high threshold for matching
     for (const block of blocks) {
         const blockText = normalize(block.textContent);
-        
-        // Exact match or identifying substring
         if (blockText.includes(searchStr)) {
-            targetElement = block;
-            break;
+            matches.push(block);
         }
     }
 
+    // 4. Select the specific occurrence (or the last available one if index is out of bounds)
+    // We use the passed index, defaulting to 0 (the first one)
+    const targetElement = matches[occurrenceIndex] || matches[0];
+
     if (targetElement) {
-        // Highlight the found block
+        // Highlight
         targetElement.classList.add('ghost-active');
 
-        // 4. Force Open the drawer if closed
+        // Force Open Drawer
         if (wrapper.classList.contains('slide-down-enter')) {
             wrapper.classList.remove('slide-down-enter');
             wrapper.classList.add('slide-down-active');
@@ -5284,12 +5283,11 @@ const scrollToSnippet = (textSnippet) => {
             }
         }
 
-        // 5. Scroll Logic
+        // Scroll Logic
         setTimeout(() => {
             const containerRect = scrollContainer.getBoundingClientRect();
             const targetRect = targetElement.getBoundingClientRect();
             
-            // Calculate scroll position to center the element
             const relativeTop = targetRect.top - containerRect.top;
             const currentScroll = scrollContainer.scrollTop;
             const centerOffset = (containerRect.height / 2) - (targetRect.height / 2);
@@ -5298,7 +5296,7 @@ const scrollToSnippet = (textSnippet) => {
                 top: currentScroll + relativeTop - centerOffset,
                 behavior: 'smooth'
             });
-        }, 150); // Small delay to allow the drawer animation to start
+        }, 150);
     }
 };
 window.scrollToSnippet = scrollToSnippet;
@@ -5396,15 +5394,12 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
 
-    // 1. EXCLUSION RULES (The Fix)
-    // If we are in 'BRONCO', ignore rules containing these keywords
+    // 1. EXCLUSION RULES
     const CATEGORY_EXCLUSIONS = {
         'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation', 'Dashboard', 'Monitoring'],
-        // You can add other categories here later
-        // 'PAR': ['tracking', 'shipment'] 
     };
 
-    // 2. CONCEPT VALIDATORS (Keep your existing list)
+    // 2. CONCEPT VALIDATORS
     const CONCEPT_VALIDATORS = {
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
@@ -5423,7 +5418,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'structured': ['hello', 'hi', 'dear']
     };
 
-    // 3. PLACEHOLDER INTENT (Keep existing)
+    // 3. PLACEHOLDER INTENT
     const PLACEHOLDER_ROLES = {
         'tracking': ['[trackingnumber]', '[fedex tracking]'],
         'customer': ['[customer\'s name]', '[user]'],
@@ -5440,12 +5435,14 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
 
     const insights = { requirements: [], warnings: [], deadlines: [] };
 
+    // --- NEW: Initialize Sentence Counter for Scrolling Index ---
+    const sentenceCounts = {}; 
+
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
 
         // --- EXCLUSION CHECK ---
-        // If we are in BRONCO, and the sentence talks about "DSS" or "SLA", skip it entirely.
         if (CATEGORY_EXCLUSIONS[safeCategory]) {
             const shouldSkip = CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord));
             if (shouldSkip) return; 
@@ -5493,10 +5490,16 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 if(hasPlaceholderIntent) status = 'pending';
             }
 
+            // --- NEW: Calculate Index for Scrolling ---
+            const uniqueKey = sentence.trim();
+            const currentIndex = sentenceCounts[uniqueKey] || 0;
+            sentenceCounts[uniqueKey] = currentIndex + 1;
+
             insights[category].push({
                 text: sentence.trim(),
                 status: status, 
-                isMissing: status === 'missing'
+                isMissing: status === 'missing',
+                occurrenceIndex: currentIndex // <--- Added here
             });
         }
     });
@@ -5507,6 +5510,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
 
     return insights;
 };
+		
 const extractContextualSnippet = (fullText, triggerWords) => {
     if (!fullText) return "";
     
@@ -5941,15 +5945,13 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     let htmlContent = '';
 
-    // --- RENDERER: Visual Feedback (Placeholder aware) ---
-    const renderSmartListItems = (items) => {
+const renderSmartListItems = (items) => {
         return items.map(item => {
             const safeText = item.text.replace(/['"]/g, '').replace(/\n/g, ' ').trim();
             
             let icon = '';
             let textClass = '';
 
-            // Handle the 3-state logic from Step 2
             if (item.status === 'missing') {
                 icon = '<i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse"></i>';
                 textClass = 'text-gray-300 underline decoration-red-500/40';
@@ -5961,8 +5963,10 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 textClass = 'text-gray-400';
             }
 
+            // FIX: Added event.stopPropagation() and passed item.occurrenceIndex
             return `
-                <li class="py-1 cursor-pointer group flex items-start gap-2" onclick="scrollToSnippet('${safeText}')">
+                <li class="py-1 cursor-pointer group flex items-start gap-2 hover:bg-white/5 rounded px-1 transition-colors" 
+                    onclick="event.stopPropagation(); scrollToSnippet('${safeText}', ${item.occurrenceIndex || 0})">
                     <div class="mt-1 min-w-[14px] text-center">${icon}</div>
                     <span class="text-sm ${textClass}">${item.text}</span>
                 </li>`;
