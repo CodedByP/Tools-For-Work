@@ -328,18 +328,24 @@ body.light-mode #cancel-placeholder-btn:hover {
     100% { background-color: rgba(253, 224, 71, 0); transform: scale(1); }
 }
 
+/* Highlight Style for Active Policy Sections */
 .ghost-active {
-    background-color: rgba(253, 224, 71, 0.15); /* Subtler background for whole block */
-    border-left: 3px solid #facc15; /* Yellow bar on left */
-    padding-left: 8px; /* Space for the text */
-    transition: all 0.3s ease;
-    border-radius: 0 4px 4px 0;
-    text-shadow: 0 0 1px rgba(253, 224, 71, 0.5); /* Slight text glow */
+    background-color: rgba(253, 224, 71, 0.15); /* Subtle Yellow Background */
+    border-left: 3px solid #facc15;             /* Solid Yellow Bar on left */
+    padding-left: 12px;                         /* Spacing from the bar */
+    border-radius: 0 6px 6px 0;                 /* Rounded right edges */
+    transition: all 0.5s ease;                  /* Smooth fade in */
+    
+    /* Ensure text color stays readable */
+    color: #fef08a !important;                  /* Light Yellow Text */
+    text-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
 }
-/* Optional: Light mode override */
+
+/* Light Mode Override */
 body.light-mode .ghost-active {
     background-color: rgba(253, 224, 71, 0.3);
     color: #000 !important;
+    border-left-color: #eab308;
 }
 /* --- Confidence Meter Bars --- */
 .conf-bar {
@@ -5187,17 +5193,21 @@ const scrollToSnippet = (textSnippet) => {
         el.classList.remove('ghost-active');
     });
 
-    // 2. Normalize snippet for search (remove punctuation/extra spaces)
+    // 2. Normalize snippet for search (remove punctuation/symbols to match the clean text)
     const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
     const searchStr = normalize(textSnippet);
 
-    // 3. Find the target element (Paragraph or List Item)
-    // We look at the textContent of the block, which ignores HTML tags like <span>
-    const blocks = sourceContainer.querySelectorAll('p, .policy-list-item');
+    // 3. Find the target element
+    // FIX: Now looks for standard tags (p, li, h4) instead of old classes
+    const blocks = sourceContainer.querySelectorAll('p, li, h4');
     let targetElement = null;
 
+    // We start with a high threshold for matching
     for (const block of blocks) {
-        if (normalize(block.textContent).includes(searchStr)) {
+        const blockText = normalize(block.textContent);
+        
+        // Exact match or identifying substring
+        if (blockText.includes(searchStr)) {
             targetElement = block;
             break;
         }
@@ -5207,7 +5217,7 @@ const scrollToSnippet = (textSnippet) => {
         // Highlight the found block
         targetElement.classList.add('ghost-active');
 
-        // 4. Force Open the drawer
+        // 4. Force Open the drawer if closed
         if (wrapper.classList.contains('slide-down-enter')) {
             wrapper.classList.remove('slide-down-enter');
             wrapper.classList.add('slide-down-active');
@@ -5217,38 +5227,21 @@ const scrollToSnippet = (textSnippet) => {
             }
         }
 
-        // 5. THE "TRACKING" SCROLL
-        // We wait 10ms to allow the class change to register layout
+        // 5. Scroll Logic
         setTimeout(() => {
-            let startTime = Date.now();
-            const duration = 600; // Run slightly longer than the CSS transition (0.5s)
-
-            const performScroll = () => {
-                const containerRect = scrollContainer.getBoundingClientRect();
-                const targetRect = targetElement.getBoundingClientRect();
-                
-                // Calculate position relative to the scroll container
-                // We center the element by subtracting half the container height
-                const relativeTop = targetRect.top - containerRect.top;
-                const centerOffset = (containerRect.height / 2) - (targetRect.height / 2);
-                const targetScrollTop = scrollContainer.scrollTop + relativeTop - centerOffset;
-
-                scrollContainer.scrollTo({
-                    top: targetScrollTop,
-                    behavior: 'auto' // Use auto during animation loop for responsiveness
-                });
-
-                // Keep tracking until animation finishes
-                if (Date.now() - startTime < duration) {
-                    requestAnimationFrame(performScroll);
-                } else {
-                    // One final smooth alignment
-                    scrollContainer.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-                }
-            };
-
-            requestAnimationFrame(performScroll);
-        }, 10);
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+            
+            // Calculate scroll position to center the element
+            const relativeTop = targetRect.top - containerRect.top;
+            const currentScroll = scrollContainer.scrollTop;
+            const centerOffset = (containerRect.height / 2) - (targetRect.height / 2);
+            
+            scrollContainer.scrollTo({
+                top: currentScroll + relativeTop - centerOffset,
+                behavior: 'smooth'
+            });
+        }, 150); // Small delay to allow the drawer animation to start
     }
 };
 window.scrollToSnippet = scrollToSnippet;
