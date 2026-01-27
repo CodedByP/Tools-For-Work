@@ -5346,22 +5346,28 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
     };
 
     // 2. NEW: CONCEPT VALIDATORS (The Logic Brain)
-    // Maps abstract policy words to concrete user evidence (Regex or Keywords)
+// 2. NEW: CONCEPT VALIDATORS (The Logic Brain)
     const CONCEPT_VALIDATORS = {
-        // If policy says "Ratio", user must have "%" or "X:Y" or specific math words
+        // Math & Stats
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         
-        // If policy says "Continuity" or "Service", look for status updates
+        // Status & Operations
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
-        'service': ['no blockers', 'no issues', 'filled', 'stocked'],
-
-        // If policy says "Devices" or "Asset", look for specific hardware names
-        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine'],
-        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine'],
+        'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
         
-        // If policy says "Return Space", look for "Empty Slots"
+        // Hardware
+        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset'],
+        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device'],
+        
+        // Logistics (The Fix for "Empty Slots")
         'return': ['empty slots', 'available slots', 'space'],
-        'space': ['empty slots', 'available slots']
+        'space': ['empty slots', 'available slots'],
+
+        // Tickets & Acknowledgment (The Fix for this new issue)
+        'ticket': ['request', 'order', 'case', 'incident'],     // "Received your request" = Ticket Found
+        'validation': ['received', 'confirmed', 'processing'],   // "We have received" = Validated
+        'acknowledge': ['received', 'thank you', 'hello'],       // Standard greeting = Acknowledged
+        'number': ['request', 'order', /\d+/]                    // Contextual match
     };
 
     const SCOPE_TRIGGERS = [
