@@ -5139,6 +5139,63 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+const generateFixPrompt = async (policy, analysis, currentDraft) => {
+    // 1. Identify the Gaps
+    const missingReqs = analysis.requirements.filter(i => i.isMissing).map(i => i.text);
+    const missingWarns = analysis.warnings.filter(i => i.isMissing).map(i => i.text);
+    
+    if (missingReqs.length === 0 && missingWarns.length === 0) {
+        showMessage("No issues to fix!", "success");
+        return;
+    }
+
+    // 2. Build the Prompt
+    let prompt = `Act as a Policy Compliance Specialist for Google IT Support.\n\n`;
+    
+    prompt += `--- GOAL ---\n`;
+    prompt += `Rewrite the following support email draft so that it fully complies with the provided policy requirements.\n\n`;
+
+    prompt += `--- CURRENT DRAFT (Needs Fixing) ---\n`;
+    prompt += `"${currentDraft}"\n\n`;
+
+    prompt += `--- MISSING REQUIREMENTS (Must be added) ---\n`;
+    missingReqs.forEach(req => prompt += `[CRITICAL] ${req}\n`);
+    missingWarns.forEach(warn => prompt += `[IMPORTANT] ${warn}\n`);
+    prompt += `\n`;
+
+    prompt += `--- RELEVANT POLICY SNIPPET ---\n`;
+    // We only send the relevant chunk to keep the prompt clean, or full content if short
+    const snippet = policy.focusedSnippet || policy.content.substring(0, 1500); 
+    prompt += `"${snippet}..."\n\n`;
+
+    prompt += `--- INSTRUCTIONS ---\n`;
+    prompt += `1. Keep the tone professional and helpful.\n`;
+    prompt += `2. Do NOT invent fake data (like tracking numbers). Use placeholders like [Tracking Number] if needed.\n`;
+    prompt += `3. Seamlessly integrate the missing requirements into the natural flow of the email.\n`;
+    prompt += `4. Provide ONLY the rewritten email body.`;
+
+    // 3. Copy & Launch
+    try {
+        await navigator.clipboard.writeText(prompt);
+        showMessage("Fix Prompt Copied! Opening Gemini...", "success");
+        
+        // Visual feedback on the button
+        const btn = document.getElementById('insight-magic-fix-btn');
+        if(btn) {
+            btn.innerHTML = `<i class="fas fa-check"></i> Copied!`;
+            btn.classList.add('bg-green-600');
+        }
+
+        setTimeout(() => {
+            window.open('https://gemini.google.com/app', '_blank');
+        }, 1000);
+
+    } catch (err) {
+        console.error("Clipboard failed:", err);
+        showMessage("Could not copy prompt.", "error");
+    }
+};
+		
 const deletePolicyArticle = async (policyId, title) => {
     // 1. Confirm deletion
     const confirmed = confirm(`Are you sure you want to delete the policy: "${title}"?\n\nThis will remove the Insight link for all canned responses matching this article.`);
@@ -6030,16 +6087,49 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         });
     }
 
+// --- 3. Footer Actions (Magic Fix) ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
-        footerDiv.innerHTML = `
-            <div style="width: 100%; display: flex;">
-                <button id="close-sidebar-footer-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 transform active:scale-95 group">
-                    <i class="fas fa-times"></i> 
-                    <span>Close Insight</span>
-                </button>
-            </div>
-        `;
+        
+        // Count missing items to decide if we show the "Fix" button
+        const missingCount = (cheatSheet.requirements.filter(i => i.isMissing).length + 
+                              cheatSheet.warnings.filter(i => i.isMissing).length);
+
+        if (missingCount > 0) {
+            // SHOW: "Fix with AI" Button
+            footerDiv.innerHTML = `
+                <div class="flex flex-col w-full gap-3">
+                    <div class="text-xs text-red-400 font-bold text-center">
+                        <i class="fas fa-exclamation-triangle"></i> ${missingCount} Policy Gaps Detected
+                    </div>
+                    <button id="insight-magic-fix-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 border border-white/10 group">
+                        <i class="fas fa-magic text-yellow-300 group-hover:animate-pulse"></i>
+                        <span>Auto-Fix with Gemini</span>
+                    </button>
+                    <button id="close-sidebar-footer-btn" class="w-full text-gray-500 hover:text-gray-300 text-sm font-semibold transition-colors">
+                        Dismiss
+                    </button>
+                </div>
+            `;
+
+            // ATTACH LISTENER: The Magic Logic
+            document.getElementById('insight-magic-fix-btn').addEventListener('click', () => {
+                generateFixPrompt(match, cheatSheet, userText);
+            });
+
+        } else {
+            // SHOW: Standard Close Button (All Good)
+            footerDiv.innerHTML = `
+                <div class="w-full flex flex-col gap-2">
+                    <div class="text-xs text-green-400 font-bold text-center mb-1">
+                        <i class="fas fa-check-circle"></i> 100% Policy Compliant
+                    </div>
+                    <button id="close-sidebar-footer-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition border border-gray-700">
+                        Close Insight
+                    </button>
+                </div>
+            `;
+        }
     }
     
     document.body.classList.add('sidebar-active');
