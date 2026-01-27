@@ -5329,30 +5329,46 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v3.1 (Percentage & Context Aware) ---
+// --- UPDATED: Smart Policy Analyzer v4.0 (Concept & Logic Aware) ---
 const generatePolicyCheatSheet = (policyText, userResponseText) => {
     if (!policyText) return null;
 
-    // 1. Setup & Roles Mapping
     const cleanText = policyText.replace(/\*\*/g, '');
     const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
     const lowerUserText = (userResponseText || '').toLowerCase();
     
-    // This tells the AI which brackets satisfy which concepts
+    // 1. PLACEHOLDER INTENT (Existing)
     const PLACEHOLDER_ROLES = {
-        'tracking': ['[trackingnumber]', '[fedex tracking]', '[returntrackingnumber]'],
-        'customer': ['[customer\'s name]', '[requester name]', '[user]'],
-        'asset': ['[asset tag]', '[asset number]', '[device model]', '[serial]', '[asset/accessory]'],
-        'location': ['[desk location]', '[site code]', '[pickup location]'],
-        'date': ['[date]', '[appointment time]', '[time]']
+        'tracking': ['[trackingnumber]', '[fedex tracking]'],
+        'customer': ['[customer\'s name]', '[user]'],
+        'asset': ['[asset tag]', '[device model]'],
+        'date': ['[date]', '[time]']
+    };
+
+    // 2. NEW: CONCEPT VALIDATORS (The Logic Brain)
+    // Maps abstract policy words to concrete user evidence (Regex or Keywords)
+    const CONCEPT_VALIDATORS = {
+        // If policy says "Ratio", user must have "%" or "X:Y" or specific math words
+        'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
+        
+        // If policy says "Continuity" or "Service", look for status updates
+        'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
+        'service': ['no blockers', 'no issues', 'filled', 'stocked'],
+
+        // If policy says "Devices" or "Asset", look for specific hardware names
+        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine'],
+        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine'],
+        
+        // If policy says "Return Space", look for "Empty Slots"
+        'return': ['empty slots', 'available slots', 'space'],
+        'space': ['empty slots', 'available slots']
     };
 
     const SCOPE_TRIGGERS = [
         'break/fix', 'break fix', 'repair', 'ricoh', 'printer', 
-        'av', 'audio', 'conference', 'headset', 'remote', 'shipping', 
-        'mail', 'locker', 'vending', 'security key', 'titan', 'yubikey', 
-        'onsite', 'desk', 'vip', 'director', 'vp', 'executive',
-        'mac', 'apple', 'windows', 'pc', 'linux', 'glinux'
+        'av', 'audio', 'headset', 'remote', 'shipping', 
+        'mail', 'locker', 'vending', 'security key', 
+        'onsite', 'desk', 'vip', 'mac', 'windows'
     ];
 
     const insights = { requirements: [], warnings: [], deadlines: [] };
@@ -5361,45 +5377,58 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
 
-        // --- 2. SCOPE FILTERING ---
+        // Scope Check
         const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
         if (triggersInSentence.length > 0) {
-            const userHasContext = triggersInSentence.some(t => lowerUserText.includes(t));
-            if (!userHasContext) return; 
+            if (!triggersInSentence.some(t => lowerUserText.includes(t))) return; 
         }
 
-        // --- 3. CATEGORIZATION ---
         let category = null;
-        if (lowerSentence.match(/\b(must|shall|required|mandatory|prohibited|never)\b/)) category = 'requirements';
-        else if (lowerSentence.match(/\b(escalate|supervisor|manager|breach|alert|warning|critical|deny|reject)\b/)) category = 'warnings';
-        else if (lowerSentence.match(/\b(\d+)\s+(days|hours|minutes|weeks|business days)\b/)) category = 'deadlines';
+        if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
+        else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
+        else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) category = 'deadlines';
 
         if (category) {
+            // A. Standard Keyword Matching
             const concepts = extractKeyConcepts(sentence);
-            let status = 'met'; 
+            let matchCount = 0;
+            const totalConcepts = concepts.length;
 
-            if (concepts.length > 0) {
-                // A. Check for Word Overlap
-                const foundTextCount = concepts.filter(c => lowerUserText.includes(c)).length;
-                
-                // B. Check for Smart Placeholders
-                const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => {
-                    if (lowerSentence.includes(role)) {
-                        return PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p));
-                    }
-                    return false;
-                });
-
-                // C. Check for KEY NUMBERS/PERCENTAGES (The Fix)
-                // If policy says "20%" or "80%" and user includes that exact term, it passes.
-                const policyPercentages = sentence.match(/\d+%/g);
-                const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
-
-                if (hasPercentageMatch) {
-                    status = 'met'; // Override: Numbers match, so it's valid
-                } else if (foundTextCount < Math.ceil(concepts.length * 0.5)) {
-                    status = hasPlaceholderIntent ? 'pending' : 'missing';
+            concepts.forEach(concept => {
+                // 1. Direct Match?
+                if (lowerUserText.includes(concept)) {
+                    matchCount++;
+                } 
+                // 2. Concept Validation Match? (The Fix)
+                else if (CONCEPT_VALIDATORS[concept]) {
+                    // Check if ANY of the validators for this concept exist in user text
+                    const validators = CONCEPT_VALIDATORS[concept];
+                    const isValidated = validators.some(val => {
+                        if (val instanceof RegExp) return val.test(lowerUserText);
+                        return lowerUserText.includes(val);
+                    });
+                    
+                    if (isValidated) matchCount++;
                 }
+            });
+
+            // B. Percentage Override (Keep existing)
+            const policyPercentages = sentence.match(/\d+%/g);
+            const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
+
+            // C. Final Status Decision
+            let status = 'missing';
+            
+            // If we matched > 50% of concepts OR satisfied the Concept Validators
+            if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
+                status = 'met';
+            } 
+            // Fallback for placeholders
+            else {
+                const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
+                    lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
+                );
+                if(hasPlaceholderIntent) status = 'pending';
             }
 
             insights[category].push({
@@ -5410,7 +5439,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
         }
     });
 
-    // Limit to top 3
+    // Limit output
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
