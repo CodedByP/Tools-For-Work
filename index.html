@@ -5329,7 +5329,7 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v3.0 (With Scope Filtering) ---
+// --- UPDATED: Smart Policy Analyzer v3.1 (Percentage & Context Aware) ---
 const generatePolicyCheatSheet = (policyText, userResponseText) => {
     if (!policyText) return null;
 
@@ -5361,7 +5361,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
 
-        // --- 2. SCOPE FILTERING (Keep your existing feature) ---
+        // --- 2. SCOPE FILTERING ---
         const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
         if (triggersInSentence.length > 0) {
             const userHasContext = triggersInSentence.some(t => lowerUserText.includes(t));
@@ -5379,28 +5379,33 @@ const generatePolicyCheatSheet = (policyText, userResponseText) => {
             let status = 'met'; 
 
             if (concepts.length > 0) {
+                // A. Check for Word Overlap
                 const foundTextCount = concepts.filter(c => lowerUserText.includes(c)).length;
                 
-                // --- 4. SMART PLACEHOLDER CHECK ---
+                // B. Check for Smart Placeholders
                 const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => {
-                    // If the policy sentence mentions a role (like "tracking")
                     if (lowerSentence.includes(role)) {
-                        // Check if the user text has one of the mapped brackets
                         return PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p));
                     }
                     return false;
                 });
 
-                if (foundTextCount < Math.ceil(concepts.length * 0.5)) {
-                    // Logic: If text is missing, check if a placeholder is acting as a proxy
+                // C. Check for KEY NUMBERS/PERCENTAGES (The Fix)
+                // If policy says "20%" or "80%" and user includes that exact term, it passes.
+                const policyPercentages = sentence.match(/\d+%/g);
+                const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
+
+                if (hasPercentageMatch) {
+                    status = 'met'; // Override: Numbers match, so it's valid
+                } else if (foundTextCount < Math.ceil(concepts.length * 0.5)) {
                     status = hasPlaceholderIntent ? 'pending' : 'missing';
                 }
             }
 
             insights[category].push({
                 text: sentence.trim(),
-                status: status, // New structured status
-                isMissing: status === 'missing' // Keep this for backward compatibility with your CSS
+                status: status, 
+                isMissing: status === 'missing'
             });
         }
     });
