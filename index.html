@@ -173,9 +173,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     right: 0;
     height: 100%;
     width: 450px;
-    z-index: 999999 !important; /* Extreme priority */
+    z-index: 9999; /* Lowered from extreme number to prevent browser lag */
     background-color: #1f2937;
-    pointer-events: none; /* Mouse "passes through" the sidebar container... */
+    pointer-events: auto !important; /* Change this to auto so children are reliably measured */
 }
 
 #insights-sidebar button {
@@ -1344,7 +1344,7 @@ body.light-mode #cancel-placeholder-btn:hover {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /* This creates a "gap" on the right so the scrollbar doesn't cover the footer */
+    position: relative; /* CRITICAL: Gives scrollToSnippet a reference point */
     scrollbar-gutter: stable; 
 }
 
@@ -5159,7 +5159,7 @@ const scrollToSnippet = (textSnippet) => {
         }
     });
 
-    // 2. Find text node
+    // 2. Find and highlight the text node
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
     let node, targetNode = null;
     while (node = walker.nextNode()) {
@@ -5175,7 +5175,7 @@ const scrollToSnippet = (textSnippet) => {
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // 3. Force Open the drawer
+        // 3. Open the drawer first
         if (wrapper.classList.contains('slide-down-enter')) {
             wrapper.classList.remove('slide-down-enter');
             wrapper.classList.add('slide-down-active');
@@ -5185,33 +5185,15 @@ const scrollToSnippet = (textSnippet) => {
             }
         }
 
-        // 4. THE "TRACKING" SCROLL (Crucial Fix)
-        // This loop runs during the expansion animation to keep the text in view
-        let startTime = Date.now();
-        const duration = 600; // Lasts slightly longer than your 500ms CSS transition
-
-        const performScroll = () => {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const spanRect = span.getBoundingClientRect();
-            
-            // Calculate current position relative to container
-            const targetScrollTop = (spanRect.top - containerRect.top) + scrollContainer.scrollTop;
-
+        // 4. Use offsetTop for stable calculation (Better than getBoundingClientRect for scrolling)
+        // We wait a tiny bit for the "slide-down" animation to start so the height isn't 0
+        setTimeout(() => {
+            const targetY = span.offsetTop;
             scrollContainer.scrollTo({
-                top: targetScrollTop - 100, // Keep text centered, not at the very top
-                behavior: 'auto' // Use 'auto' during tracking for instant adjustment
+                top: targetY - 40, // 40px padding so it's not tucked under the header
+                behavior: 'smooth'
             });
-
-            // Keep tracking until the 0.5s animation is finished
-            if (Date.now() - startTime < duration) {
-                requestAnimationFrame(performScroll);
-            } else {
-                // Final smooth adjustment to "settle" the view
-                scrollContainer.scrollTo({ top: targetScrollTop - 100, behavior: 'smooth' });
-            }
-        };
-
-        requestAnimationFrame(performScroll);
+        }, 100);
     }
 };
 window.scrollToSnippet = scrollToSnippet;
