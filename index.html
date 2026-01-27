@@ -6120,19 +6120,20 @@ const renderSmartListItems = (items) => {
                 generateFixPrompt(match, cheatSheet, userText);
             });
 
-        } else {
+			} else {
             // SHOW: Standard Close Button (All Good)
             footerDiv.innerHTML = `
                 <div class="w-full flex flex-col gap-2">
                     <div class="text-xs text-green-400 font-bold text-center mb-1">
                         <i class="fas fa-check-circle"></i> 100% Policy Compliant
                     </div>
-                    <button id="close-sidebar-footer-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition border border-gray-700">
+                    <button id="close-sidebar-footer-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition border border-gray-700 flex items-center justify-center shadow-lg">
                         Close Insight
                     </button>
                 </div>
             `;
         }
+        
     }
     
     document.body.classList.add('sidebar-active');
