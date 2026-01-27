@@ -5149,8 +5149,16 @@ const scrollToSnippet = (textSnippet) => {
     
     if (!wrapper || !sourceContainer) return;
 
-    // 1. Force the policy drawer open
-    if (wrapper.classList.contains('slide-down-enter')) {
+    // 1. Clean previous highlights
+    document.querySelectorAll('.ghost-active').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize(); 
+    });
+
+    // 2. Open the drawer IF it's closed
+    const wasClosed = wrapper.classList.contains('slide-down-enter');
+    if (wasClosed) {
         wrapper.classList.remove('slide-down-enter');
         wrapper.classList.add('slide-down-active');
         if (toggleBtn) {
@@ -5159,20 +5167,12 @@ const scrollToSnippet = (textSnippet) => {
         }
     }
 
-    // 2. Clean previous highlights and normalize text nodes
-    document.querySelectorAll('.ghost-active').forEach(el => {
-        const parent = el.parentNode;
-        parent.replaceChild(document.createTextNode(el.textContent), el);
-        parent.normalize(); 
-    });
-
-    // 3. Search text nodes using TreeWalker
+    // 3. Find the text node
     const walker = document.createTreeWalker(sourceContainer, NodeFilter.SHOW_TEXT, null, false);
     let node;
     let targetNode = null;
 
     while (node = walker.nextNode()) {
-        // Match even if capitalization or surrounding whitespace differs
         if (node.textContent.toLowerCase().includes(textSnippet.toLowerCase().trim())) {
             targetNode = node;
             break;
@@ -5180,16 +5180,31 @@ const scrollToSnippet = (textSnippet) => {
     }
 
     if (targetNode) {
-        // 4. Inject the highlight span
         const span = document.createElement('span');
         span.className = 'ghost-active';
         span.textContent = targetNode.textContent;
         targetNode.parentNode.replaceChild(span, targetNode);
 
-        // 5. Scroll to center after the drawer begins opening
+        // --- THE CRITICAL FIX: The Delay Logic ---
+        // If the drawer was closed, we need to wait for the animation.
+        // Even if it was open, requestAnimationFrame ensures the DOM is painted.
+        const delay = wasClosed ? 300 : 50; 
+
         setTimeout(() => {
-            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 150); 
+            span.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center',
+                inline: 'nearest' 
+            });
+            
+            // Visual pulse to show the user where they landed
+            span.style.transition = 'all 0.5s ease';
+            span.style.backgroundColor = 'rgba(253, 224, 71, 0.8)'; // Brighter yellow
+            setTimeout(() => {
+                span.style.backgroundColor = 'rgba(253, 224, 71, 0.3)'; // Fade back to soft
+            }, 1000);
+            
+        }, delay);
     }
 };
 window.scrollToSnippet = scrollToSnippet;	
