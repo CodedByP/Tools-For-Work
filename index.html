@@ -5384,7 +5384,7 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v6.0 (Process vs. Content) ---
+// --- UPDATED: Smart Policy Analyzer v7.0 (Interactive Tips) ---
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
@@ -5393,19 +5393,18 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
 
-    // 1. EXCLUSION RULES (Keep existing)
+    // 1. EXCLUSION RULES
     const CATEGORY_EXCLUSIONS = {
-        'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation'],
+        'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation', 'Dashboard', 'Monitoring'],
     };
 
-    // 2. CONCEPT VALIDATORS (Keep existing)
+    // 2. CONCEPT VALIDATORS (Same as before)
     const CONCEPT_VALIDATORS = {
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
         'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
-		'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware', 'alternative', 'substitution'],
+        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware', 'alternative', 'substitution'],
         'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device', 'hardware'],
-        'specifics': ['hardware name', 'model', 'substitution', 'alternative'],
         'return': ['empty slots', 'available slots', 'space'],
         'space': ['empty slots', 'available slots'],
         'ticket': ['request', 'order', 'case', 'incident'],
@@ -5415,15 +5414,17 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'understanding': ['received', 'request', 'noted', 'regarding'],
         'confirm': ['received', 'acknowledged', 'thank you'],
         'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
-        'structured': ['hello', 'hi', 'dear']
+        'structured': ['hello', 'hi', 'dear'],
+        'specifics': ['hardware name', 'model', 'substitution', 'alternative']
     };
 
-    // 3. PLACEHOLDER INTENT (Keep existing)
+    // 3. PLACEHOLDER INTENT
     const PLACEHOLDER_ROLES = {
-        'tracking': ['[trackingnumber]', '[fedex tracking]'],
-        'customer': ['[customer\'s name]', '[user]'],
+        'tracking': ['[trackingnumber]', '[fedex tracking]', '[returntrackingnumber]'],
+        'customer': ['[customer\'s name]', '[requester name]', '[user]'],
         'asset': ['[asset tag]', '[asset number]', '[device model]', '[hardware name]', '[substitution hardware name]', '[asset/accessory]'],
-        'date': ['[date]', '[time]']
+        'location': ['[desk location]', '[site code]', '[pickup location]'],
+        'date': ['[date]', '[appointment time]', '[time]']
     };
 
     const SCOPE_TRIGGERS = [
@@ -5433,23 +5434,25 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'onsite', 'desk', 'vip', 'mac', 'windows'
     ];
 
-    // --- 4. NEW: PROCESS INDICATORS ---
-    // Sentences containing these are likely instructions for the human, NOT text for the email.
-    // We will separate these into a "Tips" bucket and NOT check them for compliance.
+    // 4. PROCESS INDICATORS
     const PROCESS_INDICATORS = [
         'dashboard', 'monitoring', 'monitor', 'workflow management', 'worklog', 
         'internal notes', 'navigate to', 'click', 'select', 'verify in', 
-        'check the', 'ensure that', 'log the', 'consult', 'tool', 'sap', 'delivery request', 
-		'update the order', 'system update'
+        'check the', 'ensure that', 'log the', 'consult', 'tool',
+        'sap', 'delivery request', 'update the order', 'system update'
     ];
 
-    // Added 'tips' array for the internal instructions
     const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
     const sentenceCounts = {}; 
 
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
+
+        // --- NEW: Calculate Index FIRST (So tips get it too) ---
+        const uniqueKey = sentence.trim();
+        const currentIndex = sentenceCounts[uniqueKey] || 0;
+        sentenceCounts[uniqueKey] = currentIndex + 1;
 
         // Exclusion Check
         if (CATEGORY_EXCLUSIONS[safeCategory]) {
@@ -5462,20 +5465,20 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
             if (!triggersInSentence.some(t => lowerUserText.includes(t))) return; 
         }
 
-        // --- NEW: PROCESS VS CONTENT SPLIT ---
-        // If it looks like an internal instruction, put it in 'tips' and SKIP validation
+        // --- PROCESS VS CONTENT SPLIT ---
         const isProcessInstruction = PROCESS_INDICATORS.some(indicator => lowerSentence.includes(indicator));
 
         if (isProcessInstruction) {
             insights.tips.push({
                 text: sentence.trim(),
-                status: 'info', // Always info
-                isMissing: false // Never mark as missing
+                status: 'info',
+                isMissing: false,
+                occurrenceIndex: currentIndex // <--- NOW INCLUDED
             });
-            return; // Stop processing this sentence here
+            return; 
         }
 
-        // --- STANDARD VALIDATION (For Content) ---
+        // --- STANDARD VALIDATION ---
         let category = null;
         if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
         else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
@@ -5512,10 +5515,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 if(hasPlaceholderIntent) status = 'pending';
             }
 
-            const uniqueKey = sentence.trim();
-            const currentIndex = sentenceCounts[uniqueKey] || 0;
-            sentenceCounts[uniqueKey] = currentIndex + 1;
-
             insights[category].push({
                 text: sentence.trim(),
                 status: status, 
@@ -5528,7 +5527,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
-    // Limit tips to avoid clutter
     insights.tips = insights.tips.slice(0, 2); 
 
     return insights;
@@ -6011,13 +6009,19 @@ const renderSmartListItems = (items) => {
                 <div class="insight-title text-purple-300 flex justify-between mb-2 font-bold tracking-wide">
                     <span class="flex items-center gap-2"><i class="fas fa-tasks"></i> Process Reminders</span>
                 </div>
-                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2">
-                    ${cheatSheet.tips.map(tip => `
-                        <li class="flex items-start gap-2 text-xs text-purple-200/90 italic">
-                            <i class="fas fa-angle-right mt-1 opacity-70"></i>
-                            <span>${tip.text}</span>
-                        </li>
-                    `).join('')}
+                <ul class="list-none ml-1 text-gray-300 space-y-1">
+                    ${cheatSheet.tips.map(tip => {
+                        const safeText = tip.text.replace(/['"]/g, '').replace(/\n/g, ' ').trim();
+                        // Added Click Handler & improved styling
+                        return `
+                        <li class="py-2 px-2 cursor-pointer group flex items-start gap-3 hover:bg-purple-500/10 rounded-md transition-all duration-200"
+                            onclick="event.stopPropagation(); scrollToSnippet('${safeText}', ${tip.occurrenceIndex || 0})">
+                            <div class="mt-0.5 min-w-[14px] text-center">
+                                <i class="fas fa-angle-right text-purple-400 group-hover:text-purple-200 transition-colors"></i>
+                            </div>
+                            <span class="text-sm text-purple-100 group-hover:text-white leading-snug">${tip.text}</span>
+                        </li>`;
+                    }).join('')}
                 </ul>
             </div>`;
         }
