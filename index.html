@@ -5150,49 +5150,57 @@ const generateFixPrompt = async (policy, analysis, currentDraft) => {
     }
 
     // 2. Build the Prompt
-    let prompt = `Act as a Policy Compliance Specialist for Google IT Support.\n\n`;
+    let prompt = `Act as a specialized Customer Support Agent for Google IT. Your goal is to write polite, clear emails to users.\n\n`;
     
     prompt += `--- GOAL ---\n`;
-    prompt += `Rewrite the following support email draft so that it fully complies with the provided policy requirements.\n\n`;
+    prompt += `Refine the current draft to ensure it meets the missing communication requirements listed below. \n\n`;
 
-    prompt += `--- CURRENT DRAFT (Needs Fixing) ---\n`;
+    prompt += `--- CURRENT DRAFT ---\n`;
     prompt += `"${currentDraft}"\n\n`;
 
-    prompt += `--- MISSING REQUIREMENTS (Must be added) ---\n`;
-    missingReqs.forEach(req => prompt += `[CRITICAL] ${req}\n`);
-    missingWarns.forEach(warn => prompt += `[IMPORTANT] ${warn}\n`);
+    prompt += `--- MISSING REQUIREMENTS (Integrate these naturally) ---\n`;
+    missingReqs.forEach(req => prompt += `[ACTION] ${req}\n`);
+    missingWarns.forEach(warn => prompt += `[NOTE] ${warn}\n`);
     prompt += `\n`;
 
-    prompt += `--- RELEVANT POLICY SNIPPET ---\n`;
-    // We only send the relevant chunk to keep the prompt clean, or full content if short
+    prompt += `--- POLICY CONTEXT (For your reference only) ---\n`;
     const snippet = policy.focusedSnippet || policy.content.substring(0, 1500); 
     prompt += `"${snippet}..."\n\n`;
 
-    prompt += `--- INSTRUCTIONS ---\n`;
-    prompt += `1. Keep the tone professional and helpful.\n`;
-    prompt += `2. Do NOT invent fake data (like tracking numbers). Use placeholders like [Tracking Number] if needed.\n`;
-    prompt += `3. Seamlessly integrate the missing requirements into the natural flow of the email.\n`;
-    prompt += `4. Provide ONLY the rewritten email body.`;
+    prompt += `--- STRICT WRITING RULES ---\n`;
+    prompt += `1. **Customer Facing Only:** Do NOT mention internal tools (PAR, GUTS, SAP), status codes (e.g., 'Assigned - Additional'), or backend workflows (e.g., 'destroy hostnames').\n`;
+    prompt += `2. **Tone:** Professional, helpful, and concise.\n`;
+    prompt += `3. **Structure:** Seamlessly weave the missing requirements into the email. Do not just tack them onto the end.\n`;
+    prompt += `4. **Data:** Use placeholders like [Date] or [Location] if you lack specific details.\n`;
+    prompt += `5. **Output:** Provide ONLY the rewritten email body.`;
 
     // 3. Copy & Launch
     try {
         await navigator.clipboard.writeText(prompt);
-        showMessage("Fix Prompt Copied! Opening Gemini...", "success");
         
-        // Visual feedback on the button
         const btn = document.getElementById('insight-magic-fix-btn');
         if(btn) {
-            btn.innerHTML = `<i class="fas fa-check"></i> Copied!`;
-            btn.classList.add('bg-green-600');
-        }
+            const originalHTML = btn.innerHTML;
+            const originalClasses = btn.className;
+            
+            btn.classList.remove('from-purple-600', 'to-indigo-600', 'hover:from-purple-500', 'hover:to-indigo-500');
+            btn.classList.add('bg-green-600', 'border-green-500', 'scale-105');
+            btn.innerHTML = `<i class="fas fa-check-circle text-white"></i> <span>Prompt Copied!</span>`;
+            
+            showMessage("Copied! Press Ctrl+V when Gemini opens.", "success", 4000);
 
-        setTimeout(() => {
-            window.open('https://gemini.google.com/app', '_blank');
-        }, 1000);
+            setTimeout(() => {
+                window.open('https://gemini.google.com/app', '_blank');
+                setTimeout(() => {
+                    btn.className = originalClasses;
+                    btn.innerHTML = originalHTML;
+                }, 1000);
+            }, 1500);
+        }
 
     } catch (err) {
         console.error("Clipboard failed:", err);
-        showMessage("Could not copy prompt.", "error");
+        showMessage("Could not copy prompt. Please copy manually.", "error");
     }
 };
 		
@@ -5445,7 +5453,8 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'internal notes', 'navigate to', 'click', 'select', 'verify in', 
         'check the', 'ensure that', 'log the', 'consult', 'tool',
         'sap', 'delivery request', 'update the order', 'system update', 'inventory is', 
-		'recovered', 'processed efficiently', 'service continuity'
+		'recovered', 'processed efficiently', 'service continuity', 'par', 'process asset return', 'guts', 'assignment status', 
+        'assigned - additional', 'hostnames', 'network cleanup', 'change assignment'
     ];
 
     const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
