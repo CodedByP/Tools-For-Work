@@ -5403,8 +5403,9 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
         'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
-        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset'],
-        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device'],
+		'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware', 'alternative', 'substitution'],
+        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device', 'hardware'],
+        'specifics': ['hardware name', 'model', 'substitution', 'alternative'],
         'return': ['empty slots', 'available slots', 'space'],
         'space': ['empty slots', 'available slots'],
         'ticket': ['request', 'order', 'case', 'incident'],
@@ -5421,9 +5422,8 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const PLACEHOLDER_ROLES = {
         'tracking': ['[trackingnumber]', '[fedex tracking]'],
         'customer': ['[customer\'s name]', '[user]'],
-        'asset': ['[asset tag]', '[device model]'],
-        'date': ['[date]', '[time]'],
-		'hardware': ['[model]', '[device]', '[substitution]'],
+        'asset': ['[asset tag]', '[asset number]', '[device model]', '[hardware name]', '[substitution hardware name]', '[asset/accessory]'],
+        'date': ['[date]', '[time]']
     };
 
     const SCOPE_TRIGGERS = [
