@@ -5438,7 +5438,8 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const PROCESS_INDICATORS = [
         'dashboard', 'monitoring', 'monitor', 'workflow management', 'worklog', 
         'internal notes', 'navigate to', 'click', 'select', 'verify in', 
-        'check the', 'ensure that', 'log the', 'consult', 'tool'
+        'check the', 'ensure that', 'log the', 'consult', 'tool', 'sap', 'delivery request', 
+		'update the order', 'system update'
     ];
 
     // Added 'tips' array for the internal instructions
@@ -6003,16 +6004,16 @@ const renderSmartListItems = (items) => {
                 ${confidenceHTML}
             </div>`;
 
-		if (cheatSheet.tips.length > 0) {
+        if (cheatSheet.tips.length > 0) {
             htmlContent += `
-            <div class="insight-card border-l-4 border-blue-400 bg-blue-900/10 p-3 mb-4 rounded-r-xl">
-                <div class="insight-title text-blue-300 flex justify-between mb-2">
-                    <span><i class="fas fa-info-circle"></i> Process Reminders</span>
+            <div class="insight-card border-l-4 border-purple-400 bg-purple-900/20 p-3 mb-4 rounded-r-xl shadow-lg shadow-purple-900/10">
+                <div class="insight-title text-purple-300 flex justify-between mb-2 font-bold tracking-wide">
+                    <span class="flex items-center gap-2"><i class="fas fa-tasks"></i> Process Reminders</span>
                 </div>
                 <ul class="list-none ml-2 text-sm text-gray-300 space-y-2">
                     ${cheatSheet.tips.map(tip => `
-                        <li class="flex items-start gap-2 text-xs text-blue-200/80 italic">
-                            <i class="fas fa-angle-right mt-1"></i>
+                        <li class="flex items-start gap-2 text-xs text-purple-200/90 italic">
+                            <i class="fas fa-angle-right mt-1 opacity-70"></i>
                             <span>${tip.text}</span>
                         </li>
                     `).join('')}
