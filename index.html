@@ -5428,7 +5428,11 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'closure': ['cancel', 'cancellation', 'close', 'void', 'update the record'],
         'actioned': ['cancel', 'cancellation', 'processed', 'updated'],
         'complete': ['drop off', 'return', 'finish', 'place'],
-        'reply': ['contact', 'reach out', 'drop off']
+        'reply': ['contact', 'reach out', 'drop off'],
+        'data points': ['asset list', 'exception logging', 'stocking metrics', 'actions taken'],
+        'specific data': ['asset list', 'exception logging', 'stocking metrics'],
+        'resolution': ['resolved', 'resolving', 'complete', 'closing'],
+        'updated': ['completed', 'conducted', 'actions taken']
     };
 
     // 3. PLACEHOLDER INTENT
@@ -5461,7 +5465,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const IGNORED_PHRASES = [
         'mandatory data to confirm', 
         'mandatory data:',
-		'mandatory ticket summary:',
+		'mandatory ticket summary format:',
         'required information:',
         'following information:',
         'specifics below:'
