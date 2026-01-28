@@ -5384,8 +5384,7 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v5.0 (Category Aware) ---
-// Now accepts 'currentCategory' to filter out irrelevant rules
+// --- UPDATED: Smart Policy Analyzer v6.0 (Process vs. Content) ---
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
@@ -5394,12 +5393,12 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
 
-    // 1. EXCLUSION RULES
+    // 1. EXCLUSION RULES (Keep existing)
     const CATEGORY_EXCLUSIONS = {
-        'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation', 'Dashboard', 'Monitoring'],
+        'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation'],
     };
 
-    // 2. CONCEPT VALIDATORS
+    // 2. CONCEPT VALIDATORS (Keep existing)
     const CONCEPT_VALIDATORS = {
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
@@ -5418,7 +5417,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'structured': ['hello', 'hi', 'dear']
     };
 
-    // 3. PLACEHOLDER INTENT
+    // 3. PLACEHOLDER INTENT (Keep existing)
     const PLACEHOLDER_ROLES = {
         'tracking': ['[trackingnumber]', '[fedex tracking]'],
         'customer': ['[customer\'s name]', '[user]'],
@@ -5433,27 +5432,48 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'onsite', 'desk', 'vip', 'mac', 'windows'
     ];
 
-    const insights = { requirements: [], warnings: [], deadlines: [] };
+    // --- 4. NEW: PROCESS INDICATORS ---
+    // Sentences containing these are likely instructions for the human, NOT text for the email.
+    // We will separate these into a "Tips" bucket and NOT check them for compliance.
+    const PROCESS_INDICATORS = [
+        'dashboard', 'monitoring', 'monitor', 'workflow management', 'worklog', 
+        'internal notes', 'navigate to', 'click', 'select', 'verify in', 
+        'check the', 'ensure that', 'log the', 'consult', 'tool'
+    ];
 
-    // --- NEW: Initialize Sentence Counter for Scrolling Index ---
+    // Added 'tips' array for the internal instructions
+    const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
     const sentenceCounts = {}; 
 
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
 
-        // --- EXCLUSION CHECK ---
+        // Exclusion Check
         if (CATEGORY_EXCLUSIONS[safeCategory]) {
-            const shouldSkip = CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord));
-            if (shouldSkip) return; 
+            if (CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
         }
 
-        // --- SCOPE CHECK ---
+        // Scope Check
         const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
         if (triggersInSentence.length > 0) {
             if (!triggersInSentence.some(t => lowerUserText.includes(t))) return; 
         }
 
+        // --- NEW: PROCESS VS CONTENT SPLIT ---
+        // If it looks like an internal instruction, put it in 'tips' and SKIP validation
+        const isProcessInstruction = PROCESS_INDICATORS.some(indicator => lowerSentence.includes(indicator));
+
+        if (isProcessInstruction) {
+            insights.tips.push({
+                text: sentence.trim(),
+                status: 'info', // Always info
+                isMissing: false // Never mark as missing
+            });
+            return; // Stop processing this sentence here
+        }
+
+        // --- STANDARD VALIDATION (For Content) ---
         let category = null;
         if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
         else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
@@ -5490,7 +5510,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 if(hasPlaceholderIntent) status = 'pending';
             }
 
-            // --- NEW: Calculate Index for Scrolling ---
             const uniqueKey = sentence.trim();
             const currentIndex = sentenceCounts[uniqueKey] || 0;
             sentenceCounts[uniqueKey] = currentIndex + 1;
@@ -5499,7 +5518,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 text: sentence.trim(),
                 status: status, 
                 isMissing: status === 'missing',
-                occurrenceIndex: currentIndex // <--- Added here
+                occurrenceIndex: currentIndex
             });
         }
     });
@@ -5507,6 +5526,8 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
+    // Limit tips to avoid clutter
+    insights.tips = insights.tips.slice(0, 2); 
 
     return insights;
 };
@@ -5981,6 +6002,23 @@ const renderSmartListItems = (items) => {
                 </h4>
                 ${confidenceHTML}
             </div>`;
+
+		if (cheatSheet.tips.length > 0) {
+            htmlContent += `
+            <div class="insight-card border-l-4 border-blue-400 bg-blue-900/10 p-3 mb-4 rounded-r-xl">
+                <div class="insight-title text-blue-300 flex justify-between mb-2">
+                    <span><i class="fas fa-info-circle"></i> Process Reminders</span>
+                </div>
+                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2">
+                    ${cheatSheet.tips.map(tip => `
+                        <li class="flex items-start gap-2 text-xs text-blue-200/80 italic">
+                            <i class="fas fa-angle-right mt-1"></i>
+                            <span>${tip.text}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>`;
+        }
 
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
