@@ -5457,12 +5457,22 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'assigned - additional', 'hostnames', 'network cleanup', 'change assignment'
     ];
 
+	// --- 5. NEW: IGNORED PHRASES (The Fix) ---
+    const IGNORED_PHRASES = [
+        'mandatory data to confirm', 
+        'mandatory data:',
+        'required information:',
+        'following information:',
+        'specifics below:'
+    ];
+
     const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
     const sentenceCounts = {}; 
 
     sentences.forEach(sentence => {
         const lowerSentence = sentence.toLowerCase().trim();
         if (lowerSentence.length < 10) return;
+		if (IGNORED_PHRASES.some(phrase => lowerSentence.includes(phrase))) return;
 
         // --- NEW: Calculate Index FIRST (So tips get it too) ---
         const uniqueKey = sentence.trim();
