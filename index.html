@@ -5275,7 +5275,7 @@ const getSimpleTeamIcon = (teamName) => {
     return `<i class="fas ${icon} text-[10px] ${color}"></i>`;
 };
 
-// --- UPDATED: Render SLA Dashboard (Table Layout) ---
+// --- UPDATED: Render SLA Dashboard (Table with Day Conversions) ---
 const renderSLADashboard = (filter = 'all', searchQuery = '') => {
     const tbody = document.getElementById('sla-table-body');
     if(!tbody) return;
@@ -5294,40 +5294,47 @@ const renderSLADashboard = (filter = 'all', searchQuery = '') => {
 
         // --- Row Styling ---
         let timeClass = 'text-gray-300 font-mono';
-        let rowClass = 'hover:bg-gray-800/50 transition-colors group';
+        let rowClass = 'hover:bg-gray-800/50 transition-colors group border-b border-gray-800/50 last:border-0';
         let iconHtml = '';
 
         if (item.type === 'urgent') {
             timeClass = 'text-red-400 font-bold';
-            rowClass = 'bg-red-900/5 hover:bg-red-900/10 border-l-2 border-red-500/50 transition-colors group';
+            rowClass = 'bg-red-900/5 hover:bg-red-900/10 border-l-2 border-l-red-500/50 border-b-gray-800/50 transition-colors group';
             iconHtml = '<i class="fas fa-fire text-red-500 mr-2 text-xs animate-pulse"></i>';
         } else if (item.type === 'high') {
             timeClass = 'text-orange-300';
-            rowClass = 'hover:bg-orange-900/10 border-l-2 border-transparent hover:border-orange-500/30 transition-colors group';
+            rowClass = 'hover:bg-orange-900/10 border-l-2 border-l-transparent hover:border-l-orange-500/30 transition-colors group';
         } else if (item.businessDays >= 10) {
             timeClass = 'text-blue-400';
         }
 
-        // Clean time text for table
+        // Clean time text
         const displayTime = item.time.replace(/Bus\. |Business /i, '');
+
+        // --- CONVERSION LABEL LOGIC (The New Part) ---
+        let conversionSubtext = '';
+        // If the label says "Hours" but we know it equals specific Business Days (like 3, 3.5, 6.5)
+        if (item.time.includes('Hours') && item.businessDays) {
+            conversionSubtext = `<div class="text-[10px] text-gray-500 font-normal mt-0.5">≈ ${item.businessDays} Days</div>`;
+        }
 
         // --- HTML Generation ---
         const tr = document.createElement('tr');
         tr.className = rowClass;
         
         tr.innerHTML = `
-            <td class="p-4 py-3 whitespace-nowrap">
-                <span class="${timeClass} text-sm">${displayTime}</span>
-            </td>
+            <td class="p-4 py-3 whitespace-nowrap align-top">
+                <span class="${timeClass} text-sm block leading-none">${displayTime}</span>
+                ${conversionSubtext} </td>
             
-            <td class="p-4 py-3">
-                <div class="flex items-center">
-                    ${iconHtml}
-                    <span class="text-gray-200 font-medium group-hover:text-white">${item.task}</span>
+            <td class="p-4 py-3 align-top">
+                <div class="flex items-start">
+                    <span class="mt-0.5">${iconHtml}</span>
+                    <span class="text-gray-200 font-medium text-sm group-hover:text-white leading-tight">${item.task}</span>
                 </div>
             </td>
 
-            <td class="p-4 py-3 text-right">
+            <td class="p-4 py-3 text-right align-top">
                 <div class="flex justify-end">
                     ${getTeamBadgeTable(item.team)}
                 </div>
@@ -5341,7 +5348,6 @@ const renderSLADashboard = (filter = 'all', searchQuery = '') => {
         tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-gray-500 italic">No tasks found</td></tr>`;
     }
     
-    // Refresh side maintenance list
     renderMaintenanceSideList();
 };
 
