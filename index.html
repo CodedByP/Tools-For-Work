@@ -2844,73 +2844,92 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div class="lg:col-span-1 space-y-6">
-            <div class="bento-card p-6 border-l-4 border-pink-500 bg-gray-800/60">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <i class="fas fa-calculator text-pink-400"></i> Deadline Calc
-                </h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-gray-400 uppercase font-bold">Start Time</label>
-                        <input type="datetime-local" id="sla-start-time" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400 uppercase font-bold">Select Task Duration</label>
-						<select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
-						    <optgroup label="Urgent">
-						        <option value="30">30 Minutes</option>
-						        <option value="60">1 Hour</option>
-						        <option value="120">2 Hours</option>
-						        <option value="240">4 Hours</option>
-						    </optgroup>
-						    <optgroup label="Business Hours (8h/day)">
-						        <option value="bd-3">24 Bus. Hours (3 Days)</option>
-						        <option value="bd-3.5">28 Bus. Hours (3.5 Days)</option>
-						        <option value="bd-6.5">52 Bus. Hours (6.5 Days)</option>
-						    </optgroup>
-						    <optgroup label="Standard Business Days">
-						        <option value="bd-1">1 Business Day</option>
-						        <option value="bd-2">2 Business Days</option>
-						        <option value="bd-3">3 Business Days</option>
-						        <option value="bd-5">5 Business Days</option>
-						        <option value="bd-10">10 Business Days</option>
-						    </optgroup>
-						</select>
-                    </div>
-                    <div class="pt-4 border-t border-gray-700">
-                        <label class="text-xs text-gray-400 uppercase font-bold">Estimated Deadline</label>
-                        <div id="sla-result-display" class="text-2xl font-mono text-green-400 font-bold mt-1">--</div>
-                        <p class="text-[10px] text-gray-500 mt-1">*Simple calc (excludes holidays)</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bento-card p-6">
-                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">
-                    <i class="fas fa-tools text-blue-400"></i> Maintenance
-                </h3>
-                <div class="space-y-3" id="maintenance-list">
-                    </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-2">
-            <div class="bento-card p-0 overflow-hidden min-h-[600px] flex flex-col">
-                <div class="p-4 border-b border-gray-700 bg-gray-800/80 flex gap-2 overflow-x-auto scrollbar-hide" id="sla-filters">
-                    <button class="sla-filter-btn active px-4 py-1.5 rounded-full text-xs font-bold bg-pink-600 text-white" data-filter="all">All</button>
-                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="urgent">Urgent (<4h)</button>
-                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="high">Daily (24h+)</button>
-                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="medium">Standard (2d+)</button>
-                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="low">Projects (3d+)</button>
-                </div>
-                
-                <div class="overflow-y-auto max-h-[700px] p-4 space-y-2 custom-scrollbar" id="sla-list-container">
-                    </div>
-            </div>
-        </div>
-
-    </div>
-</div>
+		<div class="lg:col-span-1 space-y-6">
+		            <div class="bento-card p-6 border-l-4 border-pink-500 bg-gray-800/60">
+		                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+		                    <i class="fas fa-calculator text-pink-400"></i> Deadline Calc
+		                </h3>
+		                <div class="space-y-4">
+		                    <div>
+		                        <label class="text-xs text-gray-400 uppercase font-bold">Start Time</label>
+		                        <input type="datetime-local" id="sla-start-time" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
+		                    </div>
+		                    <div>
+		                        <label class="text-xs text-gray-400 uppercase font-bold">Select Task Duration</label>
+		                        <select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
+		                            <optgroup label="Urgent">
+		                                <option value="30">30 Minutes</option>
+		                                <option value="60">1 Hour</option>
+		                                <option value="120">2 Hours</option>
+		                                <option value="240">4 Hours</option>
+		                            </optgroup>
+		                            <optgroup label="Business Hours (8h/day)">
+		                                <option value="bd-3">24 Bus. Hours (3 Days)</option>
+		                                <option value="bd-3.5">28 Bus. Hours (3.5 Days)</option>
+		                                <option value="bd-6.5">52 Bus. Hours (6.5 Days)</option>
+		                            </optgroup>
+		                            <optgroup label="Standard Business Days">
+		                                <option value="bd-1">1 Business Day</option>
+		                                <option value="bd-2">2 Business Days</option>
+		                                <option value="bd-3">3 Business Days</option>
+		                                <option value="bd-5">5 Business Days</option>
+		                                <option value="bd-10">10 Business Days</option>
+		                            </optgroup>
+		                        </select>
+		                    </div>
+		                    <div class="pt-4 border-t border-gray-700">
+		                        <label class="text-xs text-gray-400 uppercase font-bold">Estimated Deadline</label>
+		                        <div id="sla-result-display" class="text-2xl font-mono text-green-400 font-bold mt-1">--</div>
+		                        <p class="text-[10px] text-gray-500 mt-1">*Simple calc (excludes holidays)</p>
+		                    </div>
+		                </div>
+		            </div>
+		
+		            <div class="bento-card p-6">
+		                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">
+		                    <i class="fas fa-tools text-blue-400"></i> Maintenance
+		                </h3>
+		                <div class="space-y-3" id="maintenance-list">
+		                    </div>
+		            </div>
+		        </div>
+		
+		        <div class="lg:col-span-2 flex flex-col gap-6">
+		            
+		            <div class="bg-gray-800/50 p-2 rounded-xl flex gap-2 overflow-x-auto scrollbar-hide border border-gray-700/50">
+		                <button class="sla-filter-btn active px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition-all" data-filter="all">All View</button>
+		                <button class="sla-filter-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:text-white transition-all" data-filter="urgent">Urgent Only</button>
+		                <button class="sla-filter-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:text-white transition-all" data-filter="logistics">Logistics Only</button>
+		            </div>
+		
+		            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 h-full overflow-y-auto pr-1 custom-scrollbar" id="sla-newspaper-grid" style="max-height: 750px;">
+		                
+		                <div class="flex flex-col gap-3">
+		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-red-500/50">
+		                        <i class="fas fa-fire text-red-400 animate-pulse"></i>
+		                        <h4 class="text-sm font-bold text-red-100 uppercase tracking-wider">Fire Lane</h4>
+		                    </div>
+		                    <div id="lane-fire" class="space-y-3"></div>
+		                </div>
+		
+		                <div class="flex flex-col gap-3">
+		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-orange-500/50">
+		                        <i class="fas fa-truck-loading text-orange-400"></i>
+		                        <h4 class="text-sm font-bold text-orange-100 uppercase tracking-wider">Supply Chain</h4>
+		                    </div>
+		                    <div id="lane-supply" class="space-y-3"></div>
+		                </div>
+		
+		                <div class="flex flex-col gap-3">
+		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-blue-500/50">
+		                        <i class="fas fa-clipboard-list text-blue-400"></i>
+		                        <h4 class="text-sm font-bold text-blue-100 uppercase tracking-wider">Projects</h4>
+		                    </div>
+		                    <div id="lane-projects" class="space-y-3"></div>
+		                </div>
+		
+		            </div>
+		        </div>
 		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
 		    <div class="main-card p-8 w-full max-w-2xl mx-auto relative"> <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
@@ -5236,68 +5255,153 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// --- SLA DASHBOARD FUNCTIONS ---
+// --- NEW: Helper to generate Team Pills & Icons ---
+const getTeamBadge = (teamName) => {
+    let color = 'border-gray-600 text-gray-400';
+    let icon = 'fa-users';
+    
+    // Logic to assign colors/icons based on team name keywords
+    if (teamName.includes('Field Services')) {
+        color = 'border-green-500/50 text-green-300 bg-green-900/20';
+        icon = 'fa-wrench';
+    } else if (teamName.includes('Inventory') || teamName.includes('Logistics')) {
+        color = 'border-orange-500/50 text-orange-300 bg-orange-900/20';
+        icon = 'fa-box-open';
+    } else if (teamName.includes('ROSG')) {
+        color = 'border-purple-500/50 text-purple-300 bg-purple-900/20';
+        icon = 'fa-crown';
+    } else if (teamName.includes('CellOps')) {
+        color = 'border-blue-500/50 text-blue-300 bg-blue-900/20';
+        icon = 'fa-mobile-alt';
+    } else if (teamName.includes('Noogler')) {
+        color = 'border-yellow-500/50 text-yellow-300 bg-yellow-900/20';
+        icon = 'fa-user-plus';
+    }
 
+    return `
+        <span class="border ${color} px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 w-fit">
+            <i class="fas ${icon} text-[9px]"></i> ${teamName.replace(' - ', '<br>')}
+        </span>
+    `;
+};
+
+// --- UPDATED: Render SLA Dashboard (Newspaper Layout) ---
 const renderSLADashboard = (filter = 'all', searchQuery = '') => {
-    const container = document.getElementById('sla-list-container');
-    const maintenanceContainer = document.getElementById('maintenance-list');
-    if(!container) return;
+    // 1. clear all lanes
+    const lanes = {
+        fire: document.getElementById('lane-fire'),
+        supply: document.getElementById('lane-supply'),
+        projects: document.getElementById('lane-projects')
+    };
+    
+    if(!lanes.fire) return; // Safety check
 
-    container.innerHTML = '';
+    Object.values(lanes).forEach(el => el.innerHTML = '');
     const query = searchQuery.toLowerCase();
 
-    // 1. Render Main SLA List
     slaDatabase.forEach(item => {
-        // Filter Logic
-        if (filter !== 'all' && item.type !== filter) return;
+        // --- 1. FILTERING LOGIC ---
+        // Search Filter
         if (query && !item.task.toLowerCase().includes(query) && !item.team.toLowerCase().includes(query)) return;
-
-        // Color Coding
-        let timeColor = 'bg-gray-700 text-gray-300';
-        let icon = 'fa-clock';
         
-        if (item.type === 'urgent') { timeColor = 'bg-red-500/20 text-red-400 border border-red-500/30'; icon = 'fa-exclamation-circle'; }
-        else if (item.type === 'high') { timeColor = 'bg-orange-500/20 text-orange-400 border border-orange-500/30'; icon = 'fa-fire'; }
-        else if (item.type === 'medium') { timeColor = 'bg-blue-500/20 text-blue-400 border border-blue-500/30'; icon = 'fa-calendar-day'; }
-        else { timeColor = 'bg-green-500/20 text-green-400 border border-green-500/30'; icon = 'fa-clipboard-check'; }
+        // Button Filters (Optional Extra)
+        if (filter === 'urgent' && item.type !== 'urgent') return;
+        if (filter === 'logistics' && !item.team.includes('Logistics')) return;
 
+        // --- 2. SEMANTIC SORTING (Which Lane?) ---
+        let targetLane = lanes.projects; // Default
+        
+        // Logic: Where does this card belong?
+        if (item.type === 'urgent') {
+            targetLane = lanes.fire;
+        } else if (item.team.includes('Inventory') || item.team.includes('Logistics') || item.task.includes('Replenishment')) {
+            targetLane = lanes.supply;
+        } else if (item.task.includes('Break-fix') || item.type === 'high') {
+            // High priority break-fix goes to Fire Lane usually, or supply if part dependent. 
+            // Let's put Medium/High Break-fix in Fire Lane for visibility
+            targetLane = lanes.fire;
+        }
+
+        // --- 3. HERO CARD STYLING ---
+        let cardBg = 'bg-gray-800/40 border-gray-700/50'; // Default Project Style
+        let timeColor = 'text-blue-200';
+        let barColor = 'bg-blue-600';
+        let barWidth = 'w-full';
+
+        // Styling based on Urgency Type
+        if (item.type === 'urgent') {
+            cardBg = 'bg-red-900/10 border-red-500/30 hover:bg-red-900/20'; 
+            timeColor = 'text-red-400';
+            barColor = 'bg-red-500';
+            barWidth = 'w-[15%]'; // Short bar = short time
+        } else if (item.type === 'high') {
+            cardBg = 'bg-orange-900/10 border-orange-500/30 hover:bg-orange-900/20';
+            timeColor = 'text-orange-300';
+            barColor = 'bg-orange-500';
+            barWidth = 'w-[40%]';
+        } else if (targetLane === lanes.supply) {
+            // Supply chain specific styling
+            cardBg = 'bg-slate-800/60 border-slate-600/50 hover:border-blue-400/50';
+            timeColor = 'text-white';
+            barColor = 'bg-indigo-500';
+            barWidth = 'w-[60%]';
+        }
+
+        // --- 4. HTML GENERATION ---
         const card = document.createElement('div');
-        card.className = 'flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-700/50 transition-all';
+        card.className = `group relative p-4 rounded-xl border ${cardBg} transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col gap-3`;
+        
         card.innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 flex-shrink-0 text-gray-400">
-                    <i class="fas ${icon}"></i>
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col">
+                    <span class="text-3xl font-extrabold ${timeColor} leading-none tracking-tighter filter drop-shadow-sm">
+                        ${item.time.replace(/Bus\. |Business /i, '')} </span>
+                    <span class="text-[10px] text-gray-500 uppercase font-bold mt-1 tracking-widest">Target SLA</span>
                 </div>
-                <div>
-                    <h4 class="font-bold text-gray-200 text-sm">${item.task}</h4>
-                    <p class="text-xs text-gray-500">${item.team}</p>
-                </div>
+                
+                ${getTeamBadge(item.team)}
             </div>
-            <div class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${timeColor}">
-                ${item.time}
+
+            <div class="border-t border-white/5 pt-2 mt-1">
+                <p class="text-sm font-medium text-gray-200 leading-snug group-hover:text-white transition-colors">
+                    ${item.task}
+                </p>
+            </div>
+
+            <div class="w-full h-1 bg-gray-700/50 rounded-full overflow-hidden mt-auto">
+                <div class="h-full ${barColor} rounded-full opacity-80" style="width: ${barWidth}"></div>
             </div>
         `;
-        container.appendChild(card);
+
+        targetLane.appendChild(card);
     });
 
-    if (container.children.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500 py-10">No SLAs found matching filter.</p>';
-    }
+    // Handle Empty States
+    Object.values(lanes).forEach(lane => {
+        if (lane.children.length === 0) {
+            lane.innerHTML = `<div class="p-4 border-2 border-dashed border-gray-800 rounded-xl text-center text-gray-600 text-xs italic">No items</div>`;
+        }
+    });
+    
+    // Render Maintenance List (Keep existing logic if you have it elsewhere, or re-add here)
+    renderMaintenanceSideList();
+};
 
-    // 2. Render Maintenance List (Only do this once or if empty)
-    if (maintenanceContainer && maintenanceContainer.children.length === 0) {
-        maintenanceSLA.forEach(m => {
-            maintenanceContainer.innerHTML += `
-                <div class="text-sm border-b border-gray-700/50 pb-2 last:border-0">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-bold text-gray-300">${m.task}</span>
-                        <span class="text-[10px] bg-blue-900/50 text-blue-300 px-2 rounded">${m.freq}</span>
-                    </div>
-                    <p class="text-xs text-gray-500">${m.detail}</p>
+const renderMaintenanceSideList = () => {
+    const container = document.getElementById('maintenance-list');
+    if(!container || container.children.length > 0) return;
+
+    maintenanceSLA.forEach(m => {
+        container.innerHTML += `
+            <div class="text-xs border-l-2 border-gray-700 pl-3 py-1 hover:border-blue-500 transition-colors">
+                <div class="flex justify-between items-center mb-0.5">
+                    <span class="font-bold text-gray-300">${m.task}</span>
+                    <span class="text-[9px] bg-blue-900/30 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/20">${m.freq}</span>
                 </div>
-            `;
-        });
-    }
+                <p class="text-[10px] text-gray-500">${m.detail}</p>
+            </div>
+        `;
+    });
 };
 
 const setupCalculator = () => {
