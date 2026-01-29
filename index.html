@@ -2886,42 +2886,8 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 h-0 flex-grow min-h-[600px]">
-        
-        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
-            <div class="p-3 bg-gray-800/80 border-b border-red-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                    <h4 class="text-xs font-bold text-red-100 uppercase tracking-wider">Fire Lane (Urgent)</h4>
-                </div>
-                <span class="text-[10px] bg-red-500/10 text-red-400 px-1.5 rounded border border-red-500/20">P0 / P1</span>
-            </div>
-            <div id="lane-fire" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
+	<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 h-0 flex-grow min-h-[600px] overflow-y-auto pr-2 custom-scrollbar" id="sla-master-grid">
         </div>
-
-        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
-            <div class="p-3 bg-gray-800/80 border-b border-orange-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                    <h4 class="text-xs font-bold text-orange-100 uppercase tracking-wider">Supply Chain</h4>
-                </div>
-                <span class="text-[10px] bg-orange-500/10 text-orange-400 px-1.5 rounded border border-orange-500/20">Logistics</span>
-            </div>
-            <div id="lane-supply" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
-        </div>
-
-        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
-            <div class="p-3 bg-gray-800/80 border-b border-blue-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h4 class="text-xs font-bold text-blue-100 uppercase tracking-wider">Projects</h4>
-                </div>
-                <span class="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 rounded border border-blue-500/20">Standard</span>
-            </div>
-            <div id="lane-projects" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
-        </div>
-
-    </div>
 </div>
 		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
@@ -5278,86 +5244,95 @@ const getTeamBadge = (teamName) => {
     `;
 };
 
-// --- UPDATED: Render SLA Dashboard (Newspaper Layout) ---
-// --- UPDATED: Render SLA Dashboard (Horizontal Ticket Design) ---
-const renderSLADashboard = (filter = 'all', searchQuery = '') => {
-    const lanes = {
-        fire: document.getElementById('lane-fire'),
-        supply: document.getElementById('lane-supply'),
-        projects: document.getElementById('lane-projects')
-    };
-    
-    if(!lanes.fire) return;
+// Helper for sorting
+const getSlaSortValue = (item) => {
+    if (item.durationMin) return item.durationMin;
+    if (item.businessDays) return item.businessDays * 1440; 
+    return 999999; 
+};
 
-    Object.values(lanes).forEach(el => el.innerHTML = '');
+// Helper for tiny icons
+const getSimpleTeamIcon = (teamName) => {
+    let icon = 'fa-users';
+    let color = 'text-gray-500';
+    if (teamName.includes('Field')) { icon = 'fa-wrench'; color = 'text-green-400'; }
+    else if (teamName.includes('Inventory')) { icon = 'fa-box'; color = 'text-orange-400'; }
+    else if (teamName.includes('ROSG')) { icon = 'fa-crown'; color = 'text-purple-400'; }
+    else if (teamName.includes('CellOps')) { icon = 'fa-mobile'; color = 'text-blue-400'; }
+    return `<i class="fas ${icon} text-[10px] ${color}"></i>`;
+};
+
+// --- UPDATED RENDER FUNCTION ---
+const renderSLADashboard = (filter = 'all', searchQuery = '') => {
+    const container = document.getElementById('sla-master-grid');
+    if(!container) return;
+
+    container.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
-    slaDatabase.forEach(item => {
-        // --- 1. FILTERING ---
+    // 1. Sort Data (Fastest -> Slowest)
+    const sortedData = [...slaDatabase].sort((a, b) => getSlaSortValue(a) - getSlaSortValue(b));
+
+    sortedData.forEach(item => {
+        // 2. Filter
         if (query && !item.task.toLowerCase().includes(query) && !item.team.toLowerCase().includes(query)) return;
         if (filter === 'urgent' && item.type !== 'urgent') return;
         if (filter === 'logistics' && !item.team.includes('Logistics')) return;
 
-        // --- 2. SORTING (Which Lane?) ---
-        let targetLane = lanes.projects; 
-        if (item.type === 'urgent') targetLane = lanes.fire;
-        else if (item.team.includes('Inventory') || item.team.includes('Logistics') || item.task.includes('Replenishment')) targetLane = lanes.supply;
-        else if (item.task.includes('Break-fix') || item.type === 'high') targetLane = lanes.fire;
-
-        // --- 3. HORIZONTAL TICKET STYLING ---
-        // Defaults
-        let sideColor = 'bg-gray-700'; 
-        let sideText = 'text-gray-300';
+        // 3. Style based on urgency
+        let sideColor = 'bg-gray-700/50'; 
+        let sideText = 'text-gray-400';
         let cardBorder = 'border-gray-700/50';
+        let badgeIcon = '';
 
         if (item.type === 'urgent') {
-            sideColor = 'bg-red-500/20 border-r border-red-500/20';
+            sideColor = 'bg-red-500/20 border-r border-red-500/10';
             sideText = 'text-red-400';
-            cardBorder = 'border-red-500/30 hover:border-red-500/60';
+            cardBorder = 'border-red-500/20 hover:border-red-500/50';
+            badgeIcon = '<i class="fas fa-fire text-red-500 text-xs animate-pulse"></i>';
         } else if (item.type === 'high') {
-            sideColor = 'bg-orange-500/20 border-r border-orange-500/20';
+            sideColor = 'bg-orange-500/20 border-r border-orange-500/10';
             sideText = 'text-orange-400';
-            cardBorder = 'border-orange-500/30 hover:border-orange-500/60';
-        } else if (targetLane === lanes.supply) {
-            sideColor = 'bg-indigo-500/20 border-r border-indigo-500/20';
-            sideText = 'text-indigo-300';
-            cardBorder = 'border-indigo-500/30 hover:border-indigo-500/60';
+            cardBorder = 'border-orange-500/20 hover:border-orange-500/50';
+        } else if (item.businessDays >= 10) {
+            sideColor = 'bg-blue-500/10 border-r border-blue-500/10';
+            sideText = 'text-blue-400';
+            cardBorder = 'border-blue-500/20 hover:border-blue-500/50';
         }
 
-        // Clean up time text (remove "Business" for compact view)
-        const cleanTime = item.time.replace(/Bus\. |Business /i, '').replace('Minutes', 'min').replace('Hours', 'hr').replace('Days', 'd');
+        // Clean time text
+        const cleanTime = item.time.replace(/Bus\. |Business /i, '')
+                                   .replace('Minutes', 'm').replace('Hours', 'h').replace('Days', 'd');
 
-        // --- 4. HTML GENERATION ---
+        // 4. Create Card
         const card = document.createElement('div');
-        // Layout: Flex Row (Side by Side)
-        card.className = `group flex w-full bg-gray-800/60 border ${cardBorder} rounded-lg overflow-hidden hover:bg-gray-800 transition-all duration-200 cursor-default`;
+        card.className = `group flex items-stretch bg-gray-800/40 border ${cardBorder} rounded-lg overflow-hidden hover:bg-gray-800 transition-all duration-200 min-h-[80px]`;
         
         card.innerHTML = `
-            <div class="${sideColor} w-20 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+            <div class="${sideColor} w-20 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center backdrop-blur-sm">
                 <span class="text-xl font-black ${sideText} leading-none tracking-tighter">${cleanTime.split(' ')[0]}</span>
                 <span class="text-[10px] font-bold ${sideText} uppercase opacity-80 leading-none mt-0.5">${cleanTime.split(' ').slice(1).join(' ')}</span>
             </div>
 
-            <div class="flex-grow p-2.5 flex flex-col justify-center min-w-0">
-                <div class="flex justify-between items-start mb-1">
-                    <p class="text-xs font-bold text-gray-200 leading-tight group-hover:text-white truncate pr-2" title="${item.task}">
-                        ${item.task}
+            <div class="flex-grow p-3 flex flex-col justify-center min-w-0">
+                <div class="flex justify-between items-start gap-2 mb-1">
+                    <p class="text-sm font-bold text-gray-200 leading-tight group-hover:text-white">
+                        ${badgeIcon} ${item.task}
                     </p>
                 </div>
-                
-                ${getTeamBadgeSmall(item.team)}
+                <div class="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                    ${getSimpleTeamIcon(item.team)}
+                    <span class="text-[10px] text-gray-400 truncate uppercase tracking-wide font-semibold">${item.team}</span>
+                </div>
             </div>
         `;
 
-        targetLane.appendChild(card);
+        container.appendChild(card);
     });
 
-    // Handle Empty States
-    Object.values(lanes).forEach(lane => {
-        if (lane.children.length === 0) {
-            lane.innerHTML = `<div class="p-8 text-center opacity-30"><i class="fas fa-clipboard-check text-2xl mb-2 block"></i><span class="text-xs">No tasks</span></div>`;
-        }
-    });
+    if (container.children.length === 0) {
+        container.innerHTML = `<div class="col-span-full p-8 text-center opacity-30"><i class="fas fa-search text-2xl mb-2 block"></i><span class="text-xs">No tasks found</span></div>`;
+    }
 };
 
 // Helper for smaller team badges in this compact view
