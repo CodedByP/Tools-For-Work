@@ -5312,7 +5312,7 @@ const setupCalculator = () => {
 
         if (durationVal.startsWith('bd-')) {
             // Business Days Logic (Simple: Add days, skip weekends)
-            let daysToAdd = parseInt(durationVal.split('-')[1]);
+			let daysToAdd = parseFloat(durationVal.split('-')[1]); // Change parseInt to parseFloat
             let count = 0;
             while (count < daysToAdd) {
                 endDate.setDate(endDate.getDate() + 1);
@@ -5374,11 +5374,12 @@ const slaDatabase = [
     { time: '2 Hours', task: 'Stuff Station Replenishment (Out of Stock)', team: 'EMT - Field Services', type: 'urgent', durationMin: 120 },
     { time: '4 Hours', task: 'Order Routing', team: 'CSD - Inventory and Logistics', type: 'high', durationMin: 240 },
     
-    // --- DAILY (24h - 1 Day) ---
-    { time: '24 Hours', task: 'Stuff Station Break-fix L1 Support - Medium', team: 'EMT - Field Services', type: 'high', durationMin: 1440 },
-    { time: '24 Hours', task: 'Stuff Station Replenishment (Low Inventory Alert)', team: 'EMT - Field Services', type: 'high', durationMin: 1440 },
-    { time: '28 Hours', task: 'ROSG Max Resolution time P0', team: 'EMT - ROSG', type: 'high', durationMin: 1680 },
-    { time: '52 Hours', task: 'ROSG Max Resolution time P1', team: 'EMT - ROSG', type: 'medium', durationMin: 3120 },
+	// --- DAILY (Business Hours Converted) ---
+    // 24 Business Hours = 3 Business Days
+    { time: '24 Bus. Hours', task: 'Stuff Station Break-fix L1 Support - Medium', team: 'EMT - Field Services', type: 'high', businessDays: 3 },
+    { time: '24 Bus. Hours', task: 'Stuff Station Replenishment (Low Inventory Alert)', team: 'EMT - Field Services', type: 'high', businessDays: 3 },
+    { time: '28 Bus. Hours', task: 'ROSG Max Resolution time P0', team: 'EMT - ROSG', type: 'high', businessDays: 3.5 },
+    { time: '52 Bus. Hours', task: 'ROSG Max Resolution time P1', team: 'EMT - ROSG', type: 'medium', businessDays: 6.5 },
     { time: '1 Bus. Day', task: 'Critical Hardware Deployment (In Office)', team: 'EMT - Inv & Log', type: 'high', businessDays: 1 },
     { time: '1 Bus. Day', task: 'Flex Desk Support (Break/Fix)', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
     { time: '1 Bus. Day', task: 'Printer & Plotter Maintenance', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
