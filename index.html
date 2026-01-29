@@ -2822,114 +2822,107 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 </div>
 
 
-<div id="sla-dashboard-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex flex-col hidden">
+<div id="sla-dashboard-app" class="w-full container-bg rounded-2xl p-6 text-gray-100 min-h-screen flex flex-col hidden">
     
-    <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 animate-fade-in">
-        <div>
-            <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
-                SLA Dashboard
-            </h2>
-            <p class="text-gray-400 mt-2">Service Level Agreement Quick Reference</p>
-        </div>
-        
-        <div class="relative w-full md:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-500"></i>
+    <div class="flex flex-col gap-6 mb-4">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                    SLA Mission Control
+                </h2>
+                <p class="text-sm text-gray-400">Quick Reference & Calculator</p>
             </div>
-            <input type="text" id="sla-search-input" 
-                   class="w-full bg-gray-800/50 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-pink-500 focus:border-pink-500 block pl-10 p-3 transition-all" 
-                   placeholder="Search task, team, or time...">
+            
+            <div class="relative w-64">
+                <input type="text" id="sla-search-input" 
+                       class="w-full bg-gray-800/50 border border-gray-600 text-gray-200 text-xs rounded-lg focus:ring-pink-500 focus:border-pink-500 block pl-8 p-2 transition-all" 
+                       placeholder="Search tasks...">
+                <i class="fas fa-search text-gray-500 absolute left-2.5 top-2.5 text-xs"></i>
+            </div>
+        </div>
+
+        <div class="bg-gray-800/80 border border-gray-700/50 p-3 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-lg backdrop-blur-md sticky top-0 z-20">
+            
+            <div class="flex items-center gap-3 bg-black/20 p-1.5 rounded-lg border border-white/5">
+                <div class="flex items-center gap-2 px-2 border-r border-gray-600/50">
+                    <i class="fas fa-calculator text-pink-400 text-sm"></i>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Deadline Calc</span>
+                </div>
+                
+                <input type="datetime-local" id="sla-start-time" class="bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-white text-xs w-40">
+                <span class="text-gray-500 text-xs">+</span>
+                <select id="sla-duration-select" class="bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-white text-xs w-48">
+                    <optgroup label="Urgent">
+                        <option value="30">30 Minutes</option>
+                        <option value="60">1 Hour</option>
+                        <option value="120">2 Hours</option>
+                        <option value="240">4 Hours</option>
+                    </optgroup>
+                    <optgroup label="Business Hours">
+                        <option value="bd-3">24 Bus. Hours (3 Days)</option>
+                        <option value="bd-3.5">28 Bus. Hours (3.5 Days)</option>
+                        <option value="bd-6.5">52 Bus. Hours (6.5 Days)</option>
+                    </optgroup>
+                    <optgroup label="Standard Days">
+                        <option value="bd-1">1 Business Day</option>
+                        <option value="bd-2">2 Business Days</option>
+                        <option value="bd-3">3 Business Days</option>
+                        <option value="bd-5">5 Business Days</option>
+                        <option value="bd-10">10 Business Days</option>
+                    </optgroup>
+                </select>
+                
+                <div class="flex items-center gap-2 pl-3 border-l border-gray-600/50">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold">Due:</span>
+                    <span id="sla-result-display" class="text-sm font-mono text-green-400 font-bold">--</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button class="sla-filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-bold bg-blue-600 text-white uppercase tracking-wide transition-all" data-filter="all">All</button>
+                <button class="sla-filter-btn px-3 py-1.5 rounded-lg text-[10px] font-bold bg-gray-700 text-gray-400 hover:text-white uppercase tracking-wide transition-all" data-filter="urgent">Urgent</button>
+                <button class="sla-filter-btn px-3 py-1.5 rounded-lg text-[10px] font-bold bg-gray-700 text-gray-400 hover:text-white uppercase tracking-wide transition-all" data-filter="logistics">Logistics</button>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 h-0 flex-grow min-h-[600px]">
         
-		<div class="lg:col-span-1 space-y-6">
-		            <div class="bento-card p-6 border-l-4 border-pink-500 bg-gray-800/60">
-		                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-		                    <i class="fas fa-calculator text-pink-400"></i> Deadline Calc
-		                </h3>
-		                <div class="space-y-4">
-		                    <div>
-		                        <label class="text-xs text-gray-400 uppercase font-bold">Start Time</label>
-		                        <input type="datetime-local" id="sla-start-time" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
-		                    </div>
-		                    <div>
-		                        <label class="text-xs text-gray-400 uppercase font-bold">Select Task Duration</label>
-		                        <select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
-		                            <optgroup label="Urgent">
-		                                <option value="30">30 Minutes</option>
-		                                <option value="60">1 Hour</option>
-		                                <option value="120">2 Hours</option>
-		                                <option value="240">4 Hours</option>
-		                            </optgroup>
-		                            <optgroup label="Business Hours (8h/day)">
-		                                <option value="bd-3">24 Bus. Hours (3 Days)</option>
-		                                <option value="bd-3.5">28 Bus. Hours (3.5 Days)</option>
-		                                <option value="bd-6.5">52 Bus. Hours (6.5 Days)</option>
-		                            </optgroup>
-		                            <optgroup label="Standard Business Days">
-		                                <option value="bd-1">1 Business Day</option>
-		                                <option value="bd-2">2 Business Days</option>
-		                                <option value="bd-3">3 Business Days</option>
-		                                <option value="bd-5">5 Business Days</option>
-		                                <option value="bd-10">10 Business Days</option>
-		                            </optgroup>
-		                        </select>
-		                    </div>
-		                    <div class="pt-4 border-t border-gray-700">
-		                        <label class="text-xs text-gray-400 uppercase font-bold">Estimated Deadline</label>
-		                        <div id="sla-result-display" class="text-2xl font-mono text-green-400 font-bold mt-1">--</div>
-		                        <p class="text-[10px] text-gray-500 mt-1">*Simple calc (excludes holidays)</p>
-		                    </div>
-		                </div>
-		            </div>
-		
-		            <div class="bento-card p-6">
-		                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">
-		                    <i class="fas fa-tools text-blue-400"></i> Maintenance
-		                </h3>
-		                <div class="space-y-3" id="maintenance-list">
-		                    </div>
-		            </div>
-		        </div>
-		
-		        <div class="lg:col-span-2 flex flex-col gap-6">
-		            
-		            <div class="bg-gray-800/50 p-2 rounded-xl flex gap-2 overflow-x-auto scrollbar-hide border border-gray-700/50">
-		                <button class="sla-filter-btn active px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition-all" data-filter="all">All View</button>
-		                <button class="sla-filter-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:text-white transition-all" data-filter="urgent">Urgent Only</button>
-		                <button class="sla-filter-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-gray-700 text-gray-400 hover:text-white transition-all" data-filter="logistics">Logistics Only</button>
-		            </div>
-		
-		            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 h-full overflow-y-auto pr-1 custom-scrollbar" id="sla-newspaper-grid" style="max-height: 750px;">
-		                
-		                <div class="flex flex-col gap-3">
-		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-red-500/50">
-		                        <i class="fas fa-fire text-red-400 animate-pulse"></i>
-		                        <h4 class="text-sm font-bold text-red-100 uppercase tracking-wider">Fire Lane</h4>
-		                    </div>
-		                    <div id="lane-fire" class="space-y-3"></div>
-		                </div>
-		
-		                <div class="flex flex-col gap-3">
-		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-orange-500/50">
-		                        <i class="fas fa-truck-loading text-orange-400"></i>
-		                        <h4 class="text-sm font-bold text-orange-100 uppercase tracking-wider">Supply Chain</h4>
-		                    </div>
-		                    <div id="lane-supply" class="space-y-3"></div>
-		                </div>
-		
-		                <div class="flex flex-col gap-3">
-		                    <div class="flex items-center gap-2 mb-2 sticky top-0 bg-[#111827] z-10 py-2 border-b-2 border-blue-500/50">
-		                        <i class="fas fa-clipboard-list text-blue-400"></i>
-		                        <h4 class="text-sm font-bold text-blue-100 uppercase tracking-wider">Projects</h4>
-		                    </div>
-		                    <div id="lane-projects" class="space-y-3"></div>
-		                </div>
-		
-		            </div>
-		        </div>
+        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
+            <div class="p-3 bg-gray-800/80 border-b border-red-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <h4 class="text-xs font-bold text-red-100 uppercase tracking-wider">Fire Lane (Urgent)</h4>
+                </div>
+                <span class="text-[10px] bg-red-500/10 text-red-400 px-1.5 rounded border border-red-500/20">P0 / P1</span>
+            </div>
+            <div id="lane-fire" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
+        </div>
+
+        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
+            <div class="p-3 bg-gray-800/80 border-b border-orange-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                    <h4 class="text-xs font-bold text-orange-100 uppercase tracking-wider">Supply Chain</h4>
+                </div>
+                <span class="text-[10px] bg-orange-500/10 text-orange-400 px-1.5 rounded border border-orange-500/20">Logistics</span>
+            </div>
+            <div id="lane-supply" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
+        </div>
+
+        <div class="flex flex-col bg-gray-900/30 rounded-xl border border-gray-800/50 overflow-hidden">
+            <div class="p-3 bg-gray-800/80 border-b border-blue-500/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <h4 class="text-xs font-bold text-blue-100 uppercase tracking-wider">Projects</h4>
+                </div>
+                <span class="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 rounded border border-blue-500/20">Standard</span>
+            </div>
+            <div id="lane-projects" class="p-3 space-y-2 overflow-y-auto custom-scrollbar flex-grow"></div>
+        </div>
+
+    </div>
+</div>
 		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
 		    <div class="main-card p-8 w-full max-w-2xl mx-auto relative"> <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
@@ -5286,90 +5279,73 @@ const getTeamBadge = (teamName) => {
 };
 
 // --- UPDATED: Render SLA Dashboard (Newspaper Layout) ---
+// --- UPDATED: Render SLA Dashboard (Horizontal Ticket Design) ---
 const renderSLADashboard = (filter = 'all', searchQuery = '') => {
-    // 1. clear all lanes
     const lanes = {
         fire: document.getElementById('lane-fire'),
         supply: document.getElementById('lane-supply'),
         projects: document.getElementById('lane-projects')
     };
     
-    if(!lanes.fire) return; // Safety check
+    if(!lanes.fire) return;
 
     Object.values(lanes).forEach(el => el.innerHTML = '');
     const query = searchQuery.toLowerCase();
 
     slaDatabase.forEach(item => {
-        // --- 1. FILTERING LOGIC ---
-        // Search Filter
+        // --- 1. FILTERING ---
         if (query && !item.task.toLowerCase().includes(query) && !item.team.toLowerCase().includes(query)) return;
-        
-        // Button Filters (Optional Extra)
         if (filter === 'urgent' && item.type !== 'urgent') return;
         if (filter === 'logistics' && !item.team.includes('Logistics')) return;
 
-        // --- 2. SEMANTIC SORTING (Which Lane?) ---
-        let targetLane = lanes.projects; // Default
-        
-        // Logic: Where does this card belong?
-        if (item.type === 'urgent') {
-            targetLane = lanes.fire;
-        } else if (item.team.includes('Inventory') || item.team.includes('Logistics') || item.task.includes('Replenishment')) {
-            targetLane = lanes.supply;
-        } else if (item.task.includes('Break-fix') || item.type === 'high') {
-            // High priority break-fix goes to Fire Lane usually, or supply if part dependent. 
-            // Let's put Medium/High Break-fix in Fire Lane for visibility
-            targetLane = lanes.fire;
-        }
+        // --- 2. SORTING (Which Lane?) ---
+        let targetLane = lanes.projects; 
+        if (item.type === 'urgent') targetLane = lanes.fire;
+        else if (item.team.includes('Inventory') || item.team.includes('Logistics') || item.task.includes('Replenishment')) targetLane = lanes.supply;
+        else if (item.task.includes('Break-fix') || item.type === 'high') targetLane = lanes.fire;
 
-        // --- 3. HERO CARD STYLING ---
-        let cardBg = 'bg-gray-800/40 border-gray-700/50'; // Default Project Style
-        let timeColor = 'text-blue-200';
-        let barColor = 'bg-blue-600';
-        let barWidth = 'w-full';
+        // --- 3. HORIZONTAL TICKET STYLING ---
+        // Defaults
+        let sideColor = 'bg-gray-700'; 
+        let sideText = 'text-gray-300';
+        let cardBorder = 'border-gray-700/50';
 
-        // Styling based on Urgency Type
         if (item.type === 'urgent') {
-            cardBg = 'bg-red-900/10 border-red-500/30 hover:bg-red-900/20'; 
-            timeColor = 'text-red-400';
-            barColor = 'bg-red-500';
-            barWidth = 'w-[15%]'; // Short bar = short time
+            sideColor = 'bg-red-500/20 border-r border-red-500/20';
+            sideText = 'text-red-400';
+            cardBorder = 'border-red-500/30 hover:border-red-500/60';
         } else if (item.type === 'high') {
-            cardBg = 'bg-orange-900/10 border-orange-500/30 hover:bg-orange-900/20';
-            timeColor = 'text-orange-300';
-            barColor = 'bg-orange-500';
-            barWidth = 'w-[40%]';
+            sideColor = 'bg-orange-500/20 border-r border-orange-500/20';
+            sideText = 'text-orange-400';
+            cardBorder = 'border-orange-500/30 hover:border-orange-500/60';
         } else if (targetLane === lanes.supply) {
-            // Supply chain specific styling
-            cardBg = 'bg-slate-800/60 border-slate-600/50 hover:border-blue-400/50';
-            timeColor = 'text-white';
-            barColor = 'bg-indigo-500';
-            barWidth = 'w-[60%]';
+            sideColor = 'bg-indigo-500/20 border-r border-indigo-500/20';
+            sideText = 'text-indigo-300';
+            cardBorder = 'border-indigo-500/30 hover:border-indigo-500/60';
         }
+
+        // Clean up time text (remove "Business" for compact view)
+        const cleanTime = item.time.replace(/Bus\. |Business /i, '').replace('Minutes', 'min').replace('Hours', 'hr').replace('Days', 'd');
 
         // --- 4. HTML GENERATION ---
         const card = document.createElement('div');
-        card.className = `group relative p-4 rounded-xl border ${cardBg} transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col gap-3`;
+        // Layout: Flex Row (Side by Side)
+        card.className = `group flex w-full bg-gray-800/60 border ${cardBorder} rounded-lg overflow-hidden hover:bg-gray-800 transition-all duration-200 cursor-default`;
         
         card.innerHTML = `
-            <div class="flex justify-between items-start">
-                <div class="flex flex-col">
-                    <span class="text-3xl font-extrabold ${timeColor} leading-none tracking-tighter filter drop-shadow-sm">
-                        ${item.time.replace(/Bus\. |Business /i, '')} </span>
-                    <span class="text-[10px] text-gray-500 uppercase font-bold mt-1 tracking-widest">Target SLA</span>
+            <div class="${sideColor} w-20 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+                <span class="text-xl font-black ${sideText} leading-none tracking-tighter">${cleanTime.split(' ')[0]}</span>
+                <span class="text-[10px] font-bold ${sideText} uppercase opacity-80 leading-none mt-0.5">${cleanTime.split(' ').slice(1).join(' ')}</span>
+            </div>
+
+            <div class="flex-grow p-2.5 flex flex-col justify-center min-w-0">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-xs font-bold text-gray-200 leading-tight group-hover:text-white truncate pr-2" title="${item.task}">
+                        ${item.task}
+                    </p>
                 </div>
                 
-                ${getTeamBadge(item.team)}
-            </div>
-
-            <div class="border-t border-white/5 pt-2 mt-1">
-                <p class="text-sm font-medium text-gray-200 leading-snug group-hover:text-white transition-colors">
-                    ${item.task}
-                </p>
-            </div>
-
-            <div class="w-full h-1 bg-gray-700/50 rounded-full overflow-hidden mt-auto">
-                <div class="h-full ${barColor} rounded-full opacity-80" style="width: ${barWidth}"></div>
+                ${getTeamBadgeSmall(item.team)}
             </div>
         `;
 
@@ -5379,14 +5355,28 @@ const renderSLADashboard = (filter = 'all', searchQuery = '') => {
     // Handle Empty States
     Object.values(lanes).forEach(lane => {
         if (lane.children.length === 0) {
-            lane.innerHTML = `<div class="p-4 border-2 border-dashed border-gray-800 rounded-xl text-center text-gray-600 text-xs italic">No items</div>`;
+            lane.innerHTML = `<div class="p-8 text-center opacity-30"><i class="fas fa-clipboard-check text-2xl mb-2 block"></i><span class="text-xs">No tasks</span></div>`;
         }
     });
-    
-    // Render Maintenance List (Keep existing logic if you have it elsewhere, or re-add here)
-    renderMaintenanceSideList();
 };
 
+// Helper for smaller team badges in this compact view
+const getTeamBadgeSmall = (teamName) => {
+    let icon = 'fa-users';
+    let colorClass = 'text-gray-500';
+    
+    if (teamName.includes('Field')) { icon = 'fa-wrench'; colorClass = 'text-green-400'; }
+    else if (teamName.includes('Inventory')) { icon = 'fa-box'; colorClass = 'text-orange-400'; }
+    else if (teamName.includes('ROSG')) { icon = 'fa-crown'; colorClass = 'text-purple-400'; }
+    
+    // Returns just a clean text line with icon
+    return `
+        <div class="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+            <i class="fas ${icon} text-[9px] ${colorClass}"></i>
+            <span class="text-[10px] text-gray-400 truncate">${teamName}</span>
+        </div>
+    `;
+};
 const renderMaintenanceSideList = () => {
     const container = document.getElementById('maintenance-list');
     if(!container || container.children.length > 0) return;
