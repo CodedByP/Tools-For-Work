@@ -9146,10 +9146,9 @@ const renderResponses = (searchQuery = '') => {
 				let maxScore = 0;
 				
 				if (typeof globalKnowledgeCache !== 'undefined' && globalKnowledgeCache.length > 0) {
-				    // OLD LINE: const matchResult = findRelevantPolicy(response.text);
+				    const fullContext = (response.label || '') + " " + (response.text || '');
 				    
-				    // NEW LINE: Pass the category!
-				    const matchResult = findRelevantPolicy(response.text, response.category);
+				    const matchResult = findRelevantPolicy(fullContext, response.category);
 				    
 				    if (matchResult) {
 				        bestMatch = matchResult;
