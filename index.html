@@ -2886,8 +2886,21 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 
-	<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 h-0 flex-grow min-h-[600px] overflow-y-auto pr-2 custom-scrollbar" id="sla-master-grid">
+	<div class="bg-gray-900/30 rounded-xl border border-gray-800/50 flex flex-col h-0 flex-grow min-h-[600px] overflow-hidden">
+        <div class="overflow-y-auto custom-scrollbar h-full">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-800/90 text-gray-400 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 backdrop-blur-sm shadow-sm">
+                    <tr>
+                        <th class="p-4 py-3 border-b border-gray-700 w-32">Target Time</th>
+                        <th class="p-4 py-3 border-b border-gray-700">Task / Service</th>
+                        <th class="p-4 py-3 border-b border-gray-700 w-48 text-right">Team Owner</th>
+                    </tr>
+                </thead>
+                <tbody id="sla-table-body" class="text-sm divide-y divide-gray-700/30">
+                    </tbody>
+            </table>
         </div>
+    </div>
 </div>
 		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
@@ -5262,94 +5275,88 @@ const getSimpleTeamIcon = (teamName) => {
     return `<i class="fas ${icon} text-[10px] ${color}"></i>`;
 };
 
-// --- UPDATED RENDER FUNCTION ---
+// --- UPDATED: Render SLA Dashboard (Table Layout) ---
 const renderSLADashboard = (filter = 'all', searchQuery = '') => {
-    const container = document.getElementById('sla-master-grid');
-    if(!container) return;
+    const tbody = document.getElementById('sla-table-body');
+    if(!tbody) return;
 
-    container.innerHTML = '';
+    tbody.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
     // 1. Sort Data (Fastest -> Slowest)
     const sortedData = [...slaDatabase].sort((a, b) => getSlaSortValue(a) - getSlaSortValue(b));
 
     sortedData.forEach(item => {
-        // 2. Filter
+        // --- Filtering ---
         if (query && !item.task.toLowerCase().includes(query) && !item.team.toLowerCase().includes(query)) return;
         if (filter === 'urgent' && item.type !== 'urgent') return;
         if (filter === 'logistics' && !item.team.includes('Logistics')) return;
 
-        // 3. Style based on urgency
-        let sideColor = 'bg-gray-700/50'; 
-        let sideText = 'text-gray-400';
-        let cardBorder = 'border-gray-700/50';
-        let badgeIcon = '';
+        // --- Row Styling ---
+        let timeClass = 'text-gray-300 font-mono';
+        let rowClass = 'hover:bg-gray-800/50 transition-colors group';
+        let iconHtml = '';
 
         if (item.type === 'urgent') {
-            sideColor = 'bg-red-500/20 border-r border-red-500/10';
-            sideText = 'text-red-400';
-            cardBorder = 'border-red-500/20 hover:border-red-500/50';
-            badgeIcon = '<i class="fas fa-fire text-red-500 text-xs animate-pulse"></i>';
+            timeClass = 'text-red-400 font-bold';
+            rowClass = 'bg-red-900/5 hover:bg-red-900/10 border-l-2 border-red-500/50 transition-colors group';
+            iconHtml = '<i class="fas fa-fire text-red-500 mr-2 text-xs animate-pulse"></i>';
         } else if (item.type === 'high') {
-            sideColor = 'bg-orange-500/20 border-r border-orange-500/10';
-            sideText = 'text-orange-400';
-            cardBorder = 'border-orange-500/20 hover:border-orange-500/50';
+            timeClass = 'text-orange-300';
+            rowClass = 'hover:bg-orange-900/10 border-l-2 border-transparent hover:border-orange-500/30 transition-colors group';
         } else if (item.businessDays >= 10) {
-            sideColor = 'bg-blue-500/10 border-r border-blue-500/10';
-            sideText = 'text-blue-400';
-            cardBorder = 'border-blue-500/20 hover:border-blue-500/50';
+            timeClass = 'text-blue-400';
         }
 
-        // Clean time text
-        const cleanTime = item.time.replace(/Bus\. |Business /i, '')
-                                   .replace('Minutes', 'm').replace('Hours', 'h').replace('Days', 'd');
+        // Clean time text for table
+        const displayTime = item.time.replace(/Bus\. |Business /i, '');
 
-        // 4. Create Card
-        const card = document.createElement('div');
-        card.className = `group flex items-stretch bg-gray-800/40 border ${cardBorder} rounded-lg overflow-hidden hover:bg-gray-800 transition-all duration-200 min-h-[80px]`;
+        // --- HTML Generation ---
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
         
-        card.innerHTML = `
-            <div class="${sideColor} w-20 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center backdrop-blur-sm">
-                <span class="text-xl font-black ${sideText} leading-none tracking-tighter">${cleanTime.split(' ')[0]}</span>
-                <span class="text-[10px] font-bold ${sideText} uppercase opacity-80 leading-none mt-0.5">${cleanTime.split(' ').slice(1).join(' ')}</span>
-            </div>
+        tr.innerHTML = `
+            <td class="p-4 py-3 whitespace-nowrap">
+                <span class="${timeClass} text-sm">${displayTime}</span>
+            </td>
+            
+            <td class="p-4 py-3">
+                <div class="flex items-center">
+                    ${iconHtml}
+                    <span class="text-gray-200 font-medium group-hover:text-white">${item.task}</span>
+                </div>
+            </td>
 
-            <div class="flex-grow p-3 flex flex-col justify-center min-w-0">
-                <div class="flex justify-between items-start gap-2 mb-1">
-                    <p class="text-sm font-bold text-gray-200 leading-tight group-hover:text-white">
-                        ${badgeIcon} ${item.task}
-                    </p>
+            <td class="p-4 py-3 text-right">
+                <div class="flex justify-end">
+                    ${getTeamBadgeTable(item.team)}
                 </div>
-                <div class="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                    ${getSimpleTeamIcon(item.team)}
-                    <span class="text-[10px] text-gray-400 truncate uppercase tracking-wide font-semibold">${item.team}</span>
-                </div>
-            </div>
+            </td>
         `;
 
-        container.appendChild(card);
+        tbody.appendChild(tr);
     });
 
-    if (container.children.length === 0) {
-        container.innerHTML = `<div class="col-span-full p-8 text-center opacity-30"><i class="fas fa-search text-2xl mb-2 block"></i><span class="text-xs">No tasks found</span></div>`;
+    if (tbody.children.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-gray-500 italic">No tasks found</td></tr>`;
     }
+    
+    // Refresh side maintenance list
+    renderMaintenanceSideList();
 };
 
-// Helper for smaller team badges in this compact view
-const getTeamBadgeSmall = (teamName) => {
-    let icon = 'fa-users';
-    let colorClass = 'text-gray-500';
+// Simplified badge helper for Table view
+const getTeamBadgeTable = (teamName) => {
+    let color = 'text-gray-500 bg-gray-800';
     
-    if (teamName.includes('Field')) { icon = 'fa-wrench'; colorClass = 'text-green-400'; }
-    else if (teamName.includes('Inventory')) { icon = 'fa-box'; colorClass = 'text-orange-400'; }
-    else if (teamName.includes('ROSG')) { icon = 'fa-crown'; colorClass = 'text-purple-400'; }
-    
-    // Returns just a clean text line with icon
+    if (teamName.includes('Field')) color = 'text-green-300 bg-green-900/20 border-green-500/30';
+    else if (teamName.includes('Inventory')) color = 'text-orange-300 bg-orange-900/20 border-orange-500/30';
+    else if (teamName.includes('ROSG')) color = 'text-purple-300 bg-purple-900/20 border-purple-500/30';
+    else if (teamName.includes('CellOps')) color = 'text-blue-300 bg-blue-900/20 border-blue-500/30';
+
     return `
-        <div class="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-            <i class="fas ${icon} text-[9px] ${colorClass}"></i>
-            <span class="text-[10px] text-gray-400 truncate">${teamName}</span>
-        </div>
+        <span class="px-2 py-1 rounded text-[10px] font-bold uppercase border ${color} bg-opacity-50 whitespace-nowrap">
+            ${teamName.split(' - ')[0]} </span>
     `;
 };
 const renderMaintenanceSideList = () => {
