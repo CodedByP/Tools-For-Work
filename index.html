@@ -2672,6 +2672,11 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		        <button id="nav-helpful-links" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
 		            <i class="fas fa-link mr-3"></i> Helpful Links
 		        </button>
+				
+				<button id="nav-sla-dashboard" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
+			   	 <i class="fas fa-stopwatch mr-3"></i> SLA Dashboard
+				</button>
+				
 		        <button id="nav-my-stats" class="w-full text-left px-5 py-3 rounded-xl hover:bg-gray-700 transition duration-300 text-gray-200 font-semibold text-lg">
 		            <i class="fas fa-chart-line mr-3"></i> My Stats
 		        </button>
@@ -2815,6 +2820,90 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 </div>
+
+
+<div id="sla-dashboard-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex flex-col hidden">
+    
+    <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 animate-fade-in">
+        <div>
+            <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                SLA Dashboard
+            </h2>
+            <p class="text-gray-400 mt-2">Service Level Agreement Quick Reference</p>
+        </div>
+        
+        <div class="relative w-full md:w-96">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-500"></i>
+            </div>
+            <input type="text" id="sla-search-input" 
+                   class="w-full bg-gray-800/50 border border-gray-600 text-gray-200 text-sm rounded-xl focus:ring-pink-500 focus:border-pink-500 block pl-10 p-3 transition-all" 
+                   placeholder="Search task, team, or time...">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bento-card p-6 border-l-4 border-pink-500 bg-gray-800/60">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-calculator text-pink-400"></i> Deadline Calc
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase font-bold">Start Time</label>
+                        <input type="datetime-local" id="sla-start-time" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase font-bold">Select Task Duration</label>
+                        <select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
+                            <option value="30">30 Minutes</option>
+                            <option value="60">1 Hour</option>
+                            <option value="120">2 Hours</option>
+                            <option value="240">4 Hours</option>
+                            <option value="1440">24 Hours</option>
+                            <option value="bd-1">1 Business Day</option>
+                            <option value="bd-2">2 Business Days</option>
+                            <option value="bd-3">3 Business Days</option>
+                            <option value="bd-5">5 Business Days</option>
+                            <option value="bd-10">10 Business Days</option>
+                        </select>
+                    </div>
+                    <div class="pt-4 border-t border-gray-700">
+                        <label class="text-xs text-gray-400 uppercase font-bold">Estimated Deadline</label>
+                        <div id="sla-result-display" class="text-2xl font-mono text-green-400 font-bold mt-1">--</div>
+                        <p class="text-[10px] text-gray-500 mt-1">*Simple calc (excludes holidays)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card p-6">
+                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fas fa-tools text-blue-400"></i> Maintenance
+                </h3>
+                <div class="space-y-3" id="maintenance-list">
+                    </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bento-card p-0 overflow-hidden min-h-[600px] flex flex-col">
+                <div class="p-4 border-b border-gray-700 bg-gray-800/80 flex gap-2 overflow-x-auto scrollbar-hide" id="sla-filters">
+                    <button class="sla-filter-btn active px-4 py-1.5 rounded-full text-xs font-bold bg-pink-600 text-white" data-filter="all">All</button>
+                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="urgent">Urgent (<4h)</button>
+                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="high">Daily (24h+)</button>
+                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="medium">Standard (2d+)</button>
+                    <button class="sla-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-gray-700 text-gray-300 hover:bg-gray-600" data-filter="low">Projects (3d+)</button>
+                </div>
+                
+                <div class="overflow-y-auto max-h-[700px] p-4 space-y-2 custom-scrollbar" id="sla-list-container">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
 		    <div class="main-card p-8 w-full max-w-2xl mx-auto relative"> <h1 class="text-4xl font-bold text-center text-gray-100 mb-4">FedEx Tracking</h1>
 		        <p class="text-center text-gray-400 mb-8 text-lg">Extract and manage your FedEx tracking numbers easily.</p>
@@ -5138,6 +5227,189 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- SLA DASHBOARD FUNCTIONS ---
+
+const renderSLADashboard = (filter = 'all', searchQuery = '') => {
+    const container = document.getElementById('sla-list-container');
+    const maintenanceContainer = document.getElementById('maintenance-list');
+    if(!container) return;
+
+    container.innerHTML = '';
+    const query = searchQuery.toLowerCase();
+
+    // 1. Render Main SLA List
+    slaDatabase.forEach(item => {
+        // Filter Logic
+        if (filter !== 'all' && item.type !== filter) return;
+        if (query && !item.task.toLowerCase().includes(query) && !item.team.toLowerCase().includes(query)) return;
+
+        // Color Coding
+        let timeColor = 'bg-gray-700 text-gray-300';
+        let icon = 'fa-clock';
+        
+        if (item.type === 'urgent') { timeColor = 'bg-red-500/20 text-red-400 border border-red-500/30'; icon = 'fa-exclamation-circle'; }
+        else if (item.type === 'high') { timeColor = 'bg-orange-500/20 text-orange-400 border border-orange-500/30'; icon = 'fa-fire'; }
+        else if (item.type === 'medium') { timeColor = 'bg-blue-500/20 text-blue-400 border border-blue-500/30'; icon = 'fa-calendar-day'; }
+        else { timeColor = 'bg-green-500/20 text-green-400 border border-green-500/30'; icon = 'fa-clipboard-check'; }
+
+        const card = document.createElement('div');
+        card.className = 'flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-700/50 transition-all';
+        card.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 flex-shrink-0 text-gray-400">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-200 text-sm">${item.task}</h4>
+                    <p class="text-xs text-gray-500">${item.team}</p>
+                </div>
+            </div>
+            <div class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${timeColor}">
+                ${item.time}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    if (container.children.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-10">No SLAs found matching filter.</p>';
+    }
+
+    // 2. Render Maintenance List (Only do this once or if empty)
+    if (maintenanceContainer && maintenanceContainer.children.length === 0) {
+        maintenanceSLA.forEach(m => {
+            maintenanceContainer.innerHTML += `
+                <div class="text-sm border-b border-gray-700/50 pb-2 last:border-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-gray-300">${m.task}</span>
+                        <span class="text-[10px] bg-blue-900/50 text-blue-300 px-2 rounded">${m.freq}</span>
+                    </div>
+                    <p class="text-xs text-gray-500">${m.detail}</p>
+                </div>
+            `;
+        });
+    }
+};
+
+const setupCalculator = () => {
+    const startInput = document.getElementById('sla-start-time');
+    const durationSelect = document.getElementById('sla-duration-select');
+    const resultDisplay = document.getElementById('sla-result-display');
+
+    if (!startInput) return;
+
+    // Set default start time to "Now"
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    startInput.value = now.toISOString().slice(0, 16);
+
+    const calculate = () => {
+        if (!startInput.value) return;
+        const startDate = new Date(startInput.value);
+        const durationVal = durationSelect.value;
+        let endDate = new Date(startDate);
+
+        if (durationVal.startsWith('bd-')) {
+            // Business Days Logic (Simple: Add days, skip weekends)
+            let daysToAdd = parseInt(durationVal.split('-')[1]);
+            let count = 0;
+            while (count < daysToAdd) {
+                endDate.setDate(endDate.getDate() + 1);
+                if (endDate.getDay() !== 0 && endDate.getDay() !== 6) {
+                    count++;
+                }
+            }
+        } else {
+            // Minutes logic
+            endDate.setMinutes(endDate.getMinutes() + parseInt(durationVal));
+        }
+
+        const options = { weekday: 'short', hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric' };
+        resultDisplay.textContent = endDate.toLocaleDateString('en-US', options);
+    };
+
+    startInput.addEventListener('change', calculate);
+    durationSelect.addEventListener('change', calculate);
+    
+    // Initial calc
+    calculate(); 
+};
+
+// Initialize listeners
+const setupSLAListeners = () => {
+    const searchInput = document.getElementById('sla-search-input');
+    const filterBtns = document.querySelectorAll('.sla-filter-btn');
+
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const activeFilter = document.querySelector('.sla-filter-btn.active').dataset.filter;
+            renderSLADashboard(activeFilter, e.target.value);
+        });
+    }
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // UI Update
+            filterBtns.forEach(b => {
+                b.classList.remove('bg-pink-600', 'text-white', 'active');
+                b.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            btn.classList.remove('bg-gray-700', 'text-gray-300');
+            btn.classList.add('bg-pink-600', 'text-white', 'active');
+
+            // Logic Update
+            renderSLADashboard(btn.dataset.filter, searchInput.value);
+        });
+    });
+};
+		
+
+const slaDatabase = [
+    // --- URGENT (Minutes/Hours) ---
+    { time: '30 Minutes', task: 'Stuff Station Break-fix L1 Support - Urgent', team: 'EMT - Field Services', type: 'urgent', durationMin: 30 },
+    { time: '30 Minutes', task: 'FMR and Ticket Triaging', team: 'CSD - Request Management', type: 'urgent', durationMin: 30 },
+    { time: '1 Hour', task: 'Order Creation - Nooglers', team: 'CSD - Inventory and Logistics', type: 'urgent', durationMin: 60 },
+    { time: '2 Hours', task: 'Stuff Station Break-fix L1 Support - High', team: 'EMT - Field Services', type: 'urgent', durationMin: 120 },
+    { time: '2 Hours', task: 'Stuff Station Replenishment (Out of Stock)', team: 'EMT - Field Services', type: 'urgent', durationMin: 120 },
+    { time: '4 Hours', task: 'Order Routing', team: 'CSD - Inventory and Logistics', type: 'high', durationMin: 240 },
+    
+    // --- DAILY (24h - 1 Day) ---
+    { time: '24 Hours', task: 'Stuff Station Break-fix L1 Support - Medium', team: 'EMT - Field Services', type: 'high', durationMin: 1440 },
+    { time: '24 Hours', task: 'Stuff Station Replenishment (Low Inventory Alert)', team: 'EMT - Field Services', type: 'high', durationMin: 1440 },
+    { time: '28 Hours', task: 'ROSG Max Resolution time P0', team: 'EMT - ROSG', type: 'high', durationMin: 1680 },
+    { time: '52 Hours', task: 'ROSG Max Resolution time P1', team: 'EMT - ROSG', type: 'medium', durationMin: 3120 },
+    { time: '1 Bus. Day', task: 'Critical Hardware Deployment (In Office)', team: 'EMT - Inv & Log', type: 'high', businessDays: 1 },
+    { time: '1 Bus. Day', task: 'Flex Desk Support (Break/Fix)', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
+    { time: '1 Bus. Day', task: 'Printer & Plotter Maintenance', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
+    { time: '1 Bus. Day', task: 'Serialized & Non-Serialized Asset Receiving', team: 'EMT - Inv & Log', type: 'high', businessDays: 1 },
+
+    // --- STANDARD (2+ Days) ---
+    { time: '2 Bus. Days', task: 'Critical Hardware Deployment (Remote)', team: 'EMT - Inv & Log', type: 'medium', businessDays: 2 },
+    { time: '2 Bus. Days', task: 'Hardware Deployment - Noogler', team: 'EMT', type: 'medium', businessDays: 2 },
+    { time: '2 Bus. Days', task: 'Mobile Device Support (Break-fix)', team: 'CellOps', type: 'medium', businessDays: 2 },
+    { time: '2 Bus. Days', task: 'Return order packaging', team: 'EMT - Inv & Log', type: 'medium', businessDays: 2 },
+    { time: '2 Bus. Days', task: 'VAR Drop Ship Enrollment Support', team: 'CSD - Inv & Log', type: 'medium', businessDays: 2 },
+    
+    // --- PROJECTS (3+ Days) ---
+    { time: '3 Bus. Days', task: 'Hardware/Accessory Deployment - New', team: 'EMT - Inv & Log', type: 'low', businessDays: 3 },
+    { time: '3 Bus. Days', task: 'Mobile Device Support (New/Upgrade)', team: 'CellOps', type: 'low', businessDays: 3 },
+    { time: '3 Bus. Days', task: 'Return Serialized Asset', team: 'EMT - Inv & Log', type: 'low', businessDays: 3 },
+    { time: '3 Bus. Days', task: 'Saksham Project Code creation', team: 'CSD - Inv & Log', type: 'low', businessDays: 3 },
+    { time: '7 Bus. Days', task: 'Stuff Station Break-fix L1 Support - Low', team: 'EMT - Field Services', type: 'low', businessDays: 7 },
+    { time: '10 Bus. Days', task: 'Flex Desk Setup', team: 'EMT - Field Services', type: 'low', businessDays: 10 },
+    { time: '10 Bus. Days', task: 'Hardware Deployment - Refresh/Swaps', team: 'EMT - Inv & Log', type: 'low', businessDays: 10 },
+    { time: '10 Bus. Days', task: 'Saksham MPN Creation', team: 'CSD - Inv & Log', type: 'low', businessDays: 10 }
+];
+
+const maintenanceSLA = [
+    { freq: '3x Daily', task: 'Accessory Rack Replenishment', detail: 'Start of day, 12 PM, and 4 PM' },
+    { freq: '3x Daily', task: 'Grab and Go Rack Maintenance', detail: 'Replenished thrice a day' },
+    { freq: 'Daily', task: 'Return Locker Maintenance', detail: 'Emptied at least once every working day' },
+    { freq: 'Weekly', task: 'eWaste / Recycle', detail: 'Based on maintenance event' },
+    { freq: 'Scheduled', task: 'Click & Collect Deployment', detail: 'Delivered during scheduled slot' },
+    { freq: 'Next Visit', task: 'ROSG Max Resolution P2 & P3', detail: 'Resolved during the Next Visit' }
+];		
 
 const generateFixPrompt = async (policy, analysis, currentDraft) => {
     // 1. Identify the Gaps
@@ -8676,6 +8948,7 @@ const renderContent = () => {
     const addLinkSection = document.getElementById('add-link-section');
     const importExportBtnSettings = document.getElementById('import-export-btn-settings');
     const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+	const slaDashboardApp = document.getElementById('sla-dashboard-app'); 
 
     categoryActionsBtn.classList.add('hidden');
     categoryActionsMenu.classList.add('hidden');
@@ -8686,6 +8959,7 @@ const renderContent = () => {
 	if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
+	if (slaDashboardApp) slaDashboardApp.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
@@ -8727,6 +9001,18 @@ const renderContent = () => {
     if (!hasLoadedStats) {
         renderAdvancedStats();
         hasLoadedStats = true; 
+   	 }
+
+	} else if (currentPage === 'sla-dashboard') {
+        slaDashboardApp.classList.remove('hidden');
+        mainTitle.textContent = 'SLA Dashboard';
+        renderSLADashboard();
+        setupCalculator();
+        setupSLAListeners();
+        
+        // Hide unrelated buttons
+        if (addCategoryBtn) addCategoryBtn.classList.add('hidden');
+        if (addResponseSection) addResponseSection.classList.add('hidden');
     }
 		
     } else if (currentPage === 'settings') {
@@ -11196,7 +11482,7 @@ if (activityFilterGroup) {
     });
 	
     // Navigation Listeners
-    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings'];
+    const navButtons = ['nav-canned-responses', 'nav-fedex-tracker', 'nav-helpful-links', 'nav-my-stats', 'nav-settings', 'nav-sla-dashboard'];
     navButtons.forEach(id => {
         const btn = document.getElementById(id);
         if(btn) btn.addEventListener('click', () => {
