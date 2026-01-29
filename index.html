@@ -2856,18 +2856,26 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                     </div>
                     <div>
                         <label class="text-xs text-gray-400 uppercase font-bold">Select Task Duration</label>
-                        <select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
-                            <option value="30">30 Minutes</option>
-                            <option value="60">1 Hour</option>
-                            <option value="120">2 Hours</option>
-                            <option value="240">4 Hours</option>
-                            <option value="1440">24 Hours</option>
-                            <option value="bd-1">1 Business Day</option>
-                            <option value="bd-2">2 Business Days</option>
-                            <option value="bd-3">3 Business Days</option>
-                            <option value="bd-5">5 Business Days</option>
-                            <option value="bd-10">10 Business Days</option>
-                        </select>
+						<select id="sla-duration-select" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg p-2 text-white text-sm">
+						    <optgroup label="Urgent">
+						        <option value="30">30 Minutes</option>
+						        <option value="60">1 Hour</option>
+						        <option value="120">2 Hours</option>
+						        <option value="240">4 Hours</option>
+						    </optgroup>
+						    <optgroup label="Business Hours (8h/day)">
+						        <option value="bd-3">24 Bus. Hours (3 Days)</option>
+						        <option value="bd-3.5">28 Bus. Hours (3.5 Days)</option>
+						        <option value="bd-6.5">52 Bus. Hours (6.5 Days)</option>
+						    </optgroup>
+						    <optgroup label="Standard Business Days">
+						        <option value="bd-1">1 Business Day</option>
+						        <option value="bd-2">2 Business Days</option>
+						        <option value="bd-3">3 Business Days</option>
+						        <option value="bd-5">5 Business Days</option>
+						        <option value="bd-10">10 Business Days</option>
+						    </optgroup>
+						</select>
                     </div>
                     <div class="pt-4 border-t border-gray-700">
                         <label class="text-xs text-gray-400 uppercase font-bold">Estimated Deadline</label>
@@ -5311,17 +5319,31 @@ const setupCalculator = () => {
         let endDate = new Date(startDate);
 
         if (durationVal.startsWith('bd-')) {
-            // Business Days Logic (Simple: Add days, skip weekends)
-			let daysToAdd = parseFloat(durationVal.split('-')[1]); // Change parseInt to parseFloat
+            // 1. Split the value (e.g., "3.5" becomes 3 days and 0.5 remainder)
+            let totalDays = parseFloat(durationVal.split('-')[1]);
+            let fullDays = Math.floor(totalDays);
+            let partialDay = totalDays - fullDays; // e.g. 0.5
+
+            // 2. Add Full Business Days (Skipping Weekends)
             let count = 0;
-            while (count < daysToAdd) {
+            while (count < fullDays) {
                 endDate.setDate(endDate.getDate() + 1);
+                // 0 is Sunday, 6 is Saturday
                 if (endDate.getDay() !== 0 && endDate.getDay() !== 6) {
                     count++;
                 }
             }
+
+            // 3. Add Partial Business Day (Converted to Hours)
+            // If you work 8 hours a day, 0.5 days = 4 hours.
+            if (partialDay > 0) {
+                const businessHoursPerDay = 8; 
+                const hoursToAdd = partialDay * businessHoursPerDay;
+                endDate.setHours(endDate.getHours() + hoursToAdd);
+            }
+
         } else {
-            // Minutes logic
+            // Standard Minutes logic (Urgent tasks)
             endDate.setMinutes(endDate.getMinutes() + parseInt(durationVal));
         }
 
