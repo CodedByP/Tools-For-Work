@@ -10715,6 +10715,11 @@ if (magicCatSelect) {
             }
             prompt += `\n`;
 
+			prompt += `--- STRICT WRITING RULES ---\n`;
+            prompt += `1. **Customer Facing Only:** Do NOT mention internal tools (PAR, GUTS, SAP), status codes (e.g., 'Assigned - Additional'), or backend workflows (e.g., 'destroy hostnames').\n`;
+            prompt += `2. **Privacy:** Never share internal links or dashboard screenshots.\n`;
+            prompt += `\n`;
+
             // B. Tone Instruction (Feature #1)
             prompt += `--- TONE & STYLE ---\n`;
             if (tone === 'Firm') {
