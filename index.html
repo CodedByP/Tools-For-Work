@@ -5278,8 +5278,7 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
-// --- MODAL FUNCTIONS ---
-
+// 1. Open Function (Called by your Table Row)
 const openSLAModal = (item) => {
     const modal = document.getElementById('sla-details-modal');
     const panel = document.getElementById('sla-modal-panel');
@@ -5294,9 +5293,8 @@ const openSLAModal = (item) => {
     // Inject Badge
     document.getElementById('modal-team-badge').innerHTML = getTeamBadgeTable(item.team);
 
-    // Show Modal (Fade In)
+    // Show Modal
     modal.classList.remove('hidden');
-    // Small timeout to allow display:block to apply before opacity transition
     setTimeout(() => {
         modal.classList.remove('opacity-0');
         panel.classList.remove('scale-95');
@@ -5304,9 +5302,12 @@ const openSLAModal = (item) => {
     }, 10);
 };
 
-const closeSLAModal = () => {
+// 2. Close Function - FIXED (Attached to Window)
+window.closeSLAModal = () => {
     const modal = document.getElementById('sla-details-modal');
     const panel = document.getElementById('sla-modal-panel');
+
+    if (!modal || !panel) return;
 
     // Fade Out
     modal.classList.add('opacity-0');
@@ -5315,13 +5316,19 @@ const closeSLAModal = () => {
 
     setTimeout(() => {
         modal.classList.add('hidden');
-    }, 300); // Match CSS duration
+    }, 300); 
 };
 
-// Close on backdrop click
-document.getElementById('sla-details-modal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'sla-details-modal') closeSLAModal();
-});
+
+const modalElement = document.getElementById('sla-details-modal');
+if (modalElement) {
+    modalElement.onclick = (e) => {
+        // If the user clicked the dark background (the parent div), close it
+        if (e.target.id === 'sla-details-modal') {
+            window.closeSLAModal();
+        }
+    };
+}
 		
 
 // --- NEW: Helper to generate Team Pills & Icons ---
