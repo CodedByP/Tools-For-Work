@@ -2901,6 +2901,57 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
             </table>
         </div>
     </div>
+	<div id="sla-details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-700 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 p-0 overflow-hidden" id="sla-modal-panel">
+            
+            <div class="bg-gray-800/50 p-6 border-b border-gray-700 flex justify-between items-start">
+                <div>
+                    <div id="modal-team-badge" class="mb-2 inline-block"></div>
+                    <h3 id="modal-title" class="text-2xl font-bold text-white leading-tight">Task Name</h3>
+                </div>
+                <button onclick="closeSLAModal()" class="text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-600 p-2 rounded-full transition-all">
+                    <i class="fas fa-times text-lg w-5 h-5 flex items-center justify-center"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                
+                <div class="flex items-center gap-4 p-4 rounded-xl bg-gray-800/40 border border-gray-700/50">
+                    <div class="p-3 rounded-full bg-gray-700 text-pink-400">
+                        <i class="fas fa-stopwatch text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Target SLA</p>
+                        <p id="modal-time" class="text-3xl font-mono font-bold text-white">--</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-400 uppercase mb-2"><i class="fas fa-info-circle mr-1"></i> Description</h4>
+                        <p id="modal-desc" class="text-gray-300 text-sm leading-relaxed">--</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-400 uppercase mb-2"><i class="fas fa-user-check mr-1"></i> User Expectation</h4>
+                        <p id="modal-expect" class="text-gray-300 text-sm leading-relaxed">--</p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-900/10 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <h4 class="text-xs font-bold text-blue-400 uppercase mb-1">Exclusions & Conditions</h4>
+                    <p id="modal-conditions" class="text-xs text-blue-200/80 italic">--</p>
+                </div>
+
+            </div>
+
+            <div class="bg-gray-800/30 p-4 border-t border-gray-700 flex justify-end">
+                <button onclick="closeSLAModal()" class="px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
 </div>
 		
 		<div id="fedex-tracker-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12 hidden">
@@ -5227,6 +5278,52 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+// --- MODAL FUNCTIONS ---
+
+const openSLAModal = (item) => {
+    const modal = document.getElementById('sla-details-modal');
+    const panel = document.getElementById('sla-modal-panel');
+    
+    // Populate Data
+    document.getElementById('modal-title').textContent = item.task;
+    document.getElementById('modal-time').textContent = item.time;
+    document.getElementById('modal-desc').textContent = item.description || "No detailed description available.";
+    document.getElementById('modal-expect').textContent = item.expectation || "Standard resolution time applies.";
+    document.getElementById('modal-conditions').textContent = item.conditions || "No specific exclusions listed.";
+    
+    // Inject Badge
+    document.getElementById('modal-team-badge').innerHTML = getTeamBadgeTable(item.team);
+
+    // Show Modal (Fade In)
+    modal.classList.remove('hidden');
+    // Small timeout to allow display:block to apply before opacity transition
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        panel.classList.remove('scale-95');
+        panel.classList.add('scale-100');
+    }, 10);
+};
+
+const closeSLAModal = () => {
+    const modal = document.getElementById('sla-details-modal');
+    const panel = document.getElementById('sla-modal-panel');
+
+    // Fade Out
+    modal.classList.add('opacity-0');
+    panel.classList.remove('scale-100');
+    panel.classList.add('scale-95');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300); // Match CSS duration
+};
+
+// Close on backdrop click
+document.getElementById('sla-details-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'sla-details-modal') closeSLAModal();
+});
+		
+
 // --- NEW: Helper to generate Team Pills & Icons ---
 const getTeamBadge = (teamName) => {
     let color = 'border-gray-600 text-gray-400';
@@ -5320,7 +5417,8 @@ const renderSLADashboard = (filter = 'all', searchQuery = '') => {
 
         // --- HTML Generation ---
         const tr = document.createElement('tr');
-        tr.className = rowClass;
+        tr.className = rowClass + ' cursor-pointer relative';
+		tr.onclick = () => openSLAModal(item);
         
         tr.innerHTML = `
             <td class="p-4 py-3 whitespace-nowrap align-top">
@@ -5471,40 +5569,282 @@ const setupSLAListeners = () => {
 
 const slaDatabase = [
     // --- URGENT (Minutes/Hours) ---
-    { time: '30 Minutes', task: 'Stuff Station Break-fix L1 Support - Urgent', team: 'EMT - Field Services', type: 'urgent', durationMin: 30 },
-    { time: '30 Minutes', task: 'FMR and Ticket Triaging', team: 'CSD - Request Management', type: 'urgent', durationMin: 30 },
-    { time: '1 Hour', task: 'Order Creation - Nooglers', team: 'CSD - Inventory and Logistics', type: 'urgent', durationMin: 60 },
-    { time: '2 Hours', task: 'Stuff Station Break-fix L1 Support - High', team: 'EMT - Field Services', type: 'urgent', durationMin: 120 },
-    { time: '2 Hours', task: 'Stuff Station Replenishment (Out of Stock)', team: 'EMT - Field Services', type: 'urgent', durationMin: 120 },
-    { time: '4 Hours', task: 'Order Routing', team: 'CSD - Inventory and Logistics', type: 'high', durationMin: 240 },
-    
-	// --- DAILY (Business Hours Converted) ---
-    // 24 Business Hours = 3 Business Days
-    { time: '24 Bus. Hours', task: 'Stuff Station Break-fix L1 Support - Medium', team: 'EMT - Field Services', type: 'high', businessDays: 3 },
-    { time: '24 Bus. Hours', task: 'Stuff Station Replenishment (Low Inventory Alert)', team: 'EMT - Field Services', type: 'high', businessDays: 3 },
-    { time: '28 Bus. Hours', task: 'ROSG Max Resolution time P0', team: 'EMT - ROSG', type: 'high', businessDays: 3.5 },
-    { time: '52 Bus. Hours', task: 'ROSG Max Resolution time P1', team: 'EMT - ROSG', type: 'medium', businessDays: 6.5 },
-    { time: '1 Bus. Day', task: 'Critical Hardware Deployment (In Office)', team: 'EMT - Inv & Log', type: 'high', businessDays: 1 },
-    { time: '1 Bus. Day', task: 'Flex Desk Support (Break/Fix)', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
-    { time: '1 Bus. Day', task: 'Printer & Plotter Maintenance', team: 'EMT - Field Services', type: 'high', businessDays: 1 },
-    { time: '1 Bus. Day', task: 'Serialized & Non-Serialized Asset Receiving', team: 'EMT - Inv & Log', type: 'high', businessDays: 1 },
+    { 
+        time: '30 Minutes', 
+        task: 'Stuff Station Break-fix L1 Support - Urgent', 
+        team: 'EMT - Field Services', 
+        type: 'urgent', 
+        durationMin: 30,
+        description: 'Check power (on/off), verify indication lights, run reset button, check cable/USB connections, test doors (alignment/latching), check elevator for jams, reset stock levels, and ensure physical stock matches virtual data.',
+        expectation: 'Resolution or escalation to L2 support within 30 minutes.',
+        conditions: 'Applicable when machine is down at a priority site. Measure ticket resolution.'
+    },
+    { 
+        time: '30 Minutes', 
+        task: 'FMR and Ticket Triaging', 
+        team: 'CSD - Request Management', 
+        type: 'urgent', 
+        durationMin: 30,
+        description: 'First meaningful response and triaging of all incoming requests (via GUTS, Bronco, Buganizer, etc.) by CSD.',
+        expectation: 'Ticket should be acknowledged and categorized within 30 mins.',
+        conditions: 'Applies to tickets entering the EMT/CSD queue.'
+    },
+    { 
+        time: '1 Hour', 
+        task: 'Order Creation - Nooglers', 
+        team: 'CSD - Inventory and Logistics', 
+        type: 'urgent', 
+        durationMin: 60,
+        description: 'Create Bronco orders for all Nooglers based on received data.',
+        expectation: 'Orders created within 1 hour of all Noogler info being available.',
+        conditions: "This service and SLA may go away depending on CPO's success."
+    },
+    { 
+        time: '2 Hours', 
+        task: 'Stuff Station Break-fix L1 Support - High', 
+        team: 'EMT - Field Services', 
+        type: 'urgent', 
+        durationMin: 120,
+        description: 'Standard L1 troubleshooting: Check power, cables, doors, elevator jams, and reset stock levels.',
+        expectation: 'Resolution or escalation to L2 support within 2 hours.',
+        conditions: 'Measure ticket resolution.'
+    },
+    { 
+        time: '2 Hours', 
+        task: 'Stuff Station Replenishment (Out of Stock)', 
+        team: 'EMT - Field Services', 
+        type: 'urgent', 
+        durationMin: 120,
+        description: 'Replenish Stuff Stations with out-of-stock assets/accessories as per generated tickets.',
+        expectation: '95% of out-of-stock alerts should be resolved within 2 hours.',
+        conditions: 'OOS tickets for items not in LOC (Pending Hardware) are excluded.'
+    },
+    { 
+        time: '4 Hours', 
+        task: 'Order Routing', 
+        team: 'CSD - Inventory and Logistics', 
+        type: 'high', 
+        durationMin: 240,
+        description: 'Routing all V3 orders to the correct fulfilment destination based on the routing guide.',
+        expectation: '99% requests to be routed in 4 hours.',
+        conditions: 'Standard resolution time applies.'
+    },
+
+    // --- DAILY (Business Hours Converted) ---
+    { 
+        time: '24 Bus. Hours', 
+        task: 'Stuff Station Break-fix L1 Support - Medium', 
+        team: 'EMT - Field Services', 
+        type: 'high', 
+        businessDays: 3,
+        description: 'Standard L1 troubleshooting for non-critical issues.',
+        expectation: 'Resolution within 24 business hours (3 days).',
+        conditions: 'Measure ticket resolution.'
+    },
+    { 
+        time: '24 Bus. Hours', 
+        task: 'Stuff Station Replenishment (Low Inventory Alert)', 
+        team: 'EMT - Field Services', 
+        type: 'high', 
+        businessDays: 3,
+        description: 'Replenish Stuff Stations with low stock assets.',
+        expectation: '95% of low inventory alerts resolved within 24 hours.',
+        conditions: 'OOS tickets for items not in LOC are excluded.'
+    },
+    { 
+        time: '28 Bus. Hours', 
+        task: 'ROSG Max Resolution time P0', 
+        team: 'EMT - ROSG', 
+        type: 'high', 
+        businessDays: 3.5,
+        description: 'Attend to P0 requests originating from ROSG sites.',
+        expectation: 'P0 incidents resolved within 28 consecutive hours.',
+        conditions: 'Exclude time in pending statuses beyond EMT control.'
+    },
+    { 
+        time: '52 Bus. Hours', 
+        task: 'ROSG Max Resolution time P1', 
+        team: 'EMT - ROSG', 
+        type: 'medium', 
+        businessDays: 6.5,
+        description: 'Attend to P1 requests originating from ROSG sites.',
+        expectation: 'P1 incidents resolved within 52 consecutive hours.',
+        conditions: 'Exclude time in pending statuses beyond EMT control.'
+    },
+    { 
+        time: '1 Bus. Day', 
+        task: 'Critical Hardware Deployment (In Office)', 
+        team: 'EMT - Inv & Log', 
+        type: 'high', 
+        businessDays: 1,
+        description: 'Replacement asset for broken/lost/stolen items assigned and provisioned to user.',
+        expectation: 'In-office fulfillment within 1 business day (8 consecutive business hours).',
+        conditions: 'Excludes Pending Hardware, Pending Approval, or Customer Action. 1 BD = 8 business hours.'
+    },
+    { 
+        time: '1 Bus. Day', 
+        task: 'Flex Desk Support (Break/Fix)', 
+        team: 'EMT - Field Services', 
+        type: 'high', 
+        businessDays: 1,
+        description: 'Replacement of defective Hoteling Desk Hardware.',
+        expectation: 'Requests resolved within 1 Business Day.',
+        conditions: 'Measured from time of receipt.'
+    },
+    { 
+        time: '1 Bus. Day', 
+        task: 'Printer & Plotter Maintenance', 
+        team: 'EMT - Field Services', 
+        type: 'high', 
+        businessDays: 1,
+        description: 'Toner management and paper jams on Ricoh Copiers and HP Plotters.',
+        expectation: '95% requests resolved in 1 business day.',
+        conditions: 'Standard maintenance SLA.'
+    },
+    { 
+        time: '1 Bus. Day', 
+        task: 'Serialized & Non-Serialized Asset Receiving', 
+        team: 'EMT - Inv & Log', 
+        type: 'high', 
+        businessDays: 1,
+        description: 'New Hardware Asset & Accessory Inventory is received into stock (includes Mobile devices).',
+        expectation: '95% of assets received in inventory in 1 BD.',
+        conditions: 'Depends on the success of tracking POD project.'
+    },
 
     // --- STANDARD (2+ Days) ---
-    { time: '2 Bus. Days', task: 'Critical Hardware Deployment (Remote)', team: 'EMT - Inv & Log', type: 'medium', businessDays: 2 },
-    { time: '2 Bus. Days', task: 'Hardware Deployment - Noogler', team: 'EMT', type: 'medium', businessDays: 2 },
-    { time: '2 Bus. Days', task: 'Mobile Device Support (Break-fix)', team: 'CellOps', type: 'medium', businessDays: 2 },
-    { time: '2 Bus. Days', task: 'Return order packaging', team: 'EMT - Inv & Log', type: 'medium', businessDays: 2 },
-    { time: '2 Bus. Days', task: 'VAR Drop Ship Enrollment Support', team: 'CSD - Inv & Log', type: 'medium', businessDays: 2 },
-    
+    { 
+        time: '2 Bus. Days', 
+        task: 'Critical Hardware Deployment (Remote)', 
+        team: 'EMT - Inv & Log', 
+        type: 'medium', 
+        businessDays: 2,
+        description: 'Shipping replacement hardware to remote users.',
+        expectation: 'Ticket raised with logistics for pickup within 2 days after imaging/packing.',
+        conditions: 'Excludes shipping transit time. 1 BD = 8 business hours.'
+    },
+    { 
+        time: '2 Bus. Days', 
+        task: 'Hardware Deployment - Noogler', 
+        team: 'EMT', 
+        type: 'medium', 
+        businessDays: 2,
+        description: 'Hardware asset assigned, configured and provisioned to Noogler FTE/TVC.',
+        expectation: 'Hardware will be delivered on or before the joining date.',
+        conditions: '99% of hardware handed over to logistics within 2 BDs of info receipt.'
+    },
+    { 
+        time: '2 Bus. Days', 
+        task: 'Mobile Device Support (Break-fix)', 
+        team: 'CellOps', 
+        type: 'medium', 
+        businessDays: 2,
+        description: 'Troubleshooting non-functioning cellphones/SIMs and provisioning replacements.',
+        expectation: 'Incident to be resolved within 2 business days.',
+        conditions: "Excludes Pending Customer Action/Carrier. For remote: measure time until ticket raised with logistics."
+    },
+    { 
+        time: '2 Bus. Days', 
+        task: 'Return order packaging', 
+        team: 'EMT - Inv & Log', 
+        type: 'medium', 
+        businessDays: 2,
+        description: 'Ship packaging material and return label to the user.',
+        expectation: '95% of packaging material is sent within 2 BDs.',
+        conditions: 'Standard shipping SLA.'
+    },
+    { 
+        time: '2 Bus. Days', 
+        task: 'VAR Drop Ship Enrollment Support', 
+        team: 'CSD - Inv & Log', 
+        type: 'medium', 
+        businessDays: 2,
+        description: 'VAR Shipment coordination (Initiate, Receive, Assign), Fallout reconciliation, Corp Enrollment.',
+        expectation: '95% requests should be resolved in 2 business days.',
+        conditions: 'Exclude time in pending statuses beyond EMT control.'
+    },
+
     // --- PROJECTS (3+ Days) ---
-    { time: '3 Bus. Days', task: 'Hardware/Accessory Deployment - New', team: 'EMT - Inv & Log', type: 'low', businessDays: 3 },
-    { time: '3 Bus. Days', task: 'Mobile Device Support (New/Upgrade)', team: 'CellOps', type: 'low', businessDays: 3 },
-    { time: '3 Bus. Days', task: 'Return Serialized Asset', team: 'EMT - Inv & Log', type: 'low', businessDays: 3 },
-    { time: '3 Bus. Days', task: 'Saksham Project Code creation', team: 'CSD - Inv & Log', type: 'low', businessDays: 3 },
-    { time: '7 Bus. Days', task: 'Stuff Station Break-fix L1 Support - Low', team: 'EMT - Field Services', type: 'low', businessDays: 7 },
-    { time: '10 Bus. Days', task: 'Flex Desk Setup', team: 'EMT - Field Services', type: 'low', businessDays: 10 },
-    { time: '10 Bus. Days', task: 'Hardware Deployment - Refresh/Swaps', team: 'EMT - Inv & Log', type: 'low', businessDays: 10 },
-    { time: '10 Bus. Days', task: 'Saksham MPN Creation', team: 'CSD - Inv & Log', type: 'low', businessDays: 10 }
+    { 
+        time: '3 Bus. Days', 
+        task: 'Hardware/Accessory Deployment - New', 
+        team: 'EMT - Inv & Log', 
+        type: 'low', 
+        businessDays: 3,
+        description: 'New hardware asset/accessory assigned, configured, tested, and delivered/deployed.',
+        expectation: '95% hardware is provisioned in 3 BDs.',
+        conditions: 'For items ordered for the first time by users.'
+    },
+    { 
+        time: '3 Bus. Days', 
+        task: 'Mobile Device Support (New/Upgrade)', 
+        team: 'CellOps', 
+        type: 'low', 
+        businessDays: 3,
+        description: 'New connection requests (eSim/pSim), New Device Requests, Upgrade Device Requests.',
+        expectation: 'Incident to be resolved within 3 business days.',
+        conditions: "Excludes Pending Customer Action/Carrier."
+    },
+    { 
+        time: '3 Bus. Days', 
+        task: 'Return Serialized Asset', 
+        team: 'EMT - Inv & Log', 
+        type: 'low', 
+        businessDays: 3,
+        description: 'Return asset process: Charging/reset & wipe down of Returned assets.',
+        expectation: '95% requests should be resolved in 3 business days.',
+        conditions: 'Desk collection: Time starts from return order creation. Remote: measured against POD time stamp.'
+    },
+    { 
+        time: '3 Bus. Days', 
+        task: 'Saksham Project Code creation', 
+        team: 'CSD - Inv & Log', 
+        type: 'low', 
+        businessDays: 3,
+        description: 'Create project codes for Saksham device enrollement.',
+        expectation: '95% requests should be resolved in 3 business days.',
+        conditions: 'Exclude time in pending statuses beyond EMT control.'
+    },
+    { 
+        time: '7 Bus. Days', 
+        task: 'Stuff Station Break-fix L1 Support - Low', 
+        team: 'EMT - Field Services', 
+        type: 'low', 
+        businessDays: 7,
+        description: 'Standard L1 troubleshooting for low priority issues.',
+        expectation: 'Resolution within 7 days.',
+        conditions: 'Measure ticket resolution.'
+    },
+    { 
+        time: '10 Bus. Days', 
+        task: 'Flex Desk Setup', 
+        team: 'EMT - Field Services', 
+        type: 'low', 
+        businessDays: 10,
+        description: 'Deployment, Configuration and Refresh of Hoteling Desk Hardware.',
+        expectation: '95% requests should be resolved within 10 Business Days.',
+        conditions: 'Measured from time of receipt.'
+    },
+    { 
+        time: '10 Bus. Days', 
+        task: 'Hardware Deployment - Refresh/Swaps', 
+        team: 'EMT - Inv & Log', 
+        type: 'low', 
+        businessDays: 10,
+        description: 'Scheduled refresh of hardware assets (laptops, phones, monitors).',
+        expectation: 'Assets delivered to user within 10 Business Days.',
+        conditions: 'Excludes time waiting for hardware availability. 1 BD = 8 business hours.'
+    },
+    { 
+        time: '10 Bus. Days', 
+        task: 'Saksham MPN Creation', 
+        team: 'CSD - Inv & Log', 
+        type: 'low', 
+        businessDays: 10,
+        description: 'Check eligibility and create an MPN for the device models procured by MSPs.',
+        expectation: '95% requests should be resolved in 10 business days.',
+        conditions: 'Exclude time in pending statuses beyond EMT control.'
+    }
 ];
 
 const maintenanceSLA = [
