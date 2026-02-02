@@ -2636,6 +2636,26 @@ body.light-mode .bento-card {
 .mini-stat-box:hover { background: rgba(0, 0, 0, 0.4); }
 body.light-mode .mini-stat-box { background: rgba(0, 0, 0, 0.05); }
 body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
+
+/* --- NUCLEAR FIX: Leaderboard Emblem Transparency --- */
+/* Target specifically the high ranks in the leaderboard list */
+.list-avatar.level-badge-master i,
+.list-avatar.level-badge-grandmaster i,
+.list-avatar.level-badge-legend i,
+.list-avatar.level-badge-demigod i,
+.list-avatar.level-badge-deity i {
+    /* 1. Force the background to cut to the shape of the icon */
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    
+    /* 2. Force the icon text to be invisible so the background shows through */
+    /* !important is needed here to override the 'text-white' class from JS */
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    /* 3. Ensure the icon renders as a block so the gradient has space to exist */
+    display: inline-block;
+}		
 		
 
     </style>
