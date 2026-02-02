@@ -903,10 +903,17 @@ body.light-mode .ghost-active {
     background: #1f2937; /* Fallback */
 }
 
-/* Ensure the icon inside pops */
 .list-avatar i {
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-}		
+    
+    /* This forces the square background gradient to take the shape of the trophy */
+    background-clip: text;
+    -webkit-background-clip: text;
+    
+    /* This makes the icon transparent so the gold gradient shows through */
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
 /* --- Leveling System Styles --- */
 /* --- Redesigned Leveling Section Styles --- */
 .level-header-bg {
