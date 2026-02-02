@@ -2656,6 +2656,26 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     /* 3. Ensure the icon renders as a block so the gradient has space to exist */
     display: inline-block;
 }		
+
+/* --- LEADERBOARD EMBLEM FIX --- */
+/* Target only the high ranks in the leaderboard container */
+#leaderboard-container .list-avatar.level-badge-master i,
+#leaderboard-container .list-avatar.level-badge-grandmaster i,
+#leaderboard-container .list-avatar.level-badge-legend i,
+#leaderboard-container .list-avatar.level-badge-demigod i,
+#leaderboard-container .list-avatar.level-badge-deity i {
+    /* 1. Force the square background to cut to the shape of the trophy */
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    
+    /* 2. Make the icon transparent so the gold gradient shows through */
+    /* !important overrides the 'text-white' class from your JS */
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    /* 3. Ensure distinct separation from the background */
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+}		
 		
 
     </style>
