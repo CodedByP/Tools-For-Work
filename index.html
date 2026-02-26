@@ -4476,6 +4476,9 @@ const showClipboardToast = (numbers) => {
     const toast = document.getElementById('clipboard-toast');
     const textEl = document.getElementById('clipboard-toast-text');
     
+    // Safety check just in case
+    if (!toast || !textEl) return;
+
     if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
 
     textEl.textContent = `Found ${numbers.length} numbers. Click to process.`;
@@ -4489,9 +4492,6 @@ const showClipboardToast = (numbers) => {
     }, 8000); 
 
     newToast.addEventListener('click', async (e) => {
-        // Prevent re-triggering if clicking a specific suggestion button later
-        if (e.target.closest('.quick-res-btn')) return;
-
         if (clipboardToastTimeout) clearTimeout(clipboardToastTimeout);
 
         // --- 1. THE CORE ACTIONS ---
@@ -4504,67 +4504,76 @@ const showClipboardToast = (numbers) => {
         window.open(fedexUrl, '_blank');
 
         // --- 2. LOG CHALLENGE PROGRESS ---
-        // This is what makes it count for "Logistics Expert"
         logUserEvent('extract_tracking', { count: numbers.length });
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'Smart Extraction');
         
-        // Refresh UI if on Stats page
         if (currentPage === 'my-stats') renderAdvancedStats();
 
-        // --- 3. THE COOL PART: RECOMMEND RESPONSES ---
-        const suggestions = getShippingSuggestions(); // Uses your existing logic
-        if (suggestions.length > 0) {
-            // Transform the toast into a mini-menu
-            newToast.style.width = 'auto';
-            newToast.style.maxWidth = '400px';
-            newToast.style.flexDirection = 'column';
-            newToast.style.alignItems = 'stretch';
+        // --- 3. HIDE TOAST & SHOW SUCCESS ---
+        newToast.classList.remove('visible');
+        showMessage(`Processed ${numbers.length} numbers!`, 'success');
+
+        // --- 4. THE COOL PART: INJECT INTO "SUGGESTED NEXT STEP" BOX ---
+        const suggestions = getShippingSuggestions(); 
+        
+        // Only inject if we have suggestions AND we are on the Canned Responses page
+        if (suggestions.length > 0 && currentPage === 'canned-responses') {
+            const container = document.getElementById('smart-suggestions-wrapper');
+            const list = document.getElementById('smart-suggestions-list');
+            const timeLabel = document.getElementById('time-of-day-label');
+            const icon = container.querySelector('i.fa-sparkles') || container.querySelector('i');
+
+            // Style the box for Logistics Focus (Orange theme)
+            timeLabel.textContent = "Logistics Focus";
+            timeLabel.className = "text-orange-400 font-bold";
+            if(icon) {
+                icon.className = "fas fa-truck-fast text-orange-400 text-sm animate-pulse";
+            }
             
-            let suggestionHTML = `
-                <div class="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
-                    <i class="fas fa-magic text-blue-400 text-xs"></i>
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Recommended Responses</span>
-                </div>
-                <div class="flex flex-col gap-2">
-            `;
+            // Swap border colors to match the theme
+            container.querySelector('.floating-card').classList.remove('border-emerald-500/30', 'border-blue-500/30');
+            container.querySelector('.floating-card').classList.add('border-orange-500/30');
+
+            list.innerHTML = ''; // Clear current suggestions
 
             suggestions.forEach(res => {
-                suggestionHTML += `
-                    <button class="quick-res-btn text-left p-2 rounded bg-white/5 hover:bg-blue-600 transition-all border border-white/5 flex justify-between items-center group" 
-                            data-id="${res.id}" data-cat="${res.categoryName}">
-                        <span class="text-xs font-semibold text-gray-200 truncate pr-2">${res.label}</span>
-                        <i class="fas fa-copy text-[10px] text-gray-500 group-hover:text-white"></i>
-                    </button>
+                const btn = document.createElement('div');
+                btn.className = 'bg-gray-800 border border-gray-700 hover:border-orange-500/50 hover:bg-gray-700 rounded-xl p-3 cursor-pointer transition-all duration-200 group relative overflow-hidden shadow-lg transform hover:translate-x-1';
+
+                btn.innerHTML = `
+                    <div class="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">${res.categoryName}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-200 text-sm group-hover:text-white truncate">${res.label || 'Untitled'}</h4>
+                        </div>
+                        <div class="mt-2 flex items-center text-[10px] text-gray-500 gap-2 border-t border-gray-700/50 pt-2">
+                            <i class="fas fa-truck text-orange-400/70"></i>
+                            <span>Recommended for shipping</span>
+                        </div>
+                    </div>
                 `;
-            });
 
-            suggestionHTML += `</div>`;
-            newToast.innerHTML = suggestionHTML;
-
-            // Add listeners to these new mini-buttons
-            newToast.querySelectorAll('.quick-res-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const resId = btn.dataset.id;
-                    const catName = btn.dataset.cat;
-                    const responseObj = categories[catName].responses.find(r => r.id === resId);
+                // Handle click on the new suggestion
+                btn.addEventListener('click', () => {
+                    processAndCopy(res.text, res.id, res.categoryName);
                     
-                    if (responseObj) {
-                        processAndCopy(responseObj.text, resId, catName);
-                        newToast.classList.remove('visible'); // Close after copying response
-                    }
+                    // Flash Orange on Click
+                    btn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+                    btn.classList.add('bg-orange-900/50', 'border-orange-500');
+                    
+                    setTimeout(() => {
+                        btn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+                        btn.classList.remove('bg-orange-900/50', 'border-orange-500');
+                    }, 400);
                 });
+
+                list.appendChild(btn);
             });
 
-            // Extend visibility so you have time to choose
-            clipboardToastTimeout = setTimeout(() => {
-                newToast.classList.remove('visible');
-            }, 10000); 
-
-        } else {
-            // Fallback if no recommendations: just show success and close
-            showMessage(`Processed ${numbers.length} numbers!`, 'success');
-            newToast.classList.remove('visible');
+            // Ensure the sidebar container is visible
+            container.classList.remove('hidden');
         }
     });
 };
