@@ -2498,6 +2498,11 @@ body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
     transform: translate(-50%, 0) !important; /* Slide to natural position */
     opacity: 1 !important; /* Fade in */
 }		
+		/* New Right-Side Suggestion Bar Animation */
+.slide-left-fade-in {
+    transform: translateX(0) !important;
+    opacity: 1 !important; 
+}
 
 /* Bento Grid Layout - UPDATED FOR MOBILE */
 .bento-grid {
@@ -3067,28 +3072,29 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		        </div>
 		    </div>
 		
-		    <div id="fedex-suggestion-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-500 ease-out translate-y-10 opacity-0 w-[95%] max-w-5xl">
-		        <div class="bg-gray-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-		            
-		            <div class="flex items-center gap-3 border-r border-white/10 pr-4 mr-2">
-		                <div class="bg-blue-600/20 p-2 rounded-lg text-blue-400">
-		                    <i class="fas fa-robot text-xl"></i>
-		                </div>
-		                <div class="flex flex-col">
-		                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Suggested</span>
-		                    <span class="text-xs text-gray-500">Based on your usage</span>
-		                </div>
-		            </div>
-		
-		            <div id="fedex-suggestion-list" class="flex flex-wrap justify-center sm:justify-start gap-2 flex-grow">
-		                </div>
-		
-		            <button id="close-suggestion-bar-btn" class="ml-2 bg-gray-800 hover:bg-red-500/20 hover:text-red-400 text-gray-400 border border-white/10 rounded-lg p-2 transition-all" title="Dismiss">
-		                <i class="fas fa-times"></i>
-		            </button>
-		        </div>
-		    </div>
-		    </div>
+			<div id="fedex-suggestion-bar" class="fixed top-24 right-6 z-50 hidden transition-all duration-500 ease-out translate-x-10 opacity-0 w-80 max-w-[90vw]">
+			    <div class="bg-gray-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-5 flex flex-col gap-4">
+			        
+			        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+			            <div class="flex items-center gap-3">
+			                <div class="bg-blue-600/20 p-2 rounded-lg text-blue-400 flex-shrink-0">
+			                    <i class="fas fa-magic text-xl"></i>
+			                </div>
+			                <div class="flex flex-col min-w-0">
+			                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Suggested</span>
+			                    <span class="text-[10px] text-gray-500 truncate">Logistics actions</span>
+			                </div>
+			            </div>
+			            <button id="close-suggestion-bar-btn" class="bg-gray-800 hover:bg-red-500/20 hover:text-red-400 text-gray-400 border border-white/10 rounded-lg p-2 transition-all flex-shrink-0" title="Dismiss">
+			                <i class="fas fa-times"></i>
+			            </button>
+			        </div>
+			
+			        <div id="fedex-suggestion-list" class="flex flex-col gap-3">
+			        </div>
+			
+			    </div>
+			</div>
 
 <div id="helpful-links-app" class="w-full hidden container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
     <div class="container mx-auto px-4">
@@ -7179,6 +7185,7 @@ const getShippingSuggestions = () => {
 };
 
 // --- 2. Render Function (STICKY MODE) ---
+// --- 2. Render Function (RIGHT SIDE PANEL MODE) ---
 const showShippingSuggestions = () => {
     const bar = document.getElementById('fedex-suggestion-bar');
     const list = document.getElementById('fedex-suggestion-list');
@@ -7190,35 +7197,29 @@ const showShippingSuggestions = () => {
 
     suggestions.forEach(res => {
         const btn = document.createElement('button');
-        // Styling for the suggestion buttons
-        btn.className = 'group flex flex-col items-start gap-0.5 bg-white/5 hover:bg-blue-600 border border-white/10 hover:border-blue-400 rounded-lg px-3 py-2 transition-all duration-200 text-left min-w-[120px]';
+        // Updated styling: w-full forces it to stretch nicely in the vertical column
+        btn.className = 'group flex flex-col items-start gap-1 bg-white/5 hover:bg-blue-600 border border-white/10 hover:border-blue-400 rounded-lg px-4 py-3 transition-all duration-200 text-left w-full';
         
-		// New code (Allows 40 characters and creates wider buttons)
-		// We also added 'flex-1' to the button class so they stretch to fill the new space
-		btn.className = 'group flex flex-col items-start gap-0.5 bg-white/5 hover:bg-blue-600 border border-white/10 hover:border-blue-400 rounded-lg px-4 py-3 transition-all duration-200 text-left min-w-[200px] flex-1';
-		
-		const label = res.label.length > 40 ? res.label.substring(0, 37) + '...' : (res.label || "Untitled");
-		
-		btn.innerHTML = `
-		    <span class="text-sm font-bold text-gray-200 group-hover:text-white truncate w-full">${label}</span>
-		    <span class="text-xs text-gray-500 group-hover:text-blue-100">
-		        <i class="fas fa-copy mr-1"></i> Used ${res.timesCopied || 0} times
-		    </span>
-		`;
+        const label = res.label.length > 40 ? res.label.substring(0, 37) + '...' : (res.label || "Untitled");
+        
+        btn.innerHTML = `
+            <span class="text-sm font-bold text-gray-200 group-hover:text-white truncate w-full">${label}</span>
+            <span class="text-xs text-gray-500 group-hover:text-blue-100">
+                <i class="fas fa-copy mr-1"></i> Used ${res.timesCopied || 0} times
+            </span>
+        `;
 
         // --- CLICK HANDLER ---
         btn.addEventListener('click', () => {
-            // 1. Copy the text (and trigger all stats/XP/Modals)
             processAndCopy(res.text, res.id, res.categoryName);
             
-            // 2. Visual Feedback: Briefly flash the button green
             const originalClass = btn.className;
             const originalHTML = btn.innerHTML;
             
-            btn.className = 'bg-green-500 text-white border-green-400 rounded-lg px-3 py-2 text-center min-w-[120px] transition-all';
-            btn.innerHTML = '<span class="text-xs font-bold"><i class="fas fa-check"></i> Copied</span>';
+            // Success state styling
+            btn.className = 'bg-green-500 text-white border-green-400 rounded-lg px-4 py-3 text-center w-full transition-all';
+            btn.innerHTML = '<span class="text-sm font-bold"><i class="fas fa-check mr-2"></i>Copied</span>';
 
-            // 3. Reset button after 1 second (Bar stays open!)
             setTimeout(() => {
                 btn.className = originalClass;
                 btn.innerHTML = originalHTML;
@@ -7228,20 +7229,19 @@ const showShippingSuggestions = () => {
         list.appendChild(btn);
     });
 
-    // Show the bar
     bar.classList.remove('hidden');
-    // Small delay to ensure the 'hidden' removal registers before animating
+    // Trigger the slide-in from the right
     setTimeout(() => {
-        bar.classList.add('slide-up-fade-in');
+        bar.classList.add('slide-left-fade-in');
     }, 10);
 };
 
 // --- 3. Close Button Logic ---
 document.getElementById('close-suggestion-bar-btn')?.addEventListener('click', () => {
     const bar = document.getElementById('fedex-suggestion-bar');
-    bar.classList.remove('slide-up-fade-in'); // Slide down
+    bar.classList.remove('slide-left-fade-in'); // Slide out to the right
     setTimeout(() => bar.classList.add('hidden'), 500); // Hide after animation
-});		
+});
 
 		const recalculateCurrentPeriodStats = async (uid) => {
     if (!uid || isAnonymous) return;
