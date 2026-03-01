@@ -4174,46 +4174,6 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		    </div>
 		</div>
 
-	<div id="weekly-winner-modal" class="modal hidden z-[10000]">
-    <div class="modal-content weekly-winner-bg text-center">
-        <div class="sparkle-bg"></div>
-        <div class="relative z-10">
-            <div class="mb-4 relative inline-block">
-                <i class="fas fa-award text-8xl text-slate-300 drop-shadow-lg"></i>
-                <i class="fas fa-bolt absolute -top-2 -right-2 text-3xl text-yellow-400 animate-pulse"></i>
-            </div>
-            <h3 class="text-3xl font-black text-white italic mb-2 uppercase">Weekly Champion</h3>
-            <p id="weekly-winner-message" class="text-indigo-100 text-lg mb-6"></p>
-            <button onclick="document.getElementById('weekly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-white text-indigo-900 font-bold shadow-xl hover:bg-indigo-50 transition-colors">Collect Reward</button>
-        </div>
-    </div>
-</div>
-
-	<div id="monthly-winner-modal" class="modal hidden z-[10000]">
-	    <div class="modal-content monthly-winner-bg text-center">
-	        <div class="sparkle-bg"></div>
-	        <div class="relative z-10">
-	            <i class="fas fa-crown text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]"></i>
-	            <h3 class="text-4xl font-black text-white tracking-widest mb-2 uppercase">Monthly Legend</h3>
-	            <div class="h-1 w-24 bg-yellow-400 mx-auto mb-4"></div>
-	            <p id="monthly-winner-message" class="text-yellow-100 text-lg mb-8 font-medium"></p>
-	            <button onclick="document.getElementById('monthly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl shadow-lg hover:scale-105 transition-all">CLAIM PRESTIGE</button>
-	        </div>
-	    </div>
-	</div>
-	
-	<div id="winner-announcement-toast">
-	    <div class="winner-toast-inner">
-	        <div id="toast-icon-box" class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border">
-	            <i class="fas fa-trophy text-xl"></i>
-	        </div>
-	        <div>
-	            <h4 id="toast-title" class="text-[10px] font-bold uppercase tracking-[0.2em]"></h4>
-	            <p id="toast-name" class="text-white font-bold text-lg leading-tight"></p>
-	        </div>
-	    </div>
-	</div>
-
 		<div id="level-up-modal" class="modal hidden">
 		    <div class="modal-content text-center">
 		        <div id="modal-level-up-icon" class="text-8xl mb-4"></div>
@@ -4467,6 +4427,46 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 <span>Copy & Ask Gemini</span>
                 <i class="fas fa-external-link-alt text-xs opacity-70"></i>
             </button>
+        </div>
+    </div>
+</div>
+
+	<div id="weekly-winner-modal" class="modal hidden z-[10000]">
+    <div class="modal-content weekly-winner-bg text-center">
+        <div class="sparkle-bg"></div>
+        <div class="relative z-10">
+            <div class="mb-4 relative inline-block">
+                <i class="fas fa-award text-8xl text-slate-300 drop-shadow-lg"></i>
+                <i class="fas fa-bolt absolute -top-2 -right-2 text-3xl text-yellow-400 animate-pulse"></i>
+            </div>
+            <h3 class="text-3xl font-black text-white italic mb-2 uppercase">Weekly Champion</h3>
+            <p id="weekly-winner-message" class="text-indigo-100 text-lg mb-6"></p>
+            <button onclick="document.getElementById('weekly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-white text-indigo-900 font-bold shadow-xl hover:bg-indigo-50 transition-colors">Collect Reward</button>
+        </div>
+    </div>
+</div>
+
+<div id="monthly-winner-modal" class="modal hidden z-[10000]">
+    <div class="modal-content monthly-winner-bg text-center">
+        <div class="sparkle-bg"></div>
+        <div class="relative z-10">
+            <i class="fas fa-crown text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]"></i>
+            <h3 class="text-4xl font-black text-white tracking-widest mb-2 uppercase">Monthly Legend</h3>
+            <div class="h-1 w-24 bg-yellow-400 mx-auto mb-4"></div>
+            <p id="monthly-winner-message" class="text-yellow-100 text-lg mb-8 font-medium"></p>
+            <button onclick="document.getElementById('monthly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl shadow-lg hover:scale-105 transition-all">CLAIM PRESTIGE</button>
+        </div>
+    </div>
+</div>
+
+<div id="winner-announcement-toast">
+    <div class="winner-toast-inner">
+        <div id="toast-icon-box" class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border">
+            <i class="fas fa-trophy text-xl"></i>
+        </div>
+        <div>
+            <h4 id="toast-title" class="text-[10px] font-bold uppercase tracking-[0.2em]"></h4>
+            <p id="toast-name" class="text-white font-bold text-lg leading-tight"></p>
         </div>
     </div>
 </div>
