@@ -4714,15 +4714,12 @@ const getContextualSuggestions = (events) => {
 
     // --- STRATEGY 1: SEQUENCE ANALYSIS (The "Next Step") ---
     if (lastCopiedId) {
-        // Iterate through history to find what usually follows 'lastCopiedId'
-        // Events are usually sorted newest-first. So if events[i+1] is the trigger, events[i] is the reaction.
         for (let i = 0; i < events.length - 1; i++) {
             const reaction = events[i];
             const trigger = events[i+1]; 
             
             if (trigger.type === 'copy' && trigger.responseId === lastCopiedId) {
                 if (reaction.type === 'copy' && reaction.responseId) {
-                    // Strong Signal: You did this immediately after
                     suggestions[reaction.responseId] = (suggestions[reaction.responseId] || 0) + 10;
                 }
             }
@@ -4730,7 +4727,6 @@ const getContextualSuggestions = (events) => {
     }
 
     // --- STRATEGY 2: TIME ROUTINE (Fallback) ---
-    // Only matters if we didn't find a strong sequence
     const now = new Date();
     const currentHour = now.getHours();
     
@@ -4738,24 +4734,37 @@ const getContextualSuggestions = (events) => {
         if (!e.timestamp || !e.responseId) return;
         const eDate = e.timestamp.toDate();
         
-        // If used within this 2-hour window in the past
         if (Math.abs(eDate.getHours() - currentHour) <= 1) {
             suggestions[e.responseId] = (suggestions[e.responseId] || 0) + 2;
         }
-        // Recency Bonus (Used today gets a small bump)
         if ((now - eDate) < 24 * 60 * 60 * 1000) {
             suggestions[e.responseId] = (suggestions[e.responseId] || 0) + 1;
         }
     });
 
-    // Remove the item we *just* copied (so it doesn't suggest doing the same thing twice)
     if (lastCopiedId) delete suggestions[lastCopiedId];
 
-    // Sort by score and take top 3
-    return Object.entries(suggestions)
+    let results = Object.entries(suggestions)
         .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
         .slice(0, 3)
         .map(([id]) => id);
+
+    // --- STRATEGY 3: ULTIMATE FALLBACK (Most Popular Overall) ---
+    // If no time/sequence matches are found, just show the most copied items
+    if (results.length === 0) {
+        const popular = {};
+        events.filter(e => e.type === 'copy' && e.responseId).forEach(e => {
+            popular[e.responseId] = (popular[e.responseId] || 0) + 1;
+        });
+        if (lastCopiedId) delete popular[lastCopiedId];
+        
+        results = Object.entries(popular)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, 3)
+            .map(([id]) => id);
+    }
+
+    return results;
 };
 
 // 3. The Renderer: Updates the UI
@@ -4778,12 +4787,17 @@ const updateSmartSuggestions = async () => {
     const topResponseIds = getContextualSuggestions(cachedStatsEvents);
     const container = document.getElementById('smart-suggestions-wrapper');
     const list = document.getElementById('smart-suggestions-list');
+    const suggestionsCard = list.closest('.floating-card'); // Target the specific box
     const timeLabel = document.getElementById('time-of-day-label');
     const icon = container.querySelector('i.fa-sparkles'); 
 
+    // --- FIX: Only hide the suggestions list, but keep the Magic Draft visible ---
     if (topResponseIds.length === 0) {
-        container.classList.add('hidden');
+        if(suggestionsCard) suggestionsCard.classList.add('hidden');
+        container.classList.remove('hidden'); 
         return;
+    } else {
+        if(suggestionsCard) suggestionsCard.classList.remove('hidden');
     }
 
     // --- DYNAMIC HEADER LOGIC ---
@@ -4796,8 +4810,7 @@ const updateSmartSuggestions = async () => {
         if(icon) {
             icon.className = "fas fa-forward text-emerald-400 text-sm animate-pulse";
         }
-        // Add a subtle green border to the container
-        container.querySelector('.floating-card').classList.add('border-emerald-500/30');
+        suggestionsCard.classList.add('border-emerald-500/30');
     } else {
         // Mode: ROUTINE (Blue/Default)
         const hour = new Date().getHours();
@@ -4810,7 +4823,7 @@ const updateSmartSuggestions = async () => {
         if(icon) {
             icon.className = "fas fa-history text-blue-400 text-sm";
         }
-        container.querySelector('.floating-card').classList.remove('border-emerald-500/30');
+        suggestionsCard.classList.remove('border-emerald-500/30');
     }
 
     list.innerHTML = ''; 
