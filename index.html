@@ -4689,10 +4689,25 @@ const showClipboardToast = (numbers) => {
         }
     });
 };
-// --- SMART SCHEDULE & VISIBILITY LOGIC ---
-// 1. The Sensor: Tracks when you are actually looking at the tab
+// 1. Store the exact date the page was initially loaded
+const sessionLoadedDate = new Date().toISOString().split('T')[0];
+
+// 2. The Sensor: Tracks when you are actually looking at the tab
 const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
+        
+        // --- NEW: The "New Day" Check ---
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // If today's date doesn't match the date the page was loaded...
+        if (todayStr !== sessionLoadedDate) {
+            // The user just clicked on the tab, and it's a new day! 
+            // Refresh immediately and silently.
+            window.location.reload(true);
+            return; // Stop the rest of the function from running
+        }
+        // ---------------------------------
+
         sessionStartTime = Date.now();
         // Trigger the Smart Brain immediately when user returns
         updateSmartSuggestions();
