@@ -2869,12 +2869,12 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		        
 		        <button id="nav-canned-responses" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 transition duration-200 text-gray-300 font-medium text-sm border-l-4 border-transparent hover:text-white group">
 		            <div class="flex items-center"><i class="fas fa-comment-dots w-6 text-center text-gray-500 group-hover:text-blue-400 transition-colors"></i> Canned Responses</div>
-		            <span class="text-[10px] text-gray-600 font-mono">Alt+1</span>
+		            <span class="text-[10px] text-gray-600 font-mono">Shift+Alt+1</span>
 		        </button>
 		        
 		        <button id="nav-fedex-tracker" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 transition duration-200 text-gray-300 font-medium text-sm border-l-4 border-transparent hover:text-white group">
 		            <div class="flex items-center"><i class="fas fa-box-open w-6 text-center text-gray-500 group-hover:text-blue-400 transition-colors"></i> FedEx Tracker</div>
-		            <span class="text-[10px] text-gray-600 font-mono">Alt+2</span>
+		            <span class="text-[10px] text-gray-600 font-mono">Shift+Alt+2</span>
 		        </button>
 		        
 		        <hr class="border-gray-800 my-4 mx-2">
@@ -2882,17 +2882,17 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
 		        <button id="nav-helpful-links" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 transition duration-200 text-gray-300 font-medium text-sm border-l-4 border-transparent hover:text-white group">
 		            <div class="flex items-center"><i class="fas fa-link w-6 text-center text-gray-500 group-hover:text-blue-400 transition-colors"></i> Helpful Links</div>
-		            <span class="text-[10px] text-gray-600 font-mono">Alt+3</span>
+		            <span class="text-[10px] text-gray-600 font-mono">Shift+Alt+3</span>
 		        </button>
 		        
 		        <button id="nav-sla-dashboard" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 transition duration-200 text-gray-300 font-medium text-sm border-l-4 border-transparent hover:text-white group">
 		            <div class="flex items-center"><i class="fas fa-stopwatch w-6 text-center text-gray-500 group-hover:text-blue-400 transition-colors"></i> SLA Dashboard</div>
-		            <span class="text-[10px] text-gray-600 font-mono">Alt+4</span>
+		            <span class="text-[10px] text-gray-600 font-mono">Shift+Alt+4</span>
 		        </button>
 
 		        <button id="nav-my-stats" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 transition duration-200 text-gray-300 font-medium text-sm border-l-4 border-transparent hover:text-white group">
 		            <div class="flex items-center"><i class="fas fa-chart-line w-6 text-center text-gray-500 group-hover:text-blue-400 transition-colors"></i> My Stats</div>
-		            <span class="text-[10px] text-gray-600 font-mono">Alt+5</span>
+		            <span class="text-[10px] text-gray-600 font-mono">Shift+Alt+5</span>
 		        </button>
 		    </nav>
 
@@ -2901,7 +2901,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		             <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs" id="sidebar-user-avatar">U</div>
 		             <div class="flex flex-col">
 		                 <span class="text-xs font-semibold text-gray-200" id="sidebar-user-name">User</span>
-		                 <span class="text-[10px] text-gray-500 font-mono">Online</span>
+		                 <span class="text-[10px] text-gray-500 font-mono" id="sidebar-greeting">Online</span>
 		             </div>
 		        </div>
 		        <button id="nav-settings" class="relative p-2 rounded-lg hover:bg-gray-800 transition duration-300 text-gray-500 hover:text-white group" aria-label="Settings">
@@ -2909,8 +2909,8 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		            <span id="settings-update-indicator" class="hidden absolute top-1 right-1 h-2 w-2 rounded-full bg-green-400"></span>
 		        </button>
 		    </div>
-            <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300 lg:hidden">
-		        <i class="fas fa-times text-gray-400"></i>
+            <button id="close-sidebar-btn" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 transition duration-300">
+		        <i class="fas fa-times text-gray-400 hover:text-white transition-colors"></i>
 		    </button>
 		</div>
 
@@ -13286,9 +13286,36 @@ onAuthStateChanged(auth, async (user) => {
         loadGlobalKnowledge();
 		initSmartClipboard();
 		trackedChallengeId = localStorage.getItem('trackedChallengeId');
-        isAnonymous = user.isAnonymous;
+		isAnonymous = user.isAnonymous;
         const displayName = user.displayName || user.email || 'User';
-        userName = displayName.split(' ')[0].split('@')[0];
+        
+        // Ensure the first letter of the name is capitalized
+        let rawName = displayName.split(' ')[0].split('@')[0];
+        userName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+        // --- NEW: Update Sidebar Greeting & Name ---
+        const avatarEl = document.getElementById('sidebar-user-avatar');
+        const nameEl = document.getElementById('sidebar-user-name');
+        const greetingEl = document.getElementById('sidebar-greeting');
+
+        if (avatarEl && nameEl && greetingEl && !isAnonymous) {
+            // Set Initial
+            avatarEl.textContent = userName.charAt(0);
+            // Set Name
+            nameEl.textContent = userName;
+            
+            // Calculate Time of Day
+            const hour = new Date().getHours();
+            let greeting = 'Good evening';
+            if (hour < 12) greeting = 'Good morning';
+            else if (hour < 18) greeting = 'Good afternoon';
+            
+            // Set Greeting
+            greetingEl.textContent = greeting;
+        } else if (isAnonymous) {
+            if (nameEl) nameEl.textContent = "Guest";
+            if (greetingEl) greetingEl.textContent = "Sign in to save data";
+        }
         const linksUserInfo = document.getElementById('links-user-info');
         if (linksUserInfo) linksUserInfo.textContent = `User ID: ${userId}`;
         defaultLinks = await getHelpfulLinksBlueprint();
