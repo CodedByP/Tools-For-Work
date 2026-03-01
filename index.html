@@ -2914,13 +2914,15 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		    </button>
 		</div>
 
-        <div id="command-palette" class="hidden fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex justify-center items-start pt-[12vh]">
+		<div id="command-palette" class="hidden fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex justify-center items-start pt-[12vh]">
             <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-200" id="cmd-modal-inner">
                 <div class="p-4 border-b border-gray-800 flex items-center bg-gray-800/50">
                     <i class="fas fa-search text-gray-500 text-lg mr-3"></i>
                     <input type="text" id="cmd-input" class="bg-transparent border-none text-gray-200 text-lg w-full focus:outline-none font-mono placeholder-gray-600" placeholder="Type a command or search a response...">
                     <button class="text-[10px] text-gray-500 border border-gray-700 rounded px-2 py-1 ml-3 font-mono">ESC</button>
                 </div>
+                <div id="cmd-results" class="p-2 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                    </div>
             </div>
         </div>
 
@@ -9797,15 +9799,86 @@ const toggleCommandPalette = () => {
     }
 };
 
+// Command Palette Search Engine
+const cmdInput = document.getElementById('cmd-input');
+const cmdResults = document.getElementById('cmd-results');
+
+if (cmdInput && cmdResults) {
+    cmdInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        cmdResults.innerHTML = '';
+
+        if (!query) return;
+
+        let results = [];
+        
+        // 1. Check for Page Navigation Commands
+        const navCommands = [
+            { label: 'Go to Canned Responses', action: () => document.getElementById('nav-canned-responses')?.click(), icon: 'fa-comment-dots' },
+            { label: 'Go to FedEx Tracker', action: () => document.getElementById('nav-fedex-tracker')?.click(), icon: 'fa-box-open' },
+            { label: 'Go to Helpful Links', action: () => document.getElementById('nav-helpful-links')?.click(), icon: 'fa-link' },
+            { label: 'Go to SLA Dashboard', action: () => document.getElementById('nav-sla-dashboard')?.click(), icon: 'fa-stopwatch' },
+            { label: 'Go to My Stats', action: () => document.getElementById('nav-my-stats')?.click(), icon: 'fa-chart-line' },
+        ];
+
+        navCommands.forEach(cmd => {
+            if (cmd.label.toLowerCase().includes(query)) results.push({ ...cmd, type: 'nav' });
+        });
+
+        // 2. Check for Canned Responses
+        for (const cat in categories) {
+            categories[cat].responses.forEach(res => {
+                if ((res.label && res.label.toLowerCase().includes(query)) || (res.text && res.text.toLowerCase().includes(query))) {
+                    results.push({
+                        label: res.label || 'Unlabeled',
+                        category: cat,
+                        text: res.text,
+                        id: res.id,
+                        type: 'response'
+                    });
+                }
+            });
+        }
+
+        // 3. Render Top 10 Results
+        results.slice(0, 10).forEach(res => {
+            const item = document.createElement('div');
+            item.className = 'p-3 hover:bg-gray-800 cursor-pointer rounded-lg flex items-center gap-3 border-b border-gray-800/50 last:border-0 group transition-colors';
+            
+            if (res.type === 'nav') {
+                item.innerHTML = `<div class="bg-gray-800 p-2 rounded text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors"><i class="fas ${res.icon}"></i></div><span class="text-gray-200 font-medium">${res.label}</span>`;
+                item.onclick = () => {
+                    res.action();
+                    toggleCommandPalette();
+                    cmdInput.value = '';
+                };
+            } else {
+                item.innerHTML = `<div class="bg-gray-800 p-2 rounded text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><i class="fas fa-copy"></i></div><div class="flex flex-col"><span class="text-gray-200 font-medium text-sm group-hover:text-white">${res.label}</span><span class="text-[10px] text-gray-500 uppercase tracking-widest">${res.category}</span></div>`;
+                item.onclick = () => {
+                    processAndCopy(res.text, res.id, res.category);
+                    toggleCommandPalette();
+                    cmdInput.value = '';
+                };
+            }
+            cmdResults.appendChild(item);
+        });
+        
+        if (results.length === 0) {
+            cmdResults.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">No results found</div>';
+        }
+    });
+}		
+
 // 3. Global Keyboard Shortcuts (Alt + Numbers & Cmd+K)
 document.addEventListener('keydown', (e) => {
-    if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        switch(e.key) {
-            case '1': document.getElementById('nav-canned-responses')?.click(); break;
-            case '2': document.getElementById('nav-fedex-tracker')?.click(); break;
-            case '3': document.getElementById('nav-helpful-links')?.click(); break;
-            case '4': document.getElementById('nav-sla-dashboard')?.click(); break;
-            case '5': document.getElementById('nav-my-stats')?.click(); break;
+// Global Power-User Hotkeys (Shift + Alt + 1-5)
+    if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        switch(e.code) { // We use e.code instead of e.key to ignore shift-character changes (like !)
+            case 'Digit1': document.getElementById('nav-canned-responses')?.click(); break;
+            case 'Digit2': document.getElementById('nav-fedex-tracker')?.click(); break;
+            case 'Digit3': document.getElementById('nav-helpful-links')?.click(); break;
+            case 'Digit4': document.getElementById('nav-sla-dashboard')?.click(); break;
+            case 'Digit5': document.getElementById('nav-my-stats')?.click(); break;
         }
     }
     
