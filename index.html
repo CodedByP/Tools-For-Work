@@ -718,6 +718,70 @@ body.light-mode .ghost-active {
     animation: pulse-text-glow 1.5s infinite;
 }		
 
+/* --- Weekly Winner: Silver/Indigo Theme --- */
+.weekly-winner-bg {
+    background: radial-gradient(circle at top, #4338ca, #1e1b4b);
+    border: 2px solid #818cf8;
+    box-shadow: 0 0 50px rgba(67, 56, 202, 0.5);
+}
+
+/* --- Monthly Winner: Molten Gold Theme --- */
+.monthly-winner-bg {
+    background: radial-gradient(circle at top, #b45309, #451a03);
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 60px rgba(245, 158, 11, 0.6);
+}
+
+/* --- Passive Sparkle for Modals --- */
+.sparkle-bg {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 10%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 10%);
+    opacity: 0.5;
+    pointer-events: none;
+    animation: pulse-bg 4s ease-in-out infinite;
+}
+
+@keyframes pulse-bg {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* --- Winner Toast: Top-Center with Animated Border --- */
+#winner-announcement-toast {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    z-index: 9999;
+    padding: 2px;
+    border-radius: 1rem;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+}
+
+#winner-announcement-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+.border-gold { background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24); background-size: 200% auto; animation: transition-gradient 3s linear infinite; }
+.border-indigo { background: linear-gradient(90deg, #818cf8, #4338ca, #818cf8); background-size: 200% auto; animation: transition-gradient 3s linear infinite; }
+
+@keyframes transition-gradient {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.winner-toast-inner {
+    background: #111827;
+    border-radius: 0.9rem;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 320px;
+}		
+
 /* --- UPDATED: Explicit Visibility Control --- */
 
 /* 1. The Container (Keeps things organized) */
@@ -4110,6 +4174,46 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 		    </div>
 		</div>
 
+	<div id="weekly-winner-modal" class="modal hidden z-[10000]">
+    <div class="modal-content weekly-winner-bg text-center">
+        <div class="sparkle-bg"></div>
+        <div class="relative z-10">
+            <div class="mb-4 relative inline-block">
+                <i class="fas fa-award text-8xl text-slate-300 drop-shadow-lg"></i>
+                <i class="fas fa-bolt absolute -top-2 -right-2 text-3xl text-yellow-400 animate-pulse"></i>
+            </div>
+            <h3 class="text-3xl font-black text-white italic mb-2 uppercase">Weekly Champion</h3>
+            <p id="weekly-winner-message" class="text-indigo-100 text-lg mb-6"></p>
+            <button onclick="document.getElementById('weekly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-white text-indigo-900 font-bold shadow-xl hover:bg-indigo-50 transition-colors">Collect Reward</button>
+        </div>
+    </div>
+</div>
+
+	<div id="monthly-winner-modal" class="modal hidden z-[10000]">
+	    <div class="modal-content monthly-winner-bg text-center">
+	        <div class="sparkle-bg"></div>
+	        <div class="relative z-10">
+	            <i class="fas fa-crown text-8xl text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]"></i>
+	            <h3 class="text-4xl font-black text-white tracking-widest mb-2 uppercase">Monthly Legend</h3>
+	            <div class="h-1 w-24 bg-yellow-400 mx-auto mb-4"></div>
+	            <p id="monthly-winner-message" class="text-yellow-100 text-lg mb-8 font-medium"></p>
+	            <button onclick="document.getElementById('monthly-winner-modal').classList.add('hidden')" class="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl shadow-lg hover:scale-105 transition-all">CLAIM PRESTIGE</button>
+	        </div>
+	    </div>
+	</div>
+	
+	<div id="winner-announcement-toast">
+	    <div class="winner-toast-inner">
+	        <div id="toast-icon-box" class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border">
+	            <i class="fas fa-trophy text-xl"></i>
+	        </div>
+	        <div>
+	            <h4 id="toast-title" class="text-[10px] font-bold uppercase tracking-[0.2em]"></h4>
+	            <p id="toast-name" class="text-white font-bold text-lg leading-tight"></p>
+	        </div>
+	    </div>
+	</div>
+
 		<div id="level-up-modal" class="modal hidden">
 		    <div class="modal-content text-center">
 		        <div id="modal-level-up-icon" class="text-8xl mb-4"></div>
@@ -5370,6 +5474,32 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+
+// --- New Confetti Helpers ---
+const fireWeeklyConfetti = () => {
+    const end = Date.now() + (2 * 1000);
+    const colors = ['#818cf8', '#ffffff', '#4338ca'];
+    (function frame() {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+    }());
+};
+
+const fireMonthlyFireworks = () => {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+};		
 
 // 1. Open Function (Called by your Table Row)
 const openSLAModal = (item) => {
@@ -8223,10 +8353,9 @@ const checkForGlobalAlerts = async (uid) => {
     const userDoc = await getDoc(userDocRef);
     const userData = userDoc.exists() ? userDoc.data() : {};
     
-    // Define what we are looking for
     const alertsToCheck = [
-        { docId: 'weekly_champion', seenField: 'lastSeenWeeklyWinnerId' },
-        { docId: 'monthly_legend', seenField: 'lastSeenMonthlyWinnerId' }
+        { docId: 'weekly_champion', seenField: 'lastSeenWeeklyWinnerId', modalId: 'weekly-winner-modal', msgId: 'weekly-winner-message' },
+        { docId: 'monthly_legend', seenField: 'lastSeenMonthlyWinnerId', modalId: 'monthly-winner-modal', msgId: 'monthly-winner-message' }
     ];
 
     for (const alert of alertsToCheck) {
@@ -8235,45 +8364,55 @@ const checkForGlobalAlerts = async (uid) => {
 
         if (alertSnap.exists()) {
             const alertData = alertSnap.data();
-            
-            // Skip if no winner was found for that period
             if (alertData.status === 'no_winner') continue;
 
-            // CHECK: Have I seen this specific period ID?
             const lastSeenId = userData[alert.seenField];
             
             if (lastSeenId !== alertData.periodId) {
-                // I HAVEN'T SEEN IT! TRIGGER VISUALS!
-                
                 if (alertData.winnerId === uid) {
-                    // --- SCENARIO A: I AM THE WINNER ---
-                    triggerCelebration(); 
-                    
+                    // YOU ARE THE WINNER
                     const sound = document.getElementById('level-up-sound');
                     if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
                     
-                    // Show Modal
-                    const modal = document.getElementById('level-up-modal');
-                    document.getElementById('modal-level-up-icon').innerHTML = '<i class="fas fa-crown text-yellow-400"></i>';
-                    document.getElementById('modal-level-up-message').innerHTML = `
-                        You finished #1 on the <b class="capitalize">${alertData.type} leaderboard!</b><br>
-                        Reward: <span class="text-green-400 font-bold">+${alertData.xpReward.toLocaleString()} XP</span>
-                    `;
-                    modal.classList.remove('hidden');
-                    
-                } else {
-                    // --- SCENARIO B: SOMEONE ELSE WON ---
-                    showMessage(`${alertData.winnerName} is the ${alertData.type} Champion!`, 'winner', 8000);
-                }
+                    if (alert.docId === 'weekly_champion') fireWeeklyConfetti();
+                    else fireMonthlyFireworks();
 
-                // MARK AS SEEN (So it doesn't show again on refresh)
-                await updateDoc(userDocRef, {
-                    [alert.seenField]: alertData.periodId
-                });
+                    document.getElementById(alert.msgId).innerHTML = `
+                        You crushed the ${alertData.type} sprint!<br>
+                        <span class="inline-block mt-4 px-6 py-2 bg-black/40 rounded-xl border border-white/10 font-mono text-2xl text-green-400">
+                            +${alertData.xpReward.toLocaleString()} XP
+                        </span>`;
+                    document.getElementById(alert.modalId).classList.remove('hidden');
+                } else {
+                    // SOMEONE ELSE WON (New Animated Toast)
+                    const toast = document.getElementById('winner-announcement-toast');
+                    const iconBox = document.getElementById('toast-icon-box');
+                    const titleEl = document.getElementById('toast-title');
+                    
+                    toast.className = ''; // Reset
+                    iconBox.className = 'flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border ';
+
+                    if (alert.docId === 'weekly_champion') {
+                        toast.classList.add('border-indigo');
+                        iconBox.classList.add('bg-indigo-500/20', 'border-indigo-500/50', 'text-indigo-400');
+                        titleEl.textContent = "WEEKLY CHAMPION CROWNED";
+                        titleEl.className = "text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400";
+                    } else {
+                        toast.classList.add('border-gold');
+                        iconBox.classList.add('bg-yellow-500/20', 'border-yellow-500/50', 'text-yellow-500');
+                        titleEl.textContent = "MONTHLY LEGEND CROWNED";
+                        titleEl.className = "text-[10px] font-bold uppercase tracking-[0.2em] text-yellow-500";
+                    }
+
+                    document.getElementById('toast-name').textContent = alertData.winnerName;
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 8000);
+                }
+                await updateDoc(userDocRef, { [alert.seenField]: alertData.periodId });
             }
         }
     }
-};		
+};	
 
 const checkAndDistributeRewards = async () => {
     // 1. Define periods using the new safe helpers
