@@ -9799,20 +9799,26 @@ const toggleCommandPalette = () => {
     }
 };
 
-// Command Palette Search Engine
+// Command Palette Search Engine & Keyboard Navigation
 const cmdInput = document.getElementById('cmd-input');
 const cmdResults = document.getElementById('cmd-results');
+let currentCmdIndex = -1;      // Tracks the currently highlighted item
+let currentCmdActions = [];    // Stores the functions for the "Enter" key to trigger
 
 if (cmdInput && cmdResults) {
+    
+    // 1. Search & Render Logic
     cmdInput.addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
         cmdResults.innerHTML = '';
+        currentCmdIndex = -1;
+        currentCmdActions = [];
 
         if (!query) return;
 
         let results = [];
         
-        // 1. Check for Page Navigation Commands
+        // Navigation Commands
         const navCommands = [
             { label: 'Go to Canned Responses', action: () => document.getElementById('nav-canned-responses')?.click(), icon: 'fa-comment-dots' },
             { label: 'Go to FedEx Tracker', action: () => document.getElementById('nav-fedex-tracker')?.click(), icon: 'fa-box-open' },
@@ -9825,49 +9831,108 @@ if (cmdInput && cmdResults) {
             if (cmd.label.toLowerCase().includes(query)) results.push({ ...cmd, type: 'nav' });
         });
 
-        // 2. Check for Canned Responses
+        // Responses
         for (const cat in categories) {
             categories[cat].responses.forEach(res => {
                 if ((res.label && res.label.toLowerCase().includes(query)) || (res.text && res.text.toLowerCase().includes(query))) {
-                    results.push({
-                        label: res.label || 'Unlabeled',
-                        category: cat,
-                        text: res.text,
-                        id: res.id,
-                        type: 'response'
-                    });
+                    results.push({ label: res.label || 'Unlabeled', category: cat, text: res.text, id: res.id, type: 'response' });
                 }
             });
         }
 
-        // 3. Render Top 10 Results
-        results.slice(0, 10).forEach(res => {
+        // Render Top 10 Results
+        results.slice(0, 10).forEach((res, index) => {
             const item = document.createElement('div');
-            item.className = 'p-3 hover:bg-gray-800 cursor-pointer rounded-lg flex items-center gap-3 border-b border-gray-800/50 last:border-0 group transition-colors';
+            item.className = 'cmd-result-item p-3 cursor-pointer rounded-lg flex items-center gap-3 border-b border-gray-800/50 last:border-0 transition-all duration-150';
             
             if (res.type === 'nav') {
-                item.innerHTML = `<div class="bg-gray-800 p-2 rounded text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors"><i class="fas ${res.icon}"></i></div><span class="text-gray-200 font-medium">${res.label}</span>`;
-                item.onclick = () => {
-                    res.action();
-                    toggleCommandPalette();
-                    cmdInput.value = '';
-                };
+                item.innerHTML = `
+                    <div class="p-2 rounded text-blue-400 bg-blue-400/10">
+                        <i class="fas ${res.icon}"></i>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-gray-200 font-medium truncate">${res.label}</span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-widest">Navigation</span>
+                    </div>
+                    <span class="ml-auto text-[10px] text-gray-500 font-mono hidden sm:inline-block">Enter ↵</span>
+                `;
+                currentCmdActions.push(() => { res.action(); toggleCommandPalette(); cmdInput.value = ''; });
             } else {
-                item.innerHTML = `<div class="bg-gray-800 p-2 rounded text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><i class="fas fa-copy"></i></div><div class="flex flex-col"><span class="text-gray-200 font-medium text-sm group-hover:text-white">${res.label}</span><span class="text-[10px] text-gray-500 uppercase tracking-widest">${res.category}</span></div>`;
-                item.onclick = () => {
-                    processAndCopy(res.text, res.id, res.category);
-                    toggleCommandPalette();
-                    cmdInput.value = '';
-                };
+                // Get the category color (Default to a neutral blue if none exists)
+                const catColor = categories[res.category]?.color || '#4DABF7';
+                
+                // Inject the dynamic color using inline styles (Hex + '20' adds 12% opacity for the background)
+                item.innerHTML = `
+                    <div class="p-2 rounded" style="color: ${catColor}; background-color: ${catColor}20;">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-gray-200 font-medium text-sm truncate">${res.label}</span>
+                        <span class="text-[10px] uppercase tracking-widest font-bold" style="color: ${catColor}90;">${res.category}</span>
+                    </div>
+                    <span class="ml-auto text-[10px] text-gray-500 font-mono hidden sm:inline-block">Enter ↵</span>
+                `;
+                currentCmdActions.push(() => { processAndCopy(res.text, res.id, res.category); toggleCommandPalette(); cmdInput.value = ''; });
             }
+            
+            // Mouse click handler
+            item.onclick = currentCmdActions[index];
+            
+            // Sync mouse hover with keyboard selection
+            item.addEventListener('mouseenter', () => updateCmdHighlight(index));
+            
             cmdResults.appendChild(item);
         });
         
         if (results.length === 0) {
             cmdResults.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">No results found</div>';
+        } else {
+            // Auto-highlight the first item when searching
+            updateCmdHighlight(0);
         }
     });
-}		
+
+    // 2. Keyboard Navigation Logic
+    cmdInput.addEventListener('keydown', (e) => {
+        const items = document.querySelectorAll('.cmd-result-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault(); // Prevents cursor from jumping to the end of the text
+            updateCmdHighlight(currentCmdIndex < items.length - 1 ? currentCmdIndex + 1 : 0);
+        } 
+        else if (e.key === 'ArrowUp') {
+            e.preventDefault(); // Prevents cursor from jumping to the start of the text
+            updateCmdHighlight(currentCmdIndex > 0 ? currentCmdIndex - 1 : items.length - 1);
+        } 
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentCmdIndex >= 0 && currentCmdIndex < currentCmdActions.length) {
+                // Execute the action bound to the currently highlighted item
+                currentCmdActions[currentCmdIndex]();
+            }
+        }
+    });
+
+    // 3. Visual Highlighter Function
+    function updateCmdHighlight(index) {
+        const items = document.querySelectorAll('.cmd-result-item');
+        items.forEach((item, i) => {
+            if (i === index) {
+                // Add highlight classes
+                item.classList.add('bg-gray-800', 'ring-1', 'ring-gray-600', 'scale-[1.02]');
+                item.classList.remove('bg-transparent');
+                // Ensure the item scrolls into view if you arrow down past the visible list
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                // Remove highlight classes
+                item.classList.remove('bg-gray-800', 'ring-1', 'ring-gray-600', 'scale-[1.02]');
+                item.classList.add('bg-transparent');
+            }
+        });
+        currentCmdIndex = index;
+    }
+}	
 
 // 3. Global Keyboard Shortcuts (Alt + Numbers & Cmd+K)
 document.addEventListener('keydown', (e) => {
