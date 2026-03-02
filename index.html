@@ -2954,7 +2954,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 </div>
             </div>
             
-            <div id="category-bar" class="mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl">
+            <div id="category-bar" class="hidden mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl">
                 <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
                     <div id="category-list" class="flex gap-4">
                         </div>
@@ -4654,6 +4654,14 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                 'settings': 'Settings'
             };
             mainTitle.textContent = titles[savedPage];
+        }
+		const categoryBar = document.getElementById('category-bar');
+        if (categoryBar) {
+            if (savedPage === 'canned-responses') {
+                categoryBar.classList.remove('hidden');
+            } else {
+                categoryBar.classList.add('hidden');
+            }
         }
     });
 </script>
