@@ -8838,12 +8838,10 @@ const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
 
     try {
-        const userDocRef = getUserRootDocRef(userId);
-        const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        const eventsCollectionRef = getUserEventsCollectionRef(userId);
-        const querySnapshot = await getDocs(query(eventsCollectionRef));
-        const events = querySnapshot.docs.map(doc => doc.data());
+		// Just use the cached memory we already have! 
+		const userData = cachedStatsUserData || {};
+		const events = cachedStatsEvents || [];
+		const userDocRef = getUserRootDocRef(userId);
         
         // --- Daily Challenge Check ---
         const todayStr = getCurrentDateString();
@@ -9503,6 +9501,15 @@ const logUserEvent = async (eventType, eventData = {}) => {
             timestamp: serverTimestamp(),
             ...cleanedEventData
         });
+		// Instantly update our local memory cache so the UI doesn't need to re-download from Firebase!
+		if (cachedStatsEvents) {
+		    cachedStatsEvents.unshift({
+		        type: eventType,
+		        // Create a fake temporary timestamp for the UI until they refresh
+		        timestamp: { toDate: () => new Date() }, 
+		        ...cleanedEventData
+		    });
+		}
 
         // (Keep your existing Globetrotter logic here...)
         if (eventType === 'copy' && eventData.categoryName) {
@@ -11733,16 +11740,28 @@ const renderAdvancedStats = async () => {
     }
 
     try {
-        const userDocRef = getUserRootDocRef(userId);
-        const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.exists() ? userDoc.data() : {};
-
-        const eventsCollectionRef = getUserEventsCollectionRef(userId);
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-
-		cachedStatsUserData = userData; 
-        cachedStatsEvents = events;
+		// 1. Set up our variables
+		let userData = cachedStatsUserData;
+		let events = cachedStatsEvents;
+		
+		// 2. ONLY fetch from Firebase if our cache is empty!
+		if (!events || events.length === 0) {
+		    console.log("Fetching stats from Firebase (First time only!)");
+		    
+		    const userDocRef = getUserRootDocRef(userId);
+		    const userDoc = await getDoc(userDocRef);
+		    userData = userDoc.exists() ? userDoc.data() : {};
+		
+		    const eventsCollectionRef = getUserEventsCollectionRef(userId);
+		    const snapshot = await getDocs(query(eventsCollectionRef));
+		    events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+		
+		    // Save to memory so we don't have to fetch again
+		    cachedStatsUserData = userData; 
+		    cachedStatsEvents = events;
+		} else {
+		    console.log("Using memory cache. Saved you Firebase reads! 💸");
+		}
 
 		renderLevelingSystem(userData);
 
