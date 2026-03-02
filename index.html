@@ -2857,7 +2857,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 	<div id="sidebar" class="sidebar flex flex-col bg-gray-900 border-r border-gray-700">
 		    <div class="px-5 pt-8 pb-4 flex items-center justify-between">
 		        <h2 class="text-2xl font-semibold text-gray-100 tracking-tight">Workspace</h2>
-		        <span class="text-[10px] text-gray-500 font-mono bg-gray-800 px-2 py-1 rounded">Cmd K</span>
+		        <span class="text-[10px] text-gray-500 font-mono bg-gray-800 px-2 py-1 rounded">Ctrl + K</span>
 		    </div>
 		    
 		    <nav class="flex flex-col space-y-1 flex-grow px-3 mt-4">
@@ -4681,6 +4681,7 @@ let currentLeaderboardView = 'all';
 let sessionStartTime = null;
 let isSilencingUpdates = false; // New flag to stop flickering
 let lastProcessedClipboard = "";		
+let isDataLoaded = false; // NEW: The Vault Door Lock		
 
 
 const initSmartClipboard = () => {
@@ -10222,6 +10223,7 @@ const renderLeaderboard = async (view = 'all') => {
 };
 
 const renderCategories = () => {
+	if (!isDataLoaded) return;
     const categoryList = document.getElementById('category-list');
     const addResponseSection = document.getElementById('add-response-section');
     const searchBarContainer = document.getElementById('search-bar-container');
@@ -10353,6 +10355,7 @@ const renderChallenges = async (events) => {
 };
 		
 const renderResponses = (searchQuery = '') => {
+	if (!isDataLoaded) return;
     const responsesList = document.getElementById('responses-list');
     const emptyState = document.getElementById('empty-state');
     const responsesHeading = document.getElementById('responses-heading');
@@ -13369,6 +13372,7 @@ onAuthStateChanged(auth, async (user) => {
                 const existingCategoryNames = Object.keys(categories);
                 if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
             }
+			isDataLoaded = true;
             renderContent();
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
@@ -13443,6 +13447,7 @@ onAuthStateChanged(auth, async (user) => {
                     const existingCategoryNames = Object.keys(categories);
                     if (!existingCategoryNames.includes(activeCategory)) { activeCategory = existingCategoryNames[0]; }
                 }
+				isDataLoaded = true;
 				hasLoadedStats = false;
                 renderContent();
 				updateDarkModeStreak();
