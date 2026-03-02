@@ -27,15 +27,17 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" media="print" onload="this.media='all'">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" defer></script>
     
-    <style>
-        /* NEW: PREMIUM TYPOGRAPHY */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        
+    <style>        
         /* Base Dark Mode Styles */
         body {
             font-family: 'Alexandria', sans-serif; 
@@ -2846,12 +2848,6 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 </head>
 <body class="flex flex-col min-h-screen relative theme-deep-space">
     <div id="app-body-container" class="flex flex-col min-h-screen">
-		<div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-[9999]">
-        <svg class="animate-spin h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-    </div>
 
     <audio id="level-up-sound" src="level-up.mp3" preload="auto"></audio> 
 	<audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
@@ -10711,7 +10707,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                             response.timesCopied = (response.timesCopied || 0) + 1;
 							isSilencingUpdates = true; // 1. Turn on Silencer
                         	saveToFirestore(categories).then(() => {
-                            setTimeout(() => { isSilencingUpdates = false; }, 500); 
+                            setTimeout(() => { isSilencingUpdates = false; }, 2000); 
                         });
                         }
                     }
@@ -12918,8 +12914,15 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
 		logUserEvent('delete_response', {}, firstSignIn);
     });
     document.getElementById('delete-cancel-btn').addEventListener('click', () => { document.getElementById('delete-modal').classList.add('hidden'); responseToDeleteId = null; });
-    document.getElementById('search-input').addEventListener('input', () => { renderResponses(document.getElementById('search-input').value); });
-    document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.remove('hidden'); document.getElementById('add-category-input').focus(); });
+// PERFORMANCE UPGRADE: Search Bar Debounce
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout); // Cancel the previous timer if they are still typing
+        searchTimeout = setTimeout(() => {
+            renderResponses(e.target.value); // Redraw the screen ONLY after they pause typing for 150ms
+        }, 150); 
+    });    
+	document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.remove('hidden'); document.getElementById('add-category-input').focus(); });
     document.getElementById('cancel-add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.add('hidden'); document.getElementById('add-category-input').value = ''; });
     document.getElementById('confirm-add-category-btn').addEventListener('click', async () => {
         const newCategoryName = document.getElementById('add-category-input').value.trim();
