@@ -8897,10 +8897,10 @@ const getPreviousMonthId = () => {
 const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
 
-	try {
-	    // Make sure the memory cache is actually loaded! If not, fetch it first.
-	    if (cachedStatsEvents === null) {
-	        const userDocRef = getUserRootDocRef(userId);
+try {
+    // BULLETPROOF CHECK: Make sure BOTH parts of the cache exist before checking challenges
+    if (!cachedStatsUserData || !cachedStatsEvents || cachedStatsEvents.length === 0) {
+        const userDocRef = getUserRootDocRef(userId);
 	        const userDoc = await getDoc(userDocRef);
 	        cachedStatsUserData = userDoc.exists() ? userDoc.data() : {};
 	
@@ -9178,6 +9178,10 @@ const awardXP = async (baseAmount, actionName = 'Action Complete') => {
 
         await setDoc(userDocRef, { xp: newXp }, { merge: true });
         await updateLeaderboardData(userId, newLevelInfo);
+		// UPDATE CACHE: Instantly update the local memory so the UI knows about the new XP!
+		if (cachedStatsUserData) {
+		    cachedStatsUserData.xp = newXp;
+		}
 
         // --- THIS IS THE NEW NOTIFICATION LOGIC ---
         let message = actionName;
@@ -11823,8 +11827,8 @@ const renderAdvancedStats = async () => {
 		let userData = cachedStatsUserData;
 		let events = cachedStatsEvents;
 		
-		// 2. ONLY fetch from Firebase if our cache is empty!
-		if (events === null) {
+		// 2. BULLETPROOF CHECK: Only fetch if our cache is missing ANY data
+		if (!userData || !events || events.length === 0) {
 		    console.log("Fetching stats from Firebase (First time only!)");
 		    
 		    const userDocRef = getUserRootDocRef(userId);
