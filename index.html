@@ -2967,7 +2967,7 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
         <div id="message-box" class="message-box"></div>
 
-<div id="canned-responses-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12">
+<div id="canned-responses-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
     <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
         
         <div class="flex flex-col md:flex-row gap-4 w-full">
@@ -3316,8 +3316,22 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
                         <h2 class="text-3xl font-bold text-center mb-8 link-title">
                             Static Resources
                         </h2>
-                        <div id="static-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <p class="text-center text-gray-400 col-span-full">Loading static links...</p>
+						<div id="static-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse">
+                                <div class="h-6 bg-gray-700 rounded w-3/4 mb-3"></div>
+                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
+                                <div class="h-3 bg-gray-700 rounded w-5/6"></div>
+                            </div>
+                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse opacity-75">
+                                <div class="h-6 bg-gray-700 rounded w-2/3 mb-3"></div>
+                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
+                                <div class="h-3 bg-gray-700 rounded w-4/5"></div>
+                            </div>
+                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse opacity-50">
+                                <div class="h-6 bg-gray-700 rounded w-1/2 mb-3"></div>
+                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
+                                <div class="h-3 bg-gray-700 rounded w-5/6"></div>
+                            </div>
                         </div>
                     </section>
                     
@@ -3473,11 +3487,16 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 
 <div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-[70vh]">
     
-    <div id="stats-loader" class="flex justify-center items-center h-full">
-        <svg class="animate-spin h-10 w-10 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+	<div id="stats-loader" class="w-full max-w-7xl mx-auto flex-col h-full animate-pulse mt-4">
+        <div class="h-10 bg-gray-800 rounded-xl w-1/4 mb-2"></div>
+        <div class="h-4 bg-gray-800 rounded w-1/3 mb-8"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="h-72 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2"></div>
+            <div class="h-72 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2"></div>
+            <div class="h-[400px] bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2 lg:row-span-2"></div>
+            <div class="h-48 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-1"></div>
+            <div class="h-48 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-1"></div>
+        </div>
     </div>
 
     <div id="stats-content" class="w-full max-w-7xl mx-auto hidden">
@@ -4600,8 +4619,47 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedPage = localStorage.getItem('lastVisitedPage') || 'canned-responses';
+        const pageMap = {
+            'canned-responses': 'canned-responses-app',
+            'sla-dashboard': 'sla-dashboard-app',
+            'fedex-tracker': 'fedex-tracker-app',
+            'helpful-links': 'helpful-links-app',
+            'my-stats': 'my-stats-page',
+            'settings': 'settings-page'
+        };
+        
+        // Hide all pages instantly
+        Object.values(pageMap).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        
+        // Unhide only the active page instantly
+        const activeEl = document.getElementById(pageMap[savedPage]);
+        if (activeEl) activeEl.classList.remove('hidden');
+        
+        // Set the correct main title instantly
+        const mainTitle = document.getElementById('main-title');
+        if (mainTitle) {
+            const titles = {
+                'canned-responses': 'Canned Responses',
+                'sla-dashboard': 'SLA Dashboard',
+                'fedex-tracker': 'FedEx Tracker',
+                'helpful-links': 'Helpful Links',
+                'my-stats': 'My Stats',
+                'settings': 'Settings'
+            };
+            mainTitle.textContent = titles[savedPage];
+        }
+    });
+</script>
 	
     <script type="module">
+		
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
