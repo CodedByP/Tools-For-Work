@@ -4800,8 +4800,8 @@ let notificationQueue = [];
 let isNotificationActive = false;
 let expandedChartInstance = null; // <--- ADD THIS LINE HERE
 let expandedChartEvents = [];     // <--- AND THIS ONE
-let cachedStatsEvents = [];
-let cachedStatsUserData = {};
+let cachedStatsEvents = null; // Tell the app this hasn't been loaded yet
+let cachedStatsUserData = null;
 let hasLoadedStats = false; // Prevents re-running the heavy logic
 let currentLeaderboardView = 'all';
 let sessionStartTime = null;
@@ -8897,11 +8897,21 @@ const getPreviousMonthId = () => {
 const checkAndAwardChallengeXP = async (userId) => {
     if (!userId || isAnonymous) return;
 
-    try {
-		// Just use the cached memory we already have! 
-		const userData = cachedStatsUserData || {};
-		const events = cachedStatsEvents || [];
-		const userDocRef = getUserRootDocRef(userId);
+	try {
+	    // Make sure the memory cache is actually loaded! If not, fetch it first.
+	    if (cachedStatsEvents === null) {
+	        const userDocRef = getUserRootDocRef(userId);
+	        const userDoc = await getDoc(userDocRef);
+	        cachedStatsUserData = userDoc.exists() ? userDoc.data() : {};
+	
+	        const eventsCollectionRef = getUserEventsCollectionRef(userId);
+	        const snapshot = await getDocs(query(eventsCollectionRef));
+	        cachedStatsEvents = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+	    }
+	
+	    const userData = cachedStatsUserData;
+	    const events = cachedStatsEvents;
+	    const userDocRef = getUserRootDocRef(userId);
         
         // --- Daily Challenge Check ---
         const todayStr = getCurrentDateString();
@@ -9562,8 +9572,8 @@ const logUserEvent = async (eventType, eventData = {}) => {
             ...cleanedEventData
         });
 		// Instantly update our local memory cache so the UI doesn't need to re-download from Firebase!
-		if (cachedStatsEvents) {
-		    cachedStatsEvents.unshift({
+	if (cachedStatsEvents !== null) {
+		cachedStatsEvents.unshift({
 		        type: eventType,
 		        // Create a fake temporary timestamp for the UI until they refresh
 		        timestamp: { toDate: () => new Date() }, 
@@ -11814,7 +11824,7 @@ const renderAdvancedStats = async () => {
 		let events = cachedStatsEvents;
 		
 		// 2. ONLY fetch from Firebase if our cache is empty!
-		if (!events || events.length === 0) {
+		if (events === null) {
 		    console.log("Fetching stats from Firebase (First time only!)");
 		    
 		    const userDocRef = getUserRootDocRef(userId);
