@@ -3324,6 +3324,52 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 @keyframes neon-pulse {
     0% { filter: drop-shadow(0 0 5px currentColor); }
     100% { filter: drop-shadow(0 0 15px currentColor); }
+}	
+
+/* ==========================================================================
+   MAGIC DRAFTER: NEURAL UI UPGRADES
+   ========================================================================== */
+
+/* 1. Active Neural Scanning Effect */
+@keyframes ai-scan-pan {
+    0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(150%) skewX(-15deg); opacity: 0; }
+}
+
+.neural-scan-line {
+    position: absolute;
+    top: 0; bottom: 0; left: 0; width: 60%;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.4), transparent);
+    animation: ai-scan-pan 1.5s infinite linear;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 2. Premium Tone Selectors (Radio Button Overrides) */
+.tone-selector-input:checked + .tone-card {
+    background: rgba(147, 51, 234, 0.2) !important;
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.2), inset 0 0 10px rgba(147, 51, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+.tone-selector-input:checked + .tone-card .tone-icon {
+    color: #c084fc !important;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.8);
+}
+
+.tone-selector-input:checked + .tone-card .tone-text {
+    color: #ffffff !important;
+}
+
+/* 3. Typing Pulse */
+@keyframes typing-pulse {
+    0%, 100% { border-color: rgba(168, 85, 247, 0.3); box-shadow: 0 0 0 transparent; }
+    50% { border-color: rgba(168, 85, 247, 0.8); box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
+}
+.is-analyzing {
+    animation: typing-pulse 1s infinite;
 }		
 
     </style>
@@ -5071,92 +5117,116 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     </div>
 </div>
 
-	<div id="magic-draft-modal" class="modal hidden z-[3000]">
-    <div class="modal-content w-full max-w-2xl bg-[#111827] border border-purple-500/30 rounded-2xl p-0 shadow-2xl shadow-purple-900/40 overflow-hidden">
+<div id="magic-draft-modal" class="modal hidden z-[3000] fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center">
+    <div class="modal-content w-full max-w-3xl bg-[#0b0f19] border border-purple-500/30 rounded-2xl p-0 shadow-[0_0_50px_rgba(147,51,234,0.15)] overflow-hidden flex flex-col relative transform transition-all scale-95 opacity-0 duration-300" id="magic-draft-inner">
         
-        <div class="bg-gradient-to-r from-gray-900 to-purple-900/40 p-6 border-b border-white/10 flex justify-between items-center">
+        <div class="bg-gradient-to-r from-gray-900 via-purple-900/20 to-gray-900 p-6 border-b border-white/10 flex justify-between items-center relative z-10">
             <div>
-                <h3 class="text-2xl font-bold text-white flex items-center gap-3">
-                    <span class="bg-purple-600/20 p-2 rounded-lg text-purple-400"><i class="fas fa-magic"></i></span>
-                    Magic Drafter
+                <h3 class="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+                    <div class="bg-purple-600/20 p-2.5 rounded-xl border border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    Neural Drafter
                 </h3>
-                <p class="text-gray-400 text-xs mt-1 ml-1">Powered by your Policy Brain</p>
+                <p class="text-gray-400 text-xs font-mono tracking-widest uppercase mt-2 ml-1">Context-Aware Generation</p>
             </div>
-            <button id="close-magic-draft-btn" class="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-lg transition-colors">
-                <i class="fas fa-times text-lg"></i>
+            <button id="close-magic-draft-btn" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10">
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <div class="p-6 space-y-5">
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between">
-                    <span>1. Describe the Situation</span>
-                    <span class="text-purple-400 text-[10px]">What happened?</span>
-                </label>
-                <textarea id="magic-input-text" rows="5" 
-                    class="w-full bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none placeholder-gray-600"
-                    placeholder="e.g. User lost their security key while traveling. They are a Director and need a replacement ASAP..."></textarea>
-            </div>
+        <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between items-end">
+                        <span>1. Incident Telemetry</span>
+                        <span class="text-purple-400/50 text-[9px] font-mono">Auto-Analyzing</span>
+                    </label>
+                    <textarea id="magic-input-text" rows="4" 
+                        class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none placeholder-gray-600 shadow-inner"
+                        placeholder="Paste user request or describe the situation here..."></textarea>
+                </div>
 
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-                    2. Context (Optional)
-                </label>
-                <div class="relative">
-                    <select id="magic-category-select" class="w-full bg-gray-800/50 border border-gray-700 rounded-xl p-3 pl-4 text-gray-200 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer">
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                        2. Scope Focus
+                    </label>
+                    <div class="relative h-[calc(100%-1.5rem)]">
+                        <select id="magic-category-select" class="w-full h-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-300 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer shadow-inner">
                         </select>
-                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
+                    </div>
                 </div>
             </div>
 
-			<div class="mt-4">
-			    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">3. Desired Tone</label>
-			    <div class="grid grid-cols-3 gap-2">
-			        <label class="cursor-pointer relative group">
-			            <input type="radio" name="magic-tone" value="Standard" checked class="peer hidden">
-			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-500 hover:bg-gray-800">
-			                <div class="text-xs font-bold">Standard</div>
-			            </div>
-			        </label>
-			        
-			        <label class="cursor-pointer relative group">
-			            <input type="radio" name="magic-tone" value="Empathetic" class="peer hidden">
-			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-500 hover:bg-gray-800">
-			                <div class="text-xs font-bold">Empathetic</div>
-			            </div>
-			        </label>
-			        
-			        <label class="cursor-pointer relative group">
-			            <input type="radio" name="magic-tone" value="Firm" class="peer hidden">
-			            <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-3 text-center transition-all peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-500 hover:bg-gray-800">
-			                <div class="text-xs font-bold">Firm / Strict</div>
-			            </div>
-			        </label>
-			    </div>
-			</div>
+            <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">3. Communication Vector</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="magic-tone" value="Standard" checked class="tone-selector-input hidden">
+                        <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-4 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
+                            <i class="fas fa-user-tie tone-icon text-gray-500 text-lg transition-colors"></i>
+                            <div class="tone-text text-xs font-bold text-gray-400 transition-colors uppercase tracking-wider">Professional</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="magic-tone" value="Empathetic" class="tone-selector-input hidden">
+                        <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-4 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
+                            <i class="fas fa-hand-holding-heart tone-icon text-gray-500 text-lg transition-colors"></i>
+                            <div class="tone-text text-xs font-bold text-gray-400 transition-colors uppercase tracking-wider">Empathetic</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="magic-tone" value="Firm" class="tone-selector-input hidden">
+                        <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-4 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
+                            <i class="fas fa-shield-alt tone-icon text-gray-500 text-lg transition-colors"></i>
+                            <div class="tone-text text-xs font-bold text-gray-400 transition-colors uppercase tracking-wider">Firm / Strict</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
 
-            <div id="magic-policy-status" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
-                <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400 shrink-0">
-                    <i class="fas fa-brain text-lg animate-pulse"></i>
+            <div id="magic-policy-container" class="hidden">
+                
+                <div id="magic-policy-scanning" class="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden hidden">
+                    <div class="neural-scan-line"></div>
+                    <i class="fas fa-circle-notch fa-spin text-purple-500 relative z-10"></i>
+                    <span class="text-xs font-mono text-purple-400 uppercase tracking-widest relative z-10">Querying Global Knowledge Base...</span>
                 </div>
-                <div class="min-w-0">
-                    <span class="text-[10px] font-bold text-purple-300 uppercase tracking-wider block mb-0.5">Policy Detected</span>
-                    <p id="magic-policy-name" class="text-sm text-white font-semibold truncate">--</p>
+
+                <div id="magic-policy-status" class="bg-gradient-to-r from-purple-900/30 to-blue-900/10 border border-purple-500/40 rounded-xl p-4 relative overflow-hidden hidden">
+                    <div class="flex items-start gap-4 relative z-10">
+                        <div class="bg-purple-500/20 p-2.5 rounded-lg text-purple-400 shrink-0 border border-purple-500/30 mt-1">
+                            <i class="fas fa-file-contract text-lg"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Policy Engaged</span>
+                                <span id="magic-policy-score" class="text-[10px] font-mono text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/30">Match: 95%</span>
+                            </div>
+                            <p id="magic-policy-name" class="text-base text-white font-bold truncate">--</p>
+                            <div class="mt-3 bg-black/40 rounded-lg p-3 border border-white/5 border-l-2 border-l-purple-500">
+                                <p id="magic-policy-snippet" class="text-xs text-gray-300 leading-relaxed font-mono line-clamp-3">--</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="ml-auto">
-                    <i class="fas fa-check-circle text-purple-400"></i>
-                </div>
+
             </div>
         </div>
 
-        <div class="bg-gray-900/50 p-6 border-t border-white/5 flex justify-end gap-3">
-            <button id="magic-cancel-btn" class="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-sm">
-                Cancel
-            </button>
-            <button id="magic-go-btn" class="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-900/30 transform transition active:scale-95 flex items-center gap-2 text-sm border border-white/10">
-                <span>Copy & Ask Gemini</span>
-                <i class="fas fa-external-link-alt text-xs opacity-70"></i>
-            </button>
+        <div class="bg-gray-900/80 p-5 border-t border-white/5 flex justify-between items-center relative z-10">
+            <span class="text-[10px] text-gray-500 font-mono hidden sm:inline-block"><i class="fas fa-lock mr-1"></i> Data remains local until dispatch</span>
+            <div class="flex gap-3 w-full sm:w-auto">
+                <button id="magic-cancel-btn" class="flex-1 sm:flex-none px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
+                    Cancel
+                </button>
+                <button id="magic-go-btn" class="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-purple-400/50 group">
+                    <span>Generate Draft</span>
+                    <i class="fas fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -7586,97 +7656,91 @@ const getBigrams = (tokens) => {
     return bigrams;
 };
 
-// --- UPDATED BRAIN v6.0: The Hybrid Engine ---
+// --- 1. THE CONTEXTUAL BRAIN (Weighted Scoring & Fuzzy Logic) ---
 const findRelevantPolicy = (text, currentCategory) => {
-    if (!text || globalKnowledgeCache.length === 0) return null;
+    if (!text || !globalKnowledgeCache || globalKnowledgeCache.length === 0) return null;
 
     const lowerText = text.toLowerCase();
     
-    // 1. Clean & Tokenize (Existing scoring setup)
-    const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
-    const userRoots = rawTokens.map(getRootWord); 
+    // Clean and Extract unique words > 3 chars
+    const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.has(w));
     const userBigrams = getBigrams(rawTokens);
 
-    // 2. Strict Scopes (Your "Bouncer" list)
-    const RESTRICTIVE_SCOPES = [
-        'onsite', 'remote', 'break/fix', 'repair', 'lost', 'stolen', 
-        'mailroom', 'shipping', 'receiving', 'audit', 'return',
-        'vip', 'director', 'executive', 'security key'
-    ];
+    // Expand User Tokens using Synonym Map (Pseudo-RAG query expansion)
+    let expandedTokens = new Set([...rawTokens]);
+    rawTokens.forEach(token => {
+        for (const [key, synonyms] of Object.entries(SYNONYM_MAP)) {
+            if (key === token || synonyms.includes(token)) {
+                expandedTokens.add(key);
+                synonyms.forEach(syn => expandedTokens.add(syn));
+            }
+        }
+    });
+    const finalTokens = Array.from(expandedTokens);
+
+    const RESTRICTIVE_SCOPES = ['onsite', 'remote', 'break/fix', 'vip', 'security key', 'locker'];
 
     let bestMatch = null;
     let highestScore = 0;
     let bestSnippet = null;
 
     globalKnowledgeCache.forEach(policy => {
-        const policyTitleLower = (policy.title || "").toLowerCase();
-        const policyContentLower = (policy.content || "").toLowerCase();
+        const policyTitle = (policy.title || "").toLowerCase();
+        const policyContent = (policy.content || "").toLowerCase();
         let score = 0;
 
-        // --- A. VETO CHECK (Existing logic) ---
-        const foundScopes = RESTRICTIVE_SCOPES.filter(scope => policyTitleLower.includes(scope));
-        if (foundScopes.length > 0) {
-            const matchesScope = foundScopes.some(scope => lowerText.includes(scope));
-            if (!matchesScope) return; 
-        }
+        // Veto Checks (Scopes & Categories)
+        const foundScopes = RESTRICTIVE_SCOPES.filter(scope => policyTitle.includes(scope));
+        if (foundScopes.length > 0 && !foundScopes.some(scope => lowerText.includes(scope))) return;
 
-        // --- B. CATEGORY FILTER (Existing logic) ---
         if (policy.targetCategories && policy.targetCategories.length > 0) {
             const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
             if (currentCategory && !normalizedTargets.includes(currentCategory.toUpperCase())) return;
         }
 
-        // --- C. ANCHOR CHECK (Existing logic) ---
-        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
-             const hasAnchor = policy.requiredAnchors.some(a => lowerText.includes(a.toLowerCase()));
-             if (!hasAnchor) return; 
-        }
+        // --- WEIGHTED SCORING ---
+        // 1. Direct Title Hits (Massive Weight)
+        if (lowerText.includes(policyTitle)) score += 50;
 
-        // --- D. SCORING ENGINE (Enhanced with Snippet Logic) ---
-        // 1. Title Match
-        if (lowerText.includes(policyTitleLower)) score += 100;
-        
-        // 2. Token overlap
-        userRoots.forEach(root => {
-            if (policyContentLower.includes(root)) score += 2;
+        // 2. Token Matching (Normal Weight)
+        finalTokens.forEach(token => {
+            // Count occurrences of the token in the policy
+            const regex = new RegExp(`\\b${token}\\b`, 'g');
+            const count = (policyContent.match(regex) || []).length;
+            // Cap the reward per token so long documents don't automatically win
+            score += Math.min(count * 2, 10); 
         });
 
-        // 3. Bigram context
+        // 3. Bigram Matching (Contextual Weight)
         userBigrams.forEach(bigram => {
-            if (policyContentLower.includes(bigram)) score += 10;
+            if (policyContent.includes(bigram)) score += 15;
         });
 
-        // --- E. SNIPPET-LEVEL ANCHOR EXTRACTION ---
+        // --- SNIPPET EXTRACTION ---
+        // Find the paragraph with the highest density of matched tokens
         const paragraphs = policy.content.split(/\n\s*\n/);
-        let policyBestSnippet = null;
-        let snippetMaxMatches = 0;
+        let policyBestSnippet = paragraphs[0]; // Default to intro
+        let snippetMaxScore = 0;
 
         paragraphs.forEach(para => {
             const lowerPara = para.toLowerCase();
-            // Look for long-tail matches (words > 4 chars) to identify specific sections
-            const paraWords = lowerPara.match(/\b(\w{5,})\b/g) || []; 
-            let matches = 0;
-            paraWords.forEach(word => {
-                if (lowerText.includes(word)) matches++;
-            });
-
-            if (matches > snippetMaxMatches) {
-                snippetMaxMatches = matches;
+            let pScore = 0;
+            finalTokens.forEach(t => { if (lowerPara.includes(t)) pScore++; });
+            if (pScore > snippetMaxScore) {
+                snippetMaxScore = pScore;
                 policyBestSnippet = para;
             }
         });
 
-        // 4. Final Match Selection
         if (score > highestScore) {
             highestScore = score;
             bestMatch = policy;
-            // Only use the snippet if it clearly identifies a specific sub-section
-            bestSnippet = (snippetMaxMatches >= 3) ? policyBestSnippet : null;
+            bestSnippet = policyBestSnippet;
         }
     });
 
-    // Threshold check
-    return highestScore > 25 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
+    // Threshold requires at least a decent cluster of keywords to match
+    return highestScore > 15 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
 };
 
 const showInsightsSidebar = (match, forceOpen = false) => {
@@ -12633,190 +12697,179 @@ function attachEventListeners() {
         });
     }
 	
-// --- MAGIC DRAFTER LOGIC ---
-const magicDraftBtn = document.getElementById('open-magic-draft-btn');
-const magicDraftModal = document.getElementById('magic-draft-modal');
-const magicInput = document.getElementById('magic-input-text');
-const magicGoBtn = document.getElementById('magic-go-btn');
+// --- 2. MODAL LOGIC & ANIMATIONS ---
+let magicTypingTimer;
 
-// 1. Open Logic
+// Open Logic
+const magicDraftBtn = document.getElementById('open-magic-draft-btn');
 if (magicDraftBtn) {
     magicDraftBtn.addEventListener('click', async () => {
-        
-        showMessage("Syncing latest policies...", "info");
         await loadGlobalKnowledge();
         
         const catSelect = document.getElementById('magic-category-select');
         catSelect.innerHTML = '<option value="">-- Auto Detect --</option>';
-        
         Object.keys(categories).forEach(cat => {
             const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
-            
-            // --- UPDATED LOGIC HERE ---
-            // If "GUTS" exists in your categories, set it as selected by default.
-            // If GUTS doesn't exist for some reason, fall back to the active category.
-            if (cat === "GUTS") {
-                option.selected = true;
-            } else if (!Object.keys(categories).includes("GUTS") && cat === activeCategory) {
+            option.value = cat; option.textContent = cat;
+            if (cat === "GUTS" || (!Object.keys(categories).includes("GUTS") && cat === activeCategory)) {
                 option.selected = true;
             }
-            
             catSelect.appendChild(option);
         });
 
-        // B. Reset & Show
-        magicInput.value = '';
-        document.getElementById('magic-policy-status').classList.add('hidden');
-        magicDraftModal.classList.remove('hidden');
+        document.getElementById('magic-input-text').value = '';
+        document.getElementById('magic-policy-container').classList.add('hidden');
         
-        setTimeout(() => magicInput.focus(), 50);
+        const modal = document.getElementById('magic-draft-modal');
+        const inner = document.getElementById('magic-draft-inner');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            inner.classList.remove('scale-95', 'opacity-0');
+            inner.classList.add('scale-100', 'opacity-100');
+            document.getElementById('magic-input-text').focus();
+        }, 10);
     });
 }
 
-// 2. Real-time Brain Scan (Typing Listener) - Existing
+// Real-Time Scanning Logic (Debounced)
+const magicInput = document.getElementById('magic-input-text');
 if (magicInput) {
     magicInput.addEventListener('input', (e) => {
-        const text = e.target.value;
-        const category = document.getElementById('magic-category-select').value;
-        
-        const policy = findRelevantPolicy(text, category);
-        const statusEl = document.getElementById('magic-policy-status');
-        const nameEl = document.getElementById('magic-policy-name');
+        const text = e.target.value.trim();
+        const container = document.getElementById('magic-policy-container');
+        const scanningUI = document.getElementById('magic-policy-scanning');
+        const statusUI = document.getElementById('magic-policy-status');
 
-        if (policy) {
-            statusEl.classList.remove('hidden');
-            nameEl.textContent = policy.title;
-        } else {
-            statusEl.classList.add('hidden');
+        clearTimeout(magicTypingTimer);
+
+        if (text.length < 10) {
+            container.classList.add('hidden');
+            magicInput.classList.remove('is-analyzing');
+            return;
         }
-    });
-}
 
-// --- NEW: Category Change Listener ---
-const magicCatSelect = document.getElementById('magic-category-select');
-if (magicCatSelect) {
-    magicCatSelect.addEventListener('change', () => {
-        // Manually trigger the scan when the dropdown changes
-        const text = document.getElementById('magic-input-text').value;
-        const category = magicCatSelect.value;
-        
-        const policy = findRelevantPolicy(text, category);
-        const statusEl = document.getElementById('magic-policy-status');
-        const nameEl = document.getElementById('magic-policy-name');
+        // Show Scanning State
+        container.classList.remove('hidden');
+        statusUI.classList.add('hidden');
+        scanningUI.classList.remove('hidden');
+        magicInput.classList.add('is-analyzing');
 
-        if (policy) {
-            statusEl.classList.remove('hidden');
-            nameEl.textContent = policy.title;
-            // Add a small visual "pulse" to show it re-scanned
-            statusEl.classList.add('animate-pulse');
-            setTimeout(() => statusEl.classList.remove('animate-pulse'), 500);
-        } else {
-            statusEl.classList.add('hidden');
-        }
-    });
-}
+        // Execute Brain after typing pauses
+        magicTypingTimer = setTimeout(() => {
+            magicInput.classList.remove('is-analyzing');
+            scanningUI.classList.add('hidden');
 
-// 3. "Go" Button Logic (UPDATED v2.0)
-    if (magicGoBtn) {
-        magicGoBtn.addEventListener('click', async () => {
-            const text = magicInput.value;
             const category = document.getElementById('magic-category-select').value;
-            
-            // 1. Get the Selected Tone
-            const toneElement = document.querySelector('input[name="magic-tone"]:checked');
-            const tone = toneElement ? toneElement.value : 'Standard';
-
-            if (!text.trim()) {
-                magicInput.classList.add('ring-2', 'ring-red-500');
-                setTimeout(() => magicInput.classList.remove('ring-2', 'ring-red-500'), 500);
-                return;
-            }
-
-            // 2. Find Policy (Using your specific brain logic)
             const policy = findRelevantPolicy(text, category);
 
-            // 3. CONSTRUCT THE SUPER PROMPT
-            let prompt = `Act as an expert IT Support Specialist for Google. \n\n`;
-            
-            // A. Context
-            prompt += `--- CONTEXT ---\n`;
-            prompt += `USER TICKET/SITUATION:\n"${text}"\n`;
             if (policy) {
-                prompt += `RELEVANT POLICY TITLE: ${policy.title}\n`;
-                prompt += `POLICY RULES: ${policy.content}\n`;
-            }
-            prompt += `\n`;
-
-			prompt += `--- STRICT WRITING RULES ---\n`;
-            prompt += `1. **Customer Facing Only:** Do NOT mention internal tools (PAR, GUTS, SAP), status codes (e.g., 'Assigned - Additional'), or backend workflows (e.g., 'destroy hostnames').\n`;
-            prompt += `2. **Privacy:** Never share internal links or dashboard screenshots.\n`;
-            prompt += `\n`;
-
-            // B. Tone Instruction (Feature #1)
-            prompt += `--- TONE & STYLE ---\n`;
-            if (tone === 'Firm') {
-                prompt += `• Tone: FIRM, AUTHORITATIVE, and DIRECT.\n`;
-                prompt += `• Intent: Enforce policy strictly. Do not apologize excessively. State the rules clearly.\n`;
-            } else if (tone === 'Empathetic') {
-                prompt += `• Tone: WARM, APOLOGETIC, and PATIENT.\n`;
-                prompt += `• Intent: De-escalate the situation. Acknowledge the user's frustration. Use phrases like "I understand" and "I apologize for the delay."\n`;
-            } else {
-                prompt += `• Tone: PROFESSIONAL, HELPFUL, and CONCISE.\n`;
-                prompt += `• Intent: Standard support resolution. Be polite but efficient.\n`;
-            }
-            prompt += `\n`;
-
-            // C. Chain of Thought (Feature #3)
-            prompt += `--- INSTRUCTIONS ---\n`;
-            prompt += `Think step-by-step before generating the draft:\n`;
-            prompt += `1. ANALYZE: Check if the User Situation provided contains all necessary info (e.g., shipping address, asset tag, dates) required by the Policy.\n`;
-            prompt += `2. DECISION: \n`;
-            prompt += `   - If info is MISSING: Draft a reply asking for those specific details.\n`;
-            prompt += `   - If info is PRESENT: Draft the final resolution email.\n`;
-            prompt += `3. FORMAT: Use placeholders like [Customer Name] or [Date] where needed.\n`;
-            
-            prompt += `\n--- OUTPUT ---\n`;
-            prompt += `Provide ONLY the final email draft. Do not show your thinking steps.`;
-
-            // D. Copy & Launch
-            try {
-                await navigator.clipboard.writeText(prompt);
+                document.getElementById('magic-policy-name').textContent = policy.title;
+                // Clean markdown from snippet for UI display
+                const cleanSnippet = (policy.focusedSnippet || "Relevant rules identified.").replace(/\*\*/g, '').trim();
+                document.getElementById('magic-policy-snippet').textContent = `"...${cleanSnippet}..."`;
                 
-                // Visual Feedback
-                const originalHTML = magicGoBtn.innerHTML;
-                magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Copied!</span>`;
-                magicGoBtn.classList.remove('from-purple-600', 'to-indigo-600');
-                magicGoBtn.classList.add('bg-green-600');
+                // Calculate a fake percentage based on score (capped at 99%)
+                const pct = Math.min(Math.floor((policy.score / 150) * 100) + 40, 99);
+                document.getElementById('magic-policy-score').textContent = `Match: ${pct}%`;
+                
+                statusUI.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden'); // Hide if no match found
+            }
+        }, 600); // 600ms delay feels like "AI processing"
+    });
+}
 
-                showMessage("Prompt copied! Opening Gemini...", "success");
+// --- 3. THE PROMPT ENGINEERING ENGINE (Few-Shot Generation) ---
+const magicGoBtn = document.getElementById('magic-go-btn');
+if (magicGoBtn) {
+    magicGoBtn.addEventListener('click', async () => {
+        const text = magicInput.value.trim();
+        const category = document.getElementById('magic-category-select').value;
+        const toneElement = document.querySelector('input[name="magic-tone"]:checked');
+        const tone = toneElement ? toneElement.value : 'Standard';
+
+        if (!text) {
+            magicInput.classList.add('ring-2', 'ring-red-500');
+            setTimeout(() => magicInput.classList.remove('ring-2', 'ring-red-500'), 500);
+            return;
+        }
+
+        const policy = findRelevantPolicy(text, category);
+
+        // --- OPTIMIZED FEW-SHOT PROMPT ---
+        let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
+        
+        prompt += `### SYSTEM DIRECTIVES (STRICT COMPLIANCE REQUIRED) ###\n`;
+        prompt += `1. **Customer Facing:** This email goes directly to the user. Do NOT mention internal systems (GUTS, PAR, SAP, Buganizer, MOMA, Techstop).\n`;
+        prompt += `2. **No Jargon:** Never use terms like "Assigned - Additional", "Hostnames", "P0/P1", or "Ticket SLA".\n`;
+        prompt += `3. **Formatting:** Use short paragraphs. Use bullet points for steps. No subject lines.\n`;
+        prompt += `4. **Placeholders:** If you need data (dates, tracking numbers, names), use bracketed placeholders like [Tracking Number] or [Date].\n\n`;
+
+        prompt += `### TONE: ${tone.toUpperCase()} ###\n`;
+        if (tone === 'Firm') {
+            prompt += `- Be polite but authoritative. State policies clearly without over-apologizing.\n\n`;
+        } else if (tone === 'Empathetic') {
+            prompt += `- Acknowledge their frustration. Use phrases like "I understand the urgency" or "I apologize for the delay."\n\n`;
+        } else {
+            prompt += `- Professional, concise, and solution-oriented.\n\n`;
+        }
+
+        // Few-Shot Examples (Teaches the AI what "good" looks like)
+        prompt += `### EXAMPLE OF A GOOD RESPONSE ###\n`;
+        prompt += `Hello [User],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\nIT Support\n\n`;
+
+        prompt += `### ACTUAL USER SITUATION ###\n`;
+        prompt += `"${text}"\n\n`;
+
+        if (policy) {
+            prompt += `### APPLICABLE COMPANY POLICY RULES ###\n`;
+            prompt += `(Ensure your draft complies with these rules. Do not explicitly say "According to policy")\n`;
+            prompt += `Rule Source: ${policy.title}\n`;
+            // Use the focused snippet to prevent context bloat
+            prompt += `Rule Details: ${policy.focusedSnippet || policy.content}\n\n`;
+        }
+        
+        prompt += `--- OUTPUT ONLY THE EMAIL BODY BELOW THIS LINE ---\n`;
+
+        // Copy & Launch logic
+        try {
+            await navigator.clipboard.writeText(prompt);
+            
+            const originalHTML = magicGoBtn.innerHTML;
+            magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Prompt Copied!</span>`;
+            magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-green-500 shadow-lg transform transition flex items-center justify-center gap-2 text-sm";
+
+            showMessage("AI Prompt Copied! Press Ctrl+V in Gemini.", "success", 4000);
+            
+            setTimeout(() => {
+                window.open('https://gemini.google.com/app', '_blank');
+                document.getElementById('magic-draft-inner').classList.remove('scale-100', 'opacity-100');
+                document.getElementById('magic-draft-inner').classList.add('scale-95', 'opacity-0');
+                setTimeout(() => document.getElementById('magic-draft-modal').classList.add('hidden'), 300);
                 
                 setTimeout(() => {
-                    window.open('https://gemini.google.com/app', '_blank');
-                    magicDraftModal.classList.add('hidden');
-                    
-                    setTimeout(() => {
-                        magicGoBtn.innerHTML = originalHTML;
-                        magicGoBtn.classList.add('from-purple-600', 'to-indigo-600');
-                        magicGoBtn.classList.remove('bg-green-600');
-                    }, 500);
-                }, 800);
+                    magicGoBtn.innerHTML = originalHTML;
+                    magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-purple-400/50 group";
+                }, 500);
+            }, 1000);
 
-            } catch (err) {
-                console.error("Clipboard failed:", err);
-                showMessage("Could not copy. Please manually copy.", "error");
-            }
-        });
-    }
+        } catch (err) {
+            console.error("Clipboard failed:", err);
+            showMessage("Could not copy prompt. Please manually copy.", "error");
+        }
+    });
+}
 
-// 4. Close Handlers
-document.getElementById('close-magic-draft-btn')?.addEventListener('click', () => {
-    magicDraftModal.classList.add('hidden');
-});
-document.getElementById('magic-cancel-btn')?.addEventListener('click', () => {
-    magicDraftModal.classList.add('hidden');
-});	
+// Close Handlers
+const closeMagicModal = () => {
+    const inner = document.getElementById('magic-draft-inner');
+    inner.classList.remove('scale-100', 'opacity-100');
+    inner.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => document.getElementById('magic-draft-modal').classList.add('hidden'), 300);
+};
+document.getElementById('close-magic-draft-btn')?.addEventListener('click', closeMagicModal);
+document.getElementById('magic-cancel-btn')?.addEventListener('click', closeMagicModal);
 
 
 document.body.addEventListener('click', (e) => {
