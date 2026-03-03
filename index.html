@@ -2230,7 +2230,51 @@
         right: 50%;
         transform: translate(-200%, -50%) scale(1); 
         max-width: 500px;
-    }	 	
+    }
+
+	/* --- Modern Interactive Tutorial Overhaul --- */
+    #tutorial-spotlight {
+        position: fixed;
+        z-index: 9998;
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); 
+        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        pointer-events: none;
+        opacity: 0;
+    }
+    #tutorial-spotlight.active { opacity: 1; }
+
+    #modern-tooltip {
+        position: fixed;
+        z-index: 9999;
+        width: 350px;
+        background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.95) 100%);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 1.25rem;
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.15);
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    #modern-tooltip.visible { opacity: 1; transform: scale(1) translateY(0); }
+    #modern-tooltip.centered {
+        top: 50% !important; left: 50% !important;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    #modern-tooltip.centered.visible { transform: translate(-50%, -50%) scale(1); }
+    body.tutorial-active { overflow: hidden; }
+    .tutorial-target-active {
+        position: relative;
+        z-index: 9997 !important;
+        animation: pulse-highlight-light 2s infinite;
+    }
+	
     #login-popup-modal {
         position: fixed;
         top: 0;
@@ -2823,8 +2867,6 @@
 
     <audio id="level-up-sound" src="level-up.mp3" preload="auto"></audio> 
 	<audio id="achievement-sound" src="achievement.mp3" preload="auto"></audio>
-
-    <div id="tutorial-overlay" class="fixed inset-0 bg-black bg-opacity-75 hidden z-[999]"></div>
 
 	<div id="sidebar" class="sidebar flex flex-col bg-gray-900 border-r border-gray-700">
 		    <div class="px-5 pt-8 pb-4 flex items-center justify-between">
@@ -4156,163 +4198,30 @@
         </div>
     </div>
 
-    <div id="tutorial-modal" class="modal hidden">
-        <div class="modal-content w-full max-w-lg">
-            <div id="tutorial-step-1" class="tutorial-step space-y-6">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Welcome! 👋</h3>
-                <p class="text-lg text-gray-300 text-center">Thanks for signing in! Here's a quick tour to show you how to get the most out of this site.</p>
-            </div>
-
-            <div id="tutorial-step-2" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Add New Responses</h3>
-                <p class="text-lg text-gray-300">This button is where you can create new canned responses. You can give it a label and assign it to a category.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-plus-circle text-purple-400 mr-3"></i> Tips
-                    </h4>
-                    <p class="text-gray-400">Add responses for your most common requests to save time!</p>
-                </div>
-            </div>
-            <div id="tutorial-step-3" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Search Your Responses</h3>
-                <p class="text-lg text-gray-300">Quickly find any response by using the search box at the top of the left column.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-search text-yellow-400 mr-3"></i> How it Works
-                    </h4>
-                    <p class="text-gray-400">Type any keyword into the search bar, and the list below will instantly filter to show you matching responses.</p>
-                </div>
-            </div>
-
-            <div id="tutorial-step-4" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Categories</h3>
-                <p class="text-lg text-gray-300">Organize your responses with custom categories. You can create new categories with the **<i class="fas fa-plus"></i>** button.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-ellipsis-v text-pink-400 mr-3"></i> Manage Categories
-                    </h4>
-                    <p class="text-gray-400">Click the vertical ellipsis (<i class="fas fa-ellipsis-v"></i>) next to a category to edit your categories. </p>
-                </div>
-            </div>
-            
-            <div id="tutorial-step-5" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Manage Categories</h3>
-                <p class="text-lg text-gray-300">Once you have a category selected, click on the (<i class="fas fa-ellipsis-v"></i>) **menu button** to edit, rename, or delete it.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-lightbulb text-yellow-400 mr-3"></i> Tip
-                    </h4>
-                    <p class="text-gray-400">You can also change a category's color here to make it stand out!</p>
-                </div>
-            </div>
-            
-            <div id="tutorial-step-6" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Manage Responses</h3>
-                <p class="text-lg text-gray-300">Use the Copy, Edit, and Delete buttons to manage your canned responses.!</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-copy text-green-400 mr-3"></i> Quick Actions
-                    </h4>
-                    <p class="text-gray-400">The **Copy** button instantly copies the text. The other buttons allow you to easily edit or delete the entry from your list.</p>
-                </div>
-            </div>
-
-            <div id="tutorial-step-7" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Pin Your Favorites</h3>
-                <p class="text-lg text-gray-300">The  <i class="fas fa-thumbtack text-white mr-3"></i> allows you to pin your most-used responses to the top of the list for quick access.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-thumbtack text-white mr-3"></i> Pinning Tips
-                    </h4>
-                    <p class="text-gray-400">Click the pin icon again to unpin a response, and it will return to its alphabetical position.</p>
-                </div>
-            </div>
-            
-            <div id="tutorial-step-8" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Dynamic Placeholders</h3>
-                <p class="text-lg text-gray-300">Some responses use special placeholders like [TrackingNumber], [Customer's Name], [Asset Number], that you can quickly fill in. You can also edit or add your own placeholders by simply adding brackets [] arround phrases!</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-magic text-purple-400 mr-3"></i> Try it out!
-                    </h4>
-                    <p class="text-gray-400 mt-2">Notice the highlighted response on the right. Click the button below to see how to fill in its placeholders!</p>
-                </div>
-                <div class="flex justify-center mt-6">
-                    <button id="show-placeholder-example-btn" class="bg-purple-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300">
-                        Fill it Out
-                    </button>
-                </div>
-            </div>
-
-            <div id="tutorial-step-9" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">You're All Set to Paste! 🎉</h3>
-                <p class="text-lg text-gray-300">You've successfully copied a response with placeholders filled in. Now you can paste it anywhere you need!</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-paste text-green-400 mr-3"></i> Try it out
-                    </h4>
-                    <p class="text-gray-400">Paste the text into a document or email to see the final result. All your responses are now ready to be used with a single click.</p>
-                </div>
-            </div>
-
-			<div id="tutorial-step-10" class="tutorial-step space-y-6 hidden">
-   				 <h3 class="text-3xl font-extrabold text-blue-400 text-center">Navigate to Other Pages 🗺️</h3>
-   				 <p class="text-lg text-gray-300">
-       				 You can access other tools, like the **FedEx Tracker**, **Helpful Links**, & **My Stats** by opening the main menu.
-   				 </p>
-   				 <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-       				 <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-            			<i class="fas fa-bars text-gray-400 mr-3"></i> How it Works
-        				</h4>
-       				 <p class="text-gray-400">
-           			 Click the hamburger icon on the top left to reveal the sidebar menu and switch between pages.
-        			</p>
-    			</div>
-			</div>
-
-            <div id="tutorial-step-11" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">FedEx Tracker Page 📦</h3>
-                <p class="text-lg text-gray-300">This page allows you to quickly extract FedEx tracking numbers from any block of text you paste in.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-clipboard-check text-green-400 mr-3"></i> Try it out!
-                    </h4>
-                    <p class="text-gray-400">Paste up to 30 FedEx tracking numbers into the box on the left.</p>
-                </div>
-            </div>	
-
-            <div id="tutorial-step-12" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Copy & Open FedEx 🔗</h3>
-                <p class="text-lg text-gray-300">After the numbers are extracted, this button copies all of them and automatically opens a new FedEx tracking tab for you.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-truck text-red-400 mr-3"></i> Why it's useful
-                    </h4>
-                    <p class="text-gray-400">This saves you from copying each number one by one and pasting them into the FedEx website, streamlining your workflow.</p>
-                </div>
-            </div>
-
-			<div id="tutorial-step-13" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">Helpful Links Page 🔗</h3>
-                <p class="text-lg text-gray-300">This page is a curated collection of useful links. You can search through the default links and add your own personal links for quick access.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-search-plus text-teal-400 mr-3"></i> Quick Tip
-                    </h4>
-                    <p class="text-gray-400">Use the search bar at the top to instantly filter both the default and your personal links.</p>
-                </div>
-            </div>
-
-            <div id="tutorial-step-14" class="tutorial-step space-y-6 hidden">
-                <h3 class="text-3xl font-extrabold text-blue-400 text-center">My Stats Page 📊</h3>
-                <p class="text-lg text-gray-300">Track your productivity here! This page visualizes your usage, showing your most copied responses, category breakdowns, and achievements you've unlocked.</p>
-                <div class="p-4 rounded-xl bg-gray-800 shadow-lg border border-gray-700">
-                    <h4 class="text-xl font-bold text-gray-200 flex items-center mb-2">
-                        <i class="fas fa-trophy text-yellow-400 mr-3"></i> Gamify Your Work
-                    </h4>
-                    <p class="text-gray-400">Unlock achievements by using different features of the application. See how many you can collect!</p>
-                </div>
-            </div>
+	<div id="tutorial-spotlight"></div>
+	    <div id="modern-tooltip" class="hidden flex-col">
+	        <div class="flex justify-between items-center px-6 py-4 border-b border-white/10">
+	            <span id="tooltip-progress" class="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest">Step 1 of X</span>
+	            <button id="tooltip-skip-btn" class="text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors">Skip Tour</button>
+	        </div>
+	        <div class="p-6">
+	            <div id="tooltip-icon-wrapper" class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl mb-4 border border-blue-500/30 shadow-inner">
+	                <i id="tooltip-icon" class="fas fa-magic"></i>
+	            </div>
+	            <h3 id="tooltip-title" class="text-xl font-black text-white mb-2 tracking-tight">Title</h3>
+	            <p id="tooltip-content" class="text-sm text-gray-300 leading-relaxed">Description goes here.</p>
+	            <label id="tooltip-opt-out-container" class="hidden items-center gap-2 mt-4 cursor-pointer group">
+	                <input type="checkbox" id="tooltip-opt-out" class="form-checkbox h-4 w-4 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500">
+	                <span class="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Don't show this automatically</span>
+	            </label>
+	        </div>
+	        <div class="flex justify-between items-center px-6 py-4 bg-black/20 rounded-b-[1.25rem] border-t border-white/5">
+	            <button id="tooltip-back-btn" class="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors">Back</button>
+	            <button id="tooltip-next-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2">
+	                <span id="tooltip-next-text">Next</span> <i class="fas fa-arrow-right text-xs"></i>
+	            </button>
+	        </div>
+	    </div>
 
             <div id="copy-success-modal" class="modal hidden">
                 <div class="modal-content">
@@ -4330,28 +4239,7 @@
                 </div>
             </div>
 
-			<div class="flex justify-between items-center mt-8">
-   				 <button id="tutorial-back-btn" class="py-3 px-6 rounded-xl shadow-md hidden 
-       			 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700
-        			light-mode:bg-gray-300 light-mode:text-gray-800 light-mode:hover:bg-gray-400
-        			transition duration-300">
-       			 <i class="fas fa-arrow-left mr-2"></i> Back
-   			 </button>
-   			 <button id="tutorial-next-btn" class="py-3 px-6 rounded-xl shadow-lg
-        			dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700
-        			light-mode:bg-blue-600 light-mode:text-white light-mode:hover:bg-blue-700
-        			transition duration-300">
-        			Next <i class="fas fa-arrow-right ml-2"></i>
-   			 </button>
-    			<button id="tutorial-finish-btn" class="py-3 px-6 rounded-xl shadow-lg hidden
-       			 dark:bg-green-600 dark:text-white dark:hover:bg-green-700
-       			 light-mode:bg-green-600 light-mode:text-white light-mode:hover:bg-green-700
-       			 transition duration-300">
-       			 Finish <i class="fas fa-check ml-2"></i>
-    			</button>
-			</div>
-        </div>
-    </div>
+
 
 		</div> <div id="achievement-toast" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse text-gray-200 bg-gray-700 divide-x rtl:divide-x-reverse divide-gray-600 rounded-lg shadow-lg space-x opacity-0 translate-y-5 transition-all duration-500 ease-out z-[5000]">
 		    <div id="toast-icon" class="text-2xl text-yellow-400">🏆</div>
@@ -5616,74 +5504,7 @@ function lightenColor(hexColor) {
 }
 
 
-const tutorialSteps = [
-    document.getElementById('tutorial-step-1'),
-    document.getElementById('tutorial-step-2'),
-    document.getElementById('tutorial-step-3'),
-    document.getElementById('tutorial-step-4'),
-    document.getElementById('tutorial-step-5'), 
-    document.getElementById('tutorial-step-6'), 
-    document.getElementById('tutorial-step-7'),
-    document.getElementById('tutorial-step-8'),
-    document.getElementById('tutorial-step-9'),
-    document.getElementById('tutorial-step-10'),
-    document.getElementById('tutorial-step-11'),
-    document.getElementById('tutorial-step-12'),
-	document.getElementById('tutorial-step-13'),
-	document.getElementById('tutorial-step-14'),
-];
 
-const highlightedElements = [
-    null, // Step 1
-    document.getElementById('add-response-section'), // Step 2: Add New Response
-    document.getElementById('search-bar-container'), // Step 3: Search Bar
-    document.getElementById('category-bar'), // Step 4: Categories
-    document.getElementById('category-menu-container'), // Step 5: Kebab menu
-    null, // Step 6: Copy, Edit, Delete buttons (highlighting handled dynamically)
-    null, // Step 7: Pin button (highlighting handled dynamically)
-    null, // Step 8: Dynamic Placeholders
-    null, // Step 9:This will be handled dynamically inside the function
-	document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
-    document.getElementById('input-text-fedex'), // Step 11
-    document.getElementById('copy-button-fedex'), // Step 12: New highlight
-	null,
-	null,
-];
- 
-const tutorialPages = [
-    'canned-responses', // Step 1: Welcome screen
-    'canned-responses', // Step 2: Add a response
-    'canned-responses', // Step 3: Search
-    'canned-responses', // Step 4: Categories
-    'canned-responses', // Step 5: Manage Categories
-    'canned-responses', // Step 6: Manage Responses (new)
-    'canned-responses', // Step 7: Pinning (new)
-    'canned-responses', // Step 8: Dynamic placeholders
-    'canned-responses', //step 9
-	'canned-responses', //step 10
-    'fedex-tracker', // Step 11: Change page to FedEx tracker
-    'fedex-tracker', // Step 12: Change page to FedEx tracker
-	'helpful-links',    //  Step 13
-    'my-stats',         //  Step 14
-];
-
-// An array to map each step to the modal's target position
-const modalPositions = [
-    'show-modal', // Step 1: Centered modal
-    'top-right',  // Step 2: Position for add response section
-    'top-right',  // Step 3: Position for the search bar
-    'bottom-left', // Step 4: Position for category bar
-    'upper-right', //Step 5: Position for Kebab menu
-    'on-response', // Step 6: Response buttons (new)
-    'on-response',  // Step 7: Pin button (new)
-    'left-response', // Step 8: Dynamic placeholders
-    'show-modal', //Step 9
-	'top-left',
-    'left-response', // Step 10: New position
-    'on-tracker-page', // Step 11: Position on the tracker page
-	'show-modal',
-	'show-modal',
-];
 
 // --- Master Blueprint Data for Initialization ---
 const defaultCannedResponsesBlueprint = {
@@ -9380,182 +9201,149 @@ const renderLinks = (searchQuery = '') => {
 
 		
 
-// This is the new, combined function that handles all tutorial logic
+// --- Modern Tutorial Configuration & Logic ---
+const TUTORIAL_CONFIG = [
+    { title: "Welcome to Your Workspace! 👋", text: "Let's take a quick tour to supercharge your productivity. We've added powerful new AI and Analytics features.", icon: "fa-rocket", page: "canned-responses", target: null },
+    { title: "Create Responses", text: "Click here to **add a new canned response**. You can organize them with labels and assign them to specific categories.", icon: "fa-plus-circle", page: "canned-responses", target: () => document.getElementById('add-response-section') },
+    { title: "Lightning Fast Search", text: "Instantly find what you need. **Type keywords** here to filter your entire library in real-time.", icon: "fa-search", page: "canned-responses", target: () => document.getElementById('search-bar-container') },
+    { title: "Smart Placeholders", text: "Use brackets like `[Device Model]` in your text. We'll automatically prompt you to **fill them in** before copying!", icon: "fa-keyboard", page: "canned-responses", target: () => { const item = Array.from(document.querySelectorAll('.response-item')).find(el => el.textContent.includes('[')); return item || document.querySelector('.response-item'); } },
+    { title: "AI Neural Drafter 🧠", text: "Stuck on a weird ticket? Describe the situation here. Gemini will scan the global policy base and **write a perfect, compliant email for you.**", icon: "fa-brain", page: "canned-responses", target: () => document.getElementById('magic-draft-card') || document.getElementById('open-magic-draft-btn') },
+    { title: "FedEx Tracker 📦", text: "Paste messy email threads or chat logs here. The system will automatically **extract all tracking numbers** at once.", icon: "fa-box-open", page: "fedex-tracker", target: () => document.getElementById('input-text-fedex') },
+    { title: "One-Click Execution", text: "Click here to **copy all extracted numbers** and automatically launch FedEx tracking in a new tab.", icon: "fa-external-link-alt", page: "fedex-tracker", target: () => document.getElementById('copy-button-fedex') },
+    { title: "SLA Dashboard ⏱️", text: "Never miss a deadline. Use the **Deadline Engine** to calculate exact turnaround times based on business hours.", icon: "fa-calculator", page: "sla-dashboard", target: () => document.getElementById('sla-deadline-engine') || document.getElementById('sla-search-input') },
+    { title: "Global Leaderboard 🌍", text: "Compete with your team! See who can clear the most tickets. Climb the ranks to become the **Weekly Champion** or **Monthly Legend**.", icon: "fa-globe", page: "my-stats", target: () => document.getElementById('leaderboard-container') },
+    { title: "Personal Records 🏆", text: "Track your own personal bests. Smash your daily, weekly, and monthly output records to earn **massive XP bonuses**.", icon: "fa-bolt", page: "my-stats", target: () => document.getElementById('record-daily').closest('.bg-black\\/30') || document.getElementById('record-daily-status') },
+    { title: "Track Your Impact 📊", text: "Keep working to **level up your rank** and unlock a massive library of hidden achievements. You're ready to go!", icon: "fa-medal", page: "my-stats", target: null }
+];
+
+let currentTutorialStep = 0;
+
+const closeTutorial = async () => {
+    isTutorialActive = false;
+    document.body.classList.remove('tutorial-active');
+    document.getElementById('tutorial-spotlight').classList.remove('active');
+    document.getElementById('modern-tooltip').classList.remove('visible');
+    setTimeout(() => { document.getElementById('modern-tooltip').classList.add('hidden'); }, 400);
+    document.querySelectorAll('.tutorial-target-active').forEach(el => el.classList.remove('tutorial-target-active'));
+
+    if (userId) {
+        const optOut = document.getElementById('tooltip-opt-out').checked;
+        if (optOut) {
+            try { await setDoc(getUserRootDocRef(userId), { tutorialSeen: true }, { merge: true }); } catch (e) { console.error(e); }
+        }
+    }
+};
+
+const positionTooltip = (targetEl) => {
+    const tooltip = document.getElementById('modern-tooltip');
+    const spotlight = document.getElementById('tutorial-spotlight');
+
+    if (!targetEl) {
+        spotlight.classList.remove('active');
+        tooltip.style.top = ''; tooltip.style.left = ''; tooltip.style.bottom = ''; tooltip.style.right = '';
+        tooltip.classList.add('centered');
+        return;
+    }
+
+    tooltip.classList.remove('centered');
+    spotlight.classList.add('active');
+    targetEl.classList.add('tutorial-target-active');
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    setTimeout(() => {
+        const rect = targetEl.getBoundingClientRect();
+        const pad = 12;
+        spotlight.style.top = `${rect.top - pad}px`;
+        spotlight.style.left = `${rect.left - pad}px`;
+        spotlight.style.width = `${rect.width + (pad * 2)}px`;
+        spotlight.style.height = `${rect.height + (pad * 2)}px`;
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const spacing = 24; 
+        let top, left;
+
+        const spaceRight = window.innerWidth - rect.right;
+        const spaceBottom = window.innerHeight - rect.bottom;
+        const spaceLeft = rect.left;
+
+        if (spaceRight > tooltipRect.width + spacing) {
+            left = rect.right + spacing; top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+        } else if (spaceLeft > tooltipRect.width + spacing) {
+            left = rect.left - tooltipRect.width - spacing; top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+        } else if (spaceBottom > tooltipRect.height + spacing) {
+            top = rect.bottom + spacing; left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        } else {
+            top = rect.top - tooltipRect.height - spacing; left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        }
+
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) left = window.innerWidth - tooltipRect.width - 10;
+        if (top < 10) top = 10;
+        if (top + tooltipRect.height > window.innerHeight - 10) top = window.innerHeight - tooltipRect.height - 10;
+
+        tooltip.style.top = `${top}px`; tooltip.style.left = `${left}px`;
+    }, 300); 
+};
+
 const showTutorialStep = async (stepIndex) => {
-	    isTutorialActive = true;
-    // Define the elements and their positions for each step
-    const highlightedElements = [
-        null, // Step 0 (Welcome)
-        document.getElementById('add-response-section'), // Step 1: Add New Response
-        document.getElementById('search-bar-container'), // Step 2: Search Bar
-        document.getElementById('category-bar'), // Step 3: Categories
-        document.getElementById('category-menu-container'), // Step 4: Kebab menu
-        null, // Step 5: Will find dynamically below
-        null, // Step 6: Will find dynamically below
-        null, // Step 7: Dynamic Placeholders
-        null, // Step 8: Placeholder Demo
-		document.getElementById('hamburger-menu-btn'), // New Step 10: Highlights the hamburger icon
-        document.getElementById('input-text-fedex'), // Step 11: FedEx Tracker
-        document.getElementById('copy-button-fedex'), // Step 12: New highlight
-		null,
-		null,
-    ];
+    isTutorialActive = true;
+    document.body.classList.add('tutorial-active');
+    const config = TUTORIAL_CONFIG[stepIndex];
+    const tooltip = document.getElementById('modern-tooltip');
+
+    document.querySelectorAll('.tutorial-target-active').forEach(el => el.classList.remove('tutorial-target-active'));
+    tooltip.classList.remove('visible'); 
+
+    if (currentPage !== config.page) {
+        currentPage = config.page;
+        renderContent();
+        await new Promise(r => setTimeout(r, 400));
+    }
+
+    document.getElementById('tooltip-progress').textContent = `Step ${stepIndex + 1} of ${TUTORIAL_CONFIG.length}`;
+    document.getElementById('tooltip-title').textContent = config.title;
     
-    const positionClasses = [
-        'show-modal', // Step 0: Centered modal
-        'top-right',  // Step 1: Add response section
-        'top-right',  // Step 2: Search bar
-        'bottom-left', // Step 3: Category bar
-        'upper-right', // Step 4: Kebab menu
-        'on-response', // Step 5: Manage Responses (new)
-        'on-response', // Step 6: Pin button (new)
-        'left-response', // Step 7: Dynamic placeholders
-        'show-modal', // Step 8: Placeholder demo
-		'top-left',
-        'on-tracker-page', // Step 10: New position
-        'on-tracker-page', // Step 11: Position on the tracker page
-		'show-modal',
-		'show-modal',
-		
-    ];
+    const iconWrapper = document.getElementById('tooltip-icon-wrapper');
+    document.getElementById('tooltip-icon').className = `fas ${config.icon}`;
+    
+    if (config.icon === 'fa-brain' || config.icon === 'fa-trophy') {
+        iconWrapper.className = "w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-4 border border-purple-500/30 shadow-inner";
+    } else if (config.icon === 'fa-calculator' || config.icon === 'fa-globe') {
+        iconWrapper.className = "w-12 h-12 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-2xl mb-4 border border-pink-500/30 shadow-inner";
+    } else {
+        iconWrapper.className = "w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl mb-4 border border-blue-500/30 shadow-inner";
+    }
+    
+    const formattedText = config.text.replace(/\*\*(.*?)\*\*/g, '<span class="text-white font-bold">$1</span>').replace(/`(.*?)`/g, '<span class="bg-gray-800 text-pink-400 px-1 py-0.5 rounded font-mono text-xs">$1</span>');
+    document.getElementById('tooltip-content').innerHTML = formattedText;
 
-    const tutorialModal = document.getElementById('tutorial-modal');
-    const tutorialOverlay = document.getElementById('tutorial-overlay');
+    const backBtn = document.getElementById('tooltip-back-btn');
+    const nextBtn = document.getElementById('tooltip-next-btn');
+    const nextText = document.getElementById('tooltip-next-text');
+    const optOut = document.getElementById('tooltip-opt-out-container');
 
-    tutorialSteps.forEach((step, index) => {
-        if (index !== stepIndex) {
-            step.classList.add('hidden');
-        } else {
-            step.classList.remove('hidden');
-        }
+    backBtn.style.visibility = stepIndex === 0 ? 'hidden' : 'visible';
+    
+    if (stepIndex === TUTORIAL_CONFIG.length - 1) {
+        nextText.textContent = "Finish & Start";
+        nextBtn.classList.replace('bg-blue-600', 'bg-green-600');
+        nextBtn.classList.replace('hover:bg-blue-500', 'hover:bg-green-500');
+        nextBtn.querySelector('i').className = "fas fa-check text-xs";
+        optOut.classList.remove('hidden'); optOut.classList.add('flex');
+    } else {
+        nextText.textContent = "Next";
+        nextBtn.classList.replace('bg-green-600', 'bg-blue-600');
+        nextBtn.classList.replace('hover:bg-green-500', 'hover:bg-blue-500');
+        nextBtn.querySelector('i').className = "fas fa-arrow-right text-xs";
+        optOut.classList.remove('flex'); optOut.classList.add('hidden');
+    }
+
+    tooltip.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        const targetElement = config.target ? config.target() : null;
+        positionTooltip(targetElement);
+        tooltip.classList.add('visible');
     });
-    // Determine the target page based on the tutorial step
-    const targetPage = tutorialPages[stepIndex];
-
-    // Check if a page change is required
-    if (currentPage !== targetPage) {
-        currentPage = targetPage;
-        
-        // Use a promise to wait for the page to render.
-        // This is the crucial change to fix the race condition.
-        await new Promise(resolve => {
-            renderContent();
-            requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
-            });
-        });
-    }
-	
-    // We now clear the highlights and hide the modal AFTER the page content is rendered.
-    clearTutorialHighlights();
-    tutorialModal.classList.remove(...positionClasses);
-
-    const currentStepElement = tutorialSteps[stepIndex];
-    if (currentStepElement) {
-        currentStepElement.classList.remove('hidden');
-
-        // Dynamically set highlights based on stepIndex
-        if (stepIndex === 5) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                const buttons = firstResponse.querySelectorAll('.copy-btn, .edit-btn, .delete-btn');
-                buttons.forEach(button => button.classList.add('highlight-target'));
-            }
-        } else if (stepIndex === 6) {
-            const firstResponse = document.querySelector('.response-item');
-            if (firstResponse) {
-                const pinButton = firstResponse.querySelector('.pin-btn');
-                if (pinButton) pinButton.classList.add('highlight-target');
-            }
-        } else if (stepIndex === 7) {
-            const responsesWithPlaceholders = [];
-            if (categories[activeCategory]) {
-                categories[activeCategory].responses.forEach(response => {
-                    if (response.text.match(/\[([^\]]+)\]/g)) {
-                        responsesWithPlaceholders.push(document.querySelector(`.response-item[data-id="${response.id}"]`));
-                    }
-                });
-            }
-            if (responsesWithPlaceholders.length === 0) {
-                for (const category in categories) {
-                    categories[category].responses.forEach(response => {
-                        if (response.text.match(/\[([^\]]+)\]/g)) {
-                            const foundResponse = document.querySelector(`.response-item[data-id="${response.id}"]`);
-                            if (foundResponse) {
-                                responsesWithPlaceholders.push(foundResponse);
-                            }
-                        }
-                    });
-                }
-            }
-            const responseToHighlight = responsesWithPlaceholders[0];
-            if (responseToHighlight) {
-                responseToHighlight.classList.add('highlight-target');
-                if (responseToHighlight.dataset.category !== activeCategory) {
-                    activeCategory = responseToHighlight.dataset.category;
-                    renderCategories();
-                    const newHighlight = document.querySelector(`.response-item[data-id="${responseToHighlight.dataset.id}"]`);
-                    if (newHighlight) {
-                        newHighlight.classList.add('highlight-target');
-                        newHighlight.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-                } else {
-                    responseToHighlight.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
-            } else {
-                console.warn("No canned response with dynamic placeholders found for the tutorial.");
-            }
-		} else if (stepIndex === 9) { // New logic for the hamburger icon
-		const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        hamburgerBtn.classList.add('highlight-target', 'bg-gray-700');	
-			hamburgerBtn.scrollIntoView({
-            		behavior: 'smooth',
-            		block: 'start' // This positions the element at the top of the viewport
-        });
-        } else if (stepIndex === 10) {
-            document.getElementById('input-text-fedex').classList.add('highlight-target');
-            document.getElementById('input-text-fedex').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        } else if (stepIndex === 11) {
-            document.getElementById('copy-button-fedex').classList.add('highlight-target');
-            document.getElementById('copy-button-fedex').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        } else {
-            const targetElement = highlightedElements[stepIndex];
-            if (targetElement) {
-                if (Array.isArray(targetElement)) {
-                    targetElement.forEach(el => {
-                        el.classList.add('highlight-target');
-                    });
-                } else {
-                    targetElement.classList.add('highlight-target');
-                }
-            }
-        }
-    }
-
-    // Now, show the modal with the correct positioning
-    tutorialModal.classList.remove('hidden');
-    tutorialOverlay.classList.remove('hidden');
-    tutorialModal.classList.add('modal', positionClasses[stepIndex]);
-
-    // Update button visibility
-    const tutorialBackBtn = document.getElementById('tutorial-back-btn');
-    const tutorialNextBtn = document.getElementById('tutorial-next-btn');
-    const tutorialFinishBtn = document.getElementById('tutorial-finish-btn');
-    tutorialBackBtn.classList.toggle('hidden', stepIndex === 0);
-    tutorialNextBtn.classList.toggle('hidden', stepIndex === tutorialSteps.length - 1);
-    tutorialFinishBtn.classList.toggle('hidden', stepIndex !== tutorialSteps.length - 1);
 
     currentTutorialStep = stepIndex;
 };
@@ -12068,26 +11856,18 @@ const renderAdvancedStats = async () => {
 };
 
 const showPlaceholderDemo = () => {
-    const tutorialModal = document.getElementById('tutorial-modal');
-    const tutorialOverlay = document.getElementById('tutorial-overlay');
-
-    // Get the element that is highlighted for the tutorial
-    const highlightedResponse = document.querySelector('.response-item.highlight-target');
-
-    // Check if the highlighted element exists and has the necessary text
+    isTutorialActive = true; 
+    const highlightedResponse = document.querySelector('.tutorial-target-active') || document.querySelector('.response-item');
     if (highlightedResponse) {
         const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
         processAndCopy(textToCopy);
     } else {
-        // Fallback or error handling if the highlighted item isn't found
-        console.error("No highlighted response found for the tutorial demo.");
-        const fallbackText = "Hello [Customer's Name], this is a default message. There was an issue loading the dynamic placeholder example.";
-        processAndCopy(fallbackText);
+        processAndCopy("Hello [Customer's Name], this is a default message.");
     }
-
-    // Hide the tutorial modal and overlay so the placeholder modal is the main focus
-    tutorialModal.classList.add('hidden');
-    tutorialOverlay.classList.add('hidden');
+    
+    // Hide the modern tooltip while the user interacts with the placeholder modal
+    document.getElementById('tutorial-spotlight').classList.remove('active');
+    document.getElementById('modern-tooltip').classList.remove('visible');
 };
 
 
@@ -12925,39 +12705,24 @@ if (activityFilterGroup) {
     document.getElementById('close-copy-success-btn').addEventListener('click', () => {
         document.getElementById('copy-success-modal').classList.add('hidden');
     });
-
-    // --- Tutorial Listeners (Corrected) ---
-    document.getElementById('tutorial-next-btn').addEventListener('click', () => {
-        if (currentTutorialStep < tutorialSteps.length - 1) {
-            currentTutorialStep++;
-            showTutorialStep(currentTutorialStep);
+		
+// --- Modern Tutorial UI Event Listeners ---
+    document.getElementById('tooltip-next-btn').addEventListener('click', () => {
+        if (currentTutorialStep < TUTORIAL_CONFIG.length - 1) {
+            showTutorialStep(currentTutorialStep + 1);
+        } else {
+            closeTutorial();
         }
     });
 
-    document.getElementById('tutorial-back-btn').addEventListener('click', () => {
+    document.getElementById('tooltip-back-btn').addEventListener('click', () => {
         if (currentTutorialStep > 0) {
-            currentTutorialStep--;
-            showTutorialStep(currentTutorialStep);
+            showTutorialStep(currentTutorialStep - 1);
         }
     });
 
-    document.getElementById('tutorial-finish-btn').addEventListener('click', async () => {
-        isTutorialActive = false;
-        // Clear all highlights before hiding the modal
-        clearTutorialHighlights();
+    document.getElementById('tooltip-skip-btn').addEventListener('click', closeTutorial);
 
-        document.getElementById('tutorial-modal').classList.add('hidden');
-        document.getElementById('tutorial-overlay').classList.add('hidden');
-
-        if (userId) {
-            const userDocRef = getUserRootDocRef(userId);
-            try {
-                await setDoc(userDocRef, { tutorialSeen: true }, { merge: true });
-            } catch (error) {
-                console.error("Error setting tutorialSeen flag:", error);
-            }
-        }
-    });
 
 
 document.getElementById('stats-tab-btn').addEventListener('click', (e) => {
@@ -12980,16 +12745,11 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
     document.getElementById('stats-tab-btn').classList.remove('text-white', 'border-blue-500');
 });
 		
-    document.getElementById('show-tutorial-btn').addEventListener('click', async () => {
+	document.getElementById('show-tutorial-btn').addEventListener('click', async () => {
         if (userId && !isAnonymous) {
-            const userDocRef = getUserRootDocRef(userId);
-            try {
-                await setDoc(userDocRef, { tutorialSeen: false }, { merge: true });
-                showTutorialStep(0); // This function call will now handle displaying the modal
-            } catch (error) {
-                console.error("Error resetting tutorialSeen flag:", error);
-                showMessage("Error showing tutorial. Please try again.", 'error');
-            }
+            // Reset the flag in DB if they want to see it again
+            try { await setDoc(getUserRootDocRef(userId), { tutorialSeen: false }, { merge: true }); } catch (e) {}
+            showTutorialStep(0); 
         } else {
             showMessage("Please sign in to view the tutorial.", 'error');
         }
