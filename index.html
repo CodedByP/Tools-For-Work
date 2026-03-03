@@ -2879,6 +2879,135 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 }
 
 /* ==========================================================================
+   PREMIUM KNOWLEDGE HUB: OBSIDIAN THEME OVERRIDES
+   ========================================================================== */
+
+/* The Main Container Background */
+#helpful-links-app {
+    background-color: #050505 !important;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0, transparent 40%),
+        radial-gradient(at 100% 100%, rgba(132, 204, 22, 0.05) 0, transparent 40%) !important;
+}
+
+/* --- OVERHAUL: Link Cards to High-Density Rows --- */
+#helpful-links-app .link-card {
+    background: rgba(15, 15, 15, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 0.85rem 1.25rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    
+    /* Force Horizontal Layout */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1rem;
+    
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0 !important; /* Handled by container space-y */
+}
+
+/* Hover Physics */
+#helpful-links-app .link-card:hover {
+    background: rgba(30, 30, 30, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateX(6px) !important;
+    box-shadow: -5px 10px 20px rgba(0,0,0,0.5) !important;
+}
+
+/* JS injects an <a> tag wrapping the text. We force it to flex horizontally. */
+#helpful-links-app .link-card a {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1.5rem;
+    width: 100%;
+    text-decoration: none !important;
+}
+
+/* Typography Overrides for Scannability */
+#helpful-links-app .link-card h3 {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: #e5e7eb !important;
+    margin: 0 !important;
+    /* Fixed width creates a clean column for eye-tracking */
+    min-width: 220px;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#helpful-links-app .link-card p {
+    font-size: 0.75rem !important;
+    color: #6b7280 !important;
+    margin: 0 !important;
+    font-family: 'JetBrains Mono', monospace; /* Tech aesthetic */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+}
+
+/* --- THEMATIC ACCENTS --- */
+/* Electric Blue for Global/Static */
+#static-links-list .link-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: #3b82f6; opacity: 0.3; transition: opacity 0.2s;
+}
+/* Lime Green for User/Personal */
+#user-links-list .link-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: #84cc16; opacity: 0.3; transition: opacity 0.2s;
+}
+#helpful-links-app .link-card:hover::before { opacity: 1; }
+
+/* Quick-Action "Launch" Icon for Static Links */
+#static-links-list .link-card::after {
+    content: '\f08e'; /* FontAwesome external-link */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 1.25rem;
+    color: #3b82f6;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+#static-links-list .link-card:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Meatballs Menu Refinement (User Links) */
+#helpful-links-app .meatballs-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.35rem !important;
+    transition: all 0.2s;
+}
+#helpful-links-app .meatballs-button:hover {
+    background: rgba(132, 204, 22, 0.15); /* Lime tint */
+    border-color: #84cc16;
+    color: #84cc16 !important;
+}
+#helpful-links-app .meatballs-menu {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.9) !important;
+    border-radius: 0.75rem !important;
+    overflow: hidden;
+}
+		
+/* ==========================================================================
    SLA DASHBOARD: MISSION CONTROL V3
    ========================================================================== */
 
@@ -3727,89 +3856,94 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
 </div>
 
 
-<div id="helpful-links-app" class="w-full hidden container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-center justify-center py-12">
-    <div class="container mx-auto px-4">
-        <div id="links-search-bar-container" class="floating-card mb-8 relative p-6 sm:p-8">
-            <div class="absolute inset-y-0 left-0 pl-11 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+<div id="helpful-links-app" class="w-full hidden min-h-screen py-8 px-4 sm:px-8 max-w-[1600px] mx-auto font-sans">
+    
+    <div class="sticky top-6 z-50 w-full max-w-3xl mx-auto mb-10 group">
+        <div class="absolute inset-0 bg-blue-500/10 rounded-full blur-xl transition-all duration-500 group-focus-within:bg-lime-500/15"></div>
+        <div id="links-search-bar-container" class="relative flex items-center bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)]">
+            <div class="pl-5 pr-2 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-500 text-lg group-focus-within:text-lime-400 transition-colors"></i>
             </div>
             <input
                 type="text"
                 id="links-search-input"
-                class="w-full border-2 border-gray-600 rounded-xl p-4 pl-12 bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 text-lg text-placeholder"
-                placeholder="Search helpful links..."
+                class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-600 px-3 py-3 text-lg outline-none"
+                placeholder="Search the Knowledge Hub..."
             />
-        </div>
-        <header class="text-center mb-16 animate-fade-in">
-                </header>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    
-                    <section class="col-span-1 md:col-span-2 lg:col-span-3">
-                        <h2 class="text-3xl font-bold text-center mb-8 link-title">
-                            Static Resources
-                        </h2>
-						<div id="static-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse">
-                                <div class="h-6 bg-gray-700 rounded w-3/4 mb-3"></div>
-                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
-                                <div class="h-3 bg-gray-700 rounded w-5/6"></div>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse opacity-75">
-                                <div class="h-6 bg-gray-700 rounded w-2/3 mb-3"></div>
-                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
-                                <div class="h-3 bg-gray-700 rounded w-4/5"></div>
-                            </div>
-                            <div class="link-card rounded-xl p-6 shadow-2xl animate-pulse opacity-50">
-                                <div class="h-6 bg-gray-700 rounded w-1/2 mb-3"></div>
-                                <div class="h-3 bg-gray-700 rounded w-full mb-2"></div>
-                                <div class="h-3 bg-gray-700 rounded w-5/6"></div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <section id="user-links-section" class="col-span-1 md:col-span-2 lg:col-span-3 mt-12">
-                        <h2 class="text-3xl font-bold text-center mb-8 link-title">
-                            Your Links
-                        </h2>
-                        <div id="user-links-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <p class="text-center text-gray-400 col-span-full">No links added yet. Add one above!</p>
-                        </div>
-                    </section>
-
-                    <section id="add-link-section" class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center">
-                        <div class="floating-card rounded-2xl p-8 max-w-lg w-full">
-                            <h2 id="form-title" class="text-2xl font-bold text-blue-400 mb-4">Add a New Link</h2>
-                            <form id="add-link-form" class="space-y-4">
-                                <div>
-                                    <label for="link-title" class="block text-sm font-medium text-gray-400">Title</label>
-                                    <input type="text" id="link-title" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
-                                </div>
-                                <div>
-                                    <label for="link-url" class="block text-sm font-medium text-gray-400">URL</label>
-                                    <input type="url" id="link-url" required class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
-                                </div>
-                                <div>
-                                    <label for="link-description" class="block text-sm font-medium text-gray-400">Description (Optional)</label>
-                                    <input type="text" id="link-description" class="mt-1 block w-full bg-gray-700 text-white border-2 border-gray-600 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg p-3 transition duration-300">
-                                </div>
-                                <div class="flex space-x-4">
-                                    <button type="submit" id="submit-button" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-lg text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
-                                        Add Link
-                                    </button>
-                                    <button type="button" id="cancel-button" class="w-full inline-flex justify-center py-3 px-6 border border-gray-600 shadow-md text-lg font-bold rounded-xl text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 hidden">
-                                        Cancel
-                                    </button>
-                                </div>
-                                <div id="status-message" class="text-center mt-2 text-sm text-gray-400"></div>
-                            </form>
-                        </div>
-                    </section>
-                </div>
+            <div class="mr-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono tracking-widest uppercase hidden sm:block shadow-inner">
+                ⌘K
             </div>
         </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 h-full">
+
+        <div class="lg:col-span-8 flex flex-col gap-4">
+            <div class="flex items-center justify-between mb-2 border-b border-white/5 pb-4">
+                <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                    <i class="fas fa-network-wired text-blue-500"></i> Global Directory
+                </h2>
+                <span class="text-[10px] font-bold font-mono text-blue-400/80 border border-blue-500/30 bg-blue-900/20 px-2 py-1 rounded uppercase tracking-wider">System Managed</span>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-3 h-[45vh] lg:h-[calc(100vh-250px)]">
+                <div id="static-links-list" class="space-y-2 pb-10">
+                    </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col gap-6 h-full">
+            
+            <section id="user-links-section" class="flex flex-col h-[30vh] lg:h-[calc(55vh-150px)]">
+                <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                    <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                        <i class="fas fa-bookmark text-lime-400 drop-shadow-[0_0_8px_rgba(132,204,22,0.4)]"></i> Personal Vault
+                    </h2>
+                    <span class="text-[10px] font-bold font-mono text-lime-400/80 border border-lime-500/30 bg-lime-900/20 px-2 py-1 rounded uppercase tracking-wider">User</span>
+                </div>
+                
+                <div class="flex-grow overflow-y-auto custom-scrollbar pr-2">
+                    <div id="user-links-list" class="space-y-2">
+                        </div>
+                </div>
+            </section>
+
+            <section id="add-link-section" class="mt-auto flex-shrink-0 pt-4">
+                <div class="bg-[#0f0f0f]/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-lime-500/30 transition-colors">
+                    
+                    <div class="absolute -right-12 -bottom-12 w-40 h-40 bg-lime-500/10 rounded-full blur-[60px] transition-all group-focus-within:bg-lime-500/20"></div>
+                    
+                    <h2 id="form-title" class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-lime-500"></i> New Resource
+                    </h2>
+                    
+                    <form id="add-link-form" class="space-y-4 relative z-10">
+                        <div>
+                            <input type="text" id="link-title" required class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600 font-medium" placeholder="Resource Title">
+                        </div>
+                        <div>
+                            <input type="url" id="link-url" required class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600 font-mono" placeholder="https://...">
+                        </div>
+                        <div>
+                            <input type="text" id="link-description" class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600" placeholder="Brief description (optional)">
+                        </div>
+                        
+                        <div class="flex gap-3 pt-2">
+                            <button type="submit" id="submit-button" class="flex-1 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-400 hover:to-green-400 text-[#050505] font-black py-3 rounded-xl transition-all transform active:scale-95 shadow-lg shadow-lime-500/20 text-xs uppercase tracking-widest">
+                                Save
+                            </button>
+                            <button type="button" id="cancel-button" class="hidden flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-colors border border-white/10 text-xs uppercase tracking-widest">
+                                Cancel
+                            </button>
+                        </div>
+                        <div id="status-message" class="text-center mt-3 text-xs font-mono"></div>
+                    </form>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
 		
         <div id="settings-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
             <div class="w-full max-w-7xl mx-auto space-y-8 md:flex md:flex-wrap md:gap-8">
