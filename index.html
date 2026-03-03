@@ -2634,6 +2634,155 @@
         box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.15);
     }
 
+	/* ==========================================================================
+   PREMIUM LIGHT MODE: WCAG ACCESSIBILITY & ACRYLIC GLASS
+   ========================================================================== */
+
+	/* --- 1. Global Typography & Acrylic Glass --- */
+	body.light-mode {
+	    background-color: #f3f4f6 !important;
+	    color: #1f2937 !important; /* Dark Slate for body text (WCAG AAA) */
+	}
+	
+	/* The "Crisp Acrylic" Glass Fix */
+	body.light-mode .premium-glass-card,
+	body.light-mode .sla-glass-panel,
+	body.light-mode #helpful-links-app .link-card,
+	body.light-mode .bento-card,
+	body.light-mode .industrial-console {
+	    background: rgba(255, 255, 255, 0.7) !important;
+	    backdrop-filter: blur(24px) !important;
+	    -webkit-backdrop-filter: blur(24px) !important;
+	    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+	    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
+	}
+	
+	body.light-mode .premium-glass-card:hover,
+	body.light-mode #helpful-links-app .link-card:hover,
+	body.light-mode .bento-card:hover {
+	    background: rgba(255, 255, 255, 0.95) !important;
+	    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12) !important;
+	    border-color: rgba(0, 0, 0, 0.15) !important;
+	}
+	
+	/* General Header & Data Overrides */
+	body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode h4 { color: #111827 !important; }
+	body.light-mode .text-slate-400, body.light-mode .text-gray-400 { color: #4b5563 !important; }
+	body.light-mode .text-slate-500, body.light-mode .text-gray-500 { color: #374151 !important; }
+	
+	/* Gradient Text Fix (Darkens gradients for readability) */
+	body.light-mode #my-stats-page h2.bg-clip-text {
+	    background-image: linear-gradient(to right, #1e40af, #0891b2, #047857) !important; /* Deep Blue to Emerald */
+	}
+	
+	/* --- 2. FedEx Tracker: Clean Paper Terminal --- */
+	body.light-mode .industrial-console {
+	    background-color: #ffffff !important;
+	}
+	body.light-mode .industrial-console > div.bg-\[\#0a0a0a\] {
+	    background-color: #e5e7eb !important; /* Light header bar */
+	    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+	}
+	body.light-mode .industrial-console .line-number-gutter {
+	    background: #f9fafb !important;
+	    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+	    color: #9ca3af !important;
+	}
+	body.light-mode .industrial-console textarea {
+	    color: #1f2937 !important; /* High contrast typing */
+	    text-shadow: none !important;
+	}
+	body.light-mode .industrial-console textarea::placeholder { color: #9ca3af !important; }
+	body.light-mode .console-scanner {
+	    background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.8), transparent) !important;
+	    box-shadow: 0 0 12px 2px rgba(79, 70, 229, 0.3) !important; /* Crisp Indigo Laser */
+	}
+	
+	/* Tracking Vault Pills */
+	body.light-mode #tracking-numbers-container .tracking-tab {
+	    background: #ffffff !important;
+	    border-left: 4px solid #4f46e5 !important;
+	}
+	body.light-mode #tracking-numbers-container .tracking-tab span { color: #111827 !important; }
+	body.light-mode #tracking-numbers-container .copy-tracking-btn {
+	    color: #4338ca !important;
+	    border-color: rgba(67, 56, 202, 0.3) !important;
+	}
+	
+	/* --- 3. SLA Dashboard: Scannable Data Table --- */
+	body.light-mode .sla-glass-panel thead {
+	    background: rgba(243, 244, 246, 0.9) !important;
+	    border-bottom: 2px solid rgba(0, 0, 0, 0.1) !important;
+	}
+	body.light-mode .sla-glass-panel thead th { color: #374151 !important; font-weight: 800 !important; }
+	body.light-mode #sla-table-body tr { border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; }
+	body.light-mode #sla-table-body tr:hover { background: rgba(0, 0, 0, 0.03) !important; }
+	
+	/* Urgent Row Override */
+	body.light-mode #sla-table-body tr.bg-red-900\/5 {
+	    background: linear-gradient(90deg, rgba(254, 226, 226, 0.7) 0%, transparent 100%) !important;
+	    border-left: 4px solid #dc2626 !important;
+	}
+	
+	/* Table Text Hierarchy */
+	body.light-mode #sla-table-body td span.text-gray-200 { color: #111827 !important; font-weight: 700 !important; }
+	body.light-mode #sla-table-body td span.text-red-400 { color: #b91c1c !important; }
+	body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; }
+	body.light-mode #sla-table-body td span.text-blue-400 { color: #1d4ed8 !important; }
+	
+	/* Solid Team Badges (No transparency) */
+	body.light-mode #sla-table-body td span.border {
+	    background: #ffffff !important;
+	    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+	    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+	}
+	body.light-mode #sla-table-body td span.text-green-300 { color: #15803d !important; background: #dcfce7 !important; border-color: #86efac !important; }
+	body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; background: #ffedd5 !important; border-color: #fdba74 !important; }
+	body.light-mode #sla-table-body td span.text-purple-300 { color: #7e22ce !important; background: #f3e8ff !important; border-color: #d8b4fe !important; }
+	body.light-mode #sla-table-body td span.text-blue-300 { color: #1d4ed8 !important; background: #dbeafe !important; border-color: #bfdbfe !important; }
+	
+	/* Modal Spec Sheet */
+	body.light-mode #sla-details-modal .bg-\[\#0f172a\] { background: #ffffff !important; }
+	body.light-mode #sla-details-modal .spec-sheet-grid { background-image: none !important; border: 1px solid #e5e7eb !important; }
+	body.light-mode #sla-details-modal .bg-\[\#020617\] { background: #f3f4f6 !important; border-color: #e5e7eb !important; box-shadow: none !important; }
+	body.light-mode #sla-details-modal .text-white { color: #111827 !important; }
+	body.light-mode #sla-details-modal .text-slate-300 { color: #374151 !important; }
+	
+	/* --- 4. My Stats: Vibrant Legibility --- */
+	body.light-mode #current-xp-display span,
+	body.light-mode #rank-name-redesigned { color: #111827 !important; text-shadow: none !important; }
+	body.light-mode .text-neon-cyan { color: #0891b2 !important; text-shadow: none !important; font-weight: 800 !important; }
+	
+	/* Podium Overrides */
+	body.light-mode .podium-card {
+	    background: rgba(255, 255, 255, 0.95) !important;
+	    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+	    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+	}
+	body.light-mode .podium-rank-1 { background: linear-gradient(to top, #fef3c7, #ffffff) !important; border-top: 4px solid #f59e0b !important; }
+	body.light-mode .podium-rank-2 { background: linear-gradient(to top, #f3f4f6, #ffffff) !important; border-top: 4px solid #9ca3af !important; }
+	body.light-mode .podium-rank-3 { background: linear-gradient(to top, #ffedd5, #ffffff) !important; border-top: 4px solid #d97706 !important; }
+	body.light-mode .podium-card p.text-white { color: #111827 !important; }
+	body.light-mode .podium-card p.text-blue-300 { color: #2563eb !important; }
+	
+	/* Achievement & Record Tiles */
+	body.light-mode .achievement-tile { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+	body.light-mode .achievement-tile p { color: #374151 !important; font-weight: 800 !important; }
+	body.light-mode .record-card { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+	body.light-mode .record-card span.text-white { color: #111827 !important; }
+	body.light-mode .record-card .record-bg-icon { opacity: 0.06 !important; color: #111827 !important; }
+	
+	/* Mini Snapshot Badges */
+	body.light-mode .mini-stat-box.bg-gradient-to-br { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important; }
+	body.light-mode .mini-stat-box span.text-white { color: #111827 !important; }
+	
+	/* --- 5. Helpful Links Resource Hub --- */
+	body.light-mode #helpful-links-app .link-card h3 { color: #111827 !important; }
+	body.light-mode #helpful-links-app .link-card p { color: #4b5563 !important; }
+	body.light-mode #links-search-bar-container { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; }
+	body.light-mode #links-search-input { color: #1f2937 !important; }
+	body.light-mode #links-search-input::placeholder { color: #9ca3af !important; }
+
     /* ==========================================================================
        === Media Queries ===
        ========================================================================== */
