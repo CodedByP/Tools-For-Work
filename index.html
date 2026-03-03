@@ -13314,12 +13314,9 @@ onAuthStateChanged(auth, async (user) => {
             }
             // --- END of New Script ---
 
-            const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
+			const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
-                document.getElementById('tutorial-modal').classList.remove('hidden');
                 showTutorialStep(0);
-            } else {
-                document.getElementById('tutorial-modal').classList.add('hidden');
             }
 			await checkForUpdatesOnLoad();
             const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
