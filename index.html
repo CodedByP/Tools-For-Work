@@ -13027,8 +13027,6 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
                 // Find chips for THIS specific key that were NOT selected
                 shownChips.forEach(chip => {
                     if (chip.dataset.key === key && chip.dataset.value !== finalValue) {
-                        // This chip was shown, but the user typed something else.
-                        // Decrease its score.
                         updateSmartHistory(key, chip.dataset.value, currentResponseToCopyCategory, 'ignore');
                     }
                 });
@@ -13038,23 +13036,18 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
 
     const finalContent = replacePlaceholders(currentTextToCopy, userValues);
     
-    // 2. UPDATE UI IMMEDIATELY (Fixes the issue)
-    // We hide the placeholder modal first, before doing any complex logic
+    // 2. UPDATE UI IMMEDIATELY
     document.getElementById('placeholder-modal').classList.add('hidden');
-    
-    // Update and show the Success Modal
     document.getElementById('copied-text-display').textContent = finalContent;
-    
+    document.getElementById('copy-success-modal').classList.remove('hidden');
+
+    // Restore the modern tutorial UI if it was active
     if (isTutorialActive) {
-        document.getElementById('copy-success-modal').classList.remove('hidden');
-        currentTutorialStep++;
-        showTutorialStep(currentTutorialStep);
-    } else {
-        document.getElementById('copy-success-modal').classList.remove('hidden');
+        document.getElementById('modern-tooltip').classList.remove('hidden');
+        document.getElementById('tutorial-spotlight').classList.add('active');
     }
 
     // 3. Run Background Logic (Safe Mode)
-    // We wrap this in a try-catch so it doesn't break the UI if it fails
     try {
         copyToClipboard(finalContent, currentResponseToCopyId, currentResponseToCopyCategory);
     } catch (error) {
@@ -13062,51 +13055,14 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     }
 });
 
-// The cancel button logic is correct and doesn't need to be changed.
 document.getElementById('cancel-placeholder-btn').addEventListener('click', () => {
     document.getElementById('placeholder-modal').classList.add('hidden');
     
+    // Restore the modern tutorial UI if it was active
     if (isTutorialActive) {
-        document.getElementById('tutorial-modal').classList.remove('hidden');
-        document.getElementById('tutorial-overlay').classList.remove('hidden');
-        showTutorialStep(currentTutorialStep);
+        document.getElementById('modern-tooltip').classList.remove('hidden');
+        document.getElementById('tutorial-spotlight').classList.add('active');
     } 
-});
-
-// The showPlaceholderDemo logic should be updated slightly.
-document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
-    isTutorialActive = true; 
-    const highlightedResponse = document.querySelector('.response-item.highlight-target');
-    if (highlightedResponse) {
-        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
-        processAndCopy(textToCopy);
-    } else {
-        console.error("No highlighted response found for the tutorial demo.");
-        const fallbackText = "Hello [Customer's Name], this is a default message.";
-        processAndCopy(fallbackText);
-    }
-    
-    // Hide the tutorial modal and overlay so the placeholder modal is the main focus.
-    // This is correct.
-    document.getElementById('tutorial-modal').classList.add('hidden');
-    document.getElementById('tutorial-overlay').classList.add('hidden');
-});
-
-// Add a check to the showPlaceholderDemo function as well to set the flag
-document.getElementById('show-placeholder-example-btn').addEventListener('click', () => {
-    isTutorialActive = true; // Set the flag to true when starting the demo
-    const highlightedResponse = document.querySelector('.response-item.highlight-target');
-    if (highlightedResponse) {
-        const textToCopy = highlightedResponse.querySelector('.response-text-display').textContent;
-        processAndCopy(textToCopy);
-    } else {
-        console.error("No highlighted response found for the tutorial demo.");
-        const fallbackText = "Hello [Customer's Name], this is a default message.";
-        processAndCopy(fallbackText);
-    }
-    // The placeholder modal is shown inside processAndCopy, so we don't do it here.
-    document.getElementById('tutorial-modal').classList.add('hidden');
-    document.getElementById('tutorial-overlay').classList.add('hidden');
 });
 
 	
