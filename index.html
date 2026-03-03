@@ -2878,6 +2878,118 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     opacity: 0.8;
 }	
 
+/* ==========================================================================
+   MY STATS: PREMIUM GAMIFIED DASHBOARD V2
+   ========================================================================== */
+
+/* --- 1. Base Glassmorphism & Cyberpunk Accents --- */
+.premium-glass-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(255,255,255,0.02);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.premium-glass-card:hover {
+    transform: translateY(-4px);
+    border-top-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(96, 165, 250, 0.1);
+}
+
+/* Neon Text Glow */
+.text-neon-cyan {
+    color: #22d3ee;
+    text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+}
+
+/* --- 2. Hero Profile Banner (Leveling Section) --- */
+.rpg-hero-banner {
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 60%),
+                radial-gradient(circle at bottom left, rgba(147, 51, 234, 0.15), transparent 60%);
+}
+
+.premium-xp-container {
+    height: 1.75rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 999px;
+    padding: 3px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+.premium-xp-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #3b82f6);
+    background-size: 200% 100%;
+    animation: xp-flow 3s linear infinite;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+}
+
+/* Shimmer passing over the XP Bar */
+.premium-xp-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transform: skewX(-20deg);
+    animation: xp-shimmer 2.5s infinite ease-in-out;
+}
+
+@keyframes xp-flow { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@keyframes xp-shimmer { 100% { left: 200%; } }
+
+/* --- 3. Upgraded JS Injections (Podium & Achievements) --- */
+/* Your JS injects .podium-card, we make them look like premium acrylic awards */
+.podium-card {
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.5));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: inset 0 2px 10px rgba(255,255,255,0.05), 0 -10px 30px rgba(0,0,0,0.3);
+}
+.podium-rank-1 { border-top: 2px solid #fbbf24; box-shadow: 0 -15px 40px rgba(251, 191, 36, 0.15); }
+.podium-rank-2 { border-top: 2px solid #94a3b8; }
+.podium-rank-3 { border-top: 2px solid #b45309; }
+
+/* Trophy Case Collectible Effect */
+.achievement-tile {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+}
+.achievement-tile:not(.locked):hover {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 1));
+    transform: translateY(-8px) scale(1.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5), 0 0 20px rgba(251, 191, 36, 0.1);
+    z-index: 10;
+}
+/* Focus attention on hovered tile, dim others slightly */
+#achievements-container:hover .achievement-tile:not(:hover) {
+    filter: brightness(0.7) blur(1px);
+    transform: scale(0.95);
+}
+
+/* --- 4. Micro-interactions --- */
+.pulse-record {
+    animation: neon-pulse 2s infinite alternate;
+}
+@keyframes neon-pulse {
+    0% { filter: drop-shadow(0 0 5px currentColor); }
+    100% { filter: drop-shadow(0 0 15px currentColor); }
+}		
+
     </style>
 		
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -3545,294 +3657,266 @@ body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
     </div>
 
 
-<div id="my-stats-page" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-[70vh]">
+<div id="my-stats-page" class="w-full container-bg rounded-2xl p-4 sm:p-8 text-gray-100 min-h-[70vh] hidden">
     
-	<div id="stats-loader" class="w-full max-w-7xl mx-auto flex-col h-full animate-pulse mt-4">
-        <div class="h-10 bg-gray-800 rounded-xl w-1/4 mb-2"></div>
-        <div class="h-4 bg-gray-800 rounded w-1/3 mb-8"></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="h-72 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2"></div>
-            <div class="h-72 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2"></div>
-            <div class="h-[400px] bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-2 lg:row-span-2"></div>
-            <div class="h-48 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-1"></div>
-            <div class="h-48 bg-gray-800/40 rounded-3xl border border-gray-700/50 lg:col-span-1"></div>
+    <div id="stats-loader" class="w-full max-w-[1400px] mx-auto flex-col h-full animate-pulse mt-4">
+        <div class="h-10 bg-slate-800 rounded-xl w-1/4 mb-2"></div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="h-48 bg-slate-800/40 rounded-3xl md:col-span-4"></div>
+            <div class="h-72 bg-slate-800/40 rounded-3xl md:col-span-2"></div>
+            <div class="h-72 bg-slate-800/40 rounded-3xl md:col-span-2"></div>
         </div>
     </div>
 
-    <div id="stats-content" class="w-full max-w-7xl mx-auto hidden">
+    <div id="stats-content" class="w-full max-w-[1400px] mx-auto hidden">
         
-        <div class="mb-8 animate-fade-in">
-            <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                Command Center
-            </h2>
-            <p class="text-gray-400 mt-2">Track your productivity, rank, and achievements.</p>
+        <div class="mb-8 animate-fade-in flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 tracking-tight drop-shadow-sm uppercase">
+                    Command Center
+                </h2>
+                <p class="text-slate-400 mt-1 font-medium tracking-wide">TELEMETRY & OPERATOR PERFORMANCE</p>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-full border border-slate-700/50 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs font-mono text-emerald-400 uppercase tracking-widest">Live Sync Active</span>
+            </div>
         </div>
 
-        <div class="bento-grid">
+        <div class="grid grid-cols-1 md:grid-cols-12 auto-rows-min gap-6">
 
-<div id="leveling-section-redesigned" class="bento-card bento-span-2 min-h-[280px] overflow-hidden relative group">
-    <div id="rank-ambient-bg" class="absolute inset-0 opacity-20 transition-all duration-1000"></div>
+            <div id="leveling-section-redesigned" class="premium-glass-card rpg-hero-banner md:col-span-8 p-6 sm:p-8 flex flex-col justify-between group">
+                <div id="rank-ambient-bg" class="absolute inset-0 opacity-30 transition-all duration-1000 mix-blend-screen pointer-events-none"></div>
 
-    <div class="p-6 flex flex-col justify-between relative z-10 h-full">
-        <div class="flex items-start justify-between w-full">
-            <div class="flex items-center gap-5">
-                <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform transition-transform duration-500 hover:scale-110 origin-left"></div>
-                <div>
-                    <h3 id="rank-name-redesigned" class="text-3xl font-extrabold text-white tracking-wide drop-shadow-md leading-none"></h3>
-                    <div class="flex flex-col">
-                        <p id="level-display-redesigned" class="text-sm font-bold text-blue-200 mt-1 uppercase tracking-wider"></p>
-                        <div id="level-prediction" class="prediction-text hidden">
-                            <i class="fas fa-stopwatch"></i>
-                            <span>ETA: <span id="level-prediction-days" class="prediction-highlight">--</span></span>
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 w-full mb-8">
+                    <div class="flex items-center gap-6">
+                        <div id="rank-icon-container-redesigned" class="flex-shrink-0 transform transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"></div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.3em] mb-1">Current Authorization</span>
+                            <h3 id="rank-name-redesigned" class="text-4xl font-black text-white tracking-wider uppercase leading-none drop-shadow-lg"></h3>
+                            <div class="flex items-center gap-3 mt-2">
+                                <p id="level-display-redesigned" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-slate-200 border border-white/5"></p>
+                                <div id="level-prediction" class="prediction-text hidden text-xs font-medium text-slate-400 bg-black/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+                                    <i class="fas fa-satellite-dish text-cyan-400"></i>
+                                    <span>ETA: <span id="level-prediction-days" class="text-cyan-300">--</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:flex flex-col items-center justify-center p-4 bg-black/20 rounded-2xl border border-white/5" id="next-rank-container">
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Next Milestone</span>
+                        <div class="next-rank-container cursor-help relative" title="Keep working to unlock this rank!">
+                            <div id="next-rank-icon" class="next-rank-ghost drop-shadow-md"></div>
+                            <div class="lock-overlay absolute -bottom-2 -right-2 bg-slate-800 text-slate-400 border border-slate-600 rounded-full w-6 h-6 flex items-center justify-center shadow-lg"><i class="fas fa-lock text-[10px]"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative z-10 w-full mt-auto">
+                    <div class="flex justify-between items-end mb-2">
+                        <div class="flex items-center gap-3">
+                            <span id="current-xp-display" class="text-2xl font-black text-white font-mono tracking-tight"></span>
+                            <div id="double-xp-indicator" class="hidden px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"><i class="fas fa-bolt animate-pulse"></i> 2x</div>
+                            <div id="triple-xp-indicator" class="hidden px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30"><i class="fas fa-fire animate-pulse"></i> 3x</div>
+                        </div>
+                        <span id="xp-needed-display" class="text-xs font-bold text-slate-400 uppercase tracking-wider"></span>
+                    </div>
+                    
+                    <div class="group/bar relative">
+                        <div class="premium-xp-container w-full">
+                            <div id="xp-bar-redesigned" class="premium-xp-fill" style="width: 0%"></div>
+                        </div>
+                        <div id="xp-action-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-slate-800 border border-slate-600 text-white text-xs font-bold rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-2xl z-20">
+                            Calculated...
+                        </div>
+                    </div>
+                    <p id="xp-progress-text-redesigned" class="hidden"></p>
+                </div>
+            </div>
+
+            <div class="premium-glass-card md:col-span-4 p-6 flex flex-col h-full">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <i class="fas fa-satellite text-cyan-400"></i> Live Snapshot
+                </h3>
+                <div id="metric-badges-container" class="grid grid-cols-2 gap-4 flex-grow">
+                    </div>
+            </div>
+
+            <div id="activity-card-wrapper" class="premium-glass-card md:col-span-8 p-6 group cursor-pointer flex flex-col min-h-[350px]">
+                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 relative z-20">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-wave-square text-emerald-400"></i> Operation Flow
+                        </h3>
+                        <p class="text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">Output Velocity Over Time</p>
+                    </div>
+                    <div id="activity-filter-group" class="flex bg-black/40 p-1 rounded-lg border border-white/5 backdrop-blur-md">
+                        <button class="activity-filter-btn px-4 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-white transition-all" data-period="7">7D</button>
+                        <button class="activity-filter-btn px-4 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-white transition-all" data-period="30">30D</button>
+                        <button class="activity-filter-btn px-4 py-1.5 rounded-md text-xs font-bold bg-slate-700 text-white shadow-md" data-period="all">ALL</button>
+                    </div>
+                </div>
+
+                <div id="activity-chart-container" class="relative w-full flex-grow">
+                    <canvas id="activityChart"></canvas>
+                </div>
+
+                <div id="activity-stats-display" class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-700/50">
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 text-center">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Total Payload</p>
+                        <p id="stats-total-copies" class="text-xl font-black text-white font-mono">--</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 text-center">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Daily Avg</p>
+                        <p id="stats-avg-copies" class="text-xl font-black text-cyan-400 font-mono">--</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 text-center relative overflow-hidden">
+                        <div class="absolute -right-2 -top-2 w-12 h-12 bg-amber-500/10 rounded-full blur-md"></div>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Peak Day</p>
+                        <p id="stats-busiest-day" class="text-[10px] text-slate-400 hidden absolute top-1 left-2">--</p>
+                        <p id="stats-busiest-day-count" class="text-xl font-black text-amber-400 font-mono">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-glass-card md:col-span-4 md:row-span-2 p-0 flex flex-col min-h-[500px]">
+                <div class="p-6 border-b border-slate-700/50 bg-slate-900/40 backdrop-blur-md sticky top-0 z-20">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-globe text-blue-500"></i> Global Network
+                        </h3>
+                    </div>
+                    <div id="leaderboard-filter-group" class="flex w-full bg-black/40 p-1 rounded-lg border border-white/5">
+                        <button class="lb-filter-btn flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md text-white bg-blue-600 shadow-lg transition-all active" data-view="all">All Time</button>
+                        <button class="lb-filter-btn flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md text-slate-400 hover:text-white transition-all" data-view="weekly">Weekly</button>
+                        <button class="lb-filter-btn flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md text-slate-400 hover:text-white transition-all" data-view="monthly">Monthly</button>
+                    </div>
+                </div>
+                
+                <div id="leaderboard-container" class="flex-grow overflow-y-auto scrollbar-hide p-4 space-y-2 bg-gradient-to-b from-transparent to-black/20">
+                    </div>
+            </div>
+
+            <div class="premium-glass-card md:col-span-8 p-6 relative overflow-hidden">
+                <i class="fas fa-medal absolute -right-4 -top-4 text-8xl text-white/5 transform -rotate-12 pointer-events-none"></i>
+                
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2 relative z-10">
+                    <i class="fas fa-bolt text-amber-400"></i> Personal Milestones
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest bg-blue-900/20 px-2 py-1 rounded">Daily Best</span>
+                            <span id="record-daily-date" class="text-[9px] text-slate-500 font-mono">--</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-4">
+                            <span id="record-daily" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+                            <span class="text-xs text-slate-500 font-medium">units</span>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+                                <span id="record-daily-status" class="text-slate-400">Today: 0</span>
+                                <span id="record-daily-percent" class="text-blue-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5">
+                                <div id="record-daily-bar" class="h-full bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.6)]" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-purple-500/50 transition-colors">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] text-purple-400 font-bold uppercase tracking-widest bg-purple-900/20 px-2 py-1 rounded">Weekly Best</span>
+                            <span id="record-weekly-date" class="text-[9px] text-slate-500 font-mono">--</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-4">
+                            <span id="record-weekly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+                            <span class="text-xs text-slate-500 font-medium">units</span>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+                                <span id="record-weekly-status" class="text-slate-400">This Week: 0</span>
+                                <span id="record-weekly-percent" class="text-purple-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5">
+                                <div id="record-weekly-bar" class="h-full bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.6)]" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/50 transition-colors">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest bg-amber-900/20 px-2 py-1 rounded">Monthly Best</span>
+                            <span id="record-monthly-date" class="text-[9px] text-slate-500 font-mono">--</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-4">
+                            <span id="record-monthly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+                            <span class="text-xs text-slate-500 font-medium">units</span>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+                                <span id="record-monthly-status" class="text-slate-400">This Month: 0</span>
+                                <span id="record-monthly-percent" class="text-amber-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5">
+                                <div id="record-monthly-bar" class="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.6)]" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="hidden sm:flex flex-col items-center justify-center pl-4 border-l border-white/10" id="next-rank-container">
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target</span>
-                <div class="next-rank-container cursor-help" title="Keep working to unlock this rank!">
-                    <div id="next-rank-icon" class="next-rank-ghost"></div>
-                    <div class="lock-overlay"><i class="fas fa-lock"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3 mt-4 mb-2">
-             <div id="double-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold flex items-center gap-2" title="2x XP Active: Weekly Challenge">
-                <i class="fas fa-bolt animate-pulse"></i> 2x Boost
-            </div>
-            <div id="triple-xp-indicator" class="hidden xp-boost-pill px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/50 text-orange-400 text-xs font-bold flex items-center gap-2" title="3x XP Active: Monthly Challenge">
-                <i class="fas fa-fire animate-pulse"></i> 3x Boost
-            </div>
-        </div>
-
-        <div class="mt-auto pt-4">
-            <div class="flex justify-between text-xs font-bold text-gray-300 mb-2">
-                <span id="current-xp-display"></span>
-                <span id="xp-needed-display" class="text-gray-500"></span>
-            </div>
-            <div class="group/bar relative">
-                <div class="xp-bar-container-redesigned h-3 bg-gray-900/80 rounded-full overflow-hidden border border-gray-700/50 relative shadow-inner">
-                    <div id="xp-bar-redesigned" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 relative transition-all duration-1000">
-                        <div class="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]"></div>
+            <div id="achievements-card-wrapper" class="premium-glass-card md:col-span-12 p-6 cursor-pointer group">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700/50 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-award text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></i> Armory & Achievements
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Collectible Progression</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <span id="ach-progress-text" class="text-xs font-mono text-cyan-400 font-bold whitespace-nowrap">0/0 Unlocked</span>
+                        <div class="w-full sm:w-48 h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                            <div id="ach-progress-bar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-300 rounded-full" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
-                <div id="xp-action-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 border border-gray-600 text-white text-xs rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-20">
-                    Calculated...
-                </div>
-            </div>
-             <p id="xp-progress-text-redesigned" class="hidden"></p> 
-        </div>
-    </div>
-</div>
 
-            <div class="bento-card bento-span-2 p-6 flex flex-col">
-                <h3 class="text-lg font-bold text-gray-200 mb-4 flex items-center">
-                    <i class="fas fa-camera-retro mr-2 text-pink-400"></i> Snapshot
-                </h3>
-                <div id="metric-badges-container" class="grid grid-cols-2 gap-4 flex-grow">
+                <div id="achievements-container" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-4 overflow-y-auto max-h-[260px] scrollbar-hide p-2 perspective-1000">
                 </div>
             </div>
 
-            <div class="bento-card bento-span-2 bento-row-span-2 p-6 flex flex-col h-full min-h-[400px]">
-				<div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
-				    <h3 class="text-lg font-bold text-gray-200 flex items-center">
-				        <i class="fas fa-list-ol mr-2 text-indigo-400"></i> Leaderboard
-				    </h3>
-				    <div id="leaderboard-filter-group" class="flex p-1 bg-gray-800/80 rounded-lg border border-gray-700/50">
-				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all active" data-view="all">All Time</button>
-				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all" data-view="weekly">Weekly</button>
-				        <button class="lb-filter-btn px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md text-gray-400 hover:text-white transition-all" data-view="monthly">Monthly</button>
-				    </div>
-				</div>
-                <div id="leaderboard-container" class="flex-grow overflow-y-auto space-y-2 scrollbar-hide">
-                </div>
-            </div>
-
-            <div class="bento-card bento-span-1 bento-row-span-2 p-6 flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-200 flex items-center">
-                        <i class="fas fa-flag-checkered mr-2 text-red-400"></i> Challenges
+            <div class="premium-glass-card md:col-span-4 p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fas fa-crosshairs text-rose-400"></i> Active Directives
                     </h3>
-                    <span id="challenge-counter" class="bg-gray-700 text-xs px-2 py-1 rounded-full text-white"></span>
+                    <span id="challenge-counter" class="bg-rose-500/20 text-rose-400 text-[10px] font-bold px-2 py-1 rounded border border-rose-500/30"></span>
                 </div>
-                <div id="challenges-container" class="space-y-3 overflow-y-auto pr-1 scrollbar-hide flex-grow">
-                </div>
+                <div id="challenges-container" class="space-y-3 overflow-y-auto scrollbar-hide flex-grow">
+                    </div>
             </div>
 
-			<div class="bento-card bento-span-1 bento-row-span-2 p-6 flex flex-col h-full overflow-hidden relative">
-			    <div class="flex justify-between items-center mb-4 z-10 shrink-0">
-			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
-			            <i class="fas fa-medal mr-2 text-orange-400"></i> Records
-			        </h3>
-			        <i class="fas fa-crown text-yellow-500/20 text-4xl absolute top-4 right-4"></i>
-			    </div>
-			
-			    <div class="flex flex-col gap-4 flex-grow z-10 h-full">
-			        
-			        <div class="record-card record-daily-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
-			            <i class="fas fa-calendar-day record-bg-icon text-blue-500"></i>
-			            
-			            <div class="flex justify-between items-start relative z-10 mb-2">
-			                <span class="text-xs text-blue-200 uppercase font-bold tracking-wider">Daily Best</span>
-			                <span id="record-daily-date" class="text-[10px] text-blue-100 bg-blue-600/40 px-2 py-0.5 rounded-full">--</span>
-			            </div>
-			
-			            <div class="flex items-baseline gap-1 relative z-10">
-			                <span id="record-daily" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-blue-300">record</span>
-			            </div>
-			
-			            <div class="relative z-10 mt-3">
-			                <div class="flex justify-between text-xs mb-1">
-			                    <span id="record-daily-status" class="font-semibold text-blue-100">Today: 0</span>
-			                    <span id="record-daily-percent" class="text-blue-300">0%</span>
-			                </div>
-			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
-			                    <div id="record-daily-bar" class="h-full bg-blue-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
-			                </div>
-			            </div>
-			        </div>
-			
-			        <div class="record-card record-weekly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
-			            <i class="fas fa-calendar-week record-bg-icon text-purple-500"></i>
-			            <div class="flex justify-between items-start relative z-10 mb-2">
-			                <span class="text-xs text-purple-200 uppercase font-bold tracking-wider">Weekly Best</span>
-			                <span id="record-weekly-date" class="text-[10px] text-purple-100 bg-purple-600/40 px-2 py-0.5 rounded-full">--</span>
-			            </div>
-			            <div class="flex items-baseline gap-1 relative z-10">
-			                <span id="record-weekly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-purple-300">record</span>
-			            </div>
-			            <div class="relative z-10 mt-3">
-			                <div class="flex justify-between text-xs mb-1">
-			                    <span id="record-weekly-status" class="font-semibold text-purple-100">This Week: 0</span>
-			                    <span id="record-weekly-percent" class="text-purple-300">0%</span>
-			                </div>
-			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
-			                    <div id="record-weekly-bar" class="h-full bg-purple-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
-			                </div>
-			            </div>
-			        </div>
-			
-			        <div class="record-card record-monthly-gradient p-4 rounded-xl relative group flex-1 flex flex-col justify-center">
-			            <i class="fas fa-calendar-alt record-bg-icon text-yellow-500"></i>
-			            <div class="flex justify-between items-start relative z-10 mb-2">
-			                <span class="text-xs text-yellow-200 uppercase font-bold tracking-wider">Monthly Best</span>
-			                <span id="record-monthly-date" class="text-[10px] text-yellow-100 bg-yellow-600/40 px-2 py-0.5 rounded-full">--</span>
-			            </div>
-			            <div class="flex items-baseline gap-1 relative z-10">
-			                <span id="record-monthly" class="text-3xl font-extrabold text-white leading-none tracking-tight">0</span>
-			                <span class="text-xs text-yellow-300">record</span>
-			            </div>
-			            <div class="relative z-10 mt-3">
-			                <div class="flex justify-between text-xs mb-1">
-			                    <span id="record-monthly-status" class="font-semibold text-yellow-100">This Month: 0</span>
-			                    <span id="record-monthly-percent" class="text-yellow-300">0%</span>
-			                </div>
-			                <div class="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
-			                    <div id="record-monthly-bar" class="h-full bg-yellow-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
-			                </div>
-			            </div>
-			        </div>
-			
-			    </div>
-			</div>
-
-			<div id="activity-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50 flex flex-col">
-			    
-			    <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-			        <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
-			    </div>
-			
-			    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-start mb-4 gap-4 relative z-20">
-			        <div>
-			            <h3 class="text-lg font-bold text-gray-200 flex items-center">
-			                <i class="fas fa-chart-area mr-2 text-green-400"></i> Activity Flow
-			            </h3>
-			            <p class="text-xs text-gray-500 mt-1">Weekly Performance</p>
-			        </div>
-			
-			        <div class="flex flex-col items-end gap-2">
-			            <div id="activity-filter-group" class="flex p-1 bg-gray-800 rounded-full scale-90 origin-right pointer-events-auto border border-gray-700">
-			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="7">7D</button>
-			                <button class="activity-filter-btn px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors" data-period="30">30D</button>
-			                <button class="activity-filter-btn px-3 py-1 text-xs text-white bg-gray-700 rounded-full shadow-sm" data-period="all">All</button>
-			            </div>
-			        </div>
-			    </div>
-			
-			    <div id="activity-chart-container" class="relative w-full flex-grow min-h-[220px]">
-			        <canvas id="activityChart"></canvas>
-			    </div>
-			
-			    <div id="activity-stats-display" class="grid grid-cols-3 gap-2 mt-4 text-center border-t border-gray-700/50 pt-3 relative z-20">
-			        <div>
-			            <p class="text-xs text-gray-500">Total</p>
-			            <p id="stats-total-copies" class="text-lg font-bold text-white leading-tight">--</p>
-			        </div>
-			        <div>
-			            <p class="text-xs text-gray-500">Avg/Day</p>
-			            <p id="stats-avg-copies" class="text-lg font-bold text-white leading-tight">--</p>
-			        </div>
-			        <div>
-			            <p class="text-xs text-gray-500">Peak</p>
-			            <p id="stats-busiest-day" class="text-xs text-gray-400 hidden">--</p>
-			            <p id="stats-busiest-day-count" class="text-lg font-bold text-white leading-tight">--</p>
-			        </div>
-			    </div>
-			</div>
-
-			<div id="achievements-card-wrapper" class="bento-card bento-span-2 p-6 flex flex-col cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
-			    
-			    <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-			        <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
-			    </div>
-			
-			    <div class="flex justify-between items-center mb-4 relative z-20">
-			        <h3 class="text-lg font-bold text-gray-200 flex items-center">
-			            <i class="fas fa-trophy mr-2 text-yellow-400"></i> Trophy Case
-			        </h3>
-			        </div>
-			
-			    <div class="mb-4 relative z-20">
-			        <div class="flex justify-between text-xs text-gray-400 mb-1">
-			            <span>Collection Progress</span>
-			            <span id="ach-progress-text">0/0</span>
-			        </div>
-			        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-			            <div id="ach-progress-bar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-300 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-			        </div>
-			    </div>
-			
-			    <div id="achievements-container" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 overflow-y-auto max-h-[220px] scrollbar-hide p-1 relative z-20">
-			    </div>
-			</div>
-
-            <div id="category-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
-                <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                    <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
-                </div>
-
-                <h3 class="text-lg font-bold text-gray-200 mb-2 relative z-20">Category Breakdown</h3>
-                <div id="category-chart-container" class="relative h-48 w-full flex justify-center">
+            <div id="category-card-wrapper" class="premium-glass-card md:col-span-4 p-6 flex flex-col group cursor-pointer hover:border-blue-500/30">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Category Matrix</h3>
+                <div id="category-chart-container" class="relative flex-grow min-h-[200px] flex items-center justify-center">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
 
-            <div id="stats-card-wrapper" class="bento-card bento-span-2 lg:col-span-2 p-6 cursor-pointer group relative transition-all duration-300 hover:ring-2 hover:ring-blue-500/50">
-                <div class="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/40 transition-all duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                    <i class="fas fa-expand-alt text-white text-4xl drop-shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300"></i>
-                </div>
-
-                <h3 class="text-lg font-bold text-gray-200 mb-2 relative z-20">Top Responses</h3>
-                <div id="stats-container" class="relative h-48 w-full">
+            <div id="stats-card-wrapper" class="premium-glass-card md:col-span-4 p-6 flex flex-col group cursor-pointer hover:border-blue-500/30">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Top Vectors</h3>
+                <div id="stats-container" class="relative flex-grow min-h-[200px]">
                     <canvas id="stats-chart"></canvas>
                 </div>
             </div>
 
-        </div> </div> </div> 
+        </div>
+    </div>
+</div>
 
 <div id="profile-modal" class="modal hidden">
         <div id="profile-modal-content-wrapper" class="modal-content w-full max-w-2xl p-0 overflow-hidden modal-scroll-fix shadow-2xl rounded-xl">    
