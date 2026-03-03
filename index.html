@@ -2324,464 +2324,249 @@
         animation: typing-pulse 1s infinite;
     }		
 
-    /* ==========================================================================
-       === Theme Overrides ===
-       ========================================================================== */
-    body.light-mode {
-        color: #1f2937; 
-        background-color: #f3f4f6 !important;
-        background-image: 
-            radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-            radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%) !important;
-    }
-    body.light-mode h1, 
-    body.light-mode h2, 
-    body.light-mode h3, 
-    body.light-mode h4, 
-    body.light-mode p, 
-    body.light-mode span, 
-    body.light-mode strong {
-        color: #111827; 
-    }
-    body.light-mode button span,
-    body.light-mode .badge span {
-        color: inherit; 
-    }
-    body.light-mode #stats-total-copies,
-    body.light-mode #stats-avg-copies,
-    body.light-mode #stats-busiest-day,
-    body.light-mode #stats-busiest-day-count {
-        color: #111827 !important;
-    }
-    body.light-mode #activity-stats-display p.text-gray-500 {
-        color: #4b5563 !important;
-    }
-    body.light-mode .bento-card h3 {
-        color: #111827 !important;
-    }
-    body.light-mode .mini-stat-box span.text-white {
-        color: #111827 !important;
-    }
-    body.light-mode .mini-stat-box span.text-slate-400 {
-        color: #4b5563 !important;
-    }
-    body.light-mode .leaderboard-entry p.text-gray-200 {
-        color: #111827 !important;
-    }
-    body.light-mode #placeholder-modal .glass-modal {
-        background: rgba(255, 255, 255, 0.98) !important; 
-        border: 1px solid #e5e7eb !important;             
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-    }
-    body.light-mode #placeholder-modal h3 {
-        color: #111827 !important; 
-    }
-    body.light-mode #placeholder-modal p,
-    body.light-mode #placeholder-modal label,
-    body.light-mode #placeholder-modal span {
-        color: #4b5563 !important; 
-    }
-    body.light-mode #placeholder-modal label.text-blue-400\/80 {
-        color: #2563eb !important; 
-    }
-    body.light-mode .premium-input {
-        background-color: #f3f4f6 !important; 
-        border-color: #d1d5db !important;
-        color: #1f2937 !important;            
-    }
-    body.light-mode .premium-input:focus {
-        background-color: #ffffff !important; 
-        border-color: #3b82f6 !important;     
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
-    }
-    body.light-mode .premium-input::placeholder {
-        color: #9ca3af !important;
-    }
-    body.light-mode .suggestion-chip {
-        background-color: #e5e7eb !important;
-        border-color: #d1d5db !important;
-    }
-    body.light-mode .suggestion-chip button {
-        color: #374151 !important;
-    }
-    body.light-mode .suggestion-chip:hover {
-        background-color: #dbeafe !important; 
-        border-color: #bfdbfe !important;
-    }
-    body.light-mode .suggestion-chip button:hover {
-        color: #1e40af !important;
-    }
-    body.light-mode #placeholder-modal button.absolute {
-        background-color: #eff6ff !important; 
-        color: #2563eb !important;            
-        border-color: #bfdbfe !important;
-    }
-    body.light-mode #placeholder-modal button.absolute:hover {
-        background-color: #dbeafe !important;
-    }
-    body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500 {
-        color: #6b7280 !important;
-    }
-    body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500:hover {
-        color: #111827 !important;
-    }
-    body.light-mode #placeholder-modal .inline-flex {
-        background-color: #eff6ff !important;
-        border-color: #bfdbfe !important;
-        color: #2563eb !important;
-    }
-    body.light-mode #cancel-placeholder-btn {
-        background-color: #f3f4f6 !important;
-        color: #374151 !important;
-        border-color: #e5e7eb !important;
-    }
-    body.light-mode #cancel-placeholder-btn:hover {
-        background-color: #e5e7eb !important;
-    }
-    body.light-mode .ghost-active {
-        background-color: rgba(253, 224, 71, 0.3);
-        color: #000 !important;
-        border-left-color: #eab308;
-    }
-    body.light-mode .activity-filter-btn {
-        color: #374151 !important; 
-    }
-    body.light-mode .activity-filter-btn:hover {
-        background-color: #e5e7eb !important; 
-        color: #111827 !important; 
-    }
-    body.light-mode .activity-filter-btn.active {
-        background-color: #3b82f6 !important; 
-        color: #ffffff !important; 
-    }
-    body.light-mode #activity-stats-display {
-        border-top-color: #d1d5db !important; 
-    }
-    body.light-mode #activity-stats-display h4 {
-        color: #4b5563 !important; 
-    }
-    body.light-mode #stats-busiest-day-count {
-        color: #6b7280 !important;
-    }
-    body.light-mode #insights-sidebar {
-        background-color: #ffffff !important;
-        border-left: 1px solid #e5e7eb !important; 
-        box-shadow: -10px 0 25px rgba(0, 0, 0, 0.1) !important;
-    }
-    body.light-mode #insights-sidebar .border-b,
-    body.light-mode #insights-sidebar .border-t {
-        border-color: #e5e7eb !important;
-        background-color: #f9fafb !important; 
-    }
-    body.light-mode #insights-content {
-        background-color: #ffffff !important;
-    }
-    body.light-mode #insights-sidebar .bg-gray-800\/50 {
-        background-color: #f3f4f6 !important; 
-        border-color: #d1d5db !important;
-    }
-    body.light-mode #insights-sidebar h3,
-    body.light-mode #insights-sidebar h4 {
-        color: #111827 !important; 
-    }
-    body.light-mode #insights-sidebar .text-gray-500 {
-        color: #6b7280 !important; 
-    }
-    body.light-mode #close-insights-btn {
-        color: #4b5563 !important;
-    }
-    body.light-mode #close-insights-btn:hover {
-        background-color: #e5e7eb !important;
-        color: #111827 !important;
-    }
-    body.light-mode .policy-prose {
-        color: #374151 !important; 
-    }
-    body.light-mode .policy-header {
-        color: #2563eb !important; 
-        border-bottom-color: rgba(37, 99, 235, 0.2) !important;
-    }
-    body.light-mode .policy-list-item {
-        color: #4b5563 !important;
-    }
-    body.light-mode .policy-list-item::before {
-        color: #2563eb !important; 
-    }
-    body.light-mode .policy-strong {
-        color: #111827 !important;
-        background: rgba(0, 0, 0, 0.05) !important; 
-    }
-    body.light-mode #sidebar-footer {
-        background-color: #ffffff !important;
-        border-top-color: #e5e7eb !important;
-    }
-    body.theme-deep-space {
-        background-color: #0d1117;
-        background-image: 
-            radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-            radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
-    }
-    body.theme-midnight {
-        background-color: #000000;
-        background-image: radial-gradient(circle at 50% 0%, #111 0%, #000 70%);
-    }
-    body.theme-nebula {
-        background-color: #1a0b2e;
-        background-image: 
-            radial-gradient(at 10% 10%, rgba(120, 50, 220, 0.15) 0, transparent 50%),
-            radial-gradient(at 90% 90%, rgba(200, 50, 100, 0.15) 0, transparent 50%),
-            radial-gradient(at 50% 50%, rgba(50, 20, 100, 0.1) 0, transparent 70%);
-    }
-    body.theme-aurora {
-        background-color: #022c22;
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.15) 0, transparent 50%),
-            radial-gradient(at 50% 50%, rgba(6, 78, 59, 0.3) 0, transparent 60%);
-    }
-    .light-mode .container-bg {
-        background-color: #f9fafb;
-        background-image: radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
-                             radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
-    }
-    .light-mode h1, .light-mode h2, .light-mode h3 {
-        color: #1f2937;
-    }
-    .light-mode .link-title {
-        background-image: none;
-        -webkit-background-clip: unset;
-        -webkit-text-fill-color: inherit;
-        color: #1f2937;
-    }
-    .light-mode .text-placeholder::placeholder {
-        color: #6b7280;
-    }
-    .light-mode #auth-status, .light-mode .text-gray-400 {
-        color: #4b5563;
-    }
-    .light-mode .bg-gray-800 { background-color: #e5e7eb; }
-    .light-mode .bg-gray-700 { background-color: #d1d5db; }
-    .light-mode .bg-gray-600 { background-color: #9ca3af; }
-    .light-mode .text-gray-100 { color: #1f2937; }
-    .light-mode .text-gray-200 { color: #374151; }
-    .light-mode .border-gray-600 { border-color: #9ca3af; }
-    .light-mode .hover\:bg-gray-700:hover { background-color: #d1d5db; }
-    .light-mode .hover\:text-white:hover { color: #1f2937; }
-    .light-mode .tracking-numbers-container { background-color: #f3f4f6; }
-    .light-mode .tracking-tab { background-color: #e5e7eb; }
-    .light-mode .login-popup {
-        background-color: rgba(255, 255, 255, 0.9);
-        color: #111827;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-    body.light-mode .highlight-target {
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.2);
-        border: 3px solid #1f2937;
-        filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
-        animation: pulse-highlight-light 1.5s infinite;
-    }
-    body.light-mode #tutorial-modal .modal-content {
-        background-color: rgba(243, 244, 246, 0.9); 
-        color: #111827; 
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    body.light-mode #tutorial-modal h3,
-    body.light-mode #tutorial-modal h4 {
-        color: #3b82f6; 
-    }
-    body.light-mode #tutorial-modal p,
-    body.light-mode #tutorial-modal ul {
-        color: #4b5563; 
-    }
-    body.light-mode #tutorial-modal .bg-gray-800 {
-        background-color: #e5e7eb; 
-        border-color: #d1d5db;
-    }
-    body.light-mode #tutorial-back-btn { background-color: #d1d5db; color: #1f2937; }
-    body.light-mode #tutorial-next-btn { background-color: #3b82f6; color: #ffffff; }
-    body.light-mode #tutorial-finish-btn { background-color: #22c55e; color: #ffffff; }
-    body.light-mode #tutorial-back-btn:hover { background-color: #9ca3af; }
-    body.light-mode #tutorial-next-btn:hover { background-color: #3b82f6; }
-    body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
-    body.light-mode .bento-card {
-        background: rgba(255, 255, 255, 0.65);
-        border-top: 1px solid rgba(255, 255, 255, 0.8);
-        border-left: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 
-            0 10px 15px -3px rgba(0, 0, 0, 0.05), 
-            0 4px 6px -2px rgba(0, 0, 0, 0.02);
-    }
-    body.light-mode .mini-stat-box { background: rgba(0, 0, 0, 0.05); }
-    body.light-mode .mini-stat-box:hover { background: rgba(0, 0, 0, 0.1); }
-    body.light-mode .link-card, 
-    body.light-mode .card-style, 
-    body.light-mode .form-container, 
-    body.light-mode .floating-card, 
-    body.light-mode .main-card, 
-    body.light-mode .sidebar, 
-    body.light-mode .modal-content,
-    body.light-mode .bento-card {
-        background-color: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-    }
-    body.light-mode .link-card:hover, 
-    body.light-mode .floating-card:hover {
-        background-color: rgba(255, 255, 255, 0.85);
-        box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.15);
-    }
-
-	/* ==========================================================================
-   PREMIUM LIGHT MODE: WCAG ACCESSIBILITY & ACRYLIC GLASS
+/* ==========================================================================
+   === MASTER LIGHT MODE THEME (WCAG COMPLIANT & ACRYLIC GLASS) ===
    ========================================================================== */
 
-	/* --- 1. Global Typography & Acrylic Glass --- */
-	body.light-mode {
-	    background-color: #f3f4f6 !important;
-	    color: #1f2937 !important; /* Dark Slate for body text (WCAG AAA) */
-	}
-	
-	/* The "Crisp Acrylic" Glass Fix */
-	body.light-mode .premium-glass-card,
-	body.light-mode .sla-glass-panel,
-	body.light-mode #helpful-links-app .link-card,
-	body.light-mode .bento-card,
-	body.light-mode .industrial-console {
-	    background: rgba(255, 255, 255, 0.7) !important;
-	    backdrop-filter: blur(24px) !important;
-	    -webkit-backdrop-filter: blur(24px) !important;
-	    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-	    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
-	}
-	
-	body.light-mode .premium-glass-card:hover,
-	body.light-mode #helpful-links-app .link-card:hover,
-	body.light-mode .bento-card:hover {
-	    background: rgba(255, 255, 255, 0.95) !important;
-	    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12) !important;
-	    border-color: rgba(0, 0, 0, 0.15) !important;
-	}
-	
-	/* General Header & Data Overrides */
-	body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode h4 { color: #111827 !important; }
-	body.light-mode .text-slate-400, body.light-mode .text-gray-400 { color: #4b5563 !important; }
-	body.light-mode .text-slate-500, body.light-mode .text-gray-500 { color: #374151 !important; }
-	
-	/* Gradient Text Fix (Darkens gradients for readability) */
-	body.light-mode #my-stats-page h2.bg-clip-text {
-	    background-image: linear-gradient(to right, #1e40af, #0891b2, #047857) !important; /* Deep Blue to Emerald */
-	}
-	
-	/* --- 2. FedEx Tracker: Clean Paper Terminal --- */
-	body.light-mode .industrial-console {
-	    background-color: #ffffff !important;
-	}
-	body.light-mode .industrial-console > div.bg-\[\#0a0a0a\] {
-	    background-color: #e5e7eb !important; /* Light header bar */
-	    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
-	}
-	body.light-mode .industrial-console .line-number-gutter {
-	    background: #f9fafb !important;
-	    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
-	    color: #9ca3af !important;
-	}
-	body.light-mode .industrial-console textarea {
-	    color: #1f2937 !important; /* High contrast typing */
-	    text-shadow: none !important;
-	}
-	body.light-mode .industrial-console textarea::placeholder { color: #9ca3af !important; }
-	body.light-mode .console-scanner {
-	    background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.8), transparent) !important;
-	    box-shadow: 0 0 12px 2px rgba(79, 70, 229, 0.3) !important; /* Crisp Indigo Laser */
-	}
-	
-	/* Tracking Vault Pills */
-	body.light-mode #tracking-numbers-container .tracking-tab {
-	    background: #ffffff !important;
-	    border-left: 4px solid #4f46e5 !important;
-	}
-	body.light-mode #tracking-numbers-container .tracking-tab span { color: #111827 !important; }
-	body.light-mode #tracking-numbers-container .copy-tracking-btn {
-	    color: #4338ca !important;
-	    border-color: rgba(67, 56, 202, 0.3) !important;
-	}
-	
-	/* --- 3. SLA Dashboard: Scannable Data Table --- */
-	body.light-mode .sla-glass-panel thead {
-	    background: rgba(243, 244, 246, 0.9) !important;
-	    border-bottom: 2px solid rgba(0, 0, 0, 0.1) !important;
-	}
-	body.light-mode .sla-glass-panel thead th { color: #374151 !important; font-weight: 800 !important; }
-	body.light-mode #sla-table-body tr { border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; }
-	body.light-mode #sla-table-body tr:hover { background: rgba(0, 0, 0, 0.03) !important; }
-	
-	/* Urgent Row Override */
-	body.light-mode #sla-table-body tr.bg-red-900\/5 {
-	    background: linear-gradient(90deg, rgba(254, 226, 226, 0.7) 0%, transparent 100%) !important;
-	    border-left: 4px solid #dc2626 !important;
-	}
-	
-	/* Table Text Hierarchy */
-	body.light-mode #sla-table-body td span.text-gray-200 { color: #111827 !important; font-weight: 700 !important; }
-	body.light-mode #sla-table-body td span.text-red-400 { color: #b91c1c !important; }
-	body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; }
-	body.light-mode #sla-table-body td span.text-blue-400 { color: #1d4ed8 !important; }
-	
-	/* Solid Team Badges (No transparency) */
-	body.light-mode #sla-table-body td span.border {
-	    background: #ffffff !important;
-	    border: 1px solid rgba(0, 0, 0, 0.15) !important;
-	    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-	}
-	body.light-mode #sla-table-body td span.text-green-300 { color: #15803d !important; background: #dcfce7 !important; border-color: #86efac !important; }
-	body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; background: #ffedd5 !important; border-color: #fdba74 !important; }
-	body.light-mode #sla-table-body td span.text-purple-300 { color: #7e22ce !important; background: #f3e8ff !important; border-color: #d8b4fe !important; }
-	body.light-mode #sla-table-body td span.text-blue-300 { color: #1d4ed8 !important; background: #dbeafe !important; border-color: #bfdbfe !important; }
-	
-	/* Modal Spec Sheet */
-	body.light-mode #sla-details-modal .bg-\[\#0f172a\] { background: #ffffff !important; }
-	body.light-mode #sla-details-modal .spec-sheet-grid { background-image: none !important; border: 1px solid #e5e7eb !important; }
-	body.light-mode #sla-details-modal .bg-\[\#020617\] { background: #f3f4f6 !important; border-color: #e5e7eb !important; box-shadow: none !important; }
-	body.light-mode #sla-details-modal .text-white { color: #111827 !important; }
-	body.light-mode #sla-details-modal .text-slate-300 { color: #374151 !important; }
-	
-	/* --- 4. My Stats: Vibrant Legibility --- */
-	body.light-mode #current-xp-display span,
-	body.light-mode #rank-name-redesigned { color: #111827 !important; text-shadow: none !important; }
-	body.light-mode .text-neon-cyan { color: #0891b2 !important; text-shadow: none !important; font-weight: 800 !important; }
-	
-	/* Podium Overrides */
-	body.light-mode .podium-card {
-	    background: rgba(255, 255, 255, 0.95) !important;
-	    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-	    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
-	}
-	body.light-mode .podium-rank-1 { background: linear-gradient(to top, #fef3c7, #ffffff) !important; border-top: 4px solid #f59e0b !important; }
-	body.light-mode .podium-rank-2 { background: linear-gradient(to top, #f3f4f6, #ffffff) !important; border-top: 4px solid #9ca3af !important; }
-	body.light-mode .podium-rank-3 { background: linear-gradient(to top, #ffedd5, #ffffff) !important; border-top: 4px solid #d97706 !important; }
-	body.light-mode .podium-card p.text-white { color: #111827 !important; }
-	body.light-mode .podium-card p.text-blue-300 { color: #2563eb !important; }
-	
-	/* Achievement & Record Tiles */
-	body.light-mode .achievement-tile { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
-	body.light-mode .achievement-tile p { color: #374151 !important; font-weight: 800 !important; }
-	body.light-mode .record-card { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
-	body.light-mode .record-card span.text-white { color: #111827 !important; }
-	body.light-mode .record-card .record-bg-icon { opacity: 0.06 !important; color: #111827 !important; }
-	
-	/* Mini Snapshot Badges */
-	body.light-mode .mini-stat-box.bg-gradient-to-br { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important; }
-	body.light-mode .mini-stat-box span.text-white { color: #111827 !important; }
-	
-	/* --- 5. Helpful Links Resource Hub --- */
-	body.light-mode #helpful-links-app .link-card h3 { color: #111827 !important; }
-	body.light-mode #helpful-links-app .link-card p { color: #4b5563 !important; }
-	body.light-mode #links-search-bar-container { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; }
-	body.light-mode #links-search-input { color: #1f2937 !important; }
-	body.light-mode #links-search-input::placeholder { color: #9ca3af !important; }
+/* --- 1. Base Global Styles --- */
+body.light-mode {
+    color: #1f2937 !important; 
+    background-color: #f3f4f6 !important;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%) !important;
+}
+
+body.light-mode .container-bg {
+    background-color: #f9fafb !important;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%) !important;
+}
+
+/* --- 2. Global Typography Hierarchy --- */
+body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode h4 { color: #111827 !important; }
+body.light-mode p, body.light-mode span, body.light-mode strong { color: #111827; }
+body.light-mode .text-slate-400, body.light-mode .text-gray-400 { color: #4b5563 !important; }
+body.light-mode .text-slate-500, body.light-mode .text-gray-500 { color: #374151 !important; }
+body.light-mode .text-gray-100 { color: #1f2937 !important; }
+body.light-mode .text-gray-200 { color: #374151 !important; }
+body.light-mode button span, body.light-mode .badge span { color: inherit !important; }
+body.light-mode .link-title { background-image: none; -webkit-background-clip: unset; -webkit-text-fill-color: inherit; color: #1f2937; }
+body.light-mode .text-placeholder::placeholder { color: #6b7280 !important; }
+body.light-mode #auth-status { color: #4b5563 !important; }
+
+/* Tailwind Color Overrides for Utility Classes */
+body.light-mode .bg-gray-800 { background-color: #e5e7eb !important; }
+body.light-mode .bg-gray-700 { background-color: #d1d5db !important; }
+body.light-mode .bg-gray-600 { background-color: #9ca3af !important; }
+body.light-mode .border-gray-600 { border-color: #9ca3af !important; }
+body.light-mode .hover\:bg-gray-700:hover { background-color: #d1d5db !important; }
+body.light-mode .hover\:text-white:hover { color: #1f2937 !important; }
+
+/* --- 3. Glassmorphism: Legacy Structural UI --- */
+body.light-mode .card-style, 
+body.light-mode .form-container, 
+body.light-mode .floating-card, 
+body.light-mode .main-card, 
+body.light-mode .sidebar, 
+body.light-mode .modal-content {
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+body.light-mode .floating-card:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* --- 4. Glassmorphism: Premium Acrylic Fix --- */
+body.light-mode .premium-glass-card,
+body.light-mode .sla-glass-panel,
+body.light-mode #helpful-links-app .link-card,
+body.light-mode .bento-card,
+body.light-mode .industrial-console {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important;
+}
+body.light-mode .premium-glass-card:hover,
+body.light-mode #helpful-links-app .link-card:hover,
+body.light-mode .bento-card:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.12) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* --- 5. Component: Canned Responses & Modals --- */
+/* Placeholder Settings */
+body.light-mode #placeholder-modal .glass-modal { background: rgba(255, 255, 255, 0.98) !important; border: 1px solid #e5e7eb !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important; }
+body.light-mode #placeholder-modal h3 { color: #111827 !important; }
+body.light-mode #placeholder-modal p, body.light-mode #placeholder-modal label, body.light-mode #placeholder-modal span { color: #4b5563 !important; }
+body.light-mode #placeholder-modal label.text-blue-400\/80 { color: #2563eb !important; }
+body.light-mode .premium-input { background-color: #f3f4f6 !important; border-color: #d1d5db !important; color: #1f2937 !important; }
+body.light-mode .premium-input:focus { background-color: #ffffff !important; border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important; }
+body.light-mode .premium-input::placeholder { color: #9ca3af !important; }
+body.light-mode .suggestion-chip { background-color: #e5e7eb !important; border-color: #d1d5db !important; }
+body.light-mode .suggestion-chip button { color: #374151 !important; }
+body.light-mode .suggestion-chip:hover { background-color: #dbeafe !important; border-color: #bfdbfe !important; }
+body.light-mode .suggestion-chip button:hover { color: #1e40af !important; }
+body.light-mode #placeholder-modal button.absolute { background-color: #eff6ff !important; color: #2563eb !important; border-color: #bfdbfe !important; }
+body.light-mode #placeholder-modal button.absolute:hover { background-color: #dbeafe !important; }
+body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500 { color: #6b7280 !important; }
+body.light-mode #placeholder-modal .premium-input ~ button.text-gray-500:hover { color: #111827 !important; }
+body.light-mode #placeholder-modal .inline-flex { background-color: #eff6ff !important; border-color: #bfdbfe !important; color: #2563eb !important; }
+body.light-mode #cancel-placeholder-btn { background-color: #f3f4f6 !important; color: #374151 !important; border-color: #e5e7eb !important; }
+body.light-mode #cancel-placeholder-btn:hover { background-color: #e5e7eb !important; }
+
+/* Micro-Interactions */
+body.light-mode .ghost-active { background-color: rgba(253, 224, 71, 0.3) !important; color: #000 !important; border-left-color: #eab308 !important; }
+body.light-mode .highlight-target {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.2);
+    border: 3px solid #1f2937;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
+    animation: pulse-highlight-light 1.5s infinite;
+}
+@keyframes pulse-highlight-light {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(100, 160, 255, 0.4); }
+    50% { transform: scale(1.01); box-shadow: 0 0 0 10px rgba(100, 160, 255, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(100, 160, 255, 0.4); }
+}
+
+/* --- 6. Component: FedEx Tracker --- */
+body.light-mode .industrial-console { background-color: #ffffff !important; }
+body.light-mode .industrial-console > div.bg-\[\#0a0a0a\] { background-color: #e5e7eb !important; border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important; }
+body.light-mode .industrial-console .line-number-gutter { background: #f9fafb !important; border-right: 1px solid rgba(0, 0, 0, 0.08) !important; color: #9ca3af !important; }
+body.light-mode .industrial-console textarea { color: #1f2937 !important; text-shadow: none !important; }
+body.light-mode .industrial-console textarea::placeholder { color: #9ca3af !important; }
+body.light-mode .console-scanner { background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.8), transparent) !important; box-shadow: 0 0 12px 2px rgba(79, 70, 229, 0.3) !important; }
+body.light-mode #tracking-numbers-container .tracking-tab { background: #ffffff !important; border-left: 4px solid #4f46e5 !important; }
+body.light-mode #tracking-numbers-container .tracking-tab span { color: #111827 !important; }
+body.light-mode #tracking-numbers-container .copy-tracking-btn { color: #4338ca !important; border-color: rgba(67, 56, 202, 0.3) !important; }
+
+/* --- 7. Component: SLA Dashboard --- */
+body.light-mode .sla-glass-panel thead { background: rgba(243, 244, 246, 0.9) !important; border-bottom: 2px solid rgba(0, 0, 0, 0.1) !important; }
+body.light-mode .sla-glass-panel thead th { color: #374151 !important; font-weight: 800 !important; }
+body.light-mode #sla-table-body tr { border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; }
+body.light-mode #sla-table-body tr:hover { background: rgba(0, 0, 0, 0.03) !important; }
+body.light-mode #sla-table-body tr.bg-red-900\/5 { background: linear-gradient(90deg, rgba(254, 226, 226, 0.7) 0%, transparent 100%) !important; border-left: 4px solid #dc2626 !important; }
+body.light-mode #sla-table-body td span.text-gray-200 { color: #111827 !important; font-weight: 700 !important; }
+body.light-mode #sla-table-body td span.text-red-400 { color: #b91c1c !important; }
+body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; }
+body.light-mode #sla-table-body td span.text-blue-400 { color: #1d4ed8 !important; }
+
+/* Solid Team Badges (WCAG Compliant) */
+body.light-mode #sla-table-body td span.border { background: #ffffff !important; border: 1px solid rgba(0, 0, 0, 0.15) !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
+body.light-mode #sla-table-body td span.text-green-300 { color: #15803d !important; background: #dcfce7 !important; border-color: #86efac !important; }
+body.light-mode #sla-table-body td span.text-orange-300 { color: #c2410c !important; background: #ffedd5 !important; border-color: #fdba74 !important; }
+body.light-mode #sla-table-body td span.text-purple-300 { color: #7e22ce !important; background: #f3e8ff !important; border-color: #d8b4fe !important; }
+body.light-mode #sla-table-body td span.text-blue-300 { color: #1d4ed8 !important; background: #dbeafe !important; border-color: #bfdbfe !important; }
+
+/* SLA Modal Spec Sheet */
+body.light-mode #sla-details-modal .bg-\[\#0f172a\] { background: #ffffff !important; }
+body.light-mode #sla-details-modal .spec-sheet-grid { background-image: none !important; border: 1px solid #e5e7eb !important; }
+body.light-mode #sla-details-modal .bg-\[\#020617\] { background: #f3f4f6 !important; border-color: #e5e7eb !important; box-shadow: none !important; }
+body.light-mode #sla-details-modal .text-white { color: #111827 !important; }
+body.light-mode #sla-details-modal .text-slate-300 { color: #374151 !important; }
+
+/* --- 8. Component: My Stats Page --- */
+body.light-mode #my-stats-page h2.bg-clip-text { background-image: linear-gradient(to right, #1e40af, #0891b2, #047857) !important; }
+body.light-mode #current-xp-display span, body.light-mode #rank-name-redesigned { color: #111827 !important; text-shadow: none !important; }
+body.light-mode .text-neon-cyan { color: #0891b2 !important; text-shadow: none !important; font-weight: 800 !important; }
+body.light-mode #stats-total-copies, body.light-mode #stats-avg-copies, body.light-mode #stats-busiest-day, body.light-mode #stats-busiest-day-count { color: #111827 !important; }
+body.light-mode #activity-stats-display p.text-gray-500 { color: #4b5563 !important; }
+body.light-mode #activity-stats-display h4 { color: #4b5563 !important; }
+body.light-mode .leaderboard-entry p.text-gray-200 { color: #111827 !important; }
+
+/* Podium Overrides */
+body.light-mode .podium-card { background: rgba(255, 255, 255, 0.95) !important; border: 1px solid rgba(0, 0, 0, 0.1) !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important; }
+body.light-mode .podium-rank-1 { background: linear-gradient(to top, #fef3c7, #ffffff) !important; border-top: 4px solid #f59e0b !important; }
+body.light-mode .podium-rank-2 { background: linear-gradient(to top, #f3f4f6, #ffffff) !important; border-top: 4px solid #9ca3af !important; }
+body.light-mode .podium-rank-3 { background: linear-gradient(to top, #ffedd5, #ffffff) !important; border-top: 4px solid #d97706 !important; }
+body.light-mode .podium-card p.text-white { color: #111827 !important; }
+body.light-mode .podium-card p.text-blue-300 { color: #2563eb !important; }
+
+/* Stats Tiles */
+body.light-mode .achievement-tile { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+body.light-mode .achievement-tile p { color: #374151 !important; font-weight: 800 !important; }
+body.light-mode .record-card { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+body.light-mode .record-card span.text-white { color: #111827 !important; }
+body.light-mode .record-card .record-bg-icon { opacity: 0.06 !important; color: #111827 !important; }
+body.light-mode .mini-stat-box.bg-gradient-to-br { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important; }
+body.light-mode .mini-stat-box span.text-white { color: #111827 !important; }
+body.light-mode .mini-stat-box span.text-slate-400 { color: #4b5563 !important; }
+
+/* Activity Filters */
+body.light-mode .activity-filter-btn { color: #374151 !important; }
+body.light-mode .activity-filter-btn:hover { background-color: #e5e7eb !important; color: #111827 !important; }
+body.light-mode .activity-filter-btn.active { background-color: #3b82f6 !important; color: #ffffff !important; }
+
+/* --- 9. Component: Helpful Links & Search --- */
+body.light-mode #helpful-links-app .link-card h3 { color: #111827 !important; }
+body.light-mode #helpful-links-app .link-card p { color: #4b5563 !important; }
+body.light-mode #links-search-bar-container { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; }
+body.light-mode #links-search-input { color: #1f2937 !important; }
+body.light-mode #links-search-input::placeholder { color: #9ca3af !important; }
+
+/* --- 10. Component: Policy Insights Sidebar --- */
+body.light-mode #insights-sidebar { background-color: #ffffff !important; border-left: 1px solid #e5e7eb !important; box-shadow: -10px 0 25px rgba(0, 0, 0, 0.1) !important; }
+body.light-mode #insights-sidebar .border-b, body.light-mode #insights-sidebar .border-t { border-color: #e5e7eb !important; background-color: #f9fafb !important; }
+body.light-mode #insights-content { background-color: #ffffff !important; }
+body.light-mode #insights-sidebar .bg-gray-800\/50 { background-color: #f3f4f6 !important; border-color: #d1d5db !important; }
+body.light-mode #insights-sidebar h3, body.light-mode #insights-sidebar h4 { color: #111827 !important; }
+body.light-mode #insights-sidebar .text-gray-500 { color: #6b7280 !important; }
+body.light-mode #close-insights-btn { color: #4b5563 !important; }
+body.light-mode #close-insights-btn:hover { background-color: #e5e7eb !important; color: #111827 !important; }
+body.light-mode .policy-prose { color: #374151 !important; }
+body.light-mode .policy-header { color: #2563eb !important; border-bottom-color: rgba(37, 99, 235, 0.2) !important; }
+body.light-mode .policy-list-item { color: #4b5563 !important; }
+body.light-mode .policy-list-item::before { color: #2563eb !important; }
+body.light-mode .policy-strong { color: #111827 !important; background: rgba(0, 0, 0, 0.05) !important; }
+body.light-mode #sidebar-footer { background-color: #ffffff !important; border-top-color: #e5e7eb !important; }
+
+/* --- 11. Component: Login & Tutorial Modals --- */
+body.light-mode .login-popup { background-color: rgba(255, 255, 255, 0.9); color: #111827; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+body.light-mode #tutorial-modal .modal-content { background-color: rgba(243, 244, 246, 0.9); color: #111827; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
+body.light-mode #tutorial-modal h3, body.light-mode #tutorial-modal h4 { color: #3b82f6; }
+body.light-mode #tutorial-modal p, body.light-mode #tutorial-modal ul { color: #4b5563; }
+body.light-mode #tutorial-modal .bg-gray-800 { background-color: #e5e7eb; border-color: #d1d5db; }
+body.light-mode #tutorial-back-btn { background-color: #d1d5db; color: #1f2937; }
+body.light-mode #tutorial-next-btn { background-color: #3b82f6; color: #ffffff; }
+body.light-mode #tutorial-finish-btn { background-color: #22c55e; color: #ffffff; }
+body.light-mode #tutorial-back-btn:hover { background-color: #9ca3af; }
+body.light-mode #tutorial-next-btn:hover { background-color: #3b82f6; }
+body.light-mode #tutorial-finish-btn:hover { background-color: #4ade80; }
+
+/* --- 12. Base Dark Themes (DO NOT REMOVE) --- */
+body.theme-deep-space {
+    background-color: #0d1117;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(215,90%,55%,0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(280,90%,70%,0.15) 0, transparent 50%);
+}
+body.theme-midnight {
+    background-color: #000000;
+    background-image: radial-gradient(circle at 50% 0%, #111 0%, #000 70%);
+}
+body.theme-nebula {
+    background-color: #1a0b2e;
+    background-image: 
+        radial-gradient(at 10% 10%, rgba(120, 50, 220, 0.15) 0, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(200, 50, 100, 0.15) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(50, 20, 100, 0.1) 0, transparent 70%);
+}
+body.theme-aurora {
+    background-color: #022c22;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.15) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(6, 78, 59, 0.3) 0, transparent 60%);
+}
 
     /* ==========================================================================
        === Media Queries ===
