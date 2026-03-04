@@ -4428,23 +4428,6 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 	        </div>
 	    </div>
 
-            <div id="copy-success-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h3 class="text-2xl font-bold text-gray-200 mb-4">Text Copied! ✅</h3>
-                    <p class="text-gray-400 text-base mb-2">Here is the final response you just copied:</p>
-                    <div class="bg-gray-700 p-4 rounded-xl border border-gray-600 mb-4 overflow-auto max-h-60">
-                        <pre id="copied-text-display" class="whitespace-pre-wrap text-gray-200"></pre>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4">Feel free to paste this into your application.</p>
-                    <div class="flex justify-end">
-                        <button id="close-copy-success-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-300">
-                            Got it!
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-
 
 		</div> <div id="achievement-toast" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse text-gray-200 bg-gray-700 divide-x rtl:divide-x-reverse divide-gray-600 rounded-lg shadow-lg space-x opacity-0 translate-y-5 transition-all duration-500 ease-out z-[5000]">
 		    <div id="toast-icon" class="text-2xl text-yellow-400">🏆</div>
@@ -12906,9 +12889,6 @@ if (activityFilterGroup) {
         try { const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); showMessage("Signed in with Google!"); } catch (error) { console.error("Google sign-in failed", error); showMessage("Google sign-in failed. Please try again.", 'error'); }
     });
 
-    document.getElementById('close-copy-success-btn').addEventListener('click', () => {
-        document.getElementById('copy-success-modal').classList.add('hidden');
-    });
 		
 // --- Modern Tutorial UI Event Listeners ---
     document.getElementById('tooltip-next-btn').addEventListener('click', () => {
@@ -13243,8 +13223,6 @@ document.getElementById('confirm-placeholder-btn').addEventListener('click', () 
     
     // 2. UPDATE UI IMMEDIATELY
     document.getElementById('placeholder-modal').classList.add('hidden');
-    document.getElementById('copied-text-display').textContent = finalContent;
-    document.getElementById('copy-success-modal').classList.remove('hidden');
 
     // Restore the modern tutorial UI if it was active
     if (isTutorialActive) {
