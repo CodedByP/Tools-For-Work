@@ -2834,6 +2834,194 @@
 	body.light-mode #links-search-input { color: #1f2937 !important; }
 	body.light-mode #links-search-input::placeholder { color: #9ca3af !important; }
 
+
+	/* ==========================================================================
+   === HELPER LINKS - PREMIUM INDUSTRIAL REDESIGN (Structure) ===
+   ========================================================================== */
+
+/* Base Row Styling (Overriding the JS Cards for BOTH modes) */
+#helpful-links-app .link-card {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    overflow: visible;
+}
+
+/* Row Internal Layout */
+#helpful-links-app .link-card a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    width: 100% !important;
+    text-decoration: none !important;
+}
+
+/* Title & Description Structure */
+#helpful-links-app .link-card h3 {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    min-width: 220px;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.01em;
+    transition: color 0.2s;
+}
+
+#helpful-links-app .link-card p {
+    font-size: 12px !important;
+    margin: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+    padding-right: 80px;
+}
+
+/* Base Icon Container (Applies to both modes) */
+#helpful-links-app .link-card a::before {
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    content: '\f0c1'; /* Default Link Icon */
+}
+
+#helpful-links-app .link-card:hover a::before {
+    transform: scale(1.05);
+}
+
+/* Injecting the "Launch" button structure */
+#static-links-list .link-card::after {
+    content: 'Launch \f08e';
+    font-family: 'Inter', 'Font Awesome 6 Free';
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: absolute;
+    right: 16px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+#static-links-list .link-card:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Meatballs Menu Structural Fix */
+#helpful-links-app .meatballs-button {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px !important;
+    margin-right: 4px;
+    opacity: 0.4;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+#helpful-links-app .link-card:hover .meatballs-button { opacity: 1; }
+
+/* Utility */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+/* ==========================================================================
+   === DARK MODE COLORS ===
+   ========================================================================== */
+body:not(.light-mode) #helpful-links-app {
+    background-color: #0d1117 !important;
+    background-image: radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.05) 0, transparent 60%) !important;
+}
+body:not(.light-mode) #helpful-links-app .link-card { border: 1px solid transparent !important; border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important; }
+body:not(.light-mode) #helpful-links-app .link-card:hover { background: rgba(255, 255, 255, 0.03) !important; border-color: rgba(255, 255, 255, 0.08) !important; transform: translateX(4px) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important; z-index: 10; }
+body:not(.light-mode) #helpful-links-app .link-card h3 { color: #e5e7eb !important; }
+body:not(.light-mode) #helpful-links-app .link-card:hover h3 { color: #38bdf8 !important; }
+body:not(.light-mode) #helpful-links-app .link-card p { color: #8b949e !important; }
+body:not(.light-mode) #static-links-list .link-card::after { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+body:not(.light-mode) #helpful-links-app .meatballs-button { color: #94a3b8; }
+body:not(.light-mode) #helpful-links-app .meatballs-button:hover { color: #10b981 !important; background: rgba(16, 185, 129, 0.1) !important; border-radius: 4px; }
+body:not(.light-mode) .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+body:not(.light-mode) .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Dark Mode Icons */
+body:not(.light-mode) #helpful-links-app .link-card a::before { color: #94a3b8; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); }
+body:not(.light-mode) #helpful-links-app .link-card a[href*="b.corp"]::before { content: '\f188'; color: #f43f5e; background: rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card a[href*="supportcenter"]::before { content: '\f02d'; color: #a855f7; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card a[href*="docs.google"], body:not(.light-mode) #helpful-links-app .link-card a[href*="script.google"]::before { content: '\f1c3'; color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card a[href*="lookerstudio"]::before { content: '\f080'; color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card a[href*="drive.google"]::before { content: '\f07b'; color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card a[href*="gutsv3"]::before { content: '\f3fd'; color: #0ea5e9; background: rgba(14, 165, 233, 0.1); border-color: rgba(14, 165, 233, 0.2); } 
+body:not(.light-mode) #helpful-links-app .link-card:hover a::before { filter: brightness(1.2); }
+
+/* ==========================================================================
+   === LIGHT MODE COLORS (Overrides Tailwind hardcoded dark classes) ===
+   ========================================================================== */
+body.light-mode #helpful-links-app {
+    background-color: #f3f4f6 !important;
+    background-image: radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.05) 0, transparent 60%) !important;
+}
+
+/* Base Overrides for UI Elements */
+body.light-mode #helpful-links-app h2 { color: #111827 !important; }
+body.light-mode #helpful-links-app .border-white\/5 { border-color: rgba(0, 0, 0, 0.05) !important; }
+body.light-mode #links-search-bar-container { background-color: rgba(255, 255, 255, 0.9) !important; border-color: rgba(0, 0, 0, 0.1) !important; }
+body.light-mode #links-search-input { color: #111827 !important; }
+body.light-mode #links-search-input::placeholder { color: #9ca3af !important; }
+body.light-mode #links-search-bar-container .bg-white\/5 { background-color: rgba(0, 0, 0, 0.05) !important; border-color: rgba(0, 0, 0, 0.1) !important; color: #4b5563 !important; }
+
+/* Link Cards */
+body.light-mode #helpful-links-app .link-card { border: 1px solid transparent !important; border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; }
+body.light-mode #helpful-links-app .link-card:hover { background: rgba(0, 0, 0, 0.02) !important; border-color: rgba(0, 0, 0, 0.08) !important; transform: translateX(4px) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; z-index: 10; }
+body.light-mode #helpful-links-app .link-card h3 { color: #1f2937 !important; }
+body.light-mode #helpful-links-app .link-card:hover h3 { color: #0284c7 !important; }
+body.light-mode #helpful-links-app .link-card p { color: #6b7280 !important; }
+body.light-mode #static-links-list .link-card::after { background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); }
+body.light-mode #helpful-links-app .meatballs-button { color: #6b7280; }
+body.light-mode #helpful-links-app .meatballs-button:hover { color: #059669 !important; background: rgba(16, 185, 129, 0.1) !important; border-radius: 4px; }
+body.light-mode .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+body.light-mode .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* Light Mode Icons */
+body.light-mode #helpful-links-app .link-card a::before { color: #64748b; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); }
+body.light-mode #helpful-links-app .link-card a[href*="b.corp"]::before { content: '\f188'; color: #e11d48; background: rgba(225, 29, 72, 0.1); border-color: rgba(225, 29, 72, 0.2); } 
+body.light-mode #helpful-links-app .link-card a[href*="supportcenter"]::before { content: '\f02d'; color: #9333ea; background: rgba(147, 51, 234, 0.1); border-color: rgba(147, 51, 234, 0.2); } 
+body.light-mode #helpful-links-app .link-card a[href*="docs.google"], body.light-mode #helpful-links-app .link-card a[href*="script.google"]::before { content: '\f1c3'; color: #059669; background: rgba(5, 150, 105, 0.1); border-color: rgba(5, 150, 105, 0.2); } 
+body.light-mode #helpful-links-app .link-card a[href*="lookerstudio"]::before { content: '\f080'; color: #d97706; background: rgba(217, 119, 6, 0.1); border-color: rgba(217, 119, 6, 0.2); } 
+body.light-mode #helpful-links-app .link-card a[href*="drive.google"]::before { content: '\f07b'; color: #2563eb; background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.2); } 
+body.light-mode #helpful-links-app .link-card a[href*="gutsv3"]::before { content: '\f3fd'; color: #0284c7; background: rgba(2, 132, 199, 0.1); border-color: rgba(2, 132, 199, 0.2); } 
+body.light-mode #helpful-links-app .link-card:hover a::before { filter: brightness(0.9); }
+
+/* Add Link Panel - Light Mode Overrides */
+body.light-mode #add-link-section > div { background-color: #ffffff !important; border-color: rgba(0, 0, 0, 0.1) !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important; }
+body.light-mode #add-link-section h2 { color: #4b5563 !important; }
+body.light-mode #add-link-section input { background-color: #f9fafb !important; border-color: rgba(0, 0, 0, 0.1) !important; color: #111827 !important; }
+body.light-mode #add-link-section input:focus { background-color: #ffffff !important; border-color: #10b981 !important; box-shadow: 0 0 0 1px #10b981 !important; }
+body.light-mode #add-link-section input::placeholder { color: #9ca3af !important; }
+body.light-mode #cancel-button { background-color: #f3f4f6 !important; color: #374151 !important; border-color: #e5e7eb !important; }
+body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
+
     /* ==========================================================================
        === Media Queries ===
        ========================================================================== */
@@ -3423,87 +3611,99 @@
 </div>
 
 
-<div id="helpful-links-app" class="w-full hidden min-h-screen py-8 px-4 sm:px-8 max-w-[1600px] mx-auto font-sans">
+<div id="helpful-links-app" class="w-full hidden min-h-[85vh] py-10 px-4 sm:px-8 max-w-[1400px] mx-auto font-sans text-gray-200">
     
-    <div class="sticky top-6 z-50 w-full max-w-3xl mx-auto mb-10 group">
-        <div class="absolute inset-0 bg-blue-500/10 rounded-full blur-xl transition-all duration-500 group-focus-within:bg-lime-500/15"></div>
-        <div id="links-search-bar-container" class="relative flex items-center bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8)]">
-            <div class="pl-5 pr-2 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-500 text-lg group-focus-within:text-lime-400 transition-colors"></i>
+    <div class="sticky top-6 z-50 w-full max-w-4xl mx-auto mb-12 group">
+        <div class="absolute inset-0 bg-sky-500/10 rounded-2xl blur-xl transition-all duration-500 group-focus-within:bg-sky-500/20"></div>
+        <div id="links-search-bar-container" class="relative flex items-center bg-[#0d1117]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-2xl transition-all duration-300 group-focus-within:border-sky-500/50">
+            <div class="pl-4 pr-3 flex items-center pointer-events-none">
+                <i class="fas fa-magnifying-glass text-gray-500 text-lg group-focus-within:text-sky-400 transition-colors"></i>
             </div>
             <input
                 type="text"
                 id="links-search-input"
-                class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-600 px-3 py-3 text-lg outline-none"
-                placeholder="Search the Knowledge Hub..."
+                class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-600 px-2 py-3 text-lg outline-none font-medium"
+                placeholder="Search the Knowledge Hub... (e.g., 'Portal', 'GUTS')"
             />
-            <div class="mr-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono tracking-widest uppercase hidden sm:block shadow-inner">
-                ⌘K
+            <div class="mr-4 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-400 font-mono tracking-widest flex items-center gap-1 shadow-inner">
+                <span class="text-[10px]">⌘</span>K
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 h-full">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-10 relative z-10 h-full">
 
-        <div class="lg:col-span-8 flex flex-col gap-4">
+        <div class="xl:col-span-8 flex flex-col gap-6">
             <div class="flex items-center justify-between mb-2 border-b border-white/5 pb-4">
-                <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                    <i class="fas fa-network-wired text-blue-500"></i> Global Directory
-                </h2>
-                <span class="text-[10px] font-bold font-mono text-blue-400/80 border border-blue-500/30 bg-blue-900/20 px-2 py-1 rounded uppercase tracking-wider">System Managed</span>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20 text-sky-400">
+                        <i class="fas fa-globe text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white tracking-tight">Global Directory</h2>
+                </div>
+                <span class="text-[10px] font-bold font-mono text-sky-400 border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 rounded-md uppercase tracking-widest flex items-center gap-1.5">
+                    <i class="fas fa-shield-check"></i> System Verified
+                </span>
             </div>
             
-            <div class="flex-grow overflow-y-auto custom-scrollbar pr-3 h-[45vh] lg:h-[calc(100vh-250px)]">
-                <div id="static-links-list" class="space-y-2 pb-10">
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 h-[50vh] xl:h-[calc(100vh-300px)]">
+                <div id="static-links-list" class="flex flex-col pb-10">
                     </div>
             </div>
         </div>
 
-        <div class="lg:col-span-4 flex flex-col gap-6 h-full">
+        <div class="xl:col-span-4 flex flex-col gap-8 h-full">
             
-            <section id="user-links-section" class="flex flex-col h-[30vh] lg:h-[calc(55vh-150px)]">
+            <section id="user-links-section" class="flex flex-col h-[35vh] xl:h-[calc(55vh-200px)]">
                 <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
-                    <h2 class="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                        <i class="fas fa-bookmark text-lime-400 drop-shadow-[0_0_8px_rgba(132,204,22,0.4)]"></i> Personal Vault
-                    </h2>
-                    <span class="text-[10px] font-bold font-mono text-lime-400/80 border border-lime-500/30 bg-lime-900/20 px-2 py-1 rounded uppercase tracking-wider">User</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+                            <i class="fas fa-bookmark text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white tracking-tight">Personal Vault</h2>
+                    </div>
+                    <span class="text-[10px] font-bold font-mono text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 rounded-md uppercase tracking-widest">
+                        User Data
+                    </span>
                 </div>
                 
                 <div class="flex-grow overflow-y-auto custom-scrollbar pr-2">
-                    <div id="user-links-list" class="space-y-2">
+                    <div id="user-links-list" class="flex flex-col">
                         </div>
                 </div>
             </section>
 
-            <section id="add-link-section" class="mt-auto flex-shrink-0 pt-4">
-                <div class="bg-[#0f0f0f]/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-lime-500/30 transition-colors">
+            <section id="add-link-section" class="mt-auto flex-shrink-0 pt-4 relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent blur-2xl pointer-events-none -z-10"></div>
+                
+                <div class="bg-[#0f141f] border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
                     
-                    <div class="absolute -right-12 -bottom-12 w-40 h-40 bg-lime-500/10 rounded-full blur-[60px] transition-all group-focus-within:bg-lime-500/20"></div>
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 id="form-title" class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-emerald-500"></i> Append Resource
+                        </h2>
+                    </div>
                     
-                    <h2 id="form-title" class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-                        <i class="fas fa-plus-circle text-lime-500"></i> New Resource
-                    </h2>
-                    
-                    <form id="add-link-form" class="space-y-4 relative z-10">
+                    <form id="add-link-form" class="space-y-3 relative z-10">
                         <div>
-                            <input type="text" id="link-title" required class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600 font-medium" placeholder="Resource Title">
+                            <input type="text" id="link-title" required class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:bg-black/60 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none placeholder-gray-600 font-medium" placeholder="Resource Title">
                         </div>
                         <div>
-                            <input type="url" id="link-url" required class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600 font-mono" placeholder="https://...">
+                            <input type="url" id="link-url" required class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:bg-black/60 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none placeholder-gray-600 font-mono" placeholder="https://...">
                         </div>
                         <div>
-                            <input type="text" id="link-description" class="w-full bg-[#171717] border border-white/5 rounded-xl p-3 text-sm text-white focus:bg-[#202020] focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-all outline-none placeholder-gray-600" placeholder="Brief description (optional)">
+                            <input type="text" id="link-description" class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:bg-black/60 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none placeholder-gray-600" placeholder="Brief description (optional)">
                         </div>
                         
-                        <div class="flex gap-3 pt-2">
-                            <button type="submit" id="submit-button" class="flex-1 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-400 hover:to-green-400 text-[#050505] font-black py-3 rounded-xl transition-all transform active:scale-95 shadow-lg shadow-lime-500/20 text-xs uppercase tracking-widest">
-                                Save
+                        <div class="flex gap-2 pt-3">
+                            <button type="submit" id="submit-button" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition-all transform active:scale-95 shadow-lg shadow-emerald-900/20 text-xs uppercase tracking-widest">
+                                Save to Vault
                             </button>
-                            <button type="button" id="cancel-button" class="hidden flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-colors border border-white/10 text-xs uppercase tracking-widest">
+                            <button type="button" id="cancel-button" class="hidden flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-2.5 rounded-lg transition-colors border border-white/10 text-xs uppercase tracking-widest">
                                 Cancel
                             </button>
                         </div>
-                        <div id="status-message" class="text-center mt-3 text-xs font-mono"></div>
+                        <div id="status-message" class="text-center mt-2 text-[10px] font-mono uppercase tracking-widest"></div>
                     </form>
                 </div>
             </section>
