@@ -7064,9 +7064,7 @@ const resetIngestForm = () => {
 const formatPolicyText = (text) => {
     if (!text) return '';
 
-    // 1. Strip the AI metadata headers completely from the visual UI
     let cleanText = stripAIMetadata(text);
-
     const lines = cleanText.split('\n');
     let html = '';
     let inList = false; 
@@ -7082,12 +7080,7 @@ const formatPolicyText = (text) => {
             return;
         }
 
-        // 2. Inject Sleek UI Badges for [PROCESS] and [CONTENT]
-        cleanLine = cleanLine
-            .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[10px]"></i> Process</span>`)
-            .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[10px]"></i> Content</span>`);
-
-        // 3. Headers
+        // Headers
         if (cleanLine.startsWith('### ')) {
             if (inList) { html += '</ul>'; inList = false; }
             html += `<h5 class="text-slate-200 font-extrabold text-md mt-5 mb-2 tracking-tight">${applyInlineStyles(cleanLine.replace(/^###\s+/, ''))}</h5>`;
@@ -7098,11 +7091,9 @@ const formatPolicyText = (text) => {
             html += `<h4 class="text-blue-400 font-black text-lg mt-8 mb-3 border-b border-slate-700/50 pb-2 flex items-center gap-2 drop-shadow-sm"><i class="fas fa-layer-group text-sm opacity-50"></i> ${applyInlineStyles(headerContent)}</h4>`;
         }
         
-        // 4. Markdown Tables (crucial for your routing matrices)
+        // Markdown Tables
         else if (cleanLine.startsWith('|')) {
             if (inList) { html += '</ul>'; inList = false; }
-            
-            // Ignore alignment separator rows like |---|---|
             if (cleanLine.match(/^\|(?:-+|:?-+:?\|)+$/)) return;
             
             const cells = cleanLine.split('|').filter(c => c.trim() !== '').map(c => c.trim());
@@ -7119,22 +7110,21 @@ const formatPolicyText = (text) => {
             }
         }
         
-        // 5. Bullet Lists
+        // Bullet Lists
         else if (cleanLine.match(/^[-•*]\s/)) {
             if (!inTable && !inList) { html += '<ul class="list-none space-y-2.5 mb-4 mt-2">'; inList = true; }
             const itemContent = cleanLine.replace(/^[-•*]\s+/, '');
-            // Custom modern bullets
             html += `<li class="leading-relaxed pl-6 relative text-[14px] text-slate-300 before:content-[''] before:absolute before:left-1.5 before:top-2 before:w-1.5 before:h-1.5 before:bg-blue-500 before:rounded-full before:shadow-[0_0_5px_rgba(59,130,246,0.8)]">${applyInlineStyles(itemContent)}</li>`;
         }
         
-        // 6. Numbered Lists
+        // Numbered Lists
         else if (cleanLine.match(/^\d+\.\s/)) {
              if (!inTable && !inList) { html += '<ul class="list-decimal pl-6 space-y-2.5 mb-4 mt-2 text-slate-300 marker:text-blue-400 marker:font-bold">'; inList = true; }
              const itemContent = cleanLine.replace(/^\d+\.\s+/, '');
              html += `<li class="leading-relaxed pl-1 text-[14px]">${applyInlineStyles(itemContent)}</li>`;
         }
 
-        // 7. Standard Paragraphs
+        // Standard Paragraphs
         else {
             if (inList) { html += '</ul>'; inList = false; }
             if (inTable) { html += '</tbody></table></div>'; inTable = false; }
@@ -7151,16 +7141,20 @@ const formatPolicyText = (text) => {
 // Helper to style Bold, Italic, and Links inside the text
 const applyInlineStyles = (text) => {
     return text
-        // Safety: Escape HTML to prevent injection
+        // 1. Safety: Escape HTML to prevent injection FIRST
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         
-        // Bold (**text** or *text*) -> White & Bold (No symbols shown)
+        // 2. Bold (**text** or *text*) 
         .replace(/\*\*([^*]+)\*\*/g, '<span class="text-white font-bold">$1</span>')
         .replace(/\*([^*]+)\*/g, '<span class="text-white font-bold">$1</span>')
         
-        // Links (http...) -> Clickable Blue Link
-        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>');
-};		
+        // 3. Links (http...) 
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>')
+        
+        // 4. Transform Tags into HTML Badges LAST (So they don't get escaped into text)
+        .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[10px]"></i> Process</span>`)
+        .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[10px]"></i> Content</span>`);
+};	
 
 // --- KNOWLEDGE BASE LOGIC ---
 
@@ -7507,7 +7501,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             </div>
             <div class="insight-card border-t-2 border-t-emerald-500 bg-gradient-to-br from-emerald-900/20 to-slate-900 flex items-center gap-5">
                 <div class="bg-emerald-500/20 p-4 rounded-xl text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                    <i class="fas fa-shield-check text-2xl"></i>
+                    <i class="fas fa-check-circle text-2xl"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-emerald-400 text-base">Perfect Compliance</h4>
