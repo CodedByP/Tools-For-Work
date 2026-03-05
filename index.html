@@ -2686,6 +2686,95 @@
     }
 
 	/* ==========================================================================
+	===  Premium Sidebar Overrides  ===
+	========================================================================== */
+
+	#insights-sidebar {
+	    background: rgba(15, 23, 42, 0.75) !important; /* Deep Slate Glass */
+	    backdrop-filter: blur(24px);
+	    -webkit-backdrop-filter: blur(24px);
+	    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+	    box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5) !important;
+	}
+	
+	#insights-sidebar .bg-gray-800 {
+	    background: transparent !important;
+	}
+	
+	#insights-content {
+	    background: transparent !important;
+	}
+	
+	/* AI Analysis Cards Redesign */
+	.insight-card {
+	    background: rgba(30, 41, 59, 0.5) !important;
+	    backdrop-filter: blur(10px);
+	    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+	    border-radius: 1rem !important;
+	    padding: 1.25rem !important;
+	    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	
+	.insight-must { border-top: 3px solid #3b82f6 !important; border-left: none !important; }
+	.insight-warn { border-top: 3px solid #f59e0b !important; border-left: none !important; }
+	.insight-time { border-top: 3px solid #10b981 !important; border-left: none !important; }
+	
+	.insight-card:hover {
+	    background: rgba(30, 41, 59, 0.8) !important;
+	    transform: translateY(-2px);
+	    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+	}
+	
+	/* Markdown Table Support */
+	.policy-prose table {
+	    width: 100%;
+	    border-collapse: separate;
+	    border-spacing: 0;
+	    border: 1px solid rgba(255,255,255,0.1);
+	    border-radius: 0.75rem;
+	    overflow: hidden;
+	    margin: 1.5rem 0;
+	    background: rgba(15, 23, 42, 0.4);
+	}
+	.policy-prose th {
+	    background: rgba(255,255,255,0.05);
+	    padding: 0.75rem 1rem;
+	    font-weight: 700;
+	    font-size: 0.8rem;
+	    text-transform: uppercase;
+	    letter-spacing: 0.05em;
+	    color: #94a3b8;
+	    border-bottom: 1px solid rgba(255,255,255,0.1);
+	}
+	.policy-prose td {
+	    padding: 0.875rem 1rem;
+	    font-size: 0.85rem;
+	    color: #cbd5e1;
+	    border-bottom: 1px solid rgba(255,255,255,0.05);
+	    border-right: 1px solid rgba(255,255,255,0.02);
+	}
+	.policy-prose tr:last-child td { border-bottom: none; }
+	.policy-prose td:last-child { border-right: none; }
+	
+	/* Inline Tags */
+	.inline-badge {
+	    display: inline-flex;
+	    align-items: center;
+	    gap: 0.25rem;
+	    padding: 0.15rem 0.4rem;
+	    border-radius: 0.375rem;
+	    font-size: 0.6rem;
+	    font-weight: 800;
+	    text-transform: uppercase;
+	    letter-spacing: 0.05em;
+	    margin-right: 0.35rem;
+	    vertical-align: text-bottom;
+	    box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
+	}
+	.badge-process { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+	.badge-content { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+	/* ==========================================================================
    PREMIUM LIGHT MODE: WCAG ACCESSIBILITY & ACRYLIC GLASS
    ========================================================================== */
 
@@ -5791,6 +5880,12 @@ const defaultHelpfulLinksBlueprint = [
 
 // --- Helper Functions ---
 
+
+const stripAIMetadata = (text) => {
+    if (!text) return '';
+    return text.replace(/### \[(?:TOPIC_ANCHORS|BIGRAM_CLUSTERS|NEGATIVE_ANCHORS)\][\s\S]*?(?=\n## |\n# |$)/g, '').trim();
+};
+
 // --- New Confetti Helpers ---
 const fireWeeklyConfetti = () => {
     const end = Date.now() + (2 * 1000);
@@ -6966,63 +7061,90 @@ const resetIngestForm = () => {
     editingArticleId = null; 
 };
 		
-// --- NEW: Clean Readability Parser ---
 const formatPolicyText = (text) => {
     if (!text) return '';
 
-    const lines = text.split('\n');
+    // 1. Strip the AI metadata headers completely from the visual UI
+    let cleanText = stripAIMetadata(text);
+
+    const lines = cleanText.split('\n');
     let html = '';
-    let inList = false; // Tracks if we are currently inside a list
+    let inList = false; 
+    let inTable = false;
 
     lines.forEach(line => {
         let cleanLine = line.trim();
 
-        // 1. Handle Empty Lines (Spacing)
         if (!cleanLine) {
             if (inList) { html += '</ul>'; inList = false; }
-            html += '<div class="h-4"></div>'; // Adds breathing room between paragraphs
+            if (inTable) { html += '</tbody></table></div>'; inTable = false; }
+            html += '<div class="h-3"></div>';
             return;
         }
 
-        // 2. Headers (## Title or Title:)
-        // Detects lines starting with '#' OR lines that end with ':' (common in policies)
-        if (cleanLine.startsWith('#') || (cleanLine.endsWith(':') && cleanLine.length < 60)) {
+        // 2. Inject Sleek UI Badges for [PROCESS] and [CONTENT]
+        cleanLine = cleanLine
+            .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[10px]"></i> Process</span>`)
+            .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[10px]"></i> Content</span>`);
+
+        // 3. Headers
+        if (cleanLine.startsWith('### ')) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h5 class="text-slate-200 font-extrabold text-md mt-5 mb-2 tracking-tight">${applyInlineStyles(cleanLine.replace(/^###\s+/, ''))}</h5>`;
+        } 
+        else if (cleanLine.startsWith('## ') || (cleanLine.endsWith(':') && cleanLine.length < 60)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            const headerContent = cleanLine.replace(/^[#\s]+/, '').replace(/:$/, '');
+            html += `<h4 class="text-blue-400 font-black text-lg mt-8 mb-3 border-b border-slate-700/50 pb-2 flex items-center gap-2 drop-shadow-sm"><i class="fas fa-layer-group text-sm opacity-50"></i> ${applyInlineStyles(headerContent)}</h4>`;
+        }
+        
+        // 4. Markdown Tables (crucial for your routing matrices)
+        else if (cleanLine.startsWith('|')) {
             if (inList) { html += '</ul>'; inList = false; }
             
-            // Remove the symbols (# and :) to keep it clean
-            const headerContent = cleanLine.replace(/^[#\s]+/, '').replace(/:$/, '');
+            // Ignore alignment separator rows like |---|---|
+            if (cleanLine.match(/^\|(?:-+|:?-+:?\|)+$/)) return;
             
-            // Render as a nice blue header with an underline
-            html += `<h4 class="text-blue-400 font-bold text-lg mt-6 mb-3 border-b border-gray-700 pb-2">${applyInlineStyles(headerContent)}</h4>`;
+            const cells = cleanLine.split('|').filter(c => c.trim() !== '').map(c => c.trim());
+            
+            if (!inTable) { 
+                html += '<div class="w-full overflow-x-auto my-5 custom-scrollbar shadow-lg"><table><thead><tr>'; 
+                cells.forEach(cell => html += `<th>${applyInlineStyles(cell)}</th>`);
+                html += '</tr></thead><tbody>';
+                inTable = true; 
+            } else {
+                html += '<tr>';
+                cells.forEach(cell => html += `<td>${applyInlineStyles(cell)}</td>`);
+                html += '</tr>';
+            }
         }
         
-        // 3. Bullet Lists (- Item or * Item)
+        // 5. Bullet Lists
         else if (cleanLine.match(/^[-•*]\s/)) {
-            // Start a list if we aren't in one
-            if (!inList) { html += '<ul class="list-disc pl-5 space-y-2 mb-4 text-gray-300 marker:text-blue-500">'; inList = true; }
-            
-            // Remove the bullet symbol
+            if (!inTable && !inList) { html += '<ul class="list-none space-y-2.5 mb-4 mt-2">'; inList = true; }
             const itemContent = cleanLine.replace(/^[-•*]\s+/, '');
-            html += `<li class="leading-relaxed pl-1">${applyInlineStyles(itemContent)}</li>`;
+            // Custom modern bullets
+            html += `<li class="leading-relaxed pl-6 relative text-[14px] text-slate-300 before:content-[''] before:absolute before:left-1.5 before:top-2 before:w-1.5 before:h-1.5 before:bg-blue-500 before:rounded-full before:shadow-[0_0_5px_rgba(59,130,246,0.8)]">${applyInlineStyles(itemContent)}</li>`;
         }
         
-        // 4. Numbered Lists (1. Item)
+        // 6. Numbered Lists
         else if (cleanLine.match(/^\d+\.\s/)) {
-             if (!inList) { html += '<ul class="list-decimal pl-5 space-y-2 mb-4 text-gray-300 marker:text-blue-500">'; inList = true; }
-             
-             // Remove the number symbol (let HTML handle the numbering)
+             if (!inTable && !inList) { html += '<ul class="list-decimal pl-6 space-y-2.5 mb-4 mt-2 text-slate-300 marker:text-blue-400 marker:font-bold">'; inList = true; }
              const itemContent = cleanLine.replace(/^\d+\.\s+/, '');
-             html += `<li class="leading-relaxed pl-1">${applyInlineStyles(itemContent)}</li>`;
+             html += `<li class="leading-relaxed pl-1 text-[14px]">${applyInlineStyles(itemContent)}</li>`;
         }
 
-        // 5. Standard Paragraphs
+        // 7. Standard Paragraphs
         else {
             if (inList) { html += '</ul>'; inList = false; }
-            html += `<p class="text-gray-300 leading-7 mb-3 text-[15px] font-light">${applyInlineStyles(cleanLine)}</p>`;
+            if (inTable) { html += '</tbody></table></div>'; inTable = false; }
+            html += `<p class="text-slate-300 leading-relaxed mb-3 text-[14px]">${applyInlineStyles(cleanLine)}</p>`;
         }
     });
 
-    if (inList) html += '</ul>'; // Close any open list at the end
+    if (inList) html += '</ul>'; 
+    if (inTable) html += '</tbody></table></div>';
+    
     return html;
 };
 
@@ -7156,9 +7278,10 @@ const findRelevantPolicy = (text, currentCategory) => {
             if (policyContent.includes(bigram)) score += 15;
         });
 
-        // --- SNIPPET EXTRACTION ---
-        // Find the paragraph with the highest density of matched tokens
-        const paragraphs = policy.content.split(/\n\s*\n/);
+		// --- SNIPPET EXTRACTION ---
+        // Strip metadata specifically for snippet generation so the UI never sees it
+        const cleanForSnippet = stripAIMetadata(policy.content);
+        const paragraphs = cleanForSnippet.split(/\n\s*\n/);
         let policyBestSnippet = paragraphs[0]; // Default to intro
         let snippetMaxScore = 0;
 
@@ -7194,7 +7317,6 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     if (!match) return; 
 
-    // Smart Suppression logic
     const policyTime = match.updatedAt ? match.updatedAt.toMillis() : 0;
     const seenKey = `pkb_seen_${match.id}`;
     const lastSeenTime = localStorage.getItem(seenKey);
@@ -7223,19 +7345,23 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     }
 
     const confidenceHTML = `
-        <div class="flex items-center gap-2 ml-2 border-l border-gray-700 pl-3" title="Match Score: ${score}">
-            <div class="flex gap-0.5 items-end ${confClass}">
+        <div class="flex items-center gap-2 ml-2 border-l border-white/10 pl-3" title="Match Score: ${score}">
+            <div class="flex gap-0.5 items-end ${confClass} drop-shadow-md">
                 <div class="conf-bar bar-1"></div>
                 <div class="conf-bar bar-2" style="height: 14px;"></div>
                 <div class="conf-bar bar-3" style="height: 18px;"></div>
             </div>
-            <span class="text-[10px] font-bold uppercase ${confColor} tracking-wider">${confLabel}</span>
+            <span class="text-[9px] font-black uppercase ${confColor} tracking-widest">${confLabel}</span>
         </div>
     `;
 
     // --- Update Header ---
-    if(headerText) headerText.textContent = match.title;
-    if(updatedDateEl) updatedDateEl.innerHTML = `<i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}`;
+    if(headerText) {
+        headerText.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-brain text-purple-400"></i> ${match.title}</div>`;
+    }
+    if(updatedDateEl) {
+        updatedDateEl.innerHTML = `<span class="bg-white/5 px-2 py-1 rounded-md border border-white/5 font-mono"><i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}</span>`;
+    }
     
     if (sourceLinkEl) {
         if (match.sourceUrl) {
@@ -7245,83 +7371,91 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 link.href = match.sourceUrl;
                 link.setAttribute('target', '_blank'); 
                 link.setAttribute('rel', 'noopener noreferrer');
+                link.className = "text-blue-400 hover:text-blue-300 flex items-center gap-1 font-bold bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20 transition-all";
             }
         } else {
             sourceLinkEl.classList.add('hidden');
         }
     }
 
-    // --- 2. Generate Cheat Sheet & Content ---
+    // --- 2. PREPARE CLEAN TEXT FOR ANALYSIS ---
     const userText = window.currentUserResponseText || "";
-
-	const activeResponseEl = document.querySelector(`.response-item[data-id="${currentEditingId || ''}"]`) 
-	                         || document.querySelector('.response-item'); // Fallback
-	
-	const categoryContext = activeResponseEl ? activeResponseEl.dataset.category : activeCategory;
-	
-	const cheatSheet = generatePolicyCheatSheet(match.content, userText, categoryContext);
+    const activeResponseEl = document.querySelector(`.response-item[data-id="${currentEditingId || ''}"]`) || document.querySelector('.response-item'); 
+    const categoryContext = activeResponseEl ? activeResponseEl.dataset.category : activeCategory;
+    
+    // CRITICAL FIX: Send only the cleaned text to the cheat sheet generator so it ignores anchors
+    const cleanFullContent = stripAIMetadata(match.content);
+    const cheatSheet = generatePolicyCheatSheet(cleanFullContent, userText, categoryContext);
+    
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
 
-    // Snippet Mode Check
-    const contentToDisplay = match.focusedSnippet ? match.focusedSnippet : match.content;
-    const isSnippetMode = !!match.focusedSnippet;
+    // Ensure the snippet we display is also stripped of metadata
+    const cleanFocusedSnippet = match.focusedSnippet ? stripAIMetadata(match.focusedSnippet) : null;
+    const isSnippetMode = !!cleanFocusedSnippet;
 
     let htmlContent = '';
 
-const renderSmartListItems = (items) => {
+    const renderSmartListItems = (items) => {
         return items.map(item => {
-            const safeText = item.text.replace(/['"]/g, '').replace(/\n/g, ' ').trim();
+            // Strip tags purely for the scroll matching function
+            const cleanScrollText = item.text.replace(/\[PROCESS\]|\[CONTENT\]/g, '').replace(/['"]/g, '').replace(/\n/g, ' ').trim();
+            // Allow badges to render in the summary list
+            const htmlText = item.text
+                .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[9px]"></i></span>`)
+                .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[9px]"></i></span>`);
             
             let icon = '';
             let textClass = '';
 
             if (item.status === 'missing') {
-                icon = '<i class="fas fa-exclamation-circle text-red-400 text-xs animate-pulse"></i>';
-                textClass = 'text-gray-300 underline decoration-red-500/40';
+                icon = '<i class="fas fa-exclamation-circle text-red-400 text-sm animate-pulse drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]"></i>';
+                textClass = 'text-white font-medium border-b border-red-500/50 pb-0.5';
             } else if (item.status === 'pending') {
-                icon = '<i class="fas fa-keyboard text-blue-400 text-xs"></i>';
-                textClass = 'text-blue-200/80 italic';
+                icon = '<i class="fas fa-keyboard text-blue-400 text-sm"></i>';
+                textClass = 'text-blue-100 italic';
             } else {
-                icon = '<i class="fas fa-check text-emerald-500 text-xs opacity-70"></i>';
-                textClass = 'text-gray-400';
+                icon = '<div class="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center"><i class="fas fa-check text-emerald-400 text-[10px]"></i></div>';
+                textClass = 'text-slate-400';
             }
 
-            // FIX: Added event.stopPropagation() and passed item.occurrenceIndex
             return `
-                <li class="py-1 cursor-pointer group flex items-start gap-2 hover:bg-white/5 rounded px-1 transition-colors" 
-                    onclick="event.stopPropagation(); scrollToSnippet('${safeText}', ${item.occurrenceIndex || 0})">
-                    <div class="mt-1 min-w-[14px] text-center">${icon}</div>
-                    <span class="text-sm ${textClass}">${item.text}</span>
+                <li class="py-2 cursor-pointer group flex items-start gap-3 hover:bg-white/5 rounded-lg px-2 transition-all" 
+                    onclick="event.stopPropagation(); scrollToSnippet('${cleanScrollText}', ${item.occurrenceIndex || 0})">
+                    <div class="mt-0.5 min-w-[16px] text-center shrink-0">${icon}</div>
+                    <span class="text-[13px] leading-tight ${textClass}">${htmlText}</span>
                 </li>`;
         }).join('');
     };
 
     if (hasInsights) {
-        htmlContent += `<div class="mb-2 animate-fade-in">
-            <div class="flex justify-between items-end mb-3">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <i class="fas fa-bolt text-yellow-500"></i> Policy Analysis
+        htmlContent += `<div class="mb-6 animate-fade-in relative z-10">
+            <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-3">
+                <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <i class="fas fa-robot text-purple-400"></i> AI Breakdown
                 </h4>
                 ${confidenceHTML}
             </div>`;
 
         if (cheatSheet.tips.length > 0) {
             htmlContent += `
-            <div class="insight-card border-l-4 border-purple-400 bg-purple-900/20 p-3 mb-4 rounded-r-xl shadow-lg shadow-purple-900/10">
-                <div class="insight-title text-purple-300 flex justify-between mb-2 font-bold tracking-wide">
-                    <span class="flex items-center gap-2"><i class="fas fa-tasks"></i> Process Reminders</span>
+            <div class="insight-card bg-gradient-to-br from-purple-900/30 to-indigo-900/10 border-t-2 border-t-purple-400 mb-4">
+                <div class="text-purple-300 flex justify-between mb-3 font-bold tracking-wide text-xs uppercase">
+                    <span class="flex items-center gap-2"><i class="fas fa-tasks"></i> Operational Context</span>
                 </div>
-                <ul class="list-none ml-1 text-gray-300 space-y-1">
+                <ul class="list-none ml-1 text-slate-300 space-y-1">
                     ${cheatSheet.tips.map(tip => {
-                        const safeText = tip.text.replace(/['"]/g, '').replace(/\n/g, ' ').trim();
-                        // Added Click Handler & improved styling
+                        const cleanScrollText = tip.text.replace(/\[PROCESS\]|\[CONTENT\]/g, '').replace(/['"]/g, '').replace(/\n/g, ' ').trim();
+                        const htmlText = tip.text
+                            .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[9px]"></i></span>`)
+                            .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[9px]"></i></span>`);
+                        
                         return `
-                        <li class="py-2 px-2 cursor-pointer group flex items-start gap-3 hover:bg-purple-500/10 rounded-md transition-all duration-200"
-                            onclick="event.stopPropagation(); scrollToSnippet('${safeText}', ${tip.occurrenceIndex || 0})">
-                            <div class="mt-0.5 min-w-[14px] text-center">
-                                <i class="fas fa-angle-right text-purple-400 group-hover:text-purple-200 transition-colors"></i>
+                        <li class="py-2 px-2 cursor-pointer group flex items-start gap-3 hover:bg-purple-500/20 rounded-lg transition-all duration-200"
+                            onclick="event.stopPropagation(); scrollToSnippet('${cleanScrollText}', ${tip.occurrenceIndex || 0})">
+                            <div class="mt-0.5 min-w-[14px] text-center shrink-0">
+                                <i class="fas fa-angle-right text-purple-400 group-hover:translate-x-1 transition-transform"></i>
                             </div>
-                            <span class="text-sm text-purple-100 group-hover:text-white leading-snug">${tip.text}</span>
+                            <span class="text-[13px] text-purple-100 group-hover:text-white leading-snug">${htmlText}</span>
                         </li>`;
                     }).join('')}
                 </ul>
@@ -7330,36 +7464,35 @@ const renderSmartListItems = (items) => {
 
         if (cheatSheet.requirements.length > 0) {
             htmlContent += `
-            <div class="insight-card insight-must group cursor-pointer hover:ring-1 hover:ring-blue-500 transition-all" onclick="const firstItem = this.querySelector('li span'); if(firstItem) scrollToSnippet(firstItem.textContent); else document.getElementById('toggle-policy-btn').click();">
-                <div class="insight-title text-blue-400 flex justify-between">
-                    <span><i class="fas fa-check-circle"></i> Requirements</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
+            <div class="insight-card insight-must mb-3">
+                <div class="text-blue-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                    <span><i class="fas fa-clipboard-check mr-1"></i> Missing Requirements</span>
                 </div>
-                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
+                <ul class="list-none ml-1 space-y-1">
                     ${renderSmartListItems(cheatSheet.requirements)}
                 </ul>
             </div>`;
         }
+        
         if (cheatSheet.warnings.length > 0) {
              htmlContent += `
-            <div class="insight-card insight-warn group cursor-pointer hover:ring-1 hover:ring-amber-500 transition-all" onclick="const firstItem = this.querySelector('li span'); if(firstItem) scrollToSnippet(firstItem.textContent); else document.getElementById('toggle-policy-btn').click();">
-                <div class="insight-title text-amber-400 flex justify-between">
-                    <span><i class="fas fa-exclamation-triangle"></i> Warnings</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
+            <div class="insight-card insight-warn mb-3">
+                <div class="text-amber-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                    <span><i class="fas fa-exclamation-triangle mr-1"></i> Policy Warnings</span>
                 </div>
-                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
+                <ul class="list-none ml-1 space-y-1">
                     ${renderSmartListItems(cheatSheet.warnings)} 
                 </ul>
             </div>`;
         }
+        
         if (cheatSheet.deadlines.length > 0) {
              htmlContent += `
-            <div class="insight-card insight-time group cursor-pointer hover:ring-1 hover:ring-emerald-500 transition-all" onclick="const firstItem = this.querySelector('li span'); if(firstItem) scrollToSnippet(firstItem.textContent); else document.getElementById('toggle-policy-btn').click();">
-                <div class="insight-title text-emerald-400 flex justify-between">
-                    <span><i class="fas fa-clock"></i> Timelines</span>
-                    <i class="fas fa-search text-xs opacity-0 group-hover:opacity-50"></i>
+            <div class="insight-card insight-time mb-3">
+                <div class="text-emerald-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                    <span><i class="fas fa-stopwatch mr-1"></i> Action Timelines</span>
                 </div>
-                <ul class="list-none ml-2 text-sm text-gray-300 space-y-2 mt-2">
+                <ul class="list-none ml-1 space-y-1">
                     ${renderSmartListItems(cheatSheet.deadlines)}
                 </ul>
             </div>`;
@@ -7367,48 +7500,48 @@ const renderSmartListItems = (items) => {
         htmlContent += `</div>`;
     } else {
         htmlContent += `
-        <div class="mb-4 animate-fade-in">
-             <div class="flex justify-between items-end mb-3">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Policy Analysis</h4>
+        <div class="mb-6 animate-fade-in relative z-10">
+             <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-3">
+                <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em]"><i class="fas fa-robot text-purple-400 mr-2"></i> AI Breakdown</h4>
                 ${confidenceHTML}
             </div>
-            <div class="insight-card border-l-4 border-emerald-500 bg-emerald-900/10 p-4 rounded-r-xl flex items-center gap-4">
-                <div class="bg-emerald-900/30 p-3 rounded-full text-emerald-400">
-                    <i class="fas fa-shield-alt text-xl"></i>
+            <div class="insight-card border-t-2 border-t-emerald-500 bg-gradient-to-br from-emerald-900/20 to-slate-900 flex items-center gap-5">
+                <div class="bg-emerald-500/20 p-4 rounded-xl text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <i class="fas fa-shield-check text-2xl"></i>
                 </div>
                 <div>
-                    <h4 class="font-bold text-emerald-400 text-sm">Everything looks good</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">No warnings or strict requirements detected.</p>
+                    <h4 class="font-bold text-emerald-400 text-base">Perfect Compliance</h4>
+                    <p class="text-[13px] text-slate-400 mt-1 leading-tight">No warnings, deadlines, or missing steps detected in this draft.</p>
                 </div>
             </div>
         </div>`;
     }
 
     const hiddenClass = hasInsights ? 'slide-down-enter' : 'slide-down-active';
-    const btnText = hasInsights ? 'Read Full Policy' : 'Hide Full Policy';
+    const btnText = hasInsights ? 'View Full Documentation' : 'Hide Documentation';
     const btnIcon = hasInsights ? 'fa-chevron-down' : 'fa-chevron-up';
 
 	contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
-            ${isSnippetMode ? `
-                <div class="mb-3 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded text-[10px] text-blue-400 font-bold uppercase w-fit">
-                    📍 Precision Snippet
-                </div>
-            ` : ''}
             
             ${htmlContent}
             
             ${hasInsights ? `
-            <button id="toggle-policy-btn" class="policy-drawer-btn mb-4 group">
-                <span>${btnText}</span>
-                <i class="fas ${btnIcon} ml-2 group-hover:translate-y-0.5 transition-transform"></i>
-            </button>
+            <div class="relative z-10 flex justify-center mt-2 mb-6">
+                <button id="toggle-policy-btn" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-full px-5 py-2 text-xs font-bold text-slate-300 uppercase tracking-widest transition-all shadow-lg group flex items-center gap-2">
+                    <i class="fas fa-file-alt text-blue-400"></i>
+                    <span>${btnText}</span>
+                    <i class="fas ${btnIcon} text-slate-500 group-hover:translate-y-0.5 transition-transform"></i>
+                </button>
+            </div>
             ` : ''}
 
-            <div id="full-policy-wrapper" class="${hiddenClass}">
-                <div class="policy-prose flex-grow pb-6 relative pt-2 border-t border-gray-800">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-xs font-bold text-gray-600 uppercase tracking-widest">Source Text</h4>
+            <div id="full-policy-wrapper" class="${hiddenClass} relative">
+                <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-3/4 h-10 bg-blue-500/10 blur-xl rounded-full pointer-events-none"></div>
+                <div class="policy-prose flex-grow pb-10 relative pt-6 border-t border-slate-700/50">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] bg-blue-900/20 px-3 py-1 rounded border border-blue-500/20">Source Document</h4>
+                        ${isSnippetMode ? `<span class="text-[10px] text-purple-400 font-mono uppercase tracking-widest"><i class="fas fa-crosshairs"></i> Targeted</span>` : ''}
                     </div>
                     ${formatPolicyText(match.content)}
                 </div>
@@ -7425,13 +7558,13 @@ const renderSmartListItems = (items) => {
             if (isHidden) {
                 wrapper.classList.remove('slide-down-enter');
                 wrapper.classList.add('slide-down-active');
-                toggleBtn.querySelector('span').textContent = "Hide Full Policy";
-                toggleBtn.querySelector('i').className = "fas fa-chevron-up ml-2";
+                toggleBtn.querySelector('span').textContent = "Hide Documentation";
+                toggleBtn.querySelector('.fa-chevron-down').classList.replace('fa-chevron-down', 'fa-chevron-up');
             } else {
                 wrapper.classList.remove('slide-down-active');
                 wrapper.classList.add('slide-down-enter');
-                toggleBtn.querySelector('span').textContent = "Read Full Policy";
-                toggleBtn.querySelector('i').className = "fas fa-chevron-down ml-2";
+                toggleBtn.querySelector('span').textContent = "View Full Documentation";
+                toggleBtn.querySelector('.fa-chevron-up').classList.replace('fa-chevron-up', 'fa-chevron-down');
             }
         });
     }
@@ -7439,52 +7572,46 @@ const renderSmartListItems = (items) => {
 // --- 3. Footer Actions (Magic Fix) ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
+        footerDiv.className = "p-5 border-t border-slate-700/80 bg-slate-900/95 backdrop-blur-3xl z-20 flex-shrink-0 relative";
         
-        // Count missing items to decide if we show the "Fix" button
         const missingCount = (cheatSheet.requirements.filter(i => i.isMissing).length + 
                               cheatSheet.warnings.filter(i => i.isMissing).length);
 
         if (missingCount > 0) {
-            // SHOW: "Fix with AI" Button
             footerDiv.innerHTML = `
-                <div class="flex flex-col w-full gap-3">
-                    <div class="text-xs text-red-400 font-bold text-center">
-                        <i class="fas fa-exclamation-triangle"></i> ${missingCount} Policy Gaps Detected
+                <div class="flex flex-col w-full gap-3 relative z-10">
+                    <div class="text-[11px] text-red-400 font-bold uppercase tracking-widest text-center">
+                        <i class="fas fa-exclamation-triangle"></i> ${missingCount} Gaps Detected
                     </div>
-                    <button id="insight-magic-fix-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 border border-white/10 group">
-                        <i class="fas fa-magic text-yellow-300 group-hover:animate-pulse"></i>
-                        <span>Auto-Fix with Gemini</span>
+                    <button id="insight-magic-fix-btn" class="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 border border-purple-400/50 group">
+                        <i class="fas fa-magic text-yellow-300 group-hover:scale-110 transition-transform"></i>
+                        <span class="tracking-wide">Auto-Fix with Gemini</span>
                     </button>
-                    <button id="close-sidebar-footer-btn" class="w-full text-gray-500 hover:text-gray-300 text-sm font-semibold transition-colors">
+                    <button id="close-sidebar-footer-btn" class="w-full text-slate-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors py-2">
                         Dismiss
                     </button>
                 </div>
             `;
 
-            // ATTACH LISTENER: The Magic Logic
             document.getElementById('insight-magic-fix-btn').addEventListener('click', () => {
                 generateFixPrompt(match, cheatSheet, userText);
             });
 
-			} else {
-            // SHOW: Standard Close Button (All Good)
+        } else {
             footerDiv.innerHTML = `
-                <div class="w-full flex flex-col gap-2">
-                    <div class="text-xs text-green-400 font-bold text-center mb-1">
-                        <i class="fas fa-check-circle"></i> 100% Policy Compliant
-                    </div>
-                    <button id="close-sidebar-footer-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition border border-gray-700 flex items-center justify-center shadow-lg">
+                <div class="w-full flex flex-col gap-3 relative z-10">
+                    <button id="close-sidebar-footer-btn" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-xl transition border border-slate-600 flex items-center justify-center shadow-lg uppercase tracking-widest text-xs">
                         Close Insight
                     </button>
                 </div>
             `;
         }
-        
     }
     
     document.body.classList.add('sidebar-active');
     sidebar.classList.remove('translate-x-full');
     sidebar.classList.add('translate-x-0');
+};
 };
 
 // --- FUZZY MATCHING HELPER (Levenshtein Distance) ---
