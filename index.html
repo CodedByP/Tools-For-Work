@@ -2731,6 +2731,93 @@
     }
 
 	/* ==========================================================================
+	   === Settings Hub - Light Mode Overrides ===
+	   ========================================================================== */
+	
+	/* 1. Sidebar Navigation */
+	body.light-mode #settings-page h2.text-white { color: #111827 !important; }
+	body.light-mode #settings-page aside p.text-gray-500 { color: #6b7280 !important; }
+	body.light-mode #settings-page aside nav { border-color: rgba(0,0,0,0.1) !important; }
+	body.light-mode .settings-nav-link { color: #4b5563 !important; }
+	body.light-mode .settings-nav-link:hover { color: #111827 !important; background: rgba(0,0,0,0.03) !important; }
+	body.light-mode .settings-nav-link.active { background: rgba(0,0,0,0.06) !important; color: #111827 !important; font-weight: 700; }
+	
+	/* 2. Glassmorphic Cards */
+	body.light-mode #settings-page .bg-gray-900\/60 { 
+	    background: rgba(255, 255, 255, 0.75) !important; 
+	    border-color: rgba(0, 0, 0, 0.1) !important; 
+	    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08) !important; 
+	}
+	body.light-mode #settings-page .border-white\/5,
+	body.light-mode #settings-page .border-white\/10 { border-color: rgba(0, 0, 0, 0.05) !important; }
+	body.light-mode #settings-page .hover\:bg-white\/\[0\.02\]:hover { background-color: rgba(0, 0, 0, 0.02) !important; }
+	
+	/* 3. Typography */
+	body.light-mode #settings-page h3 { color: #4b5563 !important; border-color: rgba(0,0,0,0.1) !important; }
+	body.light-mode #settings-page .text-white { color: #111827 !important; }
+	body.light-mode #settings-page .text-gray-200 { color: #1f2937 !important; }
+	body.light-mode #settings-page .text-gray-500 { color: #6b7280 !important; }
+	
+	/* 4. Buttons & Badges */
+	body.light-mode #settings-page button.bg-gray-800 { 
+	    background: #f3f4f6 !important; 
+	    border-color: #d1d5db !important; 
+	    color: #374151 !important; 
+	}
+	body.light-mode #settings-page button.bg-gray-800:hover { 
+	    background: #e5e7eb !important; 
+	    color: #111827 !important; 
+	}
+	body.light-mode #settings-page .bg-gray-800.text-gray-400.rounded-md { 
+	    background: #f3f4f6 !important; 
+	    border-color: #e5e7eb !important; 
+	    color: #4b5563 !important; 
+	}
+	body.light-mode #settings-page .bg-blue-500\/20 { 
+	    background: #eff6ff !important; 
+	    border-color: #bfdbfe !important; 
+	    color: #2563eb !important; 
+	}
+	
+	/* 5. Theme Preview Grid Labels */
+	body.light-mode #settings-page .bg-theme-btn span { color: #4b5563 !important; }
+	body.light-mode #settings-page .bg-theme-btn:hover span.group-hover\:text-blue-400 { color: #2563eb !important; }
+	body.light-mode #settings-page .bg-theme-btn:hover span.group-hover\:text-purple-400 { color: #9333ea !important; }
+	body.light-mode #settings-page .bg-theme-btn:hover span.group-hover\:text-teal-400 { color: #0d9488 !important; }
+	body.light-mode #settings-page .bg-theme-btn:hover span.group-hover\:text-gray-200 { color: #111827 !important; }
+	
+	/* Dummy Toggle Switches */
+	body.light-mode #settings-page .bg-gray-700.rounded-full { background: #d1d5db !important; }
+	body.light-mode #settings-page .bg-gray-500.rounded-full { background: #ffffff !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+	
+	/* 6. Danger Zone */
+	body.light-mode #settings-page .bg-red-950\/10 { 
+	    background: rgba(254, 242, 242, 0.8) !important; 
+	    border-color: rgba(239, 68, 68, 0.2) !important; 
+	}
+	body.light-mode #settings-page .hover\:bg-red-900\/10:hover { background-color: rgba(239, 68, 68, 0.05) !important; }
+	body.light-mode #settings-page .border-red-900\/20 { border-color: rgba(239, 68, 68, 0.1) !important; }
+	body.light-mode #settings-page .bg-red-600\/20 { background: #fee2e2 !important; border-color: #fca5a5 !important; }
+	
+	/* 7. Admin Terminal (Light Code Editor Theme) */
+	body.light-mode #admin-knowledge-settings .bg-\[\#050505\] { 
+	    background: #ffffff !important; 
+	    border-color: #86efac !important; 
+	    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15) !important;
+	}
+	body.light-mode #admin-knowledge-settings .bg-\[\#0f0f0f\] { 
+	    background: #f0fdf4 !important; 
+	    border-color: #bbf7d0 !important; 
+	}
+	body.light-mode #admin-knowledge-settings .text-green-500\/60 { color: #166534 !important; font-weight: 600; }
+	body.light-mode #admin-knowledge-settings .text-green-400 { color: #15803d !important; }
+	body.light-mode #admin-knowledge-settings .text-green-500 { color: #16a34a !important; }
+	body.light-mode #admin-knowledge-settings .bg-green-500\/10 { background: #dcfce7 !important; border-color: #bbf7d0 !important; color: #166534 !important; }
+	body.light-mode #admin-knowledge-settings .hover\:bg-green-900\/20:hover { background: #f0fdf4 !important; border-color: #86efac !important; }
+	body.light-mode #admin-knowledge-settings .border-gray-800 { border-color: #bbf7d0 !important; }
+	body.light-mode #admin-knowledge-settings .cli-scan-line { background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent) !important; }
+
+	/* ==========================================================================
 	===  Premium Sidebar Overrides  ===
 	========================================================================== */
 
