@@ -3059,25 +3059,24 @@
 	/* ==========================================================================
        === Sticky Category Bar Overrides ===
        ========================================================================== */
-    #category-bar {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    #category-bar-inner {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     /* Dark Mode Sticky State */
-    #category-bar.is-stuck {
-        background-color: rgba(17, 24, 39, 0.8) !important; /* Matches gray-900/80 */
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border-bottom: 1px solid #374151 !important; /* Matches gray-700 */
-        border-radius: 0 0 1rem 1rem !important; /* Removes top rounded corners */
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    #category-bar-inner.is-stuck {
+        background-color: rgba(17, 24, 39, 0.75) !important; /* gray-900 with transparency */
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(96, 165, 250, 0.1) !important;
     }
 
     /* Light Mode Sticky State Support */
-    body.light-mode #category-bar.is-stuck {
+    body.light-mode #category-bar-inner.is-stuck {
         background-color: rgba(255, 255, 255, 0.85) !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1) !important;
     }
 
 	/* ==========================================================================
@@ -3422,20 +3421,25 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
             </div>
         </header>
 
-        <div id="category-bar" class="hidden w-full sticky top-0 z-[60] mb-8 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out">
-            <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
-                <div id="category-list" class="flex gap-4">
-                    </div>
-            </div>
-            <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
 
         <div id="message-box" class="message-box"></div>
 
 <div id="canned-responses-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
     <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
+
+		<div id="category-bar" class="hidden w-full sticky top-4 z-[60]">
+            <div id="category-bar-sentinel" class="absolute -top-[17px] left-0 w-full h-[1px] pointer-events-none opacity-0"></div>
+            
+            <div id="category-bar-inner" class="w-full p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-500 ease-in-out border border-transparent">
+                <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
+                    <div id="category-list" class="flex gap-4">
+                        </div>
+                </div>
+                <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
         
         <div class="flex flex-col md:flex-row gap-4 w-full">
             <div id="search-bar-container" class="floating-card relative p-4 flex-grow z-10">
@@ -12454,24 +12458,18 @@ const showPlaceholderDemo = () => {
 function attachEventListeners() {
 
 // --- Category Bar Sticky/Glassmorphism Logic ---
-    const categoryBar = document.getElementById('category-bar');
+    const sentinel = document.getElementById('category-bar-sentinel');
+    const categoryBarInner = document.getElementById('category-bar-inner');
 
-    if (categoryBar && !document.getElementById('category-bar-sentinel')) {
-        // 1. Create an invisible "sentinel" div right above the category bar
-        const sentinel = document.createElement('div');
-        sentinel.id = 'category-bar-sentinel';
-        sentinel.style.marginTop = '-1px'; 
-        categoryBar.parentNode.insertBefore(sentinel, categoryBar);
-
-        // 2. Set up the IntersectionObserver
+    if (sentinel && categoryBarInner) {
         const observer = new IntersectionObserver((entries) => {
             const entry = entries[0];
             
-            // If the sentinel is pushed up out of the viewport, the bar is sticky
-            if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
-                categoryBar.classList.add('is-stuck');
+            // Trigger glassmorphism when the sentinel scrolls up past the top of the viewport
+            if (!entry.isIntersecting) {
+                categoryBarInner.classList.add('is-stuck');
             } else {
-                categoryBar.classList.remove('is-stuck');
+                categoryBarInner.classList.remove('is-stuck');
             }
         }, { 
             threshold: 0,
