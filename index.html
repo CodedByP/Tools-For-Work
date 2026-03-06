@@ -3419,13 +3419,10 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                     </button>
                 </div>
             </div>
-        </header>
-		
-		<div class="w-full relative block"> 
+		</header>
 
-            <div id="category-bar" class="hidden w-full sticky top-4 z-[60] mb-8">
-                <div id="category-bar-sentinel" class="absolute -top-[17px] left-0 w-full h-[1px] pointer-events-none opacity-0"></div>
-                
+        <div id="category-bar-placeholder" class="w-full mb-8">
+            <div id="category-bar" class="hidden w-full transition-all duration-300">
                 <div id="category-bar-inner" class="w-full p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out border border-transparent">
                     <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
                         <div id="category-list" class="flex gap-4">
@@ -3436,8 +3433,8 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                     </button>
                 </div>
             </div>
-
-            <div id="message-box" class="message-box"></div>
+        </div>
+        <div id="message-box" class="message-box"></div>
 
             <div id="canned-responses-app" class="w-full container-bg rounded-2xl p-6 sm:p-10 text-gray-100 min-h-screen flex items-start justify-center py-12 hidden">
                 <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
@@ -3519,7 +3516,6 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                 </div>
             </div>
 
-        </div>
 
 
 <div id="sla-dashboard-app" class="w-full hidden animate-fade-in py-8 px-4 sm:px-8 max-w-[1600px] mx-auto min-h-[85vh]">
@@ -12440,26 +12436,54 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
-// --- Category Bar Sticky/Glassmorphism Logic ---
-    const sentinel = document.getElementById('category-bar-sentinel');
+// --- Guaranteed Sticky Category Bar (JS Fallback) ---
+    const categoryBar = document.getElementById('category-bar');
     const categoryBarInner = document.getElementById('category-bar-inner');
+    const placeholder = document.getElementById('category-bar-placeholder');
 
-    if (sentinel && categoryBarInner) {
-        const observer = new IntersectionObserver((entries) => {
-            const entry = entries[0];
+    if (categoryBar && categoryBarInner && placeholder) {
+        window.addEventListener('scroll', () => {
+            // Do nothing if the bar isn't currently supposed to be visible
+            if (categoryBar.classList.contains('hidden')) {
+                placeholder.style.height = 'auto';
+                return;
+            }
+
+            // Sync the placeholder height before doing math so the page doesn't jump
+            if (categoryBar.style.position !== 'fixed') {
+                placeholder.style.height = categoryBar.offsetHeight + 'px';
+            }
+
+            // Get distance from top of screen
+            const rect = placeholder.getBoundingClientRect();
             
-            // Trigger glassmorphism when the sentinel scrolls up past the top of the viewport
-            if (!entry.isIntersecting) {
+            // If scrolled past 16px (top-4)
+            if (rect.top <= 16) {
+                // Pin it to the screen
+                categoryBar.style.position = 'fixed';
+                categoryBar.style.top = '16px';
+                categoryBar.style.width = placeholder.offsetWidth + 'px';
+                categoryBar.style.zIndex = '60';
+                
+                // Add Glassmorphism effect
                 categoryBarInner.classList.add('is-stuck');
             } else {
+                // Return to normal resting position
+                categoryBar.style.position = 'relative';
+                categoryBar.style.top = 'auto';
+                categoryBar.style.width = '100%';
+                
+                // Remove Glassmorphism effect
                 categoryBarInner.classList.remove('is-stuck');
             }
-        }, { 
-            threshold: 0,
-            rootMargin: '0px 0px 0px 0px' 
-        });
+        }, { passive: true });
 
-        observer.observe(sentinel);
+        // Handle window resizing to keep the fixed width perfectly accurate
+        window.addEventListener('resize', () => {
+            if (categoryBar.style.position === 'fixed') {
+                categoryBar.style.width = placeholder.offsetWidth + 'px';
+            }
+        });
     }
 
 // --- ADMIN SEARCH LOGIC ---
