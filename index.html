@@ -3057,6 +3057,30 @@
 
 
 	/* ==========================================================================
+       === Sticky Category Bar Overrides ===
+       ========================================================================== */
+    #category-bar {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Dark Mode Sticky State */
+    #category-bar.is-stuck {
+        background-color: rgba(17, 24, 39, 0.8) !important; /* Matches gray-900/80 */
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border-bottom: 1px solid #374151 !important; /* Matches gray-700 */
+        border-radius: 0 0 1rem 1rem !important; /* Removes top rounded corners */
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Light Mode Sticky State Support */
+    body.light-mode #category-bar.is-stuck {
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    }
+
+	/* ==========================================================================
    === HELPER LINKS - PREMIUM INDUSTRIAL REDESIGN (Structure) ===
    ========================================================================== */
 
@@ -3365,7 +3389,8 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
         </div>
 
     <div id="main-content" class="flex-1 p-6 sm:p-10 flex flex-col items-center transition-all duration-300 ease-in-out">
-        <header class="w-full mb-8">
+		
+<header class="w-full mb-6 relative z-[70]">
             <div class="flex items-center justify-between relative">
                 <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300 relative z-1000" aria-label="Open Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -3380,7 +3405,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
                         </button>
-                        <div id="category-actions-menu" class="hidden absolute top-full right-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-50 transform scale-95 opacity-0 transition-all duration-300 origin-top-right">
+                        <div id="category-actions-menu" class="hidden absolute top-full right-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-[100] transform scale-95 opacity-0 transition-all duration-300 origin-top-right">
                             <button id="rename-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-t-xl transition duration-200"><i class="fas fa-pencil-alt mr-2"></i>Rename Category</button>
                             <button id="delete-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 text-red-400 transition duration-200"><i class="fas fa-trash-alt mr-2"></i>Delete Category</button>
                             <button id="change-color-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-b-xl transition duration-200"><i class="fas fa-palette mr-2"></i>Change Color</button>
@@ -3395,17 +3420,17 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                     </button>
                 </div>
             </div>
-            
-			<div id="category-bar" class="hidden sticky top-0 z-[60] mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out">
-			    <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
-			        <div id="category-list" class="flex gap-4">
-			            </div>
-			    </div>
-			    <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
-			        <i class="fas fa-plus"></i>
-			    </button>
-			</div>
         </header>
+
+        <div id="category-bar" class="hidden w-full sticky top-0 z-[60] mb-8 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out">
+            <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
+                <div id="category-list" class="flex gap-4">
+                    </div>
+            </div>
+            <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
 
         <div id="message-box" class="message-box"></div>
 
@@ -12428,40 +12453,33 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
-	// --- Category Bar Sticky/Glassmorphism Logic ---
-const categoryBar = document.getElementById('category-bar');
+// --- Category Bar Sticky/Glassmorphism Logic ---
+    const categoryBar = document.getElementById('category-bar');
 
-if (categoryBar) {
-    // 1. Create an invisible "sentinel" div right above the category bar
-    const sentinel = document.createElement('div');
-    sentinel.id = 'category-bar-sentinel';
-    // Small negative margin ensures it triggers exactly as the bar hits the top
-    sentinel.style.marginTop = '-1px'; 
-    categoryBar.parentNode.insertBefore(sentinel, categoryBar);
+    if (categoryBar && !document.getElementById('category-bar-sentinel')) {
+        // 1. Create an invisible "sentinel" div right above the category bar
+        const sentinel = document.createElement('div');
+        sentinel.id = 'category-bar-sentinel';
+        sentinel.style.marginTop = '-1px'; 
+        categoryBar.parentNode.insertBefore(sentinel, categoryBar);
 
-    // 2. Set up the IntersectionObserver
-    const observer = new IntersectionObserver((entries) => {
-        const entry = entries[0];
-        
-        // If the sentinel is pushed up out of the viewport (top < 0), the bar is sticky
-        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+        // 2. Set up the IntersectionObserver
+        const observer = new IntersectionObserver((entries) => {
+            const entry = entries[0];
             
-            // Apply Glassmorphic styles
-            categoryBar.classList.add('bg-gray-900/80', 'backdrop-blur-md', 'border-b', 'border-gray-700', 'rounded-b-2xl', 'rounded-t-none');
-            categoryBar.classList.remove('bg-gray-800', 'rounded-2xl');
-            
-        } else {
-            // Revert to original floating island styles when back at the top
-            categoryBar.classList.add('bg-gray-800', 'rounded-2xl');
-            categoryBar.classList.remove('bg-gray-900/80', 'backdrop-blur-md', 'border-b', 'border-gray-700', 'rounded-b-2xl', 'rounded-t-none');
-        }
-    }, { 
-        threshold: 0,
-        rootMargin: '0px 0px 0px 0px' 
-    });
+            // If the sentinel is pushed up out of the viewport, the bar is sticky
+            if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+                categoryBar.classList.add('is-stuck');
+            } else {
+                categoryBar.classList.remove('is-stuck');
+            }
+        }, { 
+            threshold: 0,
+            rootMargin: '0px 0px 0px 0px' 
+        });
 
-    observer.observe(sentinel);
-}
+        observer.observe(sentinel);
+    }
 
 // --- ADMIN SEARCH LOGIC ---
     const adminSearchInput = document.getElementById('admin-policy-search');
