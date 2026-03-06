@@ -3396,15 +3396,15 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                 </div>
             </div>
             
-            <div id="category-bar" class="hidden mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl">
-                <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
-                    <div id="category-list" class="flex gap-4">
-                        </div>
-                </div>
-                <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
+			<div id="category-bar" class="hidden sticky top-0 z-[60] mt-6 p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out">
+			    <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
+			        <div id="category-list" class="flex gap-4">
+			            </div>
+			    </div>
+			    <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+			        <i class="fas fa-plus"></i>
+			    </button>
+			</div>
         </header>
 
         <div id="message-box" class="message-box"></div>
@@ -12427,6 +12427,41 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+	// --- Category Bar Sticky/Glassmorphism Logic ---
+const categoryBar = document.getElementById('category-bar');
+
+if (categoryBar) {
+    // 1. Create an invisible "sentinel" div right above the category bar
+    const sentinel = document.createElement('div');
+    sentinel.id = 'category-bar-sentinel';
+    // Small negative margin ensures it triggers exactly as the bar hits the top
+    sentinel.style.marginTop = '-1px'; 
+    categoryBar.parentNode.insertBefore(sentinel, categoryBar);
+
+    // 2. Set up the IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        
+        // If the sentinel is pushed up out of the viewport (top < 0), the bar is sticky
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+            
+            // Apply Glassmorphic styles
+            categoryBar.classList.add('bg-gray-900/80', 'backdrop-blur-md', 'border-b', 'border-gray-700', 'rounded-b-2xl', 'rounded-t-none');
+            categoryBar.classList.remove('bg-gray-800', 'rounded-2xl');
+            
+        } else {
+            // Revert to original floating island styles when back at the top
+            categoryBar.classList.add('bg-gray-800', 'rounded-2xl');
+            categoryBar.classList.remove('bg-gray-900/80', 'backdrop-blur-md', 'border-b', 'border-gray-700', 'rounded-b-2xl', 'rounded-t-none');
+        }
+    }, { 
+        threshold: 0,
+        rootMargin: '0px 0px 0px 0px' 
+    });
+
+    observer.observe(sentinel);
+}
 
 // --- ADMIN SEARCH LOGIC ---
     const adminSearchInput = document.getElementById('admin-policy-search');
