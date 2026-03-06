@@ -3463,8 +3463,8 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 
                     <div class="flex flex-col lg:flex-row gap-6 items-start relative">
 
-                        <div id="smart-suggestions-wrapper" class="w-full lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-6 hidden animate-fade-in transition-all z-0">
-                            
+				<div id="smart-suggestions-wrapper" class="w-full lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-32 hidden animate-fade-in transition-all z-0">
+					
                             <div class="floating-card p-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                                 <div class="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
                                     <i class="fas fa-sparkles text-yellow-400 text-sm animate-pulse"></i>
@@ -13374,13 +13374,26 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
             renderAdvancedStats();
         }
     });
-    document.getElementById('category-list').addEventListener('click', (e) => {
+document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
         if (button) {
             const newCategory = button.dataset.category;
             if (newCategory !== activeCategory) {
                 activeCategory = newCategory;
-                renderCategories();
+                
+                // 1. Instantly show visual feedback so the app feels snappy
+                document.querySelectorAll('.category-item').forEach(b => {
+                    b.classList.remove('border-2', 'border-white', 'border-gray-900', 'scale-105');
+                });
+                button.classList.add('border-2', document.body.classList.contains('light-mode') ? 'border-gray-900' : 'border-white');
+                
+                // 2. Put a quick loading spinner in the main area
+                document.getElementById('responses-list').innerHTML = '<div class="flex justify-center py-12"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500"></i></div>';
+                
+                // 3. Defer the heavy AI math to let the UI paint first
+                setTimeout(() => {
+                    renderCategories();
+                }, 50); 
             }
         }
     });
