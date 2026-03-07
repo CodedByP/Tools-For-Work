@@ -7683,6 +7683,101 @@ const findRelevantPolicy = (text, currentCategory) => {
     return highestScore > 15 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
 };
 
+// --- THE MAGIC DRAFT BRAIN (Optimized for noisy Ticket Summaries) ---
+const findPolicyForTicket = (ticketText, currentCategory) => {
+    if (!ticketText || !globalKnowledgeCache || globalKnowledgeCache.length === 0) return null;
+
+    const lowerTicket = ticketText.toLowerCase();
+    
+    let bestMatch = null;
+    let highestScore = 0;
+    let bestSnippet = null;
+
+    globalKnowledgeCache.forEach(policy => {
+        const policyTitle = (policy.title || "").toLowerCase();
+        const policyContent = (policy.content || "").toLowerCase();
+        let score = 0;
+
+        // 1. STRICT FILTERS
+        if (policy.targetCategories && policy.targetCategories.length > 0) {
+            const normalizedTargets = policy.targetCategories.map(c => c.toUpperCase());
+            if (currentCategory && !normalizedTargets.includes(currentCategory.toUpperCase())) return;
+        }
+
+        if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
+            const validNegatives = policy.negativeKeywords.filter(n => n.trim().length > 0);
+            if (validNegatives.some(neg => lowerTicket.includes(neg.toLowerCase().trim()))) return; // Instant Kill
+        }
+
+        // 2. REQUIRED ANCHORS (The Secret Weapon for Tickets)
+        // If the article has required anchors defined, the ticket MUST contain at least one.
+        // If it does, we give it a MASSIVE point boost.
+        let matchedAnchors = 0;
+        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
+            const validAnchors = policy.requiredAnchors.filter(a => a.trim().length > 0);
+            if (validAnchors.length > 0) {
+                validAnchors.forEach(anchor => {
+                    if (lowerTicket.includes(anchor.toLowerCase().trim())) {
+                        matchedAnchors++;
+                        score += 80; // HUGE boost for hitting a specific anchor
+                    }
+                });
+                // If the policy requires anchors and the ticket has NONE of them, skip this policy.
+                if (matchedAnchors === 0) return; 
+            }
+        }
+
+        // 3. TITLE MATCHING
+        // If the ticket explicitly mentions the title (e.g., "Flex Desk")
+        if (lowerTicket.includes(policyTitle)) score += 50;
+
+        // Check if a good chunk of the title words are in the ticket
+        const titleWords = policyTitle.split(' ').filter(w => w.length > 3);
+        let titleHitCount = 0;
+        titleWords.forEach(word => { if (lowerTicket.includes(word)) titleHitCount++; });
+        if (titleWords.length > 0 && titleHitCount >= Math.ceil(titleWords.length / 2)) {
+            score += 30; 
+        }
+
+        // 4. TOKEN OVERLAP (Capped to prevent long articles from cheating)
+        const ticketTokens = [...new Set(lowerTicket.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4 && !STOP_WORDS.has(w)))];
+        let tokenMatchScore = 0;
+        
+        ticketTokens.forEach(token => {
+            if (policyContent.includes(token)) tokenMatchScore += 1;
+        });
+        
+        // Cap the maximum points a policy can get just from random word overlaps to 15.
+        score += Math.min(tokenMatchScore, 15);
+
+        // 5. SNIPPET EXTRACTION
+        const cleanForSnippet = stripAIMetadata(policy.content);
+        const paragraphs = cleanForSnippet.split(/\n\s*\n/);
+        let policyBestSnippet = paragraphs[0]; 
+        let snippetMaxScore = 0;
+
+        paragraphs.forEach(para => {
+            const lowerPara = para.toLowerCase();
+            let pScore = 0;
+            ticketTokens.forEach(t => { if (lowerPara.includes(t)) pScore++; });
+            if (pScore > snippetMaxScore) {
+                snippetMaxScore = pScore;
+                policyBestSnippet = para;
+            }
+        });
+
+        if (score > highestScore) {
+            highestScore = score;
+            bestMatch = policy;
+            bestSnippet = policyBestSnippet;
+        }
+    });
+
+    // Requires a solid score to trigger (prevents random weak matches)
+    return highestScore > 25 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
+};
+
+		
 const showInsightsSidebar = (match, forceOpen = false) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
@@ -12711,7 +12806,7 @@ if (magicInput) {
             scanningUI.classList.add('hidden');
 
             const category = document.getElementById('magic-category-select').value;
-            const policy = findRelevantPolicy(text, category);
+            const policy = findPolicyForTicket(text, category);
 
             if (policy) {
                 document.getElementById('magic-policy-name').textContent = policy.title;
@@ -12748,7 +12843,7 @@ if (magicGoBtn) {
             return;
         }
 
-        const policy = findRelevantPolicy(summaryText, category);
+        const policy = findPolicyForTicket(summaryText, category);
 
         // --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
