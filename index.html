@@ -7466,18 +7466,18 @@ const getBigrams = (tokens) => {
     }
     return bigrams;
 };
-
-// --- 1. THE CONTEXTUAL BRAIN (Weighted Scoring & Fuzzy Logic) ---
+		
+// --- 1. THE CONTEXTUAL BRAIN (Upgraded v2.0) ---
 const findRelevantPolicy = (text, currentCategory) => {
     if (!text || !globalKnowledgeCache || globalKnowledgeCache.length === 0) return null;
 
     const lowerText = text.toLowerCase();
     
-    // Clean and Extract unique words > 3 chars
-    const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.has(w));
+    // UPGRADE: Changed w.length > 3 to w.length > 2 to catch "Mac", "iOS", "VIP", "bug"
+    const rawTokens = lowerText.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
     const userBigrams = getBigrams(rawTokens);
 
-    // Expand User Tokens using Synonym Map (Pseudo-RAG query expansion)
+    // Expand User Tokens using Synonym Map
     let expandedTokens = new Set([...rawTokens]);
     rawTokens.forEach(token => {
         for (const [key, synonyms] of Object.entries(SYNONYM_MAP)) {
@@ -7500,6 +7500,18 @@ const findRelevantPolicy = (text, currentCategory) => {
         const policyContent = (policy.content || "").toLowerCase();
         let score = 0;
 
+        // --- UPGRADE 1: STRICT NEGATIVE KEYWORDS (Instant Disqualification) ---
+        if (policy.negativeKeywords && policy.negativeKeywords.length > 0) {
+            const hasNegative = policy.negativeKeywords.some(neg => lowerText.includes(neg.toLowerCase()));
+            if (hasNegative) return; // Skip this policy entirely
+        }
+
+        // --- UPGRADE 2: STRICT REQUIRED ANCHORS ---
+        if (policy.requiredAnchors && policy.requiredAnchors.length > 0) {
+            const missingAnchor = policy.requiredAnchors.some(anchor => !lowerText.includes(anchor.toLowerCase()));
+            if (missingAnchor) return; // Skip if it doesn't have ALL required anchors
+        }
+
         // Veto Checks (Scopes & Categories)
         const foundScopes = RESTRICTIVE_SCOPES.filter(scope => policyTitle.includes(scope));
         if (foundScopes.length > 0 && !foundScopes.some(scope => lowerText.includes(scope))) return;
@@ -7515,10 +7527,8 @@ const findRelevantPolicy = (text, currentCategory) => {
 
         // 2. Token Matching (Normal Weight)
         finalTokens.forEach(token => {
-            // Count occurrences of the token in the policy
             const regex = new RegExp(`\\b${token}\\b`, 'g');
             const count = (policyContent.match(regex) || []).length;
-            // Cap the reward per token so long documents don't automatically win
             score += Math.min(count * 2, 10); 
         });
 
@@ -7527,11 +7537,10 @@ const findRelevantPolicy = (text, currentCategory) => {
             if (policyContent.includes(bigram)) score += 15;
         });
 
-		// --- SNIPPET EXTRACTION ---
-        // Strip metadata specifically for snippet generation so the UI never sees it
+        // --- SNIPPET EXTRACTION ---
         const cleanForSnippet = stripAIMetadata(policy.content);
         const paragraphs = cleanForSnippet.split(/\n\s*\n/);
-        let policyBestSnippet = paragraphs[0]; // Default to intro
+        let policyBestSnippet = paragraphs[0]; 
         let snippetMaxScore = 0;
 
         paragraphs.forEach(para => {
@@ -7551,7 +7560,6 @@ const findRelevantPolicy = (text, currentCategory) => {
         }
     });
 
-    // Threshold requires at least a decent cluster of keywords to match
     return highestScore > 15 ? { ...bestMatch, score: highestScore, focusedSnippet: bestSnippet } : null;
 };
 
