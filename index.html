@@ -5893,30 +5893,36 @@ const closeExpandedChart = () => {
 
 
 // --- CONFIG: Smart Synonym Dictionary ---
-// Maps a "Policy Word" to accepted "User Variations"
 const SYNONYM_MAP = {
-    // Identity
-    'user': ['customer', 'requester', 'employee', 'client'],
-    'customer': ['user', 'requester', 'employee'],
+    // Identity & Hierarchy
+    'user': ['customer', 'requester', 'employee', 'client', 'noogler'],
+    'escalate': ['manager', 'supervisor', 'lead', 'boss', 'route', 'director'],
     'name': ['identity', 'who'],
 
-    // Hardware/Items
-    'asset': ['device', 'hardware', 'equipment', 'item', 'laptop', 'phone', 'machine', 'unit'],
-    'device': ['asset', 'hardware', 'equipment', 'item', 'unit'],
-    'tag': ['id', 'serial', 'number', 'sticker', 'asset tag'],
-    'serial': ['sn', 's/n', 'service tag'],
+    // Hardware & Assets
+    'asset': ['device', 'hardware', 'equipment', 'item', 'laptop', 'phone', 'machine', 'unit', 'model', 'computer', 'cellphone', 'pixel', 'chromebook', 'macbook'],
+    'accessory': ['monitor', 'headset', 'keyboard', 'security key', 'power adapter', 'usb-c', 'peripheral', 'arms'],
+    'identifier': ['tag', 'id', 'serial', 'number', 'sticker', 'asset tag', 'serial number', 'sn', 's/n', 'tracking number', 'sto', 'bug id', 'mid', 'project code'],
 
-    // Logistics
-    'tracking': ['fedex', 'track', 'shipment', 'waybill', 'tracking number'],
-    'shipment': ['package', 'box', 'order', 'delivery', 'tracking'],
-    'delivered': ['arrived', 'received', 'signed for', 'completed'],
-    'return': ['send back', 'rma', 'mail back', 'revert'],
+    // Logistics & Locations
+    'logistics': ['fedex', 'shipment', 'tracking', 'delivery', 'package', 'mail', 'mail room', 'transit', 'waybill', 'dispatch', 'carrier', 'track'],
+    'return': ['send back', 'rma', 'collection', 'drop off', 'revert', 'return kit', 'recovery', 'retrieve', 'mail back'],
+    'location': ['desk', 'site code', 'locker', 'vending machine', 'piktime', 'onsite', 'remote', 'address'],
+    'packaging': ['box', 'tape', 'bubble wrap', 'mailer', 'shipping materials', 'supplies', 'uline', 'return label', 'kimwipes'],
 
-    // Actions/Status
-    'ticket': ['case', 'request', 'incident', 'order'],
-    'escalate': ['manager', 'supervisor', 'lead', 'boss', 'route'],
+    // Support & Actions
+    'ticket': ['case', 'request', 'incident', 'order', 'bug', 'guts', 'bronco', 'support ticket', 'transfer order'],
     'contact': ['reach out', 'email', 'message', 'ping', 'call'],
-    'resolved': ['closed', 'completed', 'finished', 'done', 'fixed']
+    'repair': ['break/fix', 'service call', 'ricoh', 'technician', 'troubleshooting', 'issue', 'dss', 'maintenance', 'av', 'audio'],
+
+    // Status & Outcomes
+    'status': ['pending', 'delayed', 'out of stock', 'canceled', 'shipped', 'duplicate'],
+    'resolved': ['closed', 'completed', 'finished', 'done', 'fixed', 'delivered', 'arrived', 'received', 'signed for'],
+
+    // IT Specifics
+    'penalty': ['chargeback', 'cost center', 'corporate access', 'restriction', 'lost', 'stolen'],
+    'infrastructure': ['netblock', 'ip address', 'subnet', 'vlan'],
+    'disposal': ['e-waste', 'iron mountain', 'wisetek', 'recycling', 'disposition', 'vendor']
 };
 		
 // --- NEW: Leveling System Configuration ---		
