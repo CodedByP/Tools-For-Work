@@ -7372,7 +7372,7 @@ const resetIngestForm = () => {
     editingArticleId = null; 
 };
 		
-const formatPolicyText = (text) => {
+    const formatPolicyText = (text) => {
     if (!text) return '';
 
     let cleanText = stripAIMetadata(text);
@@ -7380,13 +7380,15 @@ const formatPolicyText = (text) => {
     let html = '';
     let inList = false; 
     let inTable = false;
-    let inContentBlock = false; // Tracks if we are grouping canned responses
+    let inContentBlock = false; 
+    let inProcessBlock = false; // <-- NEW: Tracks Process grouping
 
     // Helper to close open HTML tags cleanly
     const closeBlocks = () => {
         if (inList) { html += '</ul>'; inList = false; }
         if (inTable) { html += '</tbody></table></div>'; inTable = false; }
         if (inContentBlock) { html += '</div></div>'; inContentBlock = false; }
+        if (inProcessBlock) { html += '</div></div>'; inProcessBlock = false; }
     };
 
     lines.forEach(line => {
@@ -7398,16 +7400,28 @@ const formatPolicyText = (text) => {
             return;
         }
 
-        // --- 1. THE MAGIC: AUTOMATIC CANNED RESPONSE BOX ---
+        // --- 1. HEADERS (These automatically close and separate the boxes) ---
+        if (cleanLine.startsWith('### ')) {
+            closeBlocks();
+            html += `<h5 class="text-slate-200 font-extrabold text-md mt-5 mb-2 tracking-tight flex items-center gap-2"><i class="fas fa-caret-right text-blue-500"></i> ${applyInlineStyles(cleanLine.replace(/^###\s+/, ''))}</h5>`;
+            return;
+        } 
+        else if (cleanLine.startsWith('## ') || (cleanLine.endsWith(':') && cleanLine.length < 60 && !cleanLine.includes('['))) {
+            closeBlocks();
+            const headerContent = cleanLine.replace(/^[#\s]+/, '').replace(/:$/, '');
+            html += `<h4 class="text-blue-400 font-black text-lg mt-8 mb-3 border-b border-slate-700/50 pb-2 flex items-center gap-2 drop-shadow-sm"><i class="fas fa-layer-group text-sm opacity-50"></i> ${applyInlineStyles(headerContent)}</h4>`;
+            return;
+        }
+
+        // --- 2. CANNED RESPONSE BOX (Green) ---
         if (cleanLine.includes('[CONTENT]')) {
+            if (inProcessBlock) closeBlocks(); // Close SOP box if open
             if (inList) { html += '</ul>'; inList = false; }
             if (inTable) { html += '</tbody></table></div>'; inTable = false; }
             
-            // Remove the [CONTENT] text so it doesn't show up on screen
-            let textWithoutTag = cleanLine.replace(/\[CONTENT\]/g, '').trim();
+            let textWithoutTag = cleanLine.replace(/\[CONTENT\]/gi, '').trim();
             
             if (!inContentBlock) {
-                // Draw the top of the beautiful green box!
                 html += `
                 <div class="my-5 bg-emerald-900/20 border border-emerald-500/30 rounded-xl overflow-hidden shadow-lg relative transition-all hover:border-emerald-500/50">
                     <div class="bg-emerald-800/40 px-4 py-2 border-b border-emerald-500/20 flex items-center gap-2">
@@ -7418,31 +7432,52 @@ const formatPolicyText = (text) => {
                 `;
                 inContentBlock = true;
             }
-            
-            // Put the text inside the box
             html += `<p class="text-emerald-50 font-mono text-[13px] leading-relaxed break-words">${applyInlineStyles(textWithoutTag)}</p>`;
-            return; // Move to the next line
+            return;
         }
 
-        // If it's NOT a [CONTENT] line, close the box if it was open
-        if (inContentBlock) {
-            closeBlocks();
+        // --- 3. STANDARD OPERATING PROCEDURE BOX (Slate/Blue) ---
+        if (cleanLine.includes('[PROCESS]')) {
+            if (inContentBlock) closeBlocks(); // Close Green box if open
+            
+            let textWithoutTag = cleanLine.replace(/\[PROCESS\]/gi, '').trim();
+            
+            if (!inProcessBlock) {
+                // Open the sleek SOP Box
+                html += `
+                <div class="my-4 bg-slate-800/40 border border-slate-600/50 rounded-xl overflow-hidden shadow-md relative transition-all hover:border-slate-500/50">
+                    <div class="bg-slate-700/30 px-4 py-2 border-b border-slate-600/50 flex items-center gap-2">
+                        <i class="fas fa-cog text-blue-400 text-xs"></i>
+                        <span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Operating Procedure</span>
+                    </div>
+                    <div class="p-4">
+                `;
+                inProcessBlock = true;
+            }
+
+            // Handle Lists inside the SOP Box
+            if (textWithoutTag.match(/^[-•*]\s/)) {
+                if (!inList) { html += '<ul class="list-none space-y-2.5 mt-2 mb-2">'; inList = true; }
+                let itemContent = textWithoutTag.replace(/^[-•*]\s+/, '').trim();
+                // Uses a cool blue arrow icon for bullets
+                html += `<li class="leading-relaxed pl-6 relative text-[13px] text-slate-300 before:content-['\\f0da'] before:font-['Font_Awesome_6_Free'] before:font-bold before:absolute before:left-1 before:top-0.5 before:text-blue-500 before:text-sm">${applyInlineStyles(itemContent)}</li>`;
+            } 
+            else if (textWithoutTag.match(/^\d+\.\s/)) {
+                 if (!inList) { html += '<ul class="list-decimal pl-6 space-y-2.5 mt-2 mb-2 text-slate-300 marker:text-blue-400 marker:font-bold text-[13px]">'; inList = true; }
+                 let itemContent = textWithoutTag.replace(/^\d+\.\s+/, '').trim();
+                 html += `<li class="leading-relaxed pl-1">${applyInlineStyles(itemContent)}</li>`;
+            } 
+            // Handle normal paragraphs inside the SOP Box
+            else {
+                if (inList) { html += '</ul>'; inList = false; } 
+                html += `<p class="text-slate-300 leading-relaxed mb-3 text-[13px]">${applyInlineStyles(textWithoutTag)}</p>`;
+            }
+            return;
         }
 
-        // --- 2. HEADERS ---
-        if (cleanLine.startsWith('### ')) {
+        // --- 4. TABLES ---
+        if (cleanLine.startsWith('|')) {
             closeBlocks();
-            html += `<h5 class="text-slate-200 font-extrabold text-md mt-5 mb-2 tracking-tight">${applyInlineStyles(cleanLine.replace(/^###\s+/, ''))}</h5>`;
-        } 
-        else if (cleanLine.startsWith('## ') || (cleanLine.endsWith(':') && cleanLine.length < 60)) {
-            closeBlocks();
-            const headerContent = cleanLine.replace(/^[#\s]+/, '').replace(/:$/, '');
-            html += `<h4 class="text-blue-400 font-black text-lg mt-8 mb-3 border-b border-slate-700/50 pb-2 flex items-center gap-2 drop-shadow-sm"><i class="fas fa-layer-group text-sm opacity-50"></i> ${applyInlineStyles(headerContent)}</h4>`;
-        }
-        
-        // --- 3. TABLES ---
-        else if (cleanLine.startsWith('|')) {
-            if (inList) { html += '</ul>'; inList = false; }
             if (cleanLine.match(/^\|(?:-+|:?-+:?\|)+$/)) return;
             
             const cells = cleanLine.split('|').filter(c => c.trim() !== '').map(c => c.trim());
@@ -7457,39 +7492,26 @@ const formatPolicyText = (text) => {
                 cells.forEach(cell => html += `<td>${applyInlineStyles(cell)}</td>`);
                 html += '</tr>';
             }
+            return;
         }
         
-        // --- 4. LISTS ---
-        else if (cleanLine.match(/^[-•*]\s/)) {
-            if (inTable) { html += '</tbody></table></div>'; inTable = false; }
+        // --- 5. NORMAL TEXT (No Tags) ---
+        closeBlocks(); 
+        
+        if (cleanLine.match(/^[-•*]\s/)) {
             if (!inList) { html += '<ul class="list-none space-y-2.5 mb-4 mt-2">'; inList = true; }
-            
-            let itemContent = cleanLine.replace(/^[-•*]\s+/, '');
-            
-            html += `<li class="leading-relaxed pl-6 relative text-[14px] text-slate-300 before:content-[''] before:absolute before:left-1.5 before:top-2 before:w-1.5 before:h-1.5 before:bg-blue-500 before:rounded-full before:shadow-[0_0_5px_rgba(59,130,246,0.8)]">${applyInlineStyles(itemContent)}</li>`;
-        }
-        else if (cleanLine.match(/^\d+\.\s/)) {
-             if (inTable) { html += '</tbody></table></div>'; inTable = false; }
-             if (!inList) { html += '<ul class="list-decimal pl-6 space-y-2.5 mb-4 mt-2 text-slate-300 marker:text-blue-400 marker:font-bold">'; inList = true; }
-             
-             let itemContent = cleanLine.replace(/^\d+\.\s+/, '');
-             
-             html += `<li class="leading-relaxed pl-1 text-[14px]">${applyInlineStyles(itemContent)}</li>`;
-        }
-
-        // --- 5. STANDARD PARAGRAPHS ---
-        else {
-            closeBlocks();
-            html += `<p class="text-slate-300 leading-relaxed mb-3 text-[14px]">${applyInlineStyles(cleanLine)}</p>`;
+            let itemContent = cleanLine.replace(/^[-•*]\s+/, '').trim();
+            html += `<li class="leading-relaxed pl-6 relative text-[13px] text-slate-300 before:content-[''] before:absolute before:left-1.5 before:top-2 before:w-1.5 before:h-1.5 before:bg-blue-500 before:rounded-full">${applyInlineStyles(itemContent)}</li>`;
+        } else {
+            html += `<p class="text-slate-300 leading-relaxed mb-3 text-[13px]">${applyInlineStyles(cleanLine)}</p>`;
         }
     });
 
-    closeBlocks(); // Make sure everything is closed at the very end
-    
+    closeBlocks(); 
     return html;
 };
 
-// Helper to style Bold, Italic, and Links inside the text
+// Helper to style Bold and Links inside the text
 const applyInlineStyles = (text) => {
     return text
         // 1. Safety: Escape HTML to prevent injection FIRST
@@ -7502,8 +7524,9 @@ const applyInlineStyles = (text) => {
         // 3. Links (http...) 
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>')
         
-        // 4. Transform Tags into HTML Badges (Keeps your cool UI!)
-        .replace(/\[PROCESS\]/gi, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[10px]"></i> Process</span>`);
+        // 4. Fallback: Erase any leftover tags just in case they slipped through
+        .replace(/\[PROCESS\]/gi, '')
+        .replace(/\[CONTENT\]/gi, '');
 };
 
 // --- KNOWLEDGE BASE LOGIC ---
