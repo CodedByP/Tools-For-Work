@@ -5040,22 +5040,32 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
         <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar">
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between items-end">
-                        <span>1. Incident Telemetry</span>
-                        <span class="text-purple-400/50 text-[9px] font-mono">Auto-Analyzing</span>
-                    </label>
-                    <textarea id="magic-input-text" rows="4" 
-                        class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none placeholder-gray-600 shadow-inner"
-                        placeholder="Paste user request or describe the situation here..."></textarea>
+                <div class="md:col-span-2 flex flex-col gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between items-end">
+                            <span>1. Ticket Summary</span>
+                            <span class="text-purple-400/50 text-[9px] font-mono">Auto-Analyzing</span>
+                        </label>
+                        <textarea id="magic-input-text" rows="3" 
+                            class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none placeholder-gray-600 shadow-inner"
+                            placeholder="Paste the user's request or ticket description here..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between items-end">
+                            <span>2. Operator Instructions <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span></span>
+                        </label>
+                        <textarea id="magic-instruction-text" rows="2" 
+                            class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none placeholder-gray-600 shadow-inner"
+                            placeholder="What do you need the AI to say? (e.g., 'Tell them it will take 3 days', or 'I already ordered the part')."></textarea>
+                    </div>
                 </div>
 
                 <div class="md:col-span-1">
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-                        2. Scope Focus
+                        3. Scope Focus
                     </label>
-                    <div class="relative h-[calc(100%-1.5rem)]">
-                        <select id="magic-category-select" class="w-full h-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-300 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer shadow-inner">
+                    <div class="relative">
+                        <select id="magic-category-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-300 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer shadow-inner">
                         </select>
                         <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
                     </div>
@@ -5063,7 +5073,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">3. Communication Vector</label>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">4. Communication Vector</label>
                 <div class="grid grid-cols-3 gap-3">
                     <label class="cursor-pointer relative">
                         <input type="radio" name="magic-tone" value="Standard" checked class="tone-selector-input hidden">
@@ -5090,7 +5100,6 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
             </div>
 
             <div id="magic-policy-container" class="hidden">
-                
                 <div id="magic-policy-scanning" class="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden hidden">
                     <div class="neural-scan-line"></div>
                     <i class="fas fa-circle-notch fa-spin text-purple-500 relative z-10"></i>
@@ -12674,7 +12683,6 @@ if (magicDraftBtn) {
     });
 }
 
-// Real-Time Scanning Logic (Debounced)
 const magicInput = document.getElementById('magic-input-text');
 if (magicInput) {
     magicInput.addEventListener('input', (e) => {
@@ -12727,18 +12735,20 @@ if (magicInput) {
 const magicGoBtn = document.getElementById('magic-go-btn');
 if (magicGoBtn) {
     magicGoBtn.addEventListener('click', async () => {
-        const text = magicInput.value.trim();
+        const summaryText = document.getElementById('magic-input-text').value.trim();
+        const instructionText = document.getElementById('magic-instruction-text').value.trim();
         const category = document.getElementById('magic-category-select').value;
         const toneElement = document.querySelector('input[name="magic-tone"]:checked');
         const tone = toneElement ? toneElement.value : 'Standard';
 
-        if (!text) {
-            magicInput.classList.add('ring-2', 'ring-red-500');
-            setTimeout(() => magicInput.classList.remove('ring-2', 'ring-red-500'), 500);
+        if (!summaryText) {
+            const magicInputEl = document.getElementById('magic-input-text');
+            magicInputEl.classList.add('ring-2', 'ring-red-500');
+            setTimeout(() => magicInputEl.classList.remove('ring-2', 'ring-red-500'), 500);
             return;
         }
 
-        const policy = findRelevantPolicy(text, category);
+        const policy = findRelevantPolicy(summaryText, category);
 
         // --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
@@ -12762,8 +12772,15 @@ if (magicGoBtn) {
         prompt += `### EXAMPLE OF A GOOD RESPONSE ###\n`;
         prompt += `Hello [User],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\nIT Support\n\n`;
 
-        prompt += `### ACTUAL USER SITUATION ###\n`;
-        prompt += `"${text}"\n\n`;
+        prompt += `### ACTUAL USER TICKET ###\n`;
+        prompt += `"${summaryText}"\n\n`;
+
+        // INJECT OPERATOR INSTRUCTIONS IF PROVIDED
+        if (instructionText) {
+            prompt += `### OPERATOR INSTRUCTIONS ###\n`;
+            prompt += `(Incorporate these instructions naturally into the draft)\n`;
+            prompt += `"${instructionText}"\n\n`;
+        }
 
         if (policy) {
             prompt += `### APPLICABLE COMPANY POLICY RULES ###\n`;
@@ -12789,6 +12806,10 @@ if (magicGoBtn) {
                 window.open('https://gemini.google.com/app', '_blank');
                 document.getElementById('magic-draft-inner').classList.remove('scale-100', 'opacity-100');
                 document.getElementById('magic-draft-inner').classList.add('scale-95', 'opacity-0');
+                
+                // Clear the instruction fields for next time
+                document.getElementById('magic-instruction-text').value = '';
+                
                 setTimeout(() => document.getElementById('magic-draft-modal').classList.add('hidden'), 300);
                 
                 setTimeout(() => {
