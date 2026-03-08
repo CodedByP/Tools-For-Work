@@ -12868,14 +12868,15 @@ if (magicGoBtn) {
 
         const policy = findPolicyForTicket(summaryText, category);
 
-        // --- OPTIMIZED FEW-SHOT PROMPT ---
+		// --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
         
         prompt += `### SYSTEM DIRECTIVES (STRICT COMPLIANCE REQUIRED) ###\n`;
         prompt += `1. **Customer Facing:** This email goes directly to the user. Do NOT mention internal systems (GUTS, PAR, SAP, Buganizer, MOMA, Techstop).\n`;
         prompt += `2. **No Jargon:** Never use terms like "Assigned - Additional", "Hostnames", "P0/P1", or "Ticket SLA".\n`;
         prompt += `3. **Formatting:** Use short paragraphs. Use bullet points for steps. No subject lines.\n`;
-        prompt += `4. **Placeholders:** If you need data (dates, tracking numbers, names), use bracketed placeholders like [Tracking Number] or [Date].\n\n`;
+        prompt += `4. **Data Extraction & Placeholders:** You MUST extract specific data (Location, Asset Tag, Hostname, Device Model, etc.) from the 'ACTUAL USER TICKET' and use it in the email body. ONLY use bracketed placeholders like [Customer Name] or [Date] if the specific information is completely missing from the ticket context.\n`;
+        prompt += `5. **Sign-off:** End the email ONLY with "Best regards,\\n\\n[Name]". Do not add "IT Support" or any other titles below the name placeholder.\n\n`;
 
         prompt += `### TONE: ${tone.toUpperCase()} ###\n`;
         if (tone === 'Firm') {
@@ -12886,7 +12887,7 @@ if (magicGoBtn) {
             prompt += `- Professional, concise, and solution-oriented.\n\n`;
         }
 
-		// --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
+        // --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
         if (ticketStatus) {
             prompt += `### TICKET STATUS DIRECTIVE ###\n`;
             prompt += `You MUST explicitly state in the email that you are updating the ticket status to "${ticketStatus}".\n`;
@@ -12903,11 +12904,11 @@ if (magicGoBtn) {
 
         // Few-Shot Examples (Teaches the AI what "good" looks like)
         prompt += `### EXAMPLE OF A GOOD RESPONSE ###\n`;
-        prompt += `Hello [User],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\nIT Support\n\n`;
+        prompt += `Hello [User Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n[Name]\n\n`;
 
         prompt += `### ACTUAL USER TICKET ###\n`;
         prompt += `"${summaryText}"\n\n`;
-
+        
         // INJECT OPERATOR INSTRUCTIONS IF PROVIDED
         if (instructionText) {
             prompt += `### OPERATOR INSTRUCTIONS ###\n`;
