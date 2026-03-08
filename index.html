@@ -5173,18 +5173,19 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                     4. Ticket Status <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span>
                                 </label>
                                 <div class="relative">
-                                    <select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
-                                        <option value="">-- No Status Change --</option>
-                                        <option value="Pending Customer Action">Pending Customer Action</option>
-                                        <option value="Pending 3rd Party Action">Pending 3rd Party Action</option>
-                                        <option value="Pending Approval">Pending Approval</option>
-                                        <option value="Pending Hardware">Pending Hardware</option>
-                                        <option value="Pending Hardware Return">Pending Hardware Return</option>
-                                        <option value="Pending Date of Event">Pending Date of Event</option>
-                                        <option value="Pending Room Booking">Pending Room Booking</option>
-                                        <option value="Pending Logistics">Pending Logistics</option>
-                                        <option value="Pending Bug Resolution">Pending Bug Resolution</option>
-                                    </select>
+										<select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
+										    <option value="">-- No Status Change --</option>
+										    <option value="In Progress">In Progress</option>
+										    <option value="Pending Customer Action">Pending Customer Action</option>
+										    <option value="Pending 3rd Party Action">Pending 3rd Party Action</option>
+										    <option value="Pending Approval">Pending Approval</option>
+										    <option value="Pending Hardware">Pending Hardware</option>
+										    <option value="Pending Hardware Return">Pending Hardware Return</option>
+										    <option value="Pending Date of Event">Pending Date of Event</option>
+										    <option value="Pending Room Booking">Pending Room Booking</option>
+										    <option value="Pending Logistics">Pending Logistics</option>
+										    <option value="Pending Bug Resolution">Pending Bug Resolution</option>
+										</select>
                                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
                                 </div>
                             </div>
@@ -7001,10 +7002,11 @@ const generateFixPrompt = async (policy, analysis, currentDraft) => {
 
     prompt += `--- STRICT WRITING RULES ---\n`;
     prompt += `1. **Customer Facing Only:** Do NOT mention internal tools (PAR, GUTS, SAP), status codes (e.g., 'Assigned - Additional'), or backend workflows (e.g., 'destroy hostnames').\n`;
-    prompt += `2. **Tone:** Professional, helpful, and concise.\n`;
-    prompt += `3. **Structure:** Seamlessly weave the missing requirements into the email. Do not just tack them onto the end.\n`;
-    prompt += `4. **Data:** Use placeholders like [Date] or [Location] if you lack specific details.\n`;
-    prompt += `5. **Output:** Provide ONLY the rewritten email body.`;
+    prompt += `2. **Tag Prioritization:** The POLICY CONTEXT may contain tags like [CONTENT] and [PROCESS]. You MUST prioritize and utilize information marked with [CONTENT] as this is meant directly for the customer. Strictly avoid mentioning any internal tech steps marked with [PROCESS].\n`;
+    prompt += `3. **Template Mode (Placeholders):** You are creating a reusable canned response template. You MUST replace specific names, dates, or item models with bracketed placeholders (e.g., [Customer Name], [Date], [Device Model]). Do NOT invent fake data.\n`;
+    prompt += `4. **Tone:** Professional, helpful, and concise.\n`;
+    prompt += `5. **Structure:** Seamlessly weave the missing requirements into the email. Do not just tack them onto the end.\n`;
+    prompt += `6. **Output:** Provide ONLY the rewritten email body.`;
 
     // 3. Copy & Launch
     try {
@@ -13106,12 +13108,14 @@ if (magicGoBtn) {
             prompt += `- Professional, concise, and solution-oriented.\n\n`;
         }
 
-        // --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
+		// --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
         if (ticketStatus) {
             prompt += `### TICKET STATUS DIRECTIVE ###\n`;
             prompt += `You MUST explicitly state in the email that you are updating the ticket status to "${ticketStatus}".\n`;
             
-            if (ticketStatus === 'Pending Customer Action') {
+            if (ticketStatus === 'In Progress') {
+                prompt += `You MUST also set the expectation that the user should expect an update before the end of the day.\n\n`;
+            } else if (ticketStatus === 'Pending Customer Action') {
                 prompt += `You MUST also set the expectation that we will follow up within 3 business days if we do not receive a reply or the required action is not completed.\n\n`;
             } else if (ticketStatus === 'Pending Date of Event') {
                 prompt += `You MUST also set the expectation that we will follow up or execute the request on the specifically scheduled date. If the date is more than 7 days from today, set the expectation to 5 business days.\n\n`;
