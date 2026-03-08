@@ -36,6 +36,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" defer></script>
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
     
 <style>
     /* ==========================================================================
@@ -883,6 +884,43 @@
         border-radius: 0.75rem !important;
         overflow: hidden;
     }
+
+	/* ==========================================================================
+	   === Drag and Drop & Grid Overrides ===
+	   ========================================================================== */
+	.sortable-ghost { 
+	    opacity: 0.4; 
+	    background-color: rgba(96, 165, 250, 0.2) !important; 
+	    border: 2px dashed #60a5fa !important; 
+	}
+	.sortable-drag { 
+	    cursor: grabbing !important; 
+	}
+	.reorder-mode-active { 
+	    cursor: grab !important; 
+	    animation: pulse-border 2s infinite; 
+	}
+	.compact-response-card { 
+	    background: rgba(31, 41, 55, 0.8); 
+	    border: 1px solid rgba(255,255,255,0.1); 
+	    border-radius: 0.75rem; 
+	    padding: 1rem; 
+	    display: flex; 
+	    align-items: center; 
+	    justify-content: space-between; 
+	    cursor: grab; 
+	    transition: transform 0.2s, border-color 0.2s; 
+	}
+	.compact-response-card:hover { 
+	    transform: translateY(-2px); 
+	    border-color: rgba(96, 165, 250, 0.5); 
+	}
+	.compact-grid { 
+	    display: grid; 
+	    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+	    gap: 1rem; 
+	    width: 100%; 
+	}
 
 
 	/* ==========================================================================
@@ -3474,6 +3512,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                         </button>
                         <div id="category-actions-menu" class="hidden absolute top-full right-0 mt-3 w-56 bg-gray-700 rounded-xl shadow-2xl z-[100] transform scale-95 opacity-0 transition-all duration-300 origin-top-right">
                             <button id="rename-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-t-xl transition duration-200"><i class="fas fa-pencil-alt mr-2"></i>Rename Category</button>
+							<button id="reorder-categories-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 transition duration-200"><i class="fas fa-arrows-alt mr-2"></i>Reorder Categories</button>
                             <button id="delete-category-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 text-red-400 transition duration-200"><i class="fas fa-trash-alt mr-2"></i>Delete Category</button>
                             <button id="change-color-btn" class="w-full text-left px-5 py-3 hover:bg-gray-600 rounded-b-xl transition duration-200"><i class="fas fa-palette mr-2"></i>Change Color</button>
                         </div>
@@ -3522,12 +3561,19 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                             />
                         </div>
                         
-                        <div id="add-response-section" class="floating-card p-4 flex-shrink-0 z-10">
-                            <button id="open-add-response-modal-btn" class="w-full md:w-auto h-full bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 whitespace-nowrap flex items-center justify-center">
-                                <i class="fas fa-plus mr-2"></i> Add New Response
-                            </button>
-                        </div>
-                    </div>
+						<div id="add-response-section" class="floating-card p-4 flex-shrink-0 z-10 hidden">
+						    <div class="flex items-center gap-2 h-full">
+						        <button id="open-add-response-modal-btn" class="w-full md:w-auto h-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 whitespace-nowrap flex items-center justify-center">
+						            <i class="fas fa-plus mr-2"></i> Add Response
+						        </button>
+						        <button id="reorder-responses-btn" class="h-full bg-gray-800 text-white font-bold py-3 px-4 rounded-xl border border-gray-600 hover:bg-gray-700 shadow-lg transition duration-300 flex items-center justify-center" title="Reorder Responses">
+						            <i class="fas fa-th"></i>
+						        </button>
+						        <button id="save-responses-order-btn" class="hidden h-full bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-500 transition duration-300 whitespace-nowrap flex items-center justify-center">
+						            <i class="fas fa-save mr-2"></i> Save Order
+						        </button>
+						    </div>
+						</div>
 
                     <div class="flex flex-col lg:flex-row gap-6 items-start relative">
 
@@ -5439,6 +5485,9 @@ let sessionStartTime = null;
 let isSilencingUpdates = false; // New flag to stop flickering
 let lastProcessedClipboard = "";		
 let isDataLoaded = false; // NEW: The Vault Door Lock		
+let isReorderingResponses = false;
+let sortableCategoryInstance = null;
+let sortableResponseInstance = null;		
 
 
 const initSmartClipboard = () => {
@@ -11153,8 +11202,13 @@ const renderCategories = () => {
     const categoryActionsMenu = document.getElementById('category-actions-menu');
 
     categoryList.innerHTML = '';
-    const categoryNames = Object.keys(categories).sort();
-    
+	const categoryNames = Object.keys(categories).sort((a, b) => {
+        const orderA = categories[a].order !== undefined ? categories[a].order : Number.MAX_SAFE_INTEGER;
+        const orderB = categories[b].order !== undefined ? categories[b].order : Number.MAX_SAFE_INTEGER;
+        if (orderA === orderB) return a.localeCompare(b);
+        return orderA - orderB;
+    });
+	
     if (!isAnonymous && categoryNames.length > 0) {
         if (categoryActionsBtn) categoryActionsBtn.classList.remove('hidden');
     } else {
@@ -11310,15 +11364,22 @@ const renderResponses = (searchQuery = '') => {
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full text-white">${count}</span>`;
     } else {
         if (categories[activeCategory]) {
-            const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
-            const pinnedResponses = allResponses.filter(r => r.isPinned);
-            const unpinnedResponses = allResponses.filter(r => !r.isPinned);
-            unpinnedResponses.sort((a, b) => (a.label || '').localeCompare(b.label || ''));
-            responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-            
-            const count = responsesToRender.length;
-            const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
-            headingText = `${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">(${count} Saved)</span>`;
+			// --- UPDATED SORTING LOGIC ---
+            if (isReorderingResponses) {
+                // If reordering, output exact array order without moving pinned items to the top
+                responsesToRender = allResponses;
+                const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
+                headingText = `Reordering: ${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">Drag to rearrange</span>`;
+            } else {
+                // Normal view: Float pinned to top, but DO NOT sort the rest alphabetically
+                const pinnedResponses = allResponses.filter(r => r.isPinned);
+                const unpinnedResponses = allResponses.filter(r => !r.isPinned);
+                responsesToRender = [...pinnedResponses, ...unpinnedResponses];
+                
+                const count = responsesToRender.length;
+                const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
+                headingText = `${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">(${count} Saved)</span>`;
+            }
         } else {
             responsesToRender = [];
             headingText = 'No Active Category';
@@ -11349,6 +11410,37 @@ const renderResponses = (searchQuery = '') => {
         for (const groupTitle in groups) {
             const groupSection = document.createElement('div');
             groupSection.className = 'mb-8 animate-fade-in'; 
+
+			if (isReorderingResponses) {
+                groupSection.innerHTML = `<div id="compact-reorder-grid" class="compact-grid pb-12"></div>`;
+                const gridContainer = groupSection.querySelector('.compact-grid');
+                
+                groups[groupTitle].forEach(response => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'compact-response-card';
+                    cardEl.dataset.id = response.id;
+                    cardEl.innerHTML = `
+                        <div class="flex items-center gap-3 overflow-hidden w-full">
+                            <i class="fas fa-grip-vertical text-gray-500 drag-handle opacity-50"></i>
+                            <span class="text-sm font-bold text-gray-200 truncate w-full">${response.label || 'Untitled Response'}</span>
+                        </div>
+                        ${response.isPinned ? '<i class="fas fa-thumbtack text-blue-400 text-xs ml-2"></i>' : ''}
+                    `;
+                    gridContainer.appendChild(cardEl);
+                });
+
+                responsesList.appendChild(groupSection);
+
+                // Initialize Sortable on the grid
+                if (sortableResponseInstance) sortableResponseInstance.destroy();
+                sortableResponseInstance = new Sortable(gridContainer, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag'
+                });
+
+                continue; // Skip the rest of the normal rendering loop for this group
+            }
             
             const isLightMode = document.body.classList.contains('light-mode');
             const headerTitleColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
@@ -12939,6 +13031,91 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+	// --- FEATURE 1: Reorder Categories ---
+    document.getElementById('reorder-categories-btn')?.addEventListener('click', () => {
+        const list = document.getElementById('category-list');
+        document.getElementById('category-actions-menu').classList.add('hidden');
+        document.getElementById('category-actions-btn').classList.remove('active');
+        
+        if (sortableCategoryInstance) {
+            sortableCategoryInstance.destroy();
+            sortableCategoryInstance = null;
+            list.classList.remove('reorder-mode-active');
+        } else {
+            list.classList.add('reorder-mode-active');
+            showMessage("Drag categories horizontally to reorder", "success");
+            
+            sortableCategoryInstance = new Sortable(list, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: function () {
+                    const itemEls = list.querySelectorAll('.category-item');
+                    itemEls.forEach((el, index) => {
+                        const catName = el.dataset.category;
+                        if (categories[catName]) {
+                            categories[catName].order = index; // Save new index
+                        }
+                    });
+                    saveToFirestore(categories);
+                    
+                    sortableCategoryInstance.destroy();
+                    sortableCategoryInstance = null;
+                    list.classList.remove('reorder-mode-active');
+                    
+                    showMessage("Category order saved!", "success");
+                    renderCategories();
+                }
+            });
+        }
+    });
+
+    // --- FEATURE 2: Reorder Responses ---
+    const reorderRespBtn = document.getElementById('reorder-responses-btn');
+    const saveRespOrderBtn = document.getElementById('save-responses-order-btn');
+    const addRespBtn = document.getElementById('open-add-response-modal-btn');
+    
+    reorderRespBtn?.addEventListener('click', () => {
+        isReorderingResponses = true;
+        reorderRespBtn.classList.add('hidden');
+        addRespBtn.classList.add('hidden');
+        saveRespOrderBtn.classList.remove('hidden');
+        document.getElementById('search-bar-container').classList.add('hidden'); // Hide search while sorting
+        renderResponses();
+    });
+
+    saveRespOrderBtn?.addEventListener('click', () => {
+        const grid = document.getElementById('compact-reorder-grid');
+        if (grid && categories[activeCategory]) {
+            const newOrderIds = Array.from(grid.children).map(el => el.dataset.id);
+            const oldArray = categories[activeCategory].responses;
+            const newArray = [];
+            
+            // Rebuild the array based on DOM order
+            newOrderIds.forEach(id => {
+                const match = oldArray.find(r => r.id === id);
+                if (match) newArray.push(match);
+            });
+            
+            categories[activeCategory].responses = newArray;
+            saveToFirestore(categories);
+        }
+        
+        // Reset UI
+        isReorderingResponses = false;
+        saveRespOrderBtn.classList.add('hidden');
+        reorderRespBtn.classList.remove('hidden');
+        addRespBtn.classList.remove('hidden');
+        document.getElementById('search-bar-container').classList.remove('hidden');
+        
+        if (sortableResponseInstance) {
+            sortableResponseInstance.destroy();
+            sortableResponseInstance = null;
+        }
+        
+        renderResponses();
+        showMessage("Response order saved!", "success");
+    });
 
 	const exportKbBtn = document.getElementById('export-kb-btn');
 if (exportKbBtn) {
