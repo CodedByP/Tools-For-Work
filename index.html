@@ -1982,22 +1982,35 @@
         transition: background 0.2s;
     }
     .mini-stat-box:hover { background: rgba(0, 0, 0, 0.4); }
+	
+/* Fix Gradient Text Clipping for High-Tier Leaderboard Avatars */
     .list-avatar.level-badge-master i,
     .list-avatar.level-badge-grandmaster i,
     .list-avatar.level-badge-legend i,
     .list-avatar.level-badge-demigod i,
-    .list-avatar.level-badge-deity i {
+    .list-avatar.level-badge-deity i,
+    .podium-avatar.level-badge-master i,
+    .podium-avatar.level-badge-grandmaster i,
+    .podium-avatar.level-badge-legend i,
+    .podium-avatar.level-badge-demigod i,
+    .podium-avatar.level-badge-deity i {
         background-clip: text !important;
         -webkit-background-clip: text !important;
         color: transparent !important;
         -webkit-text-fill-color: transparent !important;
         display: inline-block;
     }
+
     #leaderboard-container .list-avatar.level-badge-master i,
     #leaderboard-container .list-avatar.level-badge-grandmaster i,
     #leaderboard-container .list-avatar.level-badge-legend i,
     #leaderboard-container .list-avatar.level-badge-demigod i,
-    #leaderboard-container .list-avatar.level-badge-deity i {
+    #leaderboard-container .list-avatar.level-badge-deity i,
+    #leaderboard-container .podium-avatar.level-badge-master i,
+    #leaderboard-container .podium-avatar.level-badge-grandmaster i,
+    #leaderboard-container .podium-avatar.level-badge-legend i,
+    #leaderboard-container .podium-avatar.level-badge-demigod i,
+    #leaderboard-container .podium-avatar.level-badge-deity i {
         background-clip: text !important;
         -webkit-background-clip: text !important;
         color: transparent !important;
@@ -11090,7 +11103,7 @@ const renderLeaderboard = async (view = 'all') => {
         });
         html += '</div>';
 
-        // --- 4. Render List (Rank 4+) ---
+		// --- 4. Render List (Rank 4+) ---
         html += '<div class="space-y-2 mt-2">';
         if (users.length > 3) {
             users.slice(3).forEach((u, index) => {
@@ -11106,7 +11119,7 @@ const renderLeaderboard = async (view = 'all') => {
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
                         <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
                         <div class="list-avatar level-badge-${u.rankName.toLowerCase()}">
-                            <i class="fas ${u.rankIcon} text-white"></i>
+                            <i class="fas ${u.rankIcon}"></i>
                         </div>
                         <div class="flex-grow min-w-0">
                             <div class="flex items-center gap-2">
