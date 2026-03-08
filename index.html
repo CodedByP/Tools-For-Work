@@ -7226,12 +7226,12 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v7.0 (Interactive Tips) ---
+// --- UPDATED: Smart Policy Analyzer v8.1 (Header-Based Scope Tracking & Strict Veto) ---
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
-    const cleanText = policyText.replace(/\*\*/g, '');
-    const sentences = cleanText.match(/[^.!?\n]+[.!?\n]+/g) || [cleanText];
+    const cleanText = policyText.replace(/\[PROCESS\]|\[CONTENT\]/g, '').trim(); // Strip tags early for clean parsing
+    const lines = cleanText.split('\n');
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
 
@@ -7240,7 +7240,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation', 'Dashboard', 'Monitoring'],
     };
 
-    // 2. CONCEPT VALIDATORS (Same as before)
     const CONCEPT_VALIDATORS = {
         'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
         'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
@@ -7258,7 +7257,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
         'structured': ['hello', 'hi', 'dear'],
         'specifics': ['hardware name', 'model', 'substitution', 'alternative'],
-		'timeline': ['deadline', 'window', 'timeframe', 'limit', '14 days', 'ten days'],
+        'timeline': ['deadline', 'window', 'timeframe', 'limit', '14 days', 'ten days'],
         'closure': ['cancel', 'cancellation', 'close', 'void', 'update the record'],
         'actioned': ['cancel', 'cancellation', 'processed', 'updated'],
         'complete': ['drop off', 'return', 'finish', 'place'],
@@ -7269,7 +7268,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'updated': ['completed', 'conducted', 'actions taken']
     };
 
-    // 3. PLACEHOLDER INTENT
     const PLACEHOLDER_ROLES = {
         'tracking': ['[trackingnumber]', '[fedex tracking]', '[returntrackingnumber]'],
         'customer': ['[customer\'s name]', '[requester name]', '[user]'],
@@ -7278,20 +7276,25 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'date': ['[date]', '[appointment time]', '[time]']
     };
 
-    const SCOPE_TRIGGERS = [
-        'break/fix', 'break fix', 'repair', 'ricoh', 'printer', 
-        'av', 'audio', 'headset', 'remote', 'shipping', 
-        'mail', 'locker', 'vending', 'security key', 
-        'onsite', 'desk', 'vip', 'mac', 'windows'
-    ];
+    // 2. SCOPE DEFINITIONS
+    const SCOPE_DEFINITIONS = {
+        remote: ['ship', 'shipping', 'transit', 'tracking', 'carrier', 'package', 'mail', 'remote', 'label', 'box'],
+        onsite: ['onsite', 'desk', 'arrive', 'pick up', 'pickup', 'locker', 'vending', 'in person', 'office'],
+        vip: ['vip', 'executive', 'director', 'vp'],
+        breakfix: ['break/fix', 'break fix', 'repair', 'ricoh', 'printer', 'av', 'audio', 'headset']
+    };
 
-    // 4. PROCESS INDICATORS
+    const OPPOSING_SCOPES = {
+        'remote': 'onsite',
+        'onsite': 'remote'
+    };
+
     const PROCESS_INDICATORS = [
         'dashboard', 'monitoring', 'monitor', 'workflow management', 'worklog', 
         'internal notes', 'navigate to', 'click', 'select', 'verify in', 
         'check the', 'ensure that', 'log the', 'consult', 'tool',
         'sap', 'delivery request', 'update the order', 'system update', 'inventory is', 
-		'recovered', 'processed efficiently', 'service continuity', 'par', 'process asset return', 'guts', 'assignment status', 
+        'recovered', 'processed efficiently', 'service continuity', 'par', 'process asset return', 'guts', 'assignment status', 
         'assigned - additional', 'hostnames', 'network cleanup', 'change assignment', 
         'replace the accessory','strict timelines','hard deadline','before business hours',
         'ready for the next user', 'physical standard', 'executive exception','status should be used','go/stuff',             
@@ -7304,105 +7307,159 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'tracking','ensure the ui','disable individual lanes', 'ticket title','remains present', 'accurately reflects', '[process]', 
     ];
 
-	// --- 5. NEW: IGNORED PHRASES (The Fix) ---
     const IGNORED_PHRASES = [
         'mandatory data to confirm', 
         'mandatory data:',
-		'mandatory ticket summary format:',
+        'mandatory ticket summary format:',
         'required information:',
         'following information:',
         'specifics below:', 
-		'mandatory documentation', 
-		'mandatory comment',
-		'mandatory data points',
-		'lithium-ion compliance',
-		'(critical)'
-		
+        'mandatory documentation', 
+        'mandatory comment',
+        'mandatory data points',
+        'lithium-ion compliance',
+        '(critical)'
     ];
 
     const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
     const sentenceCounts = {}; 
 
-    sentences.forEach(sentence => {
-        const lowerSentence = sentence.toLowerCase().trim();
-        if (lowerSentence.length < 10) return;
-		if (IGNORED_PHRASES.some(phrase => lowerSentence.includes(phrase))) return;
-
-        // --- NEW: Calculate Index FIRST (So tips get it too) ---
-        const uniqueKey = sentence.trim();
-        const currentIndex = sentenceCounts[uniqueKey] || 0;
-        sentenceCounts[uniqueKey] = currentIndex + 1;
-
-        // Exclusion Check
-        if (CATEGORY_EXCLUSIONS[safeCategory]) {
-            if (CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
-        }
-
-        // Scope Check
-        const triggersInSentence = SCOPE_TRIGGERS.filter(t => lowerSentence.includes(t));
-        if (triggersInSentence.length > 0) {
-            if (!triggersInSentence.some(t => lowerUserText.includes(t))) return; 
-        }
-
-        // --- PROCESS VS CONTENT SPLIT ---
-        const isProcessInstruction = PROCESS_INDICATORS.some(indicator => lowerSentence.includes(indicator));
-
-        if (isProcessInstruction) {
-            insights.tips.push({
-                text: sentence.trim(),
-                status: 'info',
-                isMissing: false,
-                occurrenceIndex: currentIndex // <--- NOW INCLUDED
-            });
-            return; 
-        }
-
-        // --- STANDARD VALIDATION ---
-        let category = null;
-        if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
-        else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
-        else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) category = 'deadlines';
-
-        if (category) {
-            const concepts = extractKeyConcepts(sentence);
-            let matchCount = 0;
-            const totalConcepts = concepts.length;
-
-            concepts.forEach(concept => {
-                if (lowerUserText.includes(concept)) {
-                    matchCount++;
-                } else if (CONCEPT_VALIDATORS[concept]) {
-                    const validators = CONCEPT_VALIDATORS[concept];
-                    const isValidated = validators.some(val => {
-                        if (val instanceof RegExp) return val.test(lowerUserText);
-                        return lowerUserText.includes(val);
-                    });
-                    if (isValidated) matchCount++;
-                }
-            });
-
-            const policyPercentages = sentence.match(/\d+%/g);
-            const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
-
-            let status = 'missing';
-            if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
-                status = 'met';
-            } else {
-                const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
-                    lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
-                );
-                if(hasPlaceholderIntent) status = 'pending';
-            }
-
-            insights[category].push({
-                text: sentence.trim(),
-                status: status, 
-                isMissing: status === 'missing',
-                occurrenceIndex: currentIndex
-            });
+    // --- IDENTIFY USER'S INTENDED SCOPE FIRST ---
+    const userScopes = new Set();
+    Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
+        if (keywords.some(kw => lowerUserText.includes(kw))) {
+            userScopes.add(scope);
         }
     });
 
+    // --- STATEFUL MEMORY VARIABLES ---
+    let activeScopeContext = null; 
+
+    lines.forEach(line => {
+        const cleanLine = line.trim();
+        if (!cleanLine) return; // Skip empty lines completely
+
+        const lowerLine = cleanLine.toLowerCase();
+
+        // --- NEW: STRUCTURAL CONTEXT LOCKING (The Safe Hybrid) ---
+        const isHardHeader = cleanLine.startsWith('#') || (cleanLine.startsWith('**') && cleanLine.endsWith('**'));
+        const isSoftHeader = cleanLine.endsWith(':');
+        
+        if (isHardHeader) {
+            // 1. HARD RESET on major visual headers
+            activeScopeContext = null; 
+            Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
+                if (keywords.some(kw => lowerLine.includes(kw))) {
+                    activeScopeContext = scope;
+                }
+            });
+            return; // Skip processing the header itself as a requirement
+        }
+
+        if (isSoftHeader) {
+            // 2. SOFT UPDATE on colons (Do NOT reset to null, do NOT skip the line)
+            Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
+                if (keywords.some(kw => lowerLine.includes(kw))) {
+                    activeScopeContext = scope; 
+                }
+            });
+        }
+
+        // 3. Inherit Scope: A line uses its own keyword match, or inherits from the active context
+        let lineScope = null;
+        Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
+            if (keywords.some(kw => lowerLine.includes(kw))) {
+                lineScope = scope;
+            }
+        });
+
+        const effectiveScope = lineScope || activeScopeContext;
+
+        // --- STRICT VETO: Context Bleed Prevention ---
+        if (effectiveScope && OPPOSING_SCOPES[effectiveScope]) {
+            const opposing = OPPOSING_SCOPES[effectiveScope];
+            // If policy wants Remote, but user wrote Onsite (and not remote), KILL the line.
+            if (userScopes.has(opposing) && !userScopes.has(effectiveScope)) {
+                return; 
+            }
+        }
+
+        // Break the valid line into sentences for granular processing
+        const sentences = cleanLine.match(/[^.!?]+[.!?]*/g) || [cleanLine];
+
+        sentences.forEach(sentence => {
+            const lowerSentence = sentence.toLowerCase().trim();
+            if (lowerSentence.length < 10) return;
+            if (IGNORED_PHRASES.some(phrase => lowerSentence.includes(phrase))) return;
+
+            const uniqueKey = sentence.trim();
+            const currentIndex = sentenceCounts[uniqueKey] || 0;
+            sentenceCounts[uniqueKey] = currentIndex + 1;
+
+            if (CATEGORY_EXCLUSIONS[safeCategory]) {
+                if (CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
+            }
+
+            const isProcessInstruction = PROCESS_INDICATORS.some(indicator => lowerSentence.includes(indicator));
+
+            if (isProcessInstruction) {
+                insights.tips.push({
+                    text: sentence.trim(),
+                    status: 'info',
+                    isMissing: false,
+                    occurrenceIndex: currentIndex 
+                });
+                return; 
+            }
+
+            // Standard Validation
+            let category = null;
+            if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
+            else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
+            else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) category = 'deadlines';
+
+            if (category) {
+                const concepts = typeof extractKeyConcepts === 'function' ? extractKeyConcepts(sentence) : [];
+                let matchCount = 0;
+                const totalConcepts = concepts.length;
+
+                concepts.forEach(concept => {
+                    if (lowerUserText.includes(concept)) {
+                        matchCount++;
+                    } else if (CONCEPT_VALIDATORS[concept]) {
+                        const validators = CONCEPT_VALIDATORS[concept];
+                        const isValidated = validators.some(val => {
+                            if (val instanceof RegExp) return val.test(lowerUserText);
+                            return lowerUserText.includes(val);
+                        });
+                        if (isValidated) matchCount++;
+                    }
+                });
+
+                const policyPercentages = sentence.match(/\d+%/g);
+                const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
+
+                let status = 'missing';
+                if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
+                    status = 'met';
+                } else {
+                    const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
+                        lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
+                    );
+                    if(hasPlaceholderIntent) status = 'pending';
+                }
+
+                insights[category].push({
+                    text: sentence.trim(),
+                    status: status, 
+                    isMissing: status === 'missing',
+                    occurrenceIndex: currentIndex
+                });
+            }
+        });
+    });
+
+    // Cap output logic
     insights.requirements = insights.requirements.slice(0, 3);
     insights.warnings = insights.warnings.slice(0, 3);
     insights.deadlines = insights.deadlines.slice(0, 3);
