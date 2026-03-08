@@ -12886,16 +12886,18 @@ if (magicGoBtn) {
             prompt += `- Professional, concise, and solution-oriented.\n\n`;
         }
 
-        // --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
+		// --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
         if (ticketStatus) {
             prompt += `### TICKET STATUS DIRECTIVE ###\n`;
+            prompt += `You MUST explicitly state in the email that you are updating the ticket status to "${ticketStatus}".\n`;
+            
             if (ticketStatus === 'Pending Customer Action') {
-                prompt += `The operator is placing this ticket into '${ticketStatus}'. You MUST explicitly inform the user that they have exactly 3 business days to reply or complete the required action. State clearly that if no response is received by then, the ticket will be automatically closed.\n\n`;
+                prompt += `You MUST also set the expectation that we will follow up within 3 business days if we do not receive a reply or the required action is not completed.\n\n`;
             } else if (ticketStatus === 'Pending Date of Event') {
-                prompt += `The operator is placing this ticket into '${ticketStatus}'. You MUST inform the user that we will reach out or execute the request on the specifically scheduled date, and we will keep the ticket open until then.\n\n`;
+                prompt += `You MUST also set the expectation that we will follow up or execute the request on the specifically scheduled date.\n\n`;
             } else {
                 // All other pending statuses default to the 5 business day rule
-                prompt += `The operator is placing this ticket into '${ticketStatus}'. You MUST explicitly inform the user that we will follow up or provide an update within 5 business days.\n\n`;
+                prompt += `You MUST also set the expectation that we will follow up or provide an update within 5 business days.\n\n`;
             }
         }
 
