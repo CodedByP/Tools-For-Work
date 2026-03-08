@@ -3531,25 +3531,25 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                     </div>
                             </div>
                         
-                            <div id="magic-draft-card" class="floating-card p-5 mt-4 border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative overflow-hidden group">
-                                <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-all duration-700"></div>
-                                
-                                <div class="relative z-10">
-                                    <div class="mb-4">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">AI Assistant</span>
-                                            <i class="fas fa-robot text-purple-500 text-lg opacity-80"></i>
-                                        </div>
-                                        <h3 class="text-xl font-bold text-white leading-tight">Complex Ticket?</h3>
-                                        <p class="text-xs text-gray-400 mt-1 leading-relaxed">Describe the situation. Gemini will write a policy-compliant draft for you.</p>
-                                    </div>
-                        
-                                    <button id="open-magic-draft-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg border border-white/10 transition-all duration-300 transform group-hover:translate-y-[-2px] active:scale-95 flex items-center justify-center gap-2">
-                                        <i class="fas fa-sparkles text-yellow-300"></i> 
-                                        <span>Magic Draft</span>
-                                    </button>
-                                </div>
-                            </div>
+							<div id="magic-draft-card" class="floating-card p-5 mt-4 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)] relative overflow-hidden group">
+							    <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-all duration-700"></div>
+							    
+							    <div class="relative z-10">
+							        <div class="mb-4">
+							            <div class="flex items-center justify-between mb-1">
+							                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">AI Assistant</span>
+							                <i class="fas fa-robot text-blue-500 text-lg opacity-80"></i>
+							            </div>
+							            <h3 class="text-xl font-bold text-white leading-tight">Complex Ticket?</h3>
+							            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Describe the situation. Gemini will write a policy-compliant draft for you.</p>
+							        </div>
+							
+							        <button id="open-magic-draft-btn" class="w-full bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold py-3 px-4 rounded-xl shadow-lg border border-white/10 transition-all duration-300 transform group-hover:translate-y-[-2px] active:scale-95 flex items-center justify-center gap-2">
+							            <i class="fas fa-sparkles text-yellow-300"></i> 
+							            <span>Magic Draft</span>
+							        </button>
+							    </div>
+							</div>
                         
                         </div>
 
@@ -5046,7 +5046,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
             </div>
         </div>
 
-        <div id="magic-instructions-panel" class="absolute top-[88px] bottom-[76px] right-0 w-full sm:w-80 bg-gray-900/95 backdrop-blur-xl border-l border-white/10 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div id="magic-instructions-panel" class="absolute top-[88px] bottom-[76px] right-0 w-full sm:w-[350px] bg-gray-900/95 backdrop-blur-xl border-l border-white/10 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
             <div class="p-5 border-b border-white/5 flex justify-between items-center bg-gray-800/50">
                 <h4 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><i class="fas fa-book-open text-blue-400"></i> Instructions</h4>
                 <button id="close-magic-info-btn" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times"></i></button>
@@ -5057,8 +5057,15 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                 <p><strong>3. Scope Focus:</strong> Auto-detects the category, but you can change it if the AI grabs the wrong policy.</p>
                 <p><strong>4. Ticket Status:</strong> If you are changing the ticket to "Pending", select the status here. The AI will automatically inform the user of the correct timeline.</p>
                 <p><strong>5. Tone:</strong> Choose how the email should sound.</p>
-                <div class="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-blue-200 text-xs">
-                    <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> Tip: Provide clear instructions in Step 2 to get the most accurate draft!
+                
+                <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-amber-200 mt-4">
+                    <h5 class="font-bold text-amber-400 flex items-center gap-2 mb-2">
+                        <i class="fas fa-bolt"></i> What happens next?
+                    </h5>
+                    <p class="text-xs leading-relaxed">
+                        Clicking <strong>"Generate Draft"</strong> automatically copies a highly-optimized prompt to your clipboard and routes you to Gemini.<br><br>
+                        Once Gemini opens, you <strong>MUST click the chat box and Paste (Ctrl+V or Cmd+V)</strong> to send the prompt to the AI!
+                    </p>
                 </div>
             </div>
         </div>
@@ -5118,7 +5125,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                         <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg relative group flex-grow flex flex-col">
                             <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex justify-between items-end relative z-10">
-                                <span class="flex items-center gap-2"><i class="fas fa-terminal text-cyan-400"></i> 2. Operator Instructions <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span></span>
+                                <span class="flex items-center gap-2"><i class="fas fa-terminal text-cyan-400"></i> 2. Operator Instructions <span class="text-gray-500 normal-case tracking-normal font-medium">(Recommended)</span></span>
                             </label>
                             <textarea id="magic-instruction-text" 
                                 class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none placeholder-gray-600 shadow-inner relative z-10 flex-grow min-h-[5rem]"
@@ -5220,7 +5227,10 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
         </div>
 
         <div class="bg-gray-900/90 backdrop-blur-md p-5 border-t border-white/10 flex justify-between items-center relative z-20 flex-shrink-0">
-            <span class="text-[10px] text-gray-500 font-mono hidden sm:inline-block"><i class="fas fa-lock mr-1"></i> Data remains local until dispatch</span>
+            <div class="flex flex-col gap-1.5 hidden sm:flex">
+                <span class="text-[10px] text-gray-500 font-mono flex items-center gap-1.5"><i class="fas fa-lock"></i> Data remains local until dispatch</span>
+                <span class="text-[10px] text-amber-500/90 font-mono font-bold flex items-center gap-1.5"><i class="fas fa-exclamation-triangle text-amber-500"></i> Always review AI-generated responses for accuracy before sending.</span>
+            </div>
             <div class="flex gap-3 w-full sm:w-auto">
                 <button id="magic-cancel-btn" class="flex-1 sm:flex-none px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
                     Cancel
