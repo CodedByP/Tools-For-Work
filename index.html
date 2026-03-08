@@ -12874,7 +12874,7 @@ if (magicGoBtn) {
         prompt += `### SYSTEM DIRECTIVES (STRICT COMPLIANCE REQUIRED) ###\n`;
         prompt += `1. **Customer Facing:** This email goes directly to the user. Do NOT mention internal systems (GUTS, PAR, SAP, Buganizer, MOMA, Techstop).\n`;
         prompt += `2. **No Jargon:** Never use terms like "Assigned - Additional", "Hostnames", "P0/P1", or "Ticket SLA".\n`;
-        prompt += `3. **Formatting:** Use short paragraphs. Use a simple dash ('-') with a space for lists. NEVER use markdown formatting like bolding (**text**) or standard bullet points.\n`;
+        prompt += `3. **Formatting:** Use short paragraphs. NEVER use markdown bolding (**text**). If you need to make a list or outline steps, NEVER use standard markdown bullet points ('*' or '•')—you MUST use a simple dash ('-') with a space instead.\n`;
         prompt += `4. **Data Extraction & Placeholders:** You MUST extract specific data (Location, Asset Tag, Hostname, Device Model, etc.) from the 'ACTUAL USER TICKET' and use it in the email body. ONLY use bracketed placeholders like [Customer Name] or [Date] if the specific information is completely missing from the ticket context.\n`;
         prompt += `5. **Sign-off:** End the email ONLY with "Best regards,\\n\\n[Name]". Do not add "IT Support" or any other titles below the name placeholder.\n\n`;
 
@@ -12923,9 +12923,9 @@ if (magicGoBtn) {
             prompt += `Rule Details: ${policy.focusedSnippet || policy.content}\n\n`;
         }
         
-        // --- NEW: FORCE PLAIN TEXT CODE BLOCK OUTPUT ---
+        // --- NEW: CONDITIONAL OUTPUT FORMATTING ---
         prompt += `### FINAL OUTPUT INSTRUCTION ###\n`;
-        prompt += `You MUST output your final email draft inside a single plain text code block (using \`\`\`text ... \`\`\`). Do NOT output any conversational filler text outside of this code block. This ensures our ticketing system does not render unwanted rich-text formatting.\n`;
+        prompt += `Review your generated email draft. IF your email contains a list of items or steps, you MUST wrap the ENTIRE email inside a plain text code block (using \`\`\`text ... \`\`\`) to prevent rich-text rendering issues in our ticketing system. IF your email does NOT contain any lists, simply output the email normally as standard text without any code blocks. Do NOT output any conversational filler text outside of your draft in either case.\n`;
         prompt += `--- OUTPUT ONLY THE EMAIL BODY BELOW THIS LINE ---\n`;
 
         // Copy & Launch logic
