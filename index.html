@@ -4022,33 +4022,33 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 
         <div class="flex-1 flex flex-col gap-12 pb-20 w-full settings-scroll">
             
-            <section id="set-account" class="scroll-mt-10">
-                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Account Details</h3>
-                <div class="bg-gray-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-2xl">
-                    <div class="flex flex-col sm:flex-row items-center gap-6">
-                        <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-black text-white shadow-lg border border-white/10 shrink-0">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        
-                        <div class="flex-1 text-center sm:text-left">
-                            <div id="auth-status-settings" class="text-xl font-bold text-white mb-1">Not signed in.</div>
-                            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2 text-xs">
-                                <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-md font-mono">Role: Operator</span>
-                                <span class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded-md font-mono"><i class="fas fa-calendar-alt mr-1"></i> Member Since 2024</span>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0">
-                            <button id="sign-in-btn-settings" class="w-full bg-white text-black font-bold py-2.5 px-6 rounded-xl hover:bg-gray-200 transition duration-300 shadow-lg text-sm flex items-center justify-center gap-2 hidden">
-                                <i class="fas fa-sign-in-alt"></i> Sign In with Google
-                            </button>
-                            <button id="sign-out-btn-settings" class="w-full bg-gray-800 border border-gray-700 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition duration-300 shadow-lg text-sm flex items-center justify-center gap-2 hidden">
-                                <i class="fas fa-sign-out-alt"></i> Sign Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+		<section id="set-account" class="scroll-mt-10">
+		    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Account Details</h3>
+		    <div class="bg-gray-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-2xl">
+		        <div class="flex flex-col sm:flex-row items-center gap-6">
+		            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-black text-white shadow-lg border border-white/10 shrink-0">
+		                <i class="fas fa-user"></i>
+		            </div>
+		            
+		            <div class="flex-1 text-center sm:text-left">
+		                <div id="auth-status-settings" class="text-xl font-bold text-white mb-1">Not signed in.</div>
+		                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2 text-xs">
+		                    <span id="settings-role-badge" class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-md font-mono">Role: Operator</span>
+		                    <span id="settings-member-since" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded-md font-mono"><i class="fas fa-calendar-alt mr-1"></i> Member Since 2024</span>
+		                </div>
+		            </div>
+		
+		            <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0">
+		                <button id="sign-in-btn-settings" class="w-full bg-white text-black font-bold py-2.5 px-6 rounded-xl hover:bg-gray-200 transition duration-300 shadow-lg text-sm flex items-center justify-center gap-2 hidden">
+		                    <i class="fas fa-sign-in-alt"></i> Sign In with Google
+		                </button>
+		                <button id="sign-out-btn-settings" class="w-full bg-gray-800 border border-gray-700 text-white font-bold py-2.5 px-6 rounded-xl hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition duration-300 shadow-lg text-sm flex items-center justify-center gap-2 hidden">
+		                    <i class="fas fa-sign-out-alt"></i> Sign Out
+		                </button>
+		            </div>
+		        </div>
+		    </div>
+		</section>
 
             <section id="set-appearance" class="scroll-mt-10">
                 <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Appearance & Theming</h3>
@@ -4365,68 +4365,76 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                     <i class="fas fa-bolt text-amber-400"></i> Personal Milestones
                 </h3>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
-                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest bg-blue-900/20 px-2 py-1 rounded">Daily Best</span>
-                            <span id="record-daily-date" class="text-[9px] text-slate-500 font-mono">--</span>
-                        </div>
-                        <div class="flex items-baseline gap-2 mb-4">
-                            <span id="record-daily" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
-                            <span class="text-xs text-slate-500 font-medium">Copies</span>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
-                                <span id="record-daily-status" class="text-slate-400">Today: 0</span>
-                                <span id="record-daily-percent" class="text-blue-400">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 rounded-full h-1.5">
-                                <div id="record-daily-bar" class="h-full bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.6)]" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-purple-500/50 transition-colors">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] text-purple-400 font-bold uppercase tracking-widest bg-purple-900/20 px-2 py-1 rounded">Weekly Best</span>
-                            <span id="record-weekly-date" class="text-[9px] text-slate-500 font-mono">--</span>
-                        </div>
-                        <div class="flex items-baseline gap-2 mb-4">
-                            <span id="record-weekly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
-                            <span class="text-xs text-slate-500 font-medium">Copies</span>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
-                                <span id="record-weekly-status" class="text-slate-400">This Week: 0</span>
-                                <span id="record-weekly-percent" class="text-purple-400">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 rounded-full h-1.5">
-                                <div id="record-weekly-bar" class="h-full bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.6)]" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/50 transition-colors">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest bg-amber-900/20 px-2 py-1 rounded">Monthly Best</span>
-                            <span id="record-monthly-date" class="text-[9px] text-slate-500 font-mono">--</span>
-                        </div>
-                        <div class="flex items-baseline gap-2 mb-4">
-                            <span id="record-monthly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
-                            <span class="text-xs text-slate-500 font-medium">Copies</span>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
-                                <span id="record-monthly-status" class="text-slate-400">This Month: 0</span>
-                                <span id="record-monthly-percent" class="text-amber-400">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 rounded-full h-1.5">
-                                <div id="record-monthly-bar" class="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.6)]" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+				    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/50 transition-colors flex flex-col justify-between">
+				        <div>
+				            <div class="flex justify-between items-start mb-4">
+				                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest bg-blue-900/20 px-2 py-1 rounded">Daily Best</span>
+				                <span id="record-daily-date" class="text-[9px] text-slate-500 font-mono">--</span>
+				            </div>
+				            <div class="flex items-baseline gap-2 mb-4">
+				                <span id="record-daily" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+				                <span class="text-xs text-slate-500 font-medium">Copies</span>
+				            </div>
+				        </div>
+				        <div class="mt-auto">
+				            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+				                <span id="record-daily-status" class="text-slate-400">Today: 0</span>
+				                <span id="record-daily-percent" class="text-blue-400">0%</span>
+				            </div>
+				            <div class="w-full bg-slate-800 rounded-full h-1.5">
+				                <div id="record-daily-bar" class="h-full bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.6)]" style="width: 0%"></div>
+				            </div>
+				            <div id="record-daily-pace" class="mt-1.5 text-[9px] font-mono text-gray-500 text-right h-3 empty:hidden transition-all duration-300"></div>
+				        </div>
+				    </div>
+				
+				    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-purple-500/50 transition-colors flex flex-col justify-between">
+				        <div>
+				            <div class="flex justify-between items-start mb-4">
+				                <span class="text-[10px] text-purple-400 font-bold uppercase tracking-widest bg-purple-900/20 px-2 py-1 rounded">Weekly Best</span>
+				                <span id="record-weekly-date" class="text-[9px] text-slate-500 font-mono">--</span>
+				            </div>
+				            <div class="flex items-baseline gap-2 mb-4">
+				                <span id="record-weekly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+				                <span class="text-xs text-slate-500 font-medium">Copies</span>
+				            </div>
+				        </div>
+				        <div class="mt-auto">
+				            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+				                <span id="record-weekly-status" class="text-slate-400">This Week: 0</span>
+				                <span id="record-weekly-percent" class="text-purple-400">0%</span>
+				            </div>
+				            <div class="w-full bg-slate-800 rounded-full h-1.5">
+				                <div id="record-weekly-bar" class="h-full bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.6)]" style="width: 0%"></div>
+				            </div>
+				            <div id="record-weekly-pace" class="mt-1.5 text-[9px] font-mono text-gray-500 text-right h-3 empty:hidden transition-all duration-300"></div>
+				        </div>
+				    </div>
+				
+				    <div class="bg-black/30 border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/50 transition-colors flex flex-col justify-between">
+				        <div>
+				            <div class="flex justify-between items-start mb-4">
+				                <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest bg-amber-900/20 px-2 py-1 rounded">Monthly Best</span>
+				                <span id="record-monthly-date" class="text-[9px] text-slate-500 font-mono">--</span>
+				            </div>
+				            <div class="flex items-baseline gap-2 mb-4">
+				                <span id="record-monthly" class="text-4xl font-black text-white tracking-tighter pulse-record">0</span>
+				                <span class="text-xs text-slate-500 font-medium">Copies</span>
+				            </div>
+				        </div>
+				        <div class="mt-auto">
+				            <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+				                <span id="record-monthly-status" class="text-slate-400">This Month: 0</span>
+				                <span id="record-monthly-percent" class="text-amber-400">0%</span>
+				            </div>
+				            <div class="w-full bg-slate-800 rounded-full h-1.5">
+				                <div id="record-monthly-bar" class="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.6)]" style="width: 0%"></div>
+				            </div>
+				            <div id="record-monthly-pace" class="mt-1.5 text-[9px] font-mono text-gray-500 text-right h-3 empty:hidden transition-all duration-300"></div>
+				        </div>
+				    </div>
+				</div>
 
             <div id="achievements-card-wrapper" class="premium-glass-card md:col-span-12 p-6 cursor-pointer group">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-700/50 pb-4">
@@ -6301,6 +6309,36 @@ const defaultHelpfulLinksBlueprint = [
 ];
 
 // --- Helper Functions ---
+const showSkeletonLoader = () => {
+    const list = document.getElementById('responses-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (list) {
+        list.innerHTML = `
+            <div class="animate-pulse flex flex-col space-y-4 p-6 border border-gray-700/50 rounded-xl bg-gray-800/30 w-full shadow-md">
+                <div class="h-5 bg-gray-700 rounded w-1/4 mb-2"></div>
+                <div class="h-3 bg-gray-700 rounded w-full"></div>
+                <div class="h-3 bg-gray-700 rounded w-5/6"></div>
+                <div class="h-3 bg-gray-700 rounded w-4/6"></div>
+                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-700/50">
+                    <div class="h-8 bg-emerald-500/20 rounded-lg w-24"></div>
+                    <div class="flex gap-2"><div class="h-8 w-8 bg-gray-700 rounded-lg"></div><div class="h-8 w-8 bg-gray-700 rounded-lg"></div></div>
+                </div>
+            </div>
+            <div class="animate-pulse flex flex-col space-y-4 p-6 border border-gray-700/50 rounded-xl bg-gray-800/30 w-full opacity-70 shadow-md">
+                <div class="h-5 bg-gray-700 rounded w-1/3 mb-2"></div>
+                <div class="h-3 bg-gray-700 rounded w-11/12"></div>
+                <div class="h-3 bg-gray-700 rounded w-3/4"></div>
+                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-700/50">
+                    <div class="h-8 bg-emerald-500/20 rounded-lg w-24"></div>
+                    <div class="flex gap-2"><div class="h-8 w-8 bg-gray-700 rounded-lg"></div><div class="h-8 w-8 bg-gray-700 rounded-lg"></div></div>
+                </div>
+            </div>
+        `;
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+};
+		
 
 
 const stripAIMetadata = (text) => {
@@ -8687,6 +8725,7 @@ const calculateAndRenderRecords = (events) => {
         const statusEl = document.getElementById(`record-${type}-status`);
         const percentEl = document.getElementById(`record-${type}-percent`);
         const barEl = document.getElementById(`record-${type}-bar`);
+        const paceEl = document.getElementById(`record-${type}-pace`);
 
         // Update Record Number
         animateValue(countEl, 0, best.val, 1500);
@@ -8698,8 +8737,41 @@ const calculateAndRenderRecords = (events) => {
             dateEl.textContent = '--';
         }
 
+        // --- PACING CALCULATOR LOGIC ---
+        if (paceEl) {
+            let pace = 0;
+            let isPaceValid = true;
+
+            if (type === 'daily') {
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const hoursElapsed = Math.max((now - startOfDay) / (1000 * 60 * 60), 0.1); 
+                pace = Math.round((current / hoursElapsed) * 24);
+            } else if (type === 'weekly') {
+                const dayOfWeek = now.getDay();
+                const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 for Monday, 6 for Sunday
+                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
+                const daysElapsed = Math.max((now - startOfWeek) / (1000 * 60 * 60 * 24), 0.1);
+                pace = Math.round((current / daysElapsed) * 7);
+            } else if (type === 'monthly') {
+                const daysElapsed = Math.max(now.getDate(), 0.1);
+                const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                pace = Math.round((current / daysElapsed) * totalDaysInMonth);
+            }
+
+            if (current > 0 && isPaceValid) {
+                if (pace > best.val && best.val > 0) {
+                    paceEl.className = "mt-1.5 text-[9px] font-mono text-emerald-400 font-bold text-right h-3 tracking-wider";
+                    paceEl.innerHTML = `<i class="fas fa-arrow-trend-up mr-0.5"></i> On pace to break record: ~${pace}`;
+                } else {
+                    paceEl.className = "mt-1.5 text-[9px] font-mono text-gray-500 text-right h-3 tracking-wider";
+                    paceEl.innerHTML = `On pace for: ~${pace}`;
+                }
+            } else {
+                paceEl.innerHTML = "";
+            }
+        }
+
         // --- THE HYPE LOGIC ---
-        // Calculate progress percentage (cap at 100% for bar width)
         let percentage = best.val > 0 ? (current / best.val) * 100 : 0;
         const displayPercent = Math.min(percentage, 100);
         
@@ -8710,43 +8782,32 @@ const calculateAndRenderRecords = (events) => {
 
         // Reset Styles
         statusEl.className = "font-semibold";
-        statusEl.innerHTML = ""; // Clear content
+        statusEl.innerHTML = ""; 
         barEl.className = `h-full rounded-full transition-all duration-1000 ${type === 'daily' ? 'bg-blue-400' : type === 'weekly' ? 'bg-purple-400' : 'bg-yellow-400'}`;
         countEl.classList.remove('new-record-glow', 'text-green-400');
 
         if (current >= best.val && best.val > 0) {
-            // CASE 1: NEW RECORD!
             statusEl.innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> <span class="text-green-400">Current Record!</span>`;
             barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
-            barEl.classList.add('bg-green-400'); // Green bar
-            countEl.classList.add('new-record-glow', 'text-green-400'); // Pulse the big number
+            barEl.classList.add('bg-green-400');
+            countEl.classList.add('new-record-glow', 'text-green-400'); 
             percentEl.textContent = "100%";
+            if(paceEl) paceEl.innerHTML = ""; // Clear pace text if record is already broken
         } 
         else if (percentage >= 80) {
-            // CASE 2: CLOSE (Within 20%)
             statusEl.innerHTML = `<i class="fas fa-fire text-orange-500 mr-1 animate-pulse"></i> <span class="text-orange-300">${distance} away!</span>`;
             barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
-            barEl.classList.add('bg-orange-500'); // Orange bar
+            barEl.classList.add('bg-orange-500'); 
         } 
         else {
-            // CASE 3: NORMAL
-            // Define label based on type
-            let label = "Today";
-            if (type === 'weekly') label = "This Week";
-            if (type === 'monthly') label = "This Month";
-            
-            // Set text color based on type to match theme
-            let colorClass = "text-gray-300";
-            if (type === 'daily') colorClass = "text-blue-100";
-            if (type === 'weekly') colorClass = "text-purple-100";
-            if (type === 'monthly') colorClass = "text-yellow-100";
+            let label = type === 'daily' ? "Today" : type === 'weekly' ? "This Week" : "This Month";
+            let colorClass = type === 'daily' ? "text-blue-100" : type === 'weekly' ? "text-purple-100" : "text-yellow-100";
 
             statusEl.className = `font-semibold ${colorClass}`;
             statusEl.textContent = `${label}: ${current}`;
         }
     };
 
-    // Date Formatters
     const formatDay = (key) => {
         const [y, m, d] = key.split('-');
         return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -8757,7 +8818,6 @@ const calculateAndRenderRecords = (events) => {
         return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     };
 
-    // 5. Run Updates
     updateUI('daily', bestDay, currentDayVal, formatDay);
     updateUI('weekly', bestWeek, currentWeekVal, formatWeek);
     updateUI('monthly', bestMonth, currentMonthVal, formatMonth);
@@ -12054,16 +12114,41 @@ const renderSettingsPage = () => {
     const tutorialResetSection = document.getElementById('tutorial-reset-section');
     const importExportBtnSettings = document.getElementById('import-export-btn-settings');
     const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
+    
+    // Elements for dynamic badges
+    const roleBadge = document.getElementById('settings-role-badge');
+    const memberSinceBadge = document.getElementById('settings-member-since');
 
     if (document.body.classList.contains('light-mode')) {
         themeIconSettings.className = 'fas fa-sun mr-2';
     } else {
         themeIconSettings.className = 'fas fa-moon mr-2';
     }
+    
     if (auth.currentUser) {
         const displayName = auth.currentUser.displayName || auth.currentUser.email || 'User';
         authStatusSettings.textContent = `Signed in as: ${displayName}`;
         authStatusSettings.title = auth.currentUser.email;
+        
+        // --- DYNAMIC PROFILE BADGES ---
+        if (roleBadge) {
+            if (auth.currentUser.email === ADMIN_EMAIL) {
+                roleBadge.textContent = "Role: Admin";
+                roleBadge.className = "bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-md font-mono font-bold tracking-wide";
+            } else {
+                roleBadge.textContent = "Role: Operator";
+                roleBadge.className = "bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-md font-mono";
+            }
+        }
+
+        if (memberSinceBadge && typeof firstSignIn !== 'undefined' && firstSignIn) {
+            const formattedDate = firstSignIn.toLocaleDateString(undefined, {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            memberSinceBadge.innerHTML = `<i class="fas fa-calendar-alt mr-1"></i> Member Since ${formattedDate}`;
+        }
+        // -----------------------------
+
         if (isAnonymous) {
             signInBtn.classList.remove('hidden');
             signOutBtn.classList.add('hidden');
@@ -12079,6 +12164,7 @@ const renderSettingsPage = () => {
         signOutBtn.classList.add('hidden');
         tutorialResetSection.classList.add('hidden');
     }
+    
     if (isAnonymous) {
         importExportBtnSettings.classList.add('hidden');
         checkUpdatesBtnSettings.classList.add('hidden');
@@ -12086,11 +12172,12 @@ const renderSettingsPage = () => {
         importExportBtnSettings.classList.remove('hidden');
         checkUpdatesBtnSettings.classList.remove('hidden');
     }
-	if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+    
+    if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
         const adminSection = document.getElementById('admin-knowledge-settings');
         if (adminSection) {
             adminSection.classList.remove('hidden');
-            renderAdminPolicies(); // <--- ADD THIS LINE
+            renderAdminPolicies(); 
         }
     }
 };
@@ -14233,6 +14320,9 @@ document.getElementById('check-updates-btn-settings').addEventListener('click', 
 
 // --- Core Application Logic (Auth and Data Sync) ---
 onAuthStateChanged(auth, async (user) => {
+	if (currentPage === 'canned-responses') {
+        showSkeletonLoader();
+    }
     if (cannedResponsesUnsubscribe) { cannedResponsesUnsubscribe(); cannedResponsesUnsubscribe = null; }
     if (helpfulLinksUnsubscribe) { helpfulLinksUnsubscribe(); helpfulLinksUnsubscribe = null; }
     if (user) {
