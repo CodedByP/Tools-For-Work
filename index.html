@@ -2922,6 +2922,7 @@
 	}
 	.badge-process { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
 	.badge-content { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+	.badge-mandatory { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
 	/* ==========================================================================
    PREMIUM LIGHT MODE: WCAG ACCESSIBILITY & ACRYLIC GLASS
@@ -7230,7 +7231,7 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v9.0 (Tag Routing & Conditional Filtering) ---
+
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
@@ -7251,11 +7252,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'purpose of this document', 'the goal is to ensure', 'it also emphasizes'
     ];
 
-    const CONCEPT_VALIDATORS = {
-        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware'],
-        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta']
-    };
-
     const SCOPE_DEFINITIONS = {
         remote: ['ship', 'shipping', 'transit', 'tracking', 'carrier', 'package', 'mail', 'remote', 'label', 'box'],
         onsite: ['onsite', 'desk', 'arrive', 'pick up', 'pickup', 'locker', 'vending', 'in person', 'office']
@@ -7263,7 +7259,6 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
 
     const OPPOSING_SCOPES = { 'remote': 'onsite', 'onsite': 'remote' };
 
-    // V9.0: Added 'process' array for Internal Tech Steps
     const insights = { requirements: [], warnings: [], deadlines: [], process: [], tips: [] };
     const sentenceCounts = {}; 
 
@@ -7281,8 +7276,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         const lowerLine = rawLine.toLowerCase();
 
         // Structural Headers
-        const isHardHeader = rawLine.startsWith('#') || (rawLine.startsWith('**') && rawLine.endsWith('**'));
-        if (isHardHeader) {
+        if (rawLine.startsWith('#') || (rawLine.startsWith('**') && rawLine.endsWith('**'))) {
             activeScopeContext = null; 
             Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
                 if (keywords.some(kw => lowerLine.includes(kw))) activeScopeContext = scope;
@@ -7290,29 +7284,30 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
             return; 
         }
 
-        // V9.0: TAG DETECTION BEFORE STRIPPING
+        // NEW: DETECT THE 3 TAGS
         const isContentLine = rawLine.includes('[CONTENT]');
         const isProcessLine = rawLine.includes('[PROCESS]');
+        const isMandatoryLine = rawLine.includes('[MANDATORY]');
 
         // Clean the text for pure analysis
-        const textToAnalyze = rawLine.replace(/\[PROCESS\]|\[CONTENT\]/gi, '').replace(/\*\*/g, '').trim();
+        const textToAnalyze = rawLine.replace(/\[PROCESS\]|\[CONTENT\]|\[MANDATORY\]/gi, '').replace(/\*\*/g, '').trim();
         const lowerAnalyze = textToAnalyze.toLowerCase();
 
         if (textToAnalyze.length < 10) return;
         if (IGNORED_PHRASES.some(phrase => lowerAnalyze.includes(phrase))) return;
 
-        // --- V9.0 THE LEAK FIX: CONDITIONAL SENTENCE FILTERING ---
-        // If a rule starts with "For [X]" or "If [X]", check if the user is even talking about [X]
+        // --- PHASE-AWARE CONDITIONAL FILTERING ---
+        // If a rule starts with "For [X]" or "When [X]", check if the user is even talking about [X]
         const conditionalMatch = lowerAnalyze.match(/^(?:for|if|when|in the event)\s+([^,:]+)/);
         if (conditionalMatch) {
             const conditionSubject = conditionalMatch[1]; 
-            // Extract the core noun (e.g., from "workstations equipped with ddr5" -> "ddr5")
-            const conditionWords = conditionSubject.split(/\s+/).filter(w => w.length > 3 && !['with', 'that', 'this', 'user', 'the', 'equipped', 'workstations'].includes(w));
+            // Extract the core noun to test against the user's draft
+            const conditionWords = conditionSubject.split(/\s+/).filter(w => w.length > 3 && !['with', 'that', 'this', 'user', 'the', 'equipped', 'workstations', 'confirming', 'initial', 'details'].includes(w));
             
             if (conditionWords.length > 0) {
                 const userTalksAboutCondition = conditionWords.some(w => lowerUserText.includes(w));
                 if (!userTalksAboutCondition) {
-                    return; // Drop this rule entirely. It doesn't apply to the current canned response context!
+                    return; // DROP THE RULE! The tech's email does not match this specific phase/condition.
                 }
             }
         }
@@ -7348,27 +7343,23 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
             words.forEach(w => { if (lowerUserText.includes(w)) matchCount++; });
             const isMet = matchCount >= 2; 
 
-            // --- V9.0 TAG ROUTING ---
-            if (isContentLine) {
-                // Must be in the email
-                if (lowerSentence.match(/\b(must|shall|required|mandatory|please|ensure|make sure)\b/)) {
-                    insights.requirements.push({
-                        text: sentence.trim(),
-                        status: isMet ? 'met' : 'missing', // Will be a Red Exclamation if missing
-                        isMissing: !isMet,
-                        occurrenceIndex: currentIndex
-                    });
-                }
+            // --- ADVANCED TAG ROUTING ---
+            if (isContentLine || isMandatoryLine) {
+                // Must be in the email - triggers Red Alert if missing
+                insights.requirements.push({
+                    text: sentence.trim(),
+                    status: isMet ? 'met' : 'missing', 
+                    isMissing: !isMet,
+                    occurrenceIndex: currentIndex
+                });
             } else if (isProcessLine) {
-                // It's an internal technician step
-                if (lowerSentence.match(/\b(must|ensure|verify|check|record|change|update|assign)\b/)) {
-                    insights.process.push({
-                        text: sentence.trim(),
-                        status: isMet ? 'met' : 'process_step', // Will be a Gray Clipboard (Neutral)
-                        isMissing: false, // Prevents triggering the Auto-Fix Alert
-                        occurrenceIndex: currentIndex
-                    });
-                }
+                // It's an internal technician step - triggers Gray Clipboard
+                insights.process.push({
+                    text: sentence.trim(),
+                    status: isMet ? 'met' : 'process_step', 
+                    isMissing: false, // Prevents triggering the Auto-Fix Alert
+                    occurrenceIndex: currentIndex
+                });
             } else {
                 // Untagged Legacy Handling
                 if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) {
@@ -7666,9 +7657,10 @@ const applyInlineStyles = (text) => {
         // 3. Links (http...) 
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>')
         
-        // 4. Fallback: Erase any leftover tags just in case they slipped through
-        .replace(/\[PROCESS\]/gi, '')
-        .replace(/\[CONTENT\]/gi, '');
+        // 4. Transform Tags into HTML Badges
+        .replace(/\[PROCESS\]/gi, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[10px]"></i> Process</span>`)
+        .replace(/\[CONTENT\]/gi, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[10px]"></i> Content</span>`)
+        .replace(/\[MANDATORY\]/gi, `<span class="inline-badge badge-mandatory"><i class="fas fa-exclamation-triangle text-[10px]"></i> Mandatory</span>`);
 };
 
 // --- KNOWLEDGE BASE LOGIC ---
