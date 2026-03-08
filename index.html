@@ -13284,14 +13284,17 @@ document.getElementById('magic-cancel-btn')?.addEventListener('click', closeMagi
 
 
 document.body.addEventListener('click', (e) => {
-    
+
     // 1. Handle "Close" (X) Button at top
     const closeBtn = e.target.closest('#close-insights-btn');
     if (closeBtn) {
-        document.body.classList.remove('sidebar-active'); // Added to slide back
+        document.body.classList.remove('sidebar-active'); 
         const sidebar = document.getElementById('insights-sidebar');
         sidebar.classList.remove('translate-x-0');
         sidebar.classList.add('translate-x-full');
+        
+        // --- NEW: Remove Highlight ---
+        document.querySelectorAll('.response-item').forEach(el => el.classList.remove('ring-2', 'ring-purple-500', 'shadow-[0_0_15px_rgba(168,85,247,0.5)]'));
         return; 
     }
 
@@ -13316,16 +13319,19 @@ document.body.addEventListener('click', (e) => {
         return;
     }
 
-    // 3. Handle the Footer Close Button
+	// 3. Handle the Footer Close Button
     const footerCloseBtn = e.target.closest('#close-sidebar-footer-btn');
     if (footerCloseBtn) {
-        document.body.classList.remove('sidebar-active'); // Slide content back
+        document.body.classList.remove('sidebar-active'); 
         const sidebar = document.getElementById('insights-sidebar');
         sidebar.classList.remove('translate-x-0');
         sidebar.classList.add('translate-x-full');
+
+        // --- NEW: Remove Highlight ---
+        document.querySelectorAll('.response-item').forEach(el => el.classList.remove('ring-2', 'ring-purple-500', 'shadow-[0_0_15px_rgba(168,85,247,0.5)]'));
         return;
     }
-}); // <--- THIS WAS MISSING: Closes the body click listener
+});
 
 // Keep this outside the body click listener
 const sidebarFooter = document.getElementById('sidebar-footer');
@@ -13390,10 +13396,13 @@ editModalTextarea.addEventListener('input', () => {
 // Sidebar Close Button
 document.getElementById('close-insights-btn')?.addEventListener('click', () => {
     const sidebar = document.getElementById('insights-sidebar');
-    // FIX: Remove the 'open' class AND add the 'closed' class
-	document.body.classList.remove('sidebar-active');
+    
+    document.body.classList.remove('sidebar-active');
     sidebar.classList.remove('translate-x-0');
     sidebar.classList.add('translate-x-full');
+    
+    // --- NEW: Remove Highlight ---
+    document.querySelectorAll('.response-item').forEach(el => el.classList.remove('ring-2', 'ring-purple-500', 'shadow-[0_0_15px_rgba(168,85,247,0.5)]'));
     
      if (currentPolicyId) {
         localStorage.setItem(`pkb_seen_${currentPolicyId}`, currentPolicyTimestamp);
