@@ -12874,7 +12874,7 @@ if (magicGoBtn) {
         prompt += `### SYSTEM DIRECTIVES (STRICT COMPLIANCE REQUIRED) ###\n`;
         prompt += `1. **Customer Facing:** This email goes directly to the user. Do NOT mention internal systems (GUTS, PAR, SAP, Buganizer, MOMA, Techstop).\n`;
         prompt += `2. **No Jargon:** Never use terms like "Assigned - Additional", "Hostnames", "P0/P1", or "Ticket SLA".\n`;
-        prompt += `3. **Formatting:** Use short paragraphs. Use bullet points for steps. No subject lines.\n`;
+        prompt += `3. **Formatting:** Use short paragraphs. NEVER use standard markdown bullet points ('*' or '•'). If you need to make a list or outline steps, you MUST use a simple dash ('-') with a space instead. No subject lines.\n`;
         prompt += `4. **Data Extraction & Placeholders:** You MUST extract specific data (Location, Asset Tag, Hostname, Device Model, etc.) from the 'ACTUAL USER TICKET' and use it in the email body. ONLY use bracketed placeholders like [Customer Name] or [Date] if the specific information is completely missing from the ticket context.\n`;
         prompt += `5. **Sign-off:** End the email ONLY with "Best regards,\\n\\n[Name]". Do not add "IT Support" or any other titles below the name placeholder.\n\n`;
 
