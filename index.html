@@ -11364,6 +11364,7 @@ const renderResponses = (searchQuery = '') => {
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full text-white">${count}</span>`;
     } else {
         if (categories[activeCategory]) {
+			const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
 			// --- UPDATED SORTING LOGIC ---
             if (isReorderingResponses) {
                 // If reordering, output exact array order without moving pinned items to the top
