@@ -7226,11 +7226,11 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v8.1 (Header-Based Scope Tracking & Strict Veto) ---
+// --- UPDATED: Smart Policy Analyzer v8.2 (Soft Suggestions & Strict Veto) ---
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
-    const cleanText = policyText.replace(/\[PROCESS\]|\[CONTENT\]/g, '').trim(); // Strip tags early for clean parsing
+    const cleanText = policyText.replace(/\[PROCESS\]|\[CONTENT\]/g, '').trim(); 
     const lines = cleanText.split('\n');
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
@@ -7332,32 +7332,29 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         }
     });
 
-    // --- STATEFUL MEMORY VARIABLES ---
     let activeScopeContext = null; 
 
     lines.forEach(line => {
         const cleanLine = line.trim();
-        if (!cleanLine) return; // Skip empty lines completely
+        if (!cleanLine) return; 
 
         const lowerLine = cleanLine.toLowerCase();
 
-        // --- NEW: STRUCTURAL CONTEXT LOCKING (The Safe Hybrid) ---
+        // --- STRUCTURAL CONTEXT LOCKING ---
         const isHardHeader = cleanLine.startsWith('#') || (cleanLine.startsWith('**') && cleanLine.endsWith('**'));
         const isSoftHeader = cleanLine.endsWith(':');
         
         if (isHardHeader) {
-            // 1. HARD RESET on major visual headers
             activeScopeContext = null; 
             Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
                 if (keywords.some(kw => lowerLine.includes(kw))) {
                     activeScopeContext = scope;
                 }
             });
-            return; // Skip processing the header itself as a requirement
+            return; 
         }
 
         if (isSoftHeader) {
-            // 2. SOFT UPDATE on colons (Do NOT reset to null, do NOT skip the line)
             Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
                 if (keywords.some(kw => lowerLine.includes(kw))) {
                     activeScopeContext = scope; 
@@ -7365,7 +7362,7 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
             });
         }
 
-        // 3. Inherit Scope: A line uses its own keyword match, or inherits from the active context
+        // Inherit Scope
         let lineScope = null;
         Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
             if (keywords.some(kw => lowerLine.includes(kw))) {
@@ -7378,13 +7375,11 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         // --- STRICT VETO: Context Bleed Prevention ---
         if (effectiveScope && OPPOSING_SCOPES[effectiveScope]) {
             const opposing = OPPOSING_SCOPES[effectiveScope];
-            // If policy wants Remote, but user wrote Onsite (and not remote), KILL the line.
             if (userScopes.has(opposing) && !userScopes.has(effectiveScope)) {
                 return; 
             }
         }
 
-        // Break the valid line into sentences for granular processing
         const sentences = cleanLine.match(/[^.!?]+[.!?]*/g) || [cleanLine];
 
         sentences.forEach(sentence => {
@@ -7412,11 +7407,20 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 return; 
             }
 
-            // Standard Validation
+            // --- V8.2 NEW: HARD RULES VS SOFT SUGGESTIONS ---
             let category = null;
-            if (lowerSentence.match(/\b(must|shall|required|mandatory|maintain|ensure)\b/)) category = 'requirements';
-            else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) category = 'warnings';
-            else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) category = 'deadlines';
+            let isSoftSuggestion = false;
+
+            if (lowerSentence.match(/\b(must|shall|required|mandatory)\b/)) {
+                category = 'requirements'; // Strict rule
+            } else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) {
+                category = 'warnings'; // Alert
+            } else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) {
+                category = 'deadlines'; // Timeline
+            } else if (lowerSentence.match(/\b(ensure|make sure|please|feel free|recommend|suggest|note that|reminder)\b/)) {
+                category = 'requirements';
+                isSoftSuggestion = true; // Flagged as soft info
+            }
 
             if (category) {
                 const concepts = typeof extractKeyConcepts === 'function' ? extractKeyConcepts(sentence) : [];
@@ -7439,20 +7443,25 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
                 const policyPercentages = sentence.match(/\d+%/g);
                 const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
 
-                let status = 'missing';
+                let status = 'missing'; // Defaults to Red Alert
                 if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
-                    status = 'met';
+                    status = 'met'; // Found it!
                 } else {
                     const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
                         lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
                     );
-                    if(hasPlaceholderIntent) status = 'pending';
+                    
+                    // IF it's just a helpful tip OR requires a placeholder...
+                    // Downgrade it from a Red Alert ('missing') to a Blue Note ('pending')
+                    if (hasPlaceholderIntent || isSoftSuggestion) {
+                        status = 'pending';
+                    }
                 }
 
                 insights[category].push({
                     text: sentence.trim(),
                     status: status, 
-                    isMissing: status === 'missing',
+                    isMissing: status === 'missing', // Soft suggestions will be false! Won't trigger the Auto-Fix alert!
                     occurrenceIndex: currentIndex
                 });
             }
