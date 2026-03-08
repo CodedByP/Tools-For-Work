@@ -7341,11 +7341,19 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
 
             if (CATEGORY_EXCLUSIONS[safeCategory] && CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
 
-            // Basic Matching Logic
-            const words = lowerSentence.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4);
-            let matchCount = 0;
-            words.forEach(w => { if (lowerUserText.includes(w)) matchCount++; });
-            const isMet = matchCount >= 2; 
+			const isGreetingRule = /\b(hi|hello|greetings|dear)\b/.test(lowerSentence) && /\b(name|requester|customer)\b/.test(lowerSentence);
+			let isMet = false;
+			
+			if (isGreetingRule) {
+			    // If the rule asks for a greeting, check if the user used ANY valid greeting
+			    isMet = /\b(hi|hello|hey|greetings|dear)\b/.test(lowerUserText);
+			} else {
+			    // Standard matching logic
+			    const words = lowerSentence.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4);
+			    let matchCount = 0;
+			    words.forEach(w => { if (lowerUserText.includes(w)) matchCount++; });
+			    isMet = matchCount >= 2; 
+			}
 
             // --- ADVANCED TAG ROUTING ---
             if (isContentLine || isMandatoryLine) {
@@ -7918,7 +7926,7 @@ const findPolicyForTicket = (ticketText, currentCategory) => {
 };
 
 		
-const showInsightsSidebar = (match, forceOpen = false) => {
+const showInsightsSidebar = (match, forceOpen = false, responseId = null) => {
     const sidebar = document.getElementById('insights-sidebar');
     const contentDiv = document.getElementById('insights-content');
     const footerDiv = document.getElementById('sidebar-footer');
@@ -7940,7 +7948,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     currentPolicyId = match.id;
     currentPolicyTimestamp = policyTime;
     
-    // --- 1. Confidence Score Logic ---
+    // --- Confidence Score Logic ---
     const score = match.score || 20; 
     let confClass = 'conf-med';
     let confLabel = 'Medium Match';
@@ -7968,12 +7976,8 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     `;
 
     // --- Update Header ---
-    if(headerText) {
-        headerText.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-brain text-purple-400"></i> ${match.title}</div>`;
-    }
-    if(updatedDateEl) {
-        updatedDateEl.innerHTML = `<span class="bg-white/5 px-2 py-1 rounded-md border border-white/5 font-mono"><i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}</span>`;
-    }
+    if(headerText) headerText.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-brain text-purple-400"></i> ${match.title}</div>`;
+    if(updatedDateEl) updatedDateEl.innerHTML = `<span class="bg-white/5 px-2 py-1 rounded-md border border-white/5 font-mono"><i class="far fa-clock"></i> Updated ${match.updatedAt ? new Date(match.updatedAt.toDate()).toLocaleDateString() : 'Unknown'}</span>`;
     
     if (sourceLinkEl) {
         if (match.sourceUrl) {
@@ -7990,20 +7994,31 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         }
     }
 
-    // --- 2. PREPARE CLEAN TEXT FOR ANALYSIS ---
     const userText = window.currentUserResponseText || "";
     const activeResponseEl = document.querySelector(`.response-item[data-id="${currentEditingId || ''}"]`) || document.querySelector('.response-item'); 
     const categoryContext = activeResponseEl ? activeResponseEl.dataset.category : activeCategory;
     
-    // v9.0 Update: Send raw content (with tags) to generatePolicyCheatSheet
     const cheatSheet = generatePolicyCheatSheet(match.content, userText, categoryContext);
-    
+
+    // --- NEW: Feature 3 - Apply Ignored Rules from LocalStorage ---
+    const ignoredRulesKey = responseId ? `ignored_rules_${responseId}` : null;
+    const ignoredRules = ignoredRulesKey ? JSON.parse(localStorage.getItem(ignoredRulesKey) || '[]') : [];
+
+    if (cheatSheet && cheatSheet.requirements) {
+        cheatSheet.requirements.forEach(req => {
+            if (ignoredRules.includes(req.text)) {
+                req.isMissing = false;
+                req.status = 'met'; // Treat as met so it clears the red flag
+            }
+        });
+    }
+    // --------------------------------------------------------------
+
+    const missingReqsCount = cheatSheet ? cheatSheet.requirements.filter(i => i.isMissing).length : 0;
     const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0 || cheatSheet.process.length > 0);
 
     const cleanFocusedSnippet = match.focusedSnippet ? stripAIMetadata(match.focusedSnippet) : null;
     const isSnippetMode = !!cleanFocusedSnippet;
-
-    let htmlContent = '';
 
     const renderSmartListItems = (items) => {
         return items.map(item => {
@@ -8012,14 +8027,16 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             
             let icon = '';
             let textClass = '';
+            let ignoreBtnHTML = '';
 
-            // V9.0 SYMBOL ROUTING LOGIC
             if (item.status === 'missing') {
-                // Standard Red Alert for missing Content
                 icon = '<i class="fas fa-exclamation-circle text-red-400 text-sm animate-pulse drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]"></i>';
                 textClass = 'text-white font-medium border-b border-red-500/50 pb-0.5';
+                // --- NEW: Feature 3 - Add Ignore Button UI ---
+                if (responseId) {
+                    ignoreBtnHTML = `<button class="ignore-rule-btn ml-auto flex-shrink-0 text-[9px] text-gray-500 hover:text-red-400 bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded transition-colors" data-rule="${encodeURIComponent(item.text)}">Ignore</button>`;
+                }
             } else if (item.status === 'process_step') {
-                // Neutral symbol for Internal Technician Steps!
                 icon = '<i class="fas fa-clipboard-list text-gray-400 text-sm"></i>';
                 textClass = 'text-gray-300 italic';
             } else if (item.status === 'pending') {
@@ -8034,21 +8051,35 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 <li class="py-2 cursor-pointer group flex items-start gap-3 hover:bg-white/5 rounded-lg px-2 transition-all" 
                     onclick="event.stopPropagation(); scrollToSnippet('${cleanScrollText}', ${item.occurrenceIndex || 0})">
                     <div class="mt-0.5 min-w-[16px] text-center shrink-0">${icon}</div>
-                    <span class="text-[13px] leading-tight ${textClass}">${htmlText}</span>
+                    <span class="text-[13px] leading-tight ${textClass} flex-grow">${htmlText}</span>
+                    ${ignoreBtnHTML}
                 </li>`;
         }).join('');
     };
 
-    if (hasInsights) {
-        htmlContent += `<div class="mb-6 animate-fade-in relative z-10">
-            <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-3">
-                <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <i class="fas fa-robot text-purple-400"></i> AI Breakdown
-                </h4>
-                ${confidenceHTML}
-            </div>`;
+    let htmlContent = `<div class="mb-6 animate-fade-in relative z-10">
+        <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-3">
+            <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                <i class="fas fa-robot text-purple-400"></i> AI Breakdown
+            </h4>
+            ${confidenceHTML}
+        </div>`;
 
-        // V9.0 NEW SECTION: Internal Tech Steps (Process Tags)
+    // --- NEW: Feature 1 - Perfect Compliance displays if NO mandatory tags are missing ---
+    if (missingReqsCount === 0) {
+        htmlContent += `
+        <div class="insight-card border-t-2 border-t-emerald-500 bg-gradient-to-br from-emerald-900/20 to-slate-900 flex items-center gap-5 mb-3">
+            <div class="bg-emerald-500/20 p-4 rounded-xl text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                <i class="fas fa-check-circle text-2xl"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-emerald-400 text-base">Perfect Compliance</h4>
+                <p class="text-[13px] text-slate-400 mt-1 leading-tight">No mandatory requirements missing.</p>
+            </div>
+        </div>`;
+    }
+
+    if (hasInsights) {
         if (cheatSheet.process && cheatSheet.process.length > 0) {
             htmlContent += `
             <div class="insight-card mb-3" style="border-left-color: #6b7280; background: linear-gradient(90deg, rgba(107, 114, 128, 0.1) 0%, rgba(0,0,0,0) 100%);">
@@ -8061,7 +8092,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             </div>`;
         }
 
-        if (cheatSheet.requirements.length > 0) {
+        if (cheatSheet.requirements.length > 0 && missingReqsCount > 0) {
             htmlContent += `
             <div class="insight-card insight-must mb-3">
                 <div class="text-blue-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
@@ -8096,35 +8127,17 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 </ul>
             </div>`;
         }
-        htmlContent += `</div>`;
-    } else {
-        htmlContent += `
-        <div class="mb-6 animate-fade-in relative z-10">
-             <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-3">
-                <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em]"><i class="fas fa-robot text-purple-400 mr-2"></i> AI Breakdown</h4>
-                ${confidenceHTML}
-            </div>
-            <div class="insight-card border-t-2 border-t-emerald-500 bg-gradient-to-br from-emerald-900/20 to-slate-900 flex items-center gap-5">
-                <div class="bg-emerald-500/20 p-4 rounded-xl text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                    <i class="fas fa-check-circle text-2xl"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400 text-base">Perfect Compliance</h4>
-                    <p class="text-[13px] text-slate-400 mt-1 leading-tight">No warnings, deadlines, or missing steps detected in this draft.</p>
-                </div>
-            </div>
-        </div>`;
     }
+    
+    htmlContent += `</div>`;
 
     const hiddenClass = hasInsights ? 'slide-down-enter' : 'slide-down-active';
     const btnText = hasInsights ? 'View Full Documentation' : 'Hide Documentation';
     const btnIcon = hasInsights ? 'fa-chevron-down' : 'fa-chevron-up';
 
-	contentDiv.innerHTML = `
+    contentDiv.innerHTML = `
         <div class="flex flex-col min-h-full">
-            
             ${htmlContent}
-            
             ${hasInsights ? `
             <div class="relative z-10 flex justify-center mt-2 mb-6">
                 <button id="toggle-policy-btn" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-full px-5 py-2 text-xs font-bold text-slate-300 uppercase tracking-widest transition-all shadow-lg group flex items-center gap-2">
@@ -8147,6 +8160,24 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             </div>
         </div>
     `;
+
+    // --- NEW: Feature 3 - Attach listeners to Ignore buttons ---
+    contentDiv.querySelectorAll('.ignore-rule-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const ruleText = decodeURIComponent(btn.dataset.rule);
+            if (ignoredRulesKey) {
+                const currentIgnored = JSON.parse(localStorage.getItem(ignoredRulesKey) || '[]');
+                if (!currentIgnored.includes(ruleText)) {
+                    currentIgnored.push(ruleText);
+                    localStorage.setItem(ignoredRulesKey, JSON.stringify(currentIgnored));
+                }
+                // Re-render sidebar instantly to remove the red flag
+                showInsightsSidebar(match, true, responseId);
+            }
+        });
+    });
+    // ------------------------------------------------------------
 
     const toggleBtn = document.getElementById('toggle-policy-btn');
     if (toggleBtn) {
@@ -8171,9 +8202,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         footerDiv.classList.remove('hidden');
         footerDiv.className = "p-5 border-t border-slate-700/80 bg-slate-900/95 backdrop-blur-3xl z-20 flex-shrink-0 relative";
         
-        // V9.0: Auto-Fix Alert ONLY triggers if there are missing Customer requirements or Warnings
-        const missingCount = (cheatSheet.requirements.filter(i => i.isMissing).length + 
-                              cheatSheet.warnings.filter(i => i.isMissing).length);
+        const missingCount = missingReqsCount + cheatSheet.warnings.filter(i => i.isMissing).length;
 
         if (missingCount > 0) {
             footerDiv.innerHTML = `
@@ -11453,16 +11482,25 @@ const renderResponses = (searchQuery = '') => {
                     </div>
                 `;
 
-                const insightBtn = cardEl.querySelector('.insight-trigger');
-                if (insightBtn) {
-                    insightBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (bestMatch) {
-                            window.currentUserResponseText = response.text; 
-                            showInsightsSidebar(bestMatch, true); 
-                        }
-                    });
-                }
+				const insightBtn = cardEl.querySelector('.insight-trigger');
+				if (insightBtn) {
+				    insightBtn.addEventListener('click', (e) => {
+				        e.stopPropagation();
+				        
+				        // --- NEW: Feature 4 - Active Selection Highlight ---
+				        document.querySelectorAll('.response-item').forEach(el => {
+				            el.classList.remove('ring-2', 'ring-purple-500', 'shadow-[0_0_15px_rgba(168,85,247,0.5)]');
+				        });
+				        cardEl.classList.add('ring-2', 'ring-purple-500', 'shadow-[0_0_15px_rgba(168,85,247,0.5)]');
+				        // -------------------------------------------------
+				
+				        if (bestMatch) {
+				            window.currentUserResponseText = response.text; 
+				            // Pass response.id as the third parameter
+				            showInsightsSidebar(bestMatch, true, response.id); 
+				        }
+				    });
+				}
 
                 const copyBtn = cardEl.querySelector('.copy-btn');
                 
