@@ -13013,7 +13013,7 @@ if (magicGoBtn) {
             if (ticketStatus === 'Pending Customer Action') {
                 prompt += `You MUST also set the expectation that we will follow up within 3 business days if we do not receive a reply or the required action is not completed.\n\n`;
             } else if (ticketStatus === 'Pending Date of Event') {
-                prompt += `You MUST also set the expectation that we will follow up or execute the request on the specifically scheduled date.\n\n`;
+                prompt += `You MUST also set the expectation that we will follow up or execute the request on the specifically scheduled date. If the date is more than 7 days from today, set the expectation to 5 business days.\n\n`;
             } else {
                 // All other pending statuses default to the 5 business day rule
                 prompt += `You MUST also set the expectation that we will follow up or provide an update within 5 business days.\n\n`;
