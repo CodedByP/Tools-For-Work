@@ -5645,26 +5645,30 @@ const getContextualSuggestions = (events) => {
         }
     });
 
-    if (lastCopiedId) delete suggestions[lastCopiedId];
-
     let results = Object.entries(suggestions)
         .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
-        .slice(0, 3)
-        .map(([id]) => id);
+        .map(([id]) => id)
+        .filter(id => id !== lastCopiedId) // Try to filter out the last clicked
+        .slice(0, 3);
 
     // --- STRATEGY 3: ULTIMATE FALLBACK (Most Popular Overall) ---
-    // If no time/sequence matches are found, just show the most copied items
     if (results.length === 0) {
         const popular = {};
         events.filter(e => e.type === 'copy' && e.responseId).forEach(e => {
             popular[e.responseId] = (popular[e.responseId] || 0) + 1;
         });
-        if (lastCopiedId) delete popular[lastCopiedId];
         
-        results = Object.entries(popular)
+        let backupResults = Object.entries(popular)
             .sort(([, countA], [, countB]) => countB - countA)
-            .slice(0, 3)
             .map(([id]) => id);
+            
+        // Try to show popular items, excluding what they just clicked
+        results = backupResults.filter(id => id !== lastCopiedId).slice(0, 3);
+        
+        // THE FIX: If filtering makes it empty (e.g., they only ever test one response), just show it anyway so the box doesn't break!
+        if (results.length === 0) {
+            results = backupResults.slice(0, 3);
+        }
     }
 
     return results;
