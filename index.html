@@ -2403,22 +2403,26 @@
         pointer-events: none;
         z-index: 0;
     }
-    .tone-selector-input:checked + .tone-card {
-        background: rgba(147, 51, 234, 0.2) !important;
-        border-color: #a855f7 !important;
-        box-shadow: 0 0 20px rgba(147, 51, 234, 0.2), inset 0 0 10px rgba(147, 51, 234, 0.1);
+	.tone-selector-input:checked + .tone-card {
+        background: rgba(59, 130, 246, 0.2) !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.1);
         transform: translateY(-2px);
     }
     .tone-selector-input:checked + .tone-card .tone-icon {
-        color: #c084fc !important;
-        text-shadow: 0 0 8px rgba(192, 132, 252, 0.8);
+        color: #60a5fa !important;
+        text-shadow: 0 0 8px rgba(96, 165, 250, 0.8);
     }
     .tone-selector-input:checked + .tone-card .tone-text {
         color: #ffffff !important;
     }
     .is-analyzing {
-        animation: typing-pulse 1s infinite;
-    }		
+        animation: typing-pulse-blue 1s infinite;
+    }
+    @keyframes typing-pulse-blue {
+        0%, 100% { border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 0 transparent; }
+        50% { border-color: rgba(59, 130, 246, 0.8); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+    }	
 
  /* ==========================================================================
        === Theme Overrides ===
@@ -5020,39 +5024,61 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 </div>
 
 <div id="magic-draft-modal" class="modal hidden z-[3000] fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6">
-    <div class="modal-content w-full max-w-5xl max-h-[90vh] bg-[#0b0f19] border border-purple-500/30 rounded-2xl p-0 shadow-[0_0_50px_rgba(147,51,234,0.15)] overflow-hidden flex flex-col relative transform transition-all scale-95 opacity-0 duration-300" id="magic-draft-inner">
+    <div class="modal-content w-full max-w-5xl max-h-[90vh] bg-[#0b0f19] border border-blue-500/30 rounded-2xl p-0 shadow-[0_0_50px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col relative transform transition-all scale-95 opacity-0 duration-300" id="magic-draft-inner">
         
-        <div class="bg-gradient-to-r from-gray-900 via-purple-900/20 to-gray-900 p-6 border-b border-white/10 flex justify-between items-center relative z-10 flex-shrink-0">
+        <div class="bg-gradient-to-r from-gray-900 via-blue-900/20 to-gray-900 p-6 border-b border-white/10 flex justify-between items-center relative z-20 flex-shrink-0">
             <div>
                 <h3 class="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
-                    <div class="bg-purple-600/20 p-2.5 rounded-xl border border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                    <div class="bg-blue-600/20 p-2.5 rounded-xl border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.4)]">
                         <i class="fas fa-brain"></i>
                     </div>
                     Neural Drafter
                 </h3>
                 <p class="text-gray-400 text-xs font-mono tracking-widest uppercase mt-2 ml-1">Context-Aware Generation</p>
             </div>
-            <button id="close-magic-draft-btn" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="magic-info-btn" class="text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 p-2.5 rounded-xl transition-all border border-blue-500/20 hover:border-blue-500/40 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i> <span class="text-xs font-bold uppercase tracking-widest hidden sm:inline-block">How to use</span>
+                </button>
+                <button id="close-magic-draft-btn" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="magic-instructions-panel" class="absolute top-[88px] bottom-[76px] right-0 w-full sm:w-80 bg-gray-900/95 backdrop-blur-xl border-l border-white/10 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-white/5 flex justify-between items-center bg-gray-800/50">
+                <h4 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><i class="fas fa-book-open text-blue-400"></i> Instructions</h4>
+                <button id="close-magic-info-btn" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto custom-scrollbar text-sm text-gray-300 space-y-4">
+                <p><strong>1. Ticket Summary:</strong> Paste the exact text of the user's request. The AI scans this to find matching policies.</p>
+                <p><strong>2. Operator Instructions:</strong> Tell the AI exactly what you want it to say. For example: <em>"Tell the user I ordered a replacement and it arrives in 2 days."</em></p>
+                <p><strong>3. Scope Focus:</strong> Auto-detects the category, but you can change it if the AI grabs the wrong policy.</p>
+                <p><strong>4. Ticket Status:</strong> If you are changing the ticket to "Pending", select the status here. The AI will automatically inform the user of the correct timeline.</p>
+                <p><strong>5. Tone:</strong> Choose how the email should sound.</p>
+                <div class="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-blue-200 text-xs">
+                    <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> Tip: Provide clear instructions in Step 2 to get the most accurate draft!
+                </div>
+            </div>
         </div>
 
         <div class="relative flex-grow overflow-y-auto custom-scrollbar bg-[#0b0f19]">
             
-            <div id="magic-draft-skeleton" class="absolute inset-0 p-6 transition-opacity duration-300 z-20 bg-[#0b0f19]">
+            <div id="magic-draft-skeleton" class="p-6 transition-opacity duration-300 z-20">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse">
                     <div class="lg:col-span-7 flex flex-col gap-6">
                         <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
                             <div class="h-3 w-32 bg-gray-700 rounded mb-2"></div>
                             <div class="h-32 bg-[#111827] rounded-xl border border-gray-700/50"></div>
                         </div>
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3 flex-grow">
                             <div class="h-3 w-48 bg-gray-700 rounded mb-2"></div>
-                            <div class="h-20 bg-[#111827] rounded-xl border border-gray-700/50"></div>
+                            <div class="h-20 bg-[#111827] rounded-xl border border-gray-700/50 h-full"></div>
                         </div>
                     </div>
                     <div class="lg:col-span-5 flex flex-col gap-6">
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-5">
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-5 flex-1 justify-center">
                             <div>
                                 <div class="h-3 w-24 bg-gray-700 rounded mb-3"></div>
                                 <div class="h-11 bg-[#111827] rounded-xl border border-gray-700/50"></div>
@@ -5062,53 +5088,53 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                 <div class="h-11 bg-[#111827] rounded-xl border border-gray-700/50"></div>
                             </div>
                         </div>
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3 flex-1">
                             <div class="h-3 w-40 bg-gray-700 rounded mb-3"></div>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="h-20 bg-[#111827] rounded-xl border border-gray-700/50"></div>
-                                <div class="h-20 bg-[#111827] rounded-xl border border-gray-700/50"></div>
-                                <div class="h-20 bg-[#111827] rounded-xl border border-gray-700/50"></div>
+                            <div class="grid grid-cols-3 gap-3 h-full">
+                                <div class="bg-[#111827] rounded-xl border border-gray-700/50 h-full min-h-[5rem]"></div>
+                                <div class="bg-[#111827] rounded-xl border border-gray-700/50 h-full min-h-[5rem]"></div>
+                                <div class="bg-[#111827] rounded-xl border border-gray-700/50 h-full min-h-[5rem]"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="magic-draft-form" class="p-6 opacity-0 hidden transition-opacity duration-300 relative z-10">
+            <div id="magic-draft-form" class="p-6 hidden opacity-0 transition-opacity duration-300 relative z-10">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
                     <div class="lg:col-span-7 flex flex-col gap-6">
                         <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg relative group">
-                            <div class="absolute inset-0 bg-purple-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                            <div class="absolute inset-0 bg-blue-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex justify-between items-end relative z-10">
-                                <span class="flex items-center gap-2"><i class="fas fa-ticket-alt text-purple-400"></i> 1. Ticket Summary</span>
-                                <span class="text-purple-400/50 text-[9px] font-mono">Auto-Analyzing</span>
+                                <span class="flex items-center gap-2"><i class="fas fa-ticket-alt text-blue-400"></i> 1. Ticket Summary</span>
+                                <span class="text-blue-400/50 text-[9px] font-mono">Auto-Analyzing</span>
                             </label>
                             <textarea id="magic-input-text" rows="6" 
-                                class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none placeholder-gray-600 shadow-inner relative z-10"
+                                class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder-gray-600 shadow-inner relative z-10"
                                 placeholder="Paste the user's request or ticket description here..."></textarea>
                         </div>
 
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg relative group flex-grow">
-                            <div class="absolute inset-0 bg-indigo-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg relative group flex-grow flex flex-col">
+                            <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex justify-between items-end relative z-10">
-                                <span class="flex items-center gap-2"><i class="fas fa-terminal text-indigo-400"></i> 2. Operator Instructions <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span></span>
+                                <span class="flex items-center gap-2"><i class="fas fa-terminal text-cyan-400"></i> 2. Operator Instructions <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span></span>
                             </label>
-                            <textarea id="magic-instruction-text" rows="3" 
-                                class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none placeholder-gray-600 shadow-inner relative z-10 h-[calc(100%-2rem)]"
+                            <textarea id="magic-instruction-text" 
+                                class="w-full bg-[#111827] border border-gray-700 rounded-xl p-4 text-gray-200 text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none placeholder-gray-600 shadow-inner relative z-10 flex-grow min-h-[5rem]"
                                 placeholder="What do you need the AI to say? (e.g., 'Tell them it will take 3 days', or 'I already ordered the part')."></textarea>
                         </div>
                     </div>
 
                     <div class="lg:col-span-5 flex flex-col gap-6">
                         
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg flex flex-col gap-5">
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg flex flex-col gap-5 flex-1 justify-center">
                             <div>
                                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
                                     3. Scope Focus
                                 </label>
                                 <div class="relative">
-                                    <select id="magic-category-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer shadow-inner">
+                                    <select id="magic-category-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
                                 </div>
@@ -5118,7 +5144,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                     4. Ticket Status <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span>
                                 </label>
                                 <div class="relative">
-                                    <select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-purple-500 transition appearance-none cursor-pointer shadow-inner">
+                                    <select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
                                         <option value="">-- No Status Change --</option>
                                         <option value="Pending Customer Action">Pending Customer Action</option>
                                         <option value="Pending 3rd Party Action">Pending 3rd Party Action</option>
@@ -5135,24 +5161,24 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                             </div>
                         </div>
 
-                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg">
+                        <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg flex flex-col flex-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">5. Communication Vector</label>
-                            <div class="grid grid-cols-3 gap-3">
-                                <label class="cursor-pointer relative">
+                            <div class="grid grid-cols-3 gap-3 flex-grow">
+                                <label class="cursor-pointer relative h-full">
                                     <input type="radio" name="magic-tone" value="Standard" checked class="tone-selector-input hidden">
                                     <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-3 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
                                         <i class="fas fa-user-tie tone-icon text-gray-500 text-lg transition-colors"></i>
                                         <div class="tone-text text-[10px] font-bold text-gray-400 transition-colors uppercase tracking-wider">Professional</div>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer relative">
+                                <label class="cursor-pointer relative h-full">
                                     <input type="radio" name="magic-tone" value="Empathetic" class="tone-selector-input hidden">
                                     <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-3 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
                                         <i class="fas fa-hand-holding-heart tone-icon text-gray-500 text-lg transition-colors"></i>
                                         <div class="tone-text text-[10px] font-bold text-gray-400 transition-colors uppercase tracking-wider">Empathetic</div>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer relative">
+                                <label class="cursor-pointer relative h-full">
                                     <input type="radio" name="magic-tone" value="Firm" class="tone-selector-input hidden">
                                     <div class="tone-card bg-[#111827] border border-gray-700 rounded-xl p-3 text-center transition-all hover:bg-gray-800 flex flex-col items-center gap-2 h-full justify-center">
                                         <i class="fas fa-shield-alt tone-icon text-gray-500 text-lg transition-colors"></i>
@@ -5164,23 +5190,23 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 
                         <div id="magic-policy-container" class="hidden">
                             <div id="magic-policy-scanning" class="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4 relative overflow-hidden hidden shadow-lg">
-                                <div class="neural-scan-line"></div>
-                                <i class="fas fa-circle-notch fa-spin text-purple-500 relative z-10"></i>
-                                <span class="text-xs font-mono text-purple-400 uppercase tracking-widest relative z-10">Querying Knowledge Base...</span>
+                                <div class="neural-scan-line bg-blue-500/40"></div>
+                                <i class="fas fa-circle-notch fa-spin text-blue-500 relative z-10"></i>
+                                <span class="text-xs font-mono text-blue-400 uppercase tracking-widest relative z-10">Querying Knowledge Base...</span>
                             </div>
 
-                            <div id="magic-policy-status" class="bg-gradient-to-r from-purple-900/40 to-indigo-900/20 border border-purple-500/40 rounded-xl p-4 relative overflow-hidden hidden shadow-lg">
+                            <div id="magic-policy-status" class="bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/40 rounded-xl p-4 relative overflow-hidden hidden shadow-lg">
                                 <div class="flex items-start gap-4 relative z-10">
-                                    <div class="bg-purple-500/20 p-2.5 rounded-lg text-purple-400 shrink-0 border border-purple-500/30 mt-1 shadow-inner">
+                                    <div class="bg-blue-500/20 p-2.5 rounded-lg text-blue-400 shrink-0 border border-blue-500/30 mt-1 shadow-inner">
                                         <i class="fas fa-file-contract text-lg"></i>
                                     </div>
                                     <div class="min-w-0 flex-grow">
                                         <div class="flex justify-between items-center mb-1">
-                                            <span class="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Policy Engaged</span>
+                                            <span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Policy Engaged</span>
                                             <span id="magic-policy-score" class="text-[10px] font-mono text-emerald-400 bg-emerald-900/30 px-2 py-0.5 rounded border border-emerald-500/30">Match: 95%</span>
                                         </div>
                                         <p id="magic-policy-name" class="text-sm text-white font-bold truncate">--</p>
-                                        <div class="mt-2 bg-[#0b0f19]/60 rounded-lg p-3 border border-white/5 border-l-2 border-l-purple-500">
+                                        <div class="mt-2 bg-[#0b0f19]/60 rounded-lg p-3 border border-white/5 border-l-2 border-l-blue-500">
                                             <p id="magic-policy-snippet" class="text-xs text-gray-300 leading-relaxed font-mono line-clamp-3">--</p>
                                         </div>
                                     </div>
@@ -5199,7 +5225,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                 <button id="magic-cancel-btn" class="flex-1 sm:flex-none px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
                     Cancel
                 </button>
-                <button id="magic-go-btn" class="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-purple-400/50 group">
+                <button id="magic-go-btn" class="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 hover:from-blue-500 hover:to-cyan-400 shadow-[0_0_20px_rgba(59,130,246,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-blue-400/50 group">
                     <span>Generate Draft</span>
                     <i class="fas fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 transition-transform"></i>
                 </button>
@@ -12821,19 +12847,20 @@ if (magicDraftBtn) {
         const inner = document.getElementById('magic-draft-inner');
         const skeleton = document.getElementById('magic-draft-skeleton');
         const form = document.getElementById('magic-draft-form');
+        const infoPanel = document.getElementById('magic-instructions-panel');
 
-        // 1. Reset fields to blank state
+        // 1. Reset fields and UI state
         document.getElementById('magic-input-text').value = '';
         document.getElementById('magic-instruction-text').value = '';
         document.getElementById('magic-status-select').value = '';
         document.getElementById('magic-policy-container').classList.add('hidden');
+        infoPanel.classList.add('translate-x-full'); // Ensure info panel is closed
 
         // 2. Set initial state: Skeleton visible, Form hidden
         form.classList.add('hidden');
         form.classList.remove('opacity-100');
-        skeleton.classList.remove('hidden');
-        skeleton.classList.add('opacity-100');
-
+        skeleton.classList.remove('hidden', 'opacity-0');
+        
         // Show Modal Container instantly
         modal.classList.remove('hidden');
         setTimeout(() => {
@@ -12857,7 +12884,6 @@ if (magicDraftBtn) {
         });
 
         // 4. Smooth Transition: Skeleton -> Form
-        skeleton.classList.remove('opacity-100');
         skeleton.classList.add('opacity-0');
         
         setTimeout(() => {
@@ -12873,6 +12899,14 @@ if (magicDraftBtn) {
         }, 300); // 300ms matches the Tailwind duration-300 class perfectly
     });
 }
+
+// Info Panel Toggle Logic
+document.getElementById('magic-info-btn')?.addEventListener('click', () => {
+    document.getElementById('magic-instructions-panel').classList.remove('translate-x-full');
+});
+document.getElementById('close-magic-info-btn')?.addEventListener('click', () => {
+    document.getElementById('magic-instructions-panel').classList.add('translate-x-full');
+});
 
 const magicInput = document.getElementById('magic-input-text');
 if (magicInput) {
@@ -13046,6 +13080,7 @@ const closeMagicModal = () => {
         // Clear fields on cancel
         document.getElementById('magic-instruction-text').value = '';
         document.getElementById('magic-status-select').value = '';
+        document.getElementById('magic-instructions-panel').classList.add('translate-x-full');
     }, 300);
 };
 document.getElementById('close-magic-draft-btn')?.addEventListener('click', closeMagicModal);
