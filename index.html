@@ -7230,12 +7230,11 @@ const getComplianceStatus = (responseDate, policyTimestamp, matchScore) => {
     return pDate > rDate ? 'warning' : 'verified';
 };		
 
-// --- UPDATED: Smart Policy Analyzer v8.2 (Soft Suggestions & Strict Veto) ---
+// --- UPDATED: Smart Policy Analyzer v9.0 (Tag Routing & Conditional Filtering) ---
 const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory = '') => {
     if (!policyText) return null;
 
-    const cleanText = policyText.replace(/\[PROCESS\]|\[CONTENT\]/g, '').trim(); 
-    const lines = cleanText.split('\n');
+    const lines = policyText.split('\n');
     const lowerUserText = (userResponseText || '').toLowerCase();
     const safeCategory = (currentCategory || '').toUpperCase();
 
@@ -7244,239 +7243,147 @@ const generatePolicyCheatSheet = (policyText, userResponseText, currentCategory 
         'BRONCO': ['dss', 'guts', 'sla', 'ticket number', 'validation', 'Dashboard', 'Monitoring'],
     };
 
+    const IGNORED_PHRASES = [
+        'mandatory data to confirm', 'mandatory data:', 'required information:',
+        'following information:', 'specifics below:', 'lithium-ion compliance',
+        'please refer to the process below', 'video was created using artificial intelligence',
+        'inaccurate translation', 'this document provides', 'this section outlines',
+        'purpose of this document', 'the goal is to ensure', 'it also emphasizes'
+    ];
+
     const CONCEPT_VALIDATORS = {
-        'ratio': [/\d+%/, /\d+:\d+/, 'percent', 'rate'],
-        'continuity': ['no blockers', 'no issues', 'preventing', 'capacity', 'operational'],
-        'service': ['no blockers', 'no issues', 'filled', 'stocked', 'ready'],
-        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware', 'alternative', 'substitution'],
-        'asset': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'device', 'hardware'],
-        'return': ['empty slots', 'available slots', 'space'],
-        'space': ['empty slots', 'available slots'],
-        'ticket': ['request', 'order', 'case', 'incident'],
-        'validation': ['received', 'confirmed', 'processing'],
-        'acknowledge': ['received', 'thank you', 'hello'],
-        'number': ['request', 'order', /\d+/],
-        'understanding': ['received', 'request', 'noted', 'regarding'],
-        'confirm': ['received', 'acknowledged', 'thank you'],
-        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta'],
-        'structured': ['hello', 'hi', 'dear'],
-        'specifics': ['hardware name', 'model', 'substitution', 'alternative'],
-        'timeline': ['deadline', 'window', 'timeframe', 'limit', '14 days', 'ten days'],
-        'closure': ['cancel', 'cancellation', 'close', 'void', 'update the record'],
-        'actioned': ['cancel', 'cancellation', 'processed', 'updated'],
-        'complete': ['drop off', 'return', 'finish', 'place'],
-        'reply': ['contact', 'reach out', 'drop off'],
-        'data points': ['asset list', 'exception logging', 'stocking metrics', 'actions taken'],
-        'specific data': ['asset list', 'exception logging', 'stocking metrics'],
-        'resolution': ['resolved', 'resolving', 'complete', 'closing'],
-        'updated': ['completed', 'conducted', 'actions taken']
+        'device': ['laptop', 'phone', 'macbook', 'chromebook', 'pixel', 'unit', 'machine', 'asset', 'hardware'],
+        'expectations': ['expect', 'ready', 'delivery', 'business days', 'within', 'eta']
     };
 
-    const PLACEHOLDER_ROLES = {
-        'tracking': ['[trackingnumber]', '[fedex tracking]', '[returntrackingnumber]'],
-        'customer': ['[customer\'s name]', '[requester name]', '[user]'],
-        'asset': ['[asset tag]', '[asset number]', '[device model]', '[hardware name]', '[substitution hardware name]', '[asset/accessory]'],
-        'location': ['[desk location]', '[site code]', '[pickup location]'],
-        'date': ['[date]', '[appointment time]', '[time]']
-    };
-
-    // 2. SCOPE DEFINITIONS
     const SCOPE_DEFINITIONS = {
         remote: ['ship', 'shipping', 'transit', 'tracking', 'carrier', 'package', 'mail', 'remote', 'label', 'box'],
-        onsite: ['onsite', 'desk', 'arrive', 'pick up', 'pickup', 'locker', 'vending', 'in person', 'office'],
-        vip: ['vip', 'executive', 'director', 'vp'],
-        breakfix: ['break/fix', 'break fix', 'repair', 'ricoh', 'printer', 'av', 'audio', 'headset']
+        onsite: ['onsite', 'desk', 'arrive', 'pick up', 'pickup', 'locker', 'vending', 'in person', 'office']
     };
 
-    const OPPOSING_SCOPES = {
-        'remote': 'onsite',
-        'onsite': 'remote'
-    };
+    const OPPOSING_SCOPES = { 'remote': 'onsite', 'onsite': 'remote' };
 
-    const PROCESS_INDICATORS = [
-        'dashboard', 'monitoring', 'monitor', 'workflow management', 'worklog', 
-        'internal notes', 'navigate to', 'click', 'select', 'verify in', 
-        'check the', 'ensure that', 'log the', 'consult', 'tool',
-        'sap', 'delivery request', 'update the order', 'system update', 'inventory is', 
-        'recovered', 'processed efficiently', 'service continuity', 'par', 'process asset return', 'guts', 'assignment status', 
-        'assigned - additional', 'hostnames', 'network cleanup', 'change assignment', 
-        'replace the accessory','strict timelines','hard deadline','before business hours',
-        'ready for the next user', 'physical standard', 'executive exception','status should be used','go/stuff',             
-        'follow-up must occur', 'timeline:','business days', 'pending', 'verify the physical asset', 
-        'digital order', 'inventory integrity', 'send the','if no reply', 'proceed with', 'cancel the order',     
-        'cancel the ticket', 'initial contact requirements', 'checked during', 'stuff station visit', 
-        'locker maintenance','emptied daily','regardless of', 'upon assignment', 'emts must send','responsible for',    
-        'gather the data', 'facilitate the','initial message', 'day 7','day 14','formal 7-day warning','cc the manager',       
-        'resolve the ticket','as unsuccessful','if no contact','overdue returns', 'inventory integrity','hardware configuration', 
-        'tracking','ensure the ui','disable individual lanes', 'ticket title','remains present', 'accurately reflects', '[process]', 
-    ];
-
-    const IGNORED_PHRASES = [
-        'mandatory data to confirm', 
-        'mandatory data:',
-        'mandatory ticket summary format:',
-        'required information:',
-        'following information:',
-        'specifics below:', 
-        'mandatory documentation', 
-        'mandatory comment',
-        'mandatory data points',
-        'lithium-ion compliance',
-        '(critical)'
-    ];
-
-    const insights = { requirements: [], warnings: [], deadlines: [], tips: [] };
+    // V9.0: Added 'process' array for Internal Tech Steps
+    const insights = { requirements: [], warnings: [], deadlines: [], process: [], tips: [] };
     const sentenceCounts = {}; 
 
-    // --- IDENTIFY USER'S INTENDED SCOPE FIRST ---
     const userScopes = new Set();
     Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
-        if (keywords.some(kw => lowerUserText.includes(kw))) {
-            userScopes.add(scope);
-        }
+        if (keywords.some(kw => lowerUserText.includes(kw))) userScopes.add(scope);
     });
 
     let activeScopeContext = null; 
 
     lines.forEach(line => {
-        const cleanLine = line.trim();
-        if (!cleanLine) return; 
+        const rawLine = line.trim();
+        if (!rawLine) return; 
 
-        const lowerLine = cleanLine.toLowerCase();
+        const lowerLine = rawLine.toLowerCase();
 
-        // --- STRUCTURAL CONTEXT LOCKING ---
-        const isHardHeader = cleanLine.startsWith('#') || (cleanLine.startsWith('**') && cleanLine.endsWith('**'));
-        const isSoftHeader = cleanLine.endsWith(':');
-        
+        // Structural Headers
+        const isHardHeader = rawLine.startsWith('#') || (rawLine.startsWith('**') && rawLine.endsWith('**'));
         if (isHardHeader) {
             activeScopeContext = null; 
             Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
-                if (keywords.some(kw => lowerLine.includes(kw))) {
-                    activeScopeContext = scope;
-                }
+                if (keywords.some(kw => lowerLine.includes(kw))) activeScopeContext = scope;
             });
             return; 
         }
 
-        if (isSoftHeader) {
-            Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
-                if (keywords.some(kw => lowerLine.includes(kw))) {
-                    activeScopeContext = scope; 
+        // V9.0: TAG DETECTION BEFORE STRIPPING
+        const isContentLine = rawLine.includes('[CONTENT]');
+        const isProcessLine = rawLine.includes('[PROCESS]');
+
+        // Clean the text for pure analysis
+        const textToAnalyze = rawLine.replace(/\[PROCESS\]|\[CONTENT\]/gi, '').replace(/\*\*/g, '').trim();
+        const lowerAnalyze = textToAnalyze.toLowerCase();
+
+        if (textToAnalyze.length < 10) return;
+        if (IGNORED_PHRASES.some(phrase => lowerAnalyze.includes(phrase))) return;
+
+        // --- V9.0 THE LEAK FIX: CONDITIONAL SENTENCE FILTERING ---
+        // If a rule starts with "For [X]" or "If [X]", check if the user is even talking about [X]
+        const conditionalMatch = lowerAnalyze.match(/^(?:for|if|when|in the event)\s+([^,:]+)/);
+        if (conditionalMatch) {
+            const conditionSubject = conditionalMatch[1]; 
+            // Extract the core noun (e.g., from "workstations equipped with ddr5" -> "ddr5")
+            const conditionWords = conditionSubject.split(/\s+/).filter(w => w.length > 3 && !['with', 'that', 'this', 'user', 'the', 'equipped', 'workstations'].includes(w));
+            
+            if (conditionWords.length > 0) {
+                const userTalksAboutCondition = conditionWords.some(w => lowerUserText.includes(w));
+                if (!userTalksAboutCondition) {
+                    return; // Drop this rule entirely. It doesn't apply to the current canned response context!
                 }
-            });
+            }
         }
 
-        // Inherit Scope
+        // Scope Bleed Prevention
         let lineScope = null;
         Object.entries(SCOPE_DEFINITIONS).forEach(([scope, keywords]) => {
-            if (keywords.some(kw => lowerLine.includes(kw))) {
-                lineScope = scope;
-            }
+            if (keywords.some(kw => lowerAnalyze.includes(kw))) lineScope = scope;
         });
 
         const effectiveScope = lineScope || activeScopeContext;
-
-        // --- STRICT VETO: Context Bleed Prevention ---
         if (effectiveScope && OPPOSING_SCOPES[effectiveScope]) {
             const opposing = OPPOSING_SCOPES[effectiveScope];
-            if (userScopes.has(opposing) && !userScopes.has(effectiveScope)) {
-                return; 
-            }
+            if (userScopes.has(opposing) && !userScopes.has(effectiveScope)) return; 
         }
 
-        const sentences = cleanLine.match(/[^.!?]+[.!?]*/g) || [cleanLine];
+        // Split and evaluate
+        const sentences = textToAnalyze.match(/[^.!?]+[.!?]*/g) || [textToAnalyze];
 
         sentences.forEach(sentence => {
             const lowerSentence = sentence.toLowerCase().trim();
             if (lowerSentence.length < 10) return;
-            if (IGNORED_PHRASES.some(phrase => lowerSentence.includes(phrase))) return;
 
             const uniqueKey = sentence.trim();
             const currentIndex = sentenceCounts[uniqueKey] || 0;
             sentenceCounts[uniqueKey] = currentIndex + 1;
 
-            if (CATEGORY_EXCLUSIONS[safeCategory]) {
-                if (CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
-            }
+            if (CATEGORY_EXCLUSIONS[safeCategory] && CATEGORY_EXCLUSIONS[safeCategory].some(badWord => lowerSentence.includes(badWord))) return; 
 
-            const isProcessInstruction = PROCESS_INDICATORS.some(indicator => lowerSentence.includes(indicator));
+            // Basic Matching Logic
+            const words = lowerSentence.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 4);
+            let matchCount = 0;
+            words.forEach(w => { if (lowerUserText.includes(w)) matchCount++; });
+            const isMet = matchCount >= 2; 
 
-            if (isProcessInstruction) {
-                insights.tips.push({
-                    text: sentence.trim(),
-                    status: 'info',
-                    isMissing: false,
-                    occurrenceIndex: currentIndex 
-                });
-                return; 
-            }
-
-            // --- V8.2 NEW: HARD RULES VS SOFT SUGGESTIONS ---
-            let category = null;
-            let isSoftSuggestion = false;
-
-            if (lowerSentence.match(/\b(must|shall|required|mandatory)\b/)) {
-                category = 'requirements'; // Strict rule
-            } else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) {
-                category = 'warnings'; // Alert
-            } else if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) {
-                category = 'deadlines'; // Timeline
-            } else if (lowerSentence.match(/\b(ensure|make sure|please|feel free|recommend|suggest|note that|reminder)\b/)) {
-                category = 'requirements';
-                isSoftSuggestion = true; // Flagged as soft info
-            }
-
-            if (category) {
-                const concepts = typeof extractKeyConcepts === 'function' ? extractKeyConcepts(sentence) : [];
-                let matchCount = 0;
-                const totalConcepts = concepts.length;
-
-                concepts.forEach(concept => {
-                    if (lowerUserText.includes(concept)) {
-                        matchCount++;
-                    } else if (CONCEPT_VALIDATORS[concept]) {
-                        const validators = CONCEPT_VALIDATORS[concept];
-                        const isValidated = validators.some(val => {
-                            if (val instanceof RegExp) return val.test(lowerUserText);
-                            return lowerUserText.includes(val);
-                        });
-                        if (isValidated) matchCount++;
-                    }
-                });
-
-                const policyPercentages = sentence.match(/\d+%/g);
-                const hasPercentageMatch = policyPercentages ? policyPercentages.every(p => lowerUserText.includes(p)) : false;
-
-                let status = 'missing'; // Defaults to Red Alert
-                if (hasPercentageMatch || matchCount >= Math.ceil(totalConcepts * 0.5)) {
-                    status = 'met'; // Found it!
-                } else {
-                    const hasPlaceholderIntent = Object.keys(PLACEHOLDER_ROLES).some(role => 
-                        lowerSentence.includes(role) && PLACEHOLDER_ROLES[role].some(p => lowerUserText.includes(p))
-                    );
-                    
-                    // IF it's just a helpful tip OR requires a placeholder...
-                    // Downgrade it from a Red Alert ('missing') to a Blue Note ('pending')
-                    if (hasPlaceholderIntent || isSoftSuggestion) {
-                        status = 'pending';
-                    }
+            // --- V9.0 TAG ROUTING ---
+            if (isContentLine) {
+                // Must be in the email
+                if (lowerSentence.match(/\b(must|shall|required|mandatory|please|ensure|make sure)\b/)) {
+                    insights.requirements.push({
+                        text: sentence.trim(),
+                        status: isMet ? 'met' : 'missing', // Will be a Red Exclamation if missing
+                        isMissing: !isMet,
+                        occurrenceIndex: currentIndex
+                    });
                 }
-
-                insights[category].push({
-                    text: sentence.trim(),
-                    status: status, 
-                    isMissing: status === 'missing', // Soft suggestions will be false! Won't trigger the Auto-Fix alert!
-                    occurrenceIndex: currentIndex
-                });
+            } else if (isProcessLine) {
+                // It's an internal technician step
+                if (lowerSentence.match(/\b(must|ensure|verify|check|record|change|update|assign)\b/)) {
+                    insights.process.push({
+                        text: sentence.trim(),
+                        status: isMet ? 'met' : 'process_step', // Will be a Gray Clipboard (Neutral)
+                        isMissing: false, // Prevents triggering the Auto-Fix Alert
+                        occurrenceIndex: currentIndex
+                    });
+                }
+            } else {
+                // Untagged Legacy Handling
+                if (lowerSentence.match(/\b(\d+)\s+(days|hours)\b/)) {
+                    insights.deadlines.push({ text: sentence.trim(), status: isMet ? 'met' : 'missing', isMissing: !isMet, occurrenceIndex: currentIndex });
+                } else if (lowerSentence.match(/\b(escalate|warning|critical|deny)\b/)) {
+                    insights.warnings.push({ text: sentence.trim(), status: isMet ? 'met' : 'missing', isMissing: !isMet, occurrenceIndex: currentIndex });
+                }
             }
         });
     });
 
-    // Cap output logic
     insights.requirements = insights.requirements.slice(0, 3);
-    insights.warnings = insights.warnings.slice(0, 3);
-    insights.deadlines = insights.deadlines.slice(0, 3);
-    insights.tips = insights.tips.slice(0, 2); 
+    insights.process = insights.process.slice(0, 3);
+    insights.warnings = insights.warnings.slice(0, 2);
+    insights.deadlines = insights.deadlines.slice(0, 2);
 
     return insights;
 };
@@ -8081,13 +7988,11 @@ const showInsightsSidebar = (match, forceOpen = false) => {
     const activeResponseEl = document.querySelector(`.response-item[data-id="${currentEditingId || ''}"]`) || document.querySelector('.response-item'); 
     const categoryContext = activeResponseEl ? activeResponseEl.dataset.category : activeCategory;
     
-    // CRITICAL FIX: Send only the cleaned text to the cheat sheet generator so it ignores anchors
-    const cleanFullContent = stripAIMetadata(match.content);
-    const cheatSheet = generatePolicyCheatSheet(cleanFullContent, userText, categoryContext);
+    // v9.0 Update: Send raw content (with tags) to generatePolicyCheatSheet
+    const cheatSheet = generatePolicyCheatSheet(match.content, userText, categoryContext);
     
-    const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0);
+    const hasInsights = cheatSheet && (cheatSheet.requirements.length > 0 || cheatSheet.warnings.length > 0 || cheatSheet.deadlines.length > 0 || cheatSheet.process.length > 0);
 
-    // Ensure the snippet we display is also stripped of metadata
     const cleanFocusedSnippet = match.focusedSnippet ? stripAIMetadata(match.focusedSnippet) : null;
     const isSnippetMode = !!cleanFocusedSnippet;
 
@@ -8095,19 +8000,21 @@ const showInsightsSidebar = (match, forceOpen = false) => {
 
     const renderSmartListItems = (items) => {
         return items.map(item => {
-            // Strip tags purely for the scroll matching function
             const cleanScrollText = item.text.replace(/\[PROCESS\]|\[CONTENT\]/g, '').replace(/['"]/g, '').replace(/\n/g, ' ').trim();
-            // Allow badges to render in the summary list
-            const htmlText = item.text
-                .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[9px]"></i></span>`)
-                .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[9px]"></i></span>`);
+            const htmlText = item.text;
             
             let icon = '';
             let textClass = '';
 
+            // V9.0 SYMBOL ROUTING LOGIC
             if (item.status === 'missing') {
+                // Standard Red Alert for missing Content
                 icon = '<i class="fas fa-exclamation-circle text-red-400 text-sm animate-pulse drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]"></i>';
                 textClass = 'text-white font-medium border-b border-red-500/50 pb-0.5';
+            } else if (item.status === 'process_step') {
+                // Neutral symbol for Internal Technician Steps!
+                icon = '<i class="fas fa-clipboard-list text-gray-400 text-sm"></i>';
+                textClass = 'text-gray-300 italic';
             } else if (item.status === 'pending') {
                 icon = '<i class="fas fa-keyboard text-blue-400 text-sm"></i>';
                 textClass = 'text-blue-100 italic';
@@ -8134,28 +8041,15 @@ const showInsightsSidebar = (match, forceOpen = false) => {
                 ${confidenceHTML}
             </div>`;
 
-        if (cheatSheet.tips.length > 0) {
+        // V9.0 NEW SECTION: Internal Tech Steps (Process Tags)
+        if (cheatSheet.process && cheatSheet.process.length > 0) {
             htmlContent += `
-            <div class="insight-card bg-gradient-to-br from-purple-900/30 to-indigo-900/10 border-t-2 border-t-purple-400 mb-4">
-                <div class="text-purple-300 flex justify-between mb-3 font-bold tracking-wide text-xs uppercase">
-                    <span class="flex items-center gap-2"><i class="fas fa-tasks"></i> Operational Context</span>
+            <div class="insight-card mb-3" style="border-left-color: #6b7280; background: linear-gradient(90deg, rgba(107, 114, 128, 0.1) 0%, rgba(0,0,0,0) 100%);">
+                <div class="text-gray-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                    <span><i class="fas fa-cogs mr-1"></i> Internal Tech Steps</span>
                 </div>
-                <ul class="list-none ml-1 text-slate-300 space-y-1">
-                    ${cheatSheet.tips.map(tip => {
-                        const cleanScrollText = tip.text.replace(/\[PROCESS\]|\[CONTENT\]/g, '').replace(/['"]/g, '').replace(/\n/g, ' ').trim();
-                        const htmlText = tip.text
-                            .replace(/\[PROCESS\]/g, `<span class="inline-badge badge-process"><i class="fas fa-cog text-[9px]"></i></span>`)
-                            .replace(/\[CONTENT\]/g, `<span class="inline-badge badge-content"><i class="fas fa-comment-dots text-[9px]"></i></span>`);
-                        
-                        return `
-                        <li class="py-2 px-2 cursor-pointer group flex items-start gap-3 hover:bg-purple-500/20 rounded-lg transition-all duration-200"
-                            onclick="event.stopPropagation(); scrollToSnippet('${cleanScrollText}', ${tip.occurrenceIndex || 0})">
-                            <div class="mt-0.5 min-w-[14px] text-center shrink-0">
-                                <i class="fas fa-angle-right text-purple-400 group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <span class="text-[13px] text-purple-100 group-hover:text-white leading-snug">${htmlText}</span>
-                        </li>`;
-                    }).join('')}
+                <ul class="list-none ml-1 space-y-1">
+                    ${renderSmartListItems(cheatSheet.process)}
                 </ul>
             </div>`;
         }
@@ -8164,7 +8058,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
             htmlContent += `
             <div class="insight-card insight-must mb-3">
                 <div class="text-blue-400 flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
-                    <span><i class="fas fa-clipboard-check mr-1"></i> Missing Requirements</span>
+                    <span><i class="fas fa-clipboard-check mr-1"></i> Missing Email Content</span>
                 </div>
                 <ul class="list-none ml-1 space-y-1">
                     ${renderSmartListItems(cheatSheet.requirements)}
@@ -8247,8 +8141,7 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         </div>
     `;
 
-    // Toggle Listener
-	const toggleBtn = document.getElementById('toggle-policy-btn');
+    const toggleBtn = document.getElementById('toggle-policy-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             const wrapper = document.getElementById('full-policy-wrapper');
@@ -8267,11 +8160,11 @@ const showInsightsSidebar = (match, forceOpen = false) => {
         });
     }
 
-// --- 3. Footer Actions (Magic Fix) ---
     if (footerDiv) {
         footerDiv.classList.remove('hidden');
         footerDiv.className = "p-5 border-t border-slate-700/80 bg-slate-900/95 backdrop-blur-3xl z-20 flex-shrink-0 relative";
         
+        // V9.0: Auto-Fix Alert ONLY triggers if there are missing Customer requirements or Warnings
         const missingCount = (cheatSheet.requirements.filter(i => i.isMissing).length + 
                               cheatSheet.warnings.filter(i => i.isMissing).length);
 
