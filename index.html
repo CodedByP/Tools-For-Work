@@ -4181,6 +4181,16 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                         </button>
                     </div>
 
+					<div class="p-4 px-6 flex items-center justify-between border-b border-red-900/20 hover:bg-red-900/10 transition-colors">
+					    <div>
+					        <span class="block text-sm font-bold text-blue-400">Export Knowledge Base</span>
+					        <span class="block text-xs text-gray-500 mt-0.5">Download global_knowledge for RAG engine tuning.</span>
+					    </div>
+					    <button id="export-kb-btn" class="px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg text-xs font-bold text-blue-400 hover:text-white hover:bg-blue-600 transition-all">
+					        <i class="fas fa-download mr-1"></i> RAG Export
+					    </button>
+					</div>
+
                     <div class="p-4 px-6 flex items-center justify-between hover:bg-red-900/10 transition-colors cursor-not-allowed opacity-60">
                         <div>
                             <span class="block text-sm font-bold text-red-400">Purge Local Cache</span>
@@ -11841,6 +11851,66 @@ const importData = (file) => {
     };
     reader.readAsText(file);
 };
+
+// --- KNOWLEDGE BASE EXPORT UTILITY ---
+const exportGlobalKnowledgeBase = async () => {
+    try {
+        console.log("Fetching global_knowledge collection...");
+        
+        // 1. Query the global_knowledge collection
+        const kbCollectionRef = collection(db, 'global_knowledge');
+        const snapshot = await getDocs(kbCollectionRef);
+        
+        if (snapshot.empty) {
+            console.warn("No articles found in global_knowledge.");
+            alert("The Knowledge Base is empty.");
+            return;
+        }
+
+        // 2. Map data and clean up Firestore Timestamps
+        const articles = snapshot.docs.map(doc => {
+            const data = doc.data();
+            
+            // Clean up the 'updatedAt' Firestore Timestamp into a readable ISO string
+            if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
+                data.updatedAt = data.updatedAt.toDate().toISOString();
+            }
+            
+            return {
+                id: doc.id, // Include the Document ID
+                ...data
+            };
+        });
+
+        // 3. Convert to formatted JSON
+        const jsonString = JSON.stringify(articles, null, 2);
+
+        // 4. Create a Blob and trigger the download
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `knowledge_base_export_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        
+        a.click(); // Trigger the download
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url); // Clean up memory
+        
+        console.log(`Successfully exported ${articles.length} articles.`);
+        if (typeof showMessage === 'function') {
+            showMessage(`Exported ${articles.length} articles successfully!`, 'success');
+        }
+
+    } catch (error) {
+        console.error("Error exporting Knowledge Base:", error);
+        alert("Failed to export. Check console for details.");
+    }
+};
+
+	
 		
 const placeholderRegex = /\[([^\]]+)\]/g;
 const processAndCopy = (text, responseId, categoryName) => {
@@ -12929,6 +12999,11 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+	const exportKbBtn = document.getElementById('export-kb-btn');
+if (exportKbBtn) {
+    exportKbBtn.addEventListener('click', exportGlobalKnowledgeBase);
+}
 
 // --- Guaranteed Sticky Category Bar (JS Fallback) ---
     const categoryBar = document.getElementById('category-bar');
