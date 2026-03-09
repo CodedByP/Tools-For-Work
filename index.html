@@ -11371,20 +11371,24 @@ const renderResponses = (searchQuery = '') => {
         const count = responsesToRender.length;
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full text-white">${count}</span>`;
     } else {
-        if (categories[activeCategory]) {
-			const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));
-			// --- UPDATED SORTING LOGIC ---
+		if (categories[activeCategory]) {
+            const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));            
+            let orderedResponses = [];
+            if (categories[activeCategory].customSorted) {
+                orderedResponses = allResponses; // Trust the exact saved array order
+            } else {
+                // Legacy view: Float pinned to top
+                const pinnedResponses = allResponses.filter(r => r.isPinned);
+                const unpinnedResponses = allResponses.filter(r => !r.isPinned);
+                orderedResponses = [...pinnedResponses, ...unpinnedResponses];
+            }
+
             if (isReorderingResponses) {
-                // If reordering, output exact array order without moving pinned items to the top
-                responsesToRender = allResponses;
+                responsesToRender = orderedResponses;
                 const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
                 headingText = `Reordering: ${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">Drag to rearrange</span>`;
             } else {
-                // Normal view: Float pinned to top, but DO NOT sort the rest alphabetically
-                const pinnedResponses = allResponses.filter(r => r.isPinned);
-                const unpinnedResponses = allResponses.filter(r => !r.isPinned);
-                responsesToRender = [...pinnedResponses, ...unpinnedResponses];
-                
+                responsesToRender = orderedResponses;
                 const count = responsesToRender.length;
                 const headerTextColor = document.body.classList.contains('light-mode') ? 'text-gray-600' : 'text-gray-400';
                 headingText = `${activeCategory} <span class="ml-4 text-xl font-normal ${headerTextColor}">(${count} Saved)</span>`;
@@ -13115,7 +13119,7 @@ function attachEventListeners() {
         renderResponses();
     });
 
-    saveRespOrderBtn?.addEventListener('click', () => {
+	saveRespOrderBtn?.addEventListener('click', () => {
         const grid = document.getElementById('compact-reorder-grid');
         if (grid && categories[activeCategory]) {
             const newOrderIds = Array.from(grid.children).map(el => el.dataset.id);
@@ -13129,6 +13133,7 @@ function attachEventListeners() {
             });
             
             categories[activeCategory].responses = newArray;
+            categories[activeCategory].customSorted = true; // --- NEW: Mark as custom sorted! ---
             saveToFirestore(categories);
         }
         
@@ -14268,17 +14273,30 @@ document.getElementById('category-list').addEventListener('click', (e) => {
             document.getElementById('delete-modal').dataset.category = category;
             document.getElementById('delete-modal').classList.remove('hidden');
         }
-        if (pinBtn) {
+		if (pinBtn) {
             const responseItem = pinBtn.closest('.response-item');
             const id = responseItem.dataset.id;
             const category = responseItem.dataset.category;
-            const responseData = categories[category].responses.find(r => r.id === id);
-            if (responseData) {
-                responseData.isPinned = !responseData.isPinned;
-		        if (responseData.isPinned) {
-		            logUserEvent('pin_response', { responseId: id }, firstSignIn); // <-- ADD THIS LINE
-		        }
-                saveToFirestore(categories);
+            
+            // --- FIX: Physically move the item to the top of the array when pinned ---
+            const categoryObj = categories[category];
+            if (categoryObj && categoryObj.responses) {
+                const index = categoryObj.responses.findIndex(r => r.id === id);
+                if (index > -1) {
+                    const responseData = categoryObj.responses[index];
+                    responseData.isPinned = !responseData.isPinned;
+                    
+                    if (responseData.isPinned) {
+                        if (typeof firstSignIn !== 'undefined') {
+                            logUserEvent('pin_response', { responseId: id }, firstSignIn); 
+                        }
+                        
+                        // Physically move to the front of the list
+                        categoryObj.responses.splice(index, 1);
+                        categoryObj.responses.unshift(responseData);
+                    }
+                    saveToFirestore(categories);
+                }
             }
         }
     });
