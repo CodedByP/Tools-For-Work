@@ -5189,7 +5189,8 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
             </div>
 
             <div id="magic-draft-form" class="p-6 hidden opacity-0 transition-opacity duration-300 relative z-10">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <div id="magic-input-screen" class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
                     
                     <div class="lg:col-span-7 flex flex-col gap-6">
                         <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg relative group">
@@ -5232,19 +5233,19 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                                     4. Ticket Status <span class="text-gray-500 normal-case tracking-normal font-medium">(Optional)</span>
                                 </label>
                                 <div class="relative">
-										<select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
-										    <option value="">-- No Status Change --</option>
-										    <option value="In Progress">In Progress</option>
-										    <option value="Pending Customer Action">Pending Customer Action</option>
-										    <option value="Pending 3rd Party Action">Pending 3rd Party Action</option>
-										    <option value="Pending Approval">Pending Approval</option>
-										    <option value="Pending Hardware">Pending Hardware</option>
-										    <option value="Pending Hardware Return">Pending Hardware Return</option>
-										    <option value="Pending Date of Event">Pending Date of Event</option>
-										    <option value="Pending Room Booking">Pending Room Booking</option>
-										    <option value="Pending Logistics">Pending Logistics</option>
-										    <option value="Pending Bug Resolution">Pending Bug Resolution</option>
-										</select>
+                                        <select id="magic-status-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
+                                            <option value="">-- No Status Change --</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Pending Customer Action">Pending Customer Action</option>
+                                            <option value="Pending 3rd Party Action">Pending 3rd Party Action</option>
+                                            <option value="Pending Approval">Pending Approval</option>
+                                            <option value="Pending Hardware">Pending Hardware</option>
+                                            <option value="Pending Hardware Return">Pending Hardware Return</option>
+                                            <option value="Pending Date of Event">Pending Date of Event</option>
+                                            <option value="Pending Room Booking">Pending Room Booking</option>
+                                            <option value="Pending Logistics">Pending Logistics</option>
+                                            <option value="Pending Bug Resolution">Pending Bug Resolution</option>
+                                        </select>
                                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
                                 </div>
                             </div>
@@ -5305,6 +5306,26 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
 
                     </div>
                 </div>
+                
+                <div id="magic-output-screen" class="hidden flex-col gap-6 w-full min-h-[450px]">
+                    <div class="bg-gray-800/40 border border-white/5 rounded-2xl p-5 shadow-lg flex-grow flex flex-col relative group">
+                        <div class="absolute inset-0 bg-purple-500/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                        <label class="block text-xs font-bold text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2 relative z-10">
+                            <i class="fas fa-robot"></i> AI Generated Draft
+                        </label>
+                        <textarea id="magic-generated-output" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-5 text-gray-200 text-[15px] leading-relaxed outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none shadow-inner flex-grow relative z-10"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 pb-2 pt-2">
+                        <button id="magic-back-edit-btn" class="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600 flex items-center gap-2">
+                            <i class="fas fa-arrow-left"></i> Back to Edit
+                        </button>
+                        <button id="magic-copy-inject-btn" class="px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center gap-2 text-sm border border-emerald-400/50">
+                            <i class="fas fa-copy"></i> Copy & Inject
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -5323,6 +5344,7 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                 </button>
             </div>
         </div>
+        
     </div>
 </div>
 
@@ -13367,7 +13389,7 @@ if (magicInput) {
     });
 }
 
-// --- 3. THE PROMPT ENGINEERING ENGINE (Few-Shot Generation) ---
+// --- 3. THE PROMPT ENGINEERING ENGINE (With Local Chrome AI Integration) ---
 const magicGoBtn = document.getElementById('magic-go-btn');
 if (magicGoBtn) {
     magicGoBtn.addEventListener('click', async () => {
@@ -13387,7 +13409,7 @@ if (magicGoBtn) {
 
         const policy = findPolicyForTicket(summaryText, category);
 
-		// --- OPTIMIZED FEW-SHOT PROMPT ---
+        // --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
         
         prompt += `### SYSTEM DIRECTIVES (STRICT COMPLIANCE REQUIRED) ###\n`;
@@ -13406,7 +13428,7 @@ if (magicGoBtn) {
             prompt += `- Professional, concise, and solution-oriented.\n\n`;
         }
 
-		// --- NEW: DYNAMIC PENDING STATUS DIRECTIVE ---
+        // --- DYNAMIC PENDING STATUS DIRECTIVE ---
         if (ticketStatus) {
             prompt += `### TICKET STATUS DIRECTIVE ###\n`;
             prompt += `You MUST explicitly state in the email that you are updating the ticket status to "${ticketStatus}".\n`;
@@ -13418,19 +13440,16 @@ if (magicGoBtn) {
             } else if (ticketStatus === 'Pending Date of Event') {
                 prompt += `You MUST also set the expectation that we will follow up or execute the request on the specifically scheduled date. If the date is more than 7 days from today, set the expectation to 5 business days.\n\n`;
             } else {
-                // All other pending statuses default to the 5 business day rule
                 prompt += `You MUST also set the expectation that we will follow up or provide an update within 5 business days.\n\n`;
             }
         }
 
-        // Few-Shot Examples (Teaches the AI what "good" looks like)
         prompt += `### EXAMPLE OF A GOOD RESPONSE ###\n`;
         prompt += `Hello [User Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n[Name]\n\n`;
 
         prompt += `### ACTUAL USER TICKET ###\n`;
         prompt += `"${summaryText}"\n\n`;
         
-        // INJECT OPERATOR INSTRUCTIONS IF PROVIDED
         if (instructionText) {
             prompt += `### OPERATOR INSTRUCTIONS ###\n`;
             prompt += `(Incorporate these instructions naturally into the draft)\n`;
@@ -13444,56 +13463,139 @@ if (magicGoBtn) {
             prompt += `Rule Details: ${policy.focusedSnippet || policy.content}\n\n`;
         }
         
-        // --- NEW: CONDITIONAL OUTPUT FORMATTING ---
         prompt += `### FINAL OUTPUT INSTRUCTION ###\n`;
         prompt += `Review your generated email draft. IF your email contains a list of items or steps, you MUST wrap the ENTIRE email inside a plain text code block (using \`\`\`text ... \`\`\`) to prevent rich-text rendering issues in our ticketing system. IF your email does NOT contain any lists, simply output the email normally as standard text without any code blocks. Do NOT output any conversational filler text outside of your draft in either case.\n`;
         prompt += `--- OUTPUT ONLY THE EMAIL BODY BELOW THIS LINE ---\n`;
 
-        // Copy & Launch logic
-        try {
-            await navigator.clipboard.writeText(prompt);
-            
-            const originalHTML = magicGoBtn.innerHTML;
-            magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Prompt Copied!</span>`;
-            magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-green-500 shadow-lg transform transition flex items-center justify-center gap-2 text-sm";
+        // --- NEW: EXECUTION & FALLBACK LOGIC ---
+        const originalHTML = magicGoBtn.innerHTML;
+        const originalClasses = magicGoBtn.className;
+        
+        // 1. Set Button to Loading State
+        magicGoBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Generating locally...</span>`;
+        magicGoBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
 
-            showMessage("AI Prompt Copied! Press Ctrl+V in Gemini.", "success", 4000);
+        let localResponse = null;
+
+        // 2. Local AI Detection & Execution
+        if (window.ai && window.ai.languageModel) {
+            try {
+                const capabilities = await window.ai.languageModel.capabilities();
+                if (capabilities.available !== "no") {
+                    const session = await window.ai.languageModel.create();
+                    localResponse = await session.prompt(prompt);
+                    if (session.destroy) session.destroy();
+                }
+            } catch (err) {
+                console.warn("Local window.ai generation failed, falling back to Gemini web.", err);
+            }
+        }
+
+        // 3. Restore original button state
+        magicGoBtn.innerHTML = originalHTML;
+        magicGoBtn.className = originalClasses;
+
+        // 4. Branch Logic: Success vs Fallback
+        if (localResponse) {
+            // SUCCESS: Switch to Local Output View
+            document.getElementById('magic-input-screen').classList.add('hidden');
+            document.getElementById('magic-output-screen').classList.remove('hidden');
+            magicGoBtn.closest('.bg-gray-900\\/90').classList.add('hidden'); // Hide original footer
             
-            setTimeout(() => {
-                window.open('https://gemini.google.com/app', '_blank');
-                document.getElementById('magic-draft-inner').classList.remove('scale-100', 'opacity-100');
-                document.getElementById('magic-draft-inner').classList.add('scale-95', 'opacity-0');
+            // Clean up the text slightly just in case the AI wraps it in markdown by mistake
+            const cleanResponse = localResponse.replace(/^```\w*\n/, '').replace(/\n```$/, '');
+            document.getElementById('magic-generated-output').value = cleanResponse.trim();
+        } else {
+            // FALLBACK: Execute exact existing logic
+            try {
+                await navigator.clipboard.writeText(prompt);
                 
-                // Clear the instruction and status fields for next time
-                document.getElementById('magic-instruction-text').value = '';
-                document.getElementById('magic-status-select').value = '';
-                
-                setTimeout(() => document.getElementById('magic-draft-modal').classList.add('hidden'), 300);
+                magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Prompt Copied!</span>`;
+                magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-green-500 shadow-lg transform transition flex items-center justify-center gap-2 text-sm";
+
+                showMessage("AI Prompt Copied! Press Ctrl+V in Gemini.", "success", 4000);
                 
                 setTimeout(() => {
-                    magicGoBtn.innerHTML = originalHTML;
-                    magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-purple-400/50 group";
-                }, 500);
-            }, 1000);
+                    window.open('https://gemini.google.com/app', '_blank');
+                    document.getElementById('magic-draft-inner').classList.remove('scale-100', 'opacity-100');
+                    document.getElementById('magic-draft-inner').classList.add('scale-95', 'opacity-0');
+                    
+                    document.getElementById('magic-instruction-text').value = '';
+                    document.getElementById('magic-status-select').value = '';
+                    
+                    setTimeout(() => document.getElementById('magic-draft-modal').classList.add('hidden'), 300);
+                    
+                    setTimeout(() => {
+                        magicGoBtn.innerHTML = originalHTML;
+                        magicGoBtn.className = originalClasses;
+                    }, 500);
+                }, 1000);
 
-        } catch (err) {
-            console.error("Clipboard failed:", err);
-            showMessage("Could not copy prompt. Please manually copy.", "error");
+            } catch (err) {
+                console.error("Clipboard failed:", err);
+                showMessage("Could not copy prompt. Please manually copy.", "error");
+            }
         }
     });
 }
 
-// Close Handlers
+// --- NEW: Local Output Screen UI Button Listeners ---
+
+// Back to Edit Button
+document.getElementById('magic-back-edit-btn')?.addEventListener('click', () => {
+    document.getElementById('magic-output-screen').classList.add('hidden');
+    document.getElementById('magic-input-screen').classList.remove('hidden');
+    document.getElementById('magic-go-btn').closest('.bg-gray-900\\/90').classList.remove('hidden');
+});
+
+// Copy & Inject Button
+document.getElementById('magic-copy-inject-btn')?.addEventListener('click', async () => {
+    const finalDraft = document.getElementById('magic-generated-output').value;
+    
+    try {
+        await navigator.clipboard.writeText(finalDraft);
+        showMessage("Generated draft copied to clipboard!", "success");
+        
+        // Reset and Close Modal
+        const inner = document.getElementById('magic-draft-inner');
+        inner.classList.remove('scale-100', 'opacity-100');
+        inner.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(() => {
+            document.getElementById('magic-draft-modal').classList.add('hidden');
+            // Reset fields
+            document.getElementById('magic-input-text').value = '';
+            document.getElementById('magic-instruction-text').value = '';
+            document.getElementById('magic-status-select').value = '';
+            document.getElementById('magic-instructions-panel').classList.add('translate-x-full');
+            
+            // Reset Views
+            document.getElementById('magic-output-screen').classList.add('hidden');
+            document.getElementById('magic-input-screen').classList.remove('hidden');
+            document.getElementById('magic-go-btn').closest('.bg-gray-900\\/90').classList.remove('hidden');
+        }, 300);
+
+    } catch (err) {
+        showMessage("Could not copy. Please manually copy the text.", "error");
+    }
+});
+
+// Update the existing close button logic to reset the views as well
 const closeMagicModal = () => {
     const inner = document.getElementById('magic-draft-inner');
     inner.classList.remove('scale-100', 'opacity-100');
     inner.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         document.getElementById('magic-draft-modal').classList.add('hidden');
-        // Clear fields on cancel
         document.getElementById('magic-instruction-text').value = '';
         document.getElementById('magic-status-select').value = '';
         document.getElementById('magic-instructions-panel').classList.add('translate-x-full');
+        
+        // Reset Views
+        document.getElementById('magic-output-screen').classList.add('hidden');
+        document.getElementById('magic-input-screen').classList.remove('hidden');
+        const footer = document.getElementById('magic-go-btn');
+        if(footer) footer.closest('.bg-gray-900\\/90').classList.remove('hidden');
     }, 300);
 };
 document.getElementById('close-magic-draft-btn')?.addEventListener('click', closeMagicModal);
