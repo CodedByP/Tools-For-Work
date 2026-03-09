@@ -3535,8 +3535,11 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                         <div id="category-list" class="flex gap-4">
                             </div>
                     </div>
-                    <button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
+					<button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
                         <i class="fas fa-plus"></i>
+                    </button>
+                    <button id="save-category-order-btn" class="hidden flex-shrink-0 ml-2 bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-500 transition duration-300">
+                        <i class="fas fa-save mr-2"></i> Save Order
                     </button>
                 </div>
             </div>
@@ -3561,20 +3564,21 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
                             />
                         </div>
                         
-						<div id="add-response-section" class="floating-card p-4 flex-shrink-0 z-10 hidden">
-						    <div class="flex items-center gap-2 h-full">
-						        <button id="open-add-response-modal-btn" class="w-full md:w-auto h-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 whitespace-nowrap flex items-center justify-center">
-						            <i class="fas fa-plus mr-2"></i> Add Response
-						        </button>
-						        <button id="reorder-responses-btn" class="h-full bg-gray-800 text-white font-bold py-3 px-4 rounded-xl border border-gray-600 hover:bg-gray-700 shadow-lg transition duration-300 flex items-center justify-center" title="Reorder Responses">
-						            <i class="fas fa-th"></i>
-						        </button>
-						        <button id="save-responses-order-btn" class="hidden h-full bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-500 transition duration-300 whitespace-nowrap flex items-center justify-center">
+						<div id="add-response-section" class="floating-card p-4 z-10 hidden w-full md:w-auto transition-all duration-300">
+						    <div class="flex items-center justify-between gap-2 h-full w-full">
+						        <div class="flex items-center gap-2 h-full">
+                                    <button id="open-add-response-modal-btn" class="w-full md:w-auto h-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 whitespace-nowrap flex items-center justify-center">
+                                        <i class="fas fa-plus mr-2"></i> Add Response
+                                    </button>
+                                    <button id="reorder-responses-btn" class="h-full bg-gray-800 text-white font-bold py-3 px-4 rounded-xl border border-gray-600 hover:bg-gray-700 shadow-lg transition duration-300 flex items-center justify-center" title="Reorder Responses">
+                                        <i class="fas fa-list-ol"></i>
+                                    </button>
+                                </div>
+						        <button id="save-responses-order-btn" class="hidden ml-auto h-full bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-green-500 transition duration-300 whitespace-nowrap flex items-center justify-center">
 						            <i class="fas fa-save mr-2"></i> Save Order
 						        </button>
 						    </div>
 						</div>
-					</div>
 
                     <div class="flex flex-col lg:flex-row gap-6 items-start relative">
 
@@ -11414,12 +11418,14 @@ const renderResponses = (searchQuery = '') => {
             groupSection.className = 'mb-8 animate-fade-in'; 
 
 			if (isReorderingResponses) {
-                groupSection.innerHTML = `<div id="compact-reorder-grid" class="compact-grid pb-12"></div>`;
-                const gridContainer = groupSection.querySelector('.compact-grid');
+                // Changed from 'compact-grid' to a vertical flex column
+                groupSection.innerHTML = `<div id="compact-reorder-grid" class="flex flex-col gap-3 pb-12 max-w-4xl mx-auto"></div>`;
+                const gridContainer = groupSection.querySelector('#compact-reorder-grid');
                 
-                groups[groupTitle].forEach(response => {
+                groups[groupTitle].forEach((response, index) => {
                     const cardEl = document.createElement('div');
-                    cardEl.className = 'compact-response-card';
+                    // Added w-full so it spans across like a list item
+                    cardEl.className = 'compact-response-card w-full';
                     cardEl.dataset.id = response.id;
                     cardEl.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden w-full">
@@ -13033,56 +13039,76 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
-
-	// --- FEATURE 1: Reorder Categories ---
+	
+// --- FEATURE 1: Reorder Categories (Multiple Moves) ---
     document.getElementById('reorder-categories-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
         document.getElementById('category-actions-menu').classList.add('hidden');
         document.getElementById('category-actions-btn').classList.remove('active');
         
-        if (sortableCategoryInstance) {
-            sortableCategoryInstance.destroy();
-            sortableCategoryInstance = null;
-            list.classList.remove('reorder-mode-active');
-        } else {
-            list.classList.add('reorder-mode-active');
-            showMessage("Drag categories horizontally to reorder", "success");
-            
+        // UI Toggle
+        document.getElementById('add-category-btn').classList.add('hidden');
+        document.getElementById('save-category-order-btn').classList.remove('hidden');
+        list.classList.add('reorder-mode-active');
+        
+        showMessage("Drag categories horizontally. Click Save when done.", "success");
+        
+        if (!sortableCategoryInstance) {
             sortableCategoryInstance = new Sortable(list, {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
-                onEnd: function () {
-                    const itemEls = list.querySelectorAll('.category-item');
-                    itemEls.forEach((el, index) => {
-                        const catName = el.dataset.category;
-                        if (categories[catName]) {
-                            categories[catName].order = index; // Save new index
-                        }
-                    });
-                    saveToFirestore(categories);
-                    
-                    sortableCategoryInstance.destroy();
-                    sortableCategoryInstance = null;
-                    list.classList.remove('reorder-mode-active');
-                    
-                    showMessage("Category order saved!", "success");
-                    renderCategories();
-                }
+                // Removed onEnd auto-save so user can make multiple moves
             });
         }
     });
 
-    // --- FEATURE 2: Reorder Responses ---
+    // NEW: Save Category Order Button
+    document.getElementById('save-category-order-btn')?.addEventListener('click', () => {
+        const list = document.getElementById('category-list');
+        const itemEls = list.querySelectorAll('.category-item');
+        
+        itemEls.forEach((el, index) => {
+            const catName = el.dataset.category;
+            if (categories[catName]) {
+                categories[catName].order = index; // Save new index
+            }
+        });
+        saveToFirestore(categories);
+        
+        if (sortableCategoryInstance) {
+            sortableCategoryInstance.destroy();
+            sortableCategoryInstance = null;
+        }
+        list.classList.remove('reorder-mode-active');
+        
+        // UI Revert
+        document.getElementById('add-category-btn').classList.remove('hidden');
+        document.getElementById('save-category-order-btn').classList.add('hidden');
+        
+        showMessage("Category order saved!", "success");
+        renderCategories();
+    });
+
+
+    // --- FEATURE 2: Reorder Responses (Layout Fixes) ---
     const reorderRespBtn = document.getElementById('reorder-responses-btn');
     const saveRespOrderBtn = document.getElementById('save-responses-order-btn');
     const addRespBtn = document.getElementById('open-add-response-modal-btn');
+    const addRespSection = document.getElementById('add-response-section');
     
     reorderRespBtn?.addEventListener('click', () => {
         isReorderingResponses = true;
+        
+        // Hide normal buttons, show save button
         reorderRespBtn.classList.add('hidden');
         addRespBtn.classList.add('hidden');
         saveRespOrderBtn.classList.remove('hidden');
-        document.getElementById('search-bar-container').classList.add('hidden'); // Hide search while sorting
+        
+        // Hide Search Bar & stretch container to push Save to the right
+        document.getElementById('search-bar-container').classList.add('hidden'); 
+        addRespSection.classList.remove('md:w-auto');
+        addRespSection.classList.add('w-full');
+        
         renderResponses();
     });
 
@@ -13108,7 +13134,11 @@ function attachEventListeners() {
         saveRespOrderBtn.classList.add('hidden');
         reorderRespBtn.classList.remove('hidden');
         addRespBtn.classList.remove('hidden');
+        
+        // Show Search Bar & shrink container
         document.getElementById('search-bar-container').classList.remove('hidden');
+        addRespSection.classList.remove('w-full');
+        addRespSection.classList.add('md:w-auto');
         
         if (sortableResponseInstance) {
             sortableResponseInstance.destroy();
