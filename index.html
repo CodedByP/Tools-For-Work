@@ -3371,6 +3371,35 @@ body.light-mode #cancel-button:hover { background-color: #e5e7eb !important; }
     }
 
     /* ==========================================================================
+       === Premium Placeholders ===
+       ========================================================================== */
+    .premium-placeholder {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #f3f4f6;
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.375rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85em;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 3px rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        margin: 0 0.1rem;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    body.light-mode .premium-placeholder {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.02));
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        color: #1f2937;
+        text-shadow: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ==========================================================================
        === Media Queries ===
        ========================================================================== */
     @media (max-width: 640px) {
@@ -11361,7 +11390,7 @@ const renderChallenges = async (events) => {
 };
 		
 const renderResponses = (searchQuery = '') => {
-	if (!isDataLoaded) return;
+    if (!isDataLoaded) return;
     const responsesList = document.getElementById('responses-list');
     const emptyState = document.getElementById('empty-state');
     const responsesHeading = document.getElementById('responses-heading');
@@ -11372,20 +11401,33 @@ const renderResponses = (searchQuery = '') => {
     let headingText = '';
     const query = searchQuery.toLowerCase().trim();
 
-    // --- 1. FILTER & SEARCH LOGIC ---
+    // --- 1. OPTIMIZED FILTER & SEARCH LOGIC ---
     if (query) {
         let allResponses = [];
         for (const categoryName in categories) {
-            allResponses = allResponses.concat(categories[categoryName].responses.map(r => ({...r, category: categoryName})));
+            const catResponses = categories[categoryName].responses;
+            // Optimized array flattening (avoids memory-heavy concat)
+            for (let i = 0; i < catResponses.length; i++) {
+                allResponses.push({...catResponses[i], category: categoryName});
+            }
         }
 
         responsesToRender = allResponses.filter(r => {
             const label = (r.label || '').toLowerCase();
             const text = (r.text || '').toLowerCase();
+            
+            // Fast text match
             if (label.includes(query) || text.includes(query)) return true;
+            
+            // Slower fuzzy match ONLY if the query is long enough
             if (query.length > 3) {
                 const labelWords = label.split(' ');
-                if (labelWords.some(word => getLevenshteinDistance(word, query) <= 2)) return true;
+                for (let i = 0; i < labelWords.length; i++) {
+                    const word = labelWords[i];
+                    // Bound check: Skip Levenshtein entirely if length difference makes a distance <= 2 impossible
+                    if (Math.abs(word.length - query.length) > 2) continue;
+                    if (getLevenshteinDistance(word, query) <= 2) return true;
+                }
             }
             return false;
         });
@@ -11393,7 +11435,7 @@ const renderResponses = (searchQuery = '') => {
         const count = responsesToRender.length;
         headingText = `Search Results <span class="ml-3 inline-block bg-gray-600 text-gray-200 text-sm font-bold px-3 py-1 rounded-full text-white">${count}</span>`;
     } else {
-		if (categories[activeCategory]) {
+        if (categories[activeCategory]) {
             const allResponses = categories[activeCategory].responses.map(r => ({...r, category: activeCategory}));            
             let orderedResponses = [];
             if (categories[activeCategory].customSorted) {
@@ -11442,11 +11484,15 @@ const renderResponses = (searchQuery = '') => {
             groups = { 'All': responsesToRender };
         }
 
+        // === CREATE THE DOCUMENT FRAGMENT ===
+        // This holds everything in memory until the loop finishes, preventing layout lag.
+        const renderFragment = document.createDocumentFragment();
+
         for (const groupTitle in groups) {
             const groupSection = document.createElement('div');
             groupSection.className = 'mb-8 animate-fade-in'; 
 
-			if (isReorderingResponses) {
+            if (isReorderingResponses) {
                 // Changed from 'compact-grid' to a vertical flex column
                 groupSection.innerHTML = `<div id="compact-reorder-grid" class="flex flex-col gap-3 pb-12 max-w-4xl mx-auto"></div>`;
                 const gridContainer = groupSection.querySelector('#compact-reorder-grid');
@@ -11466,7 +11512,8 @@ const renderResponses = (searchQuery = '') => {
                     gridContainer.appendChild(cardEl);
                 });
 
-                responsesList.appendChild(groupSection);
+                // APPEND TO FRAGMENT INSTEAD OF DOM
+                renderFragment.appendChild(groupSection);
 
                 // Initialize Sortable on the grid
                 if (sortableResponseInstance) sortableResponseInstance.destroy();
@@ -11511,11 +11558,18 @@ const renderResponses = (searchQuery = '') => {
                 // Colors & Styling
                 let displayText = response.text;
                 let displayLabel = response.label || 'Unlabeled';
+                
+                // 1. Highlight search query first
                 if (query) {
-                    const regex = new RegExp(`(${query})`, 'gi');
-                    displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
-                    displayLabel = displayLabel.replace(regex, `<span class="highlight">$1</span>`);
+                    // Escape special characters to prevent regex failures
+                    const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const searchRegex = new RegExp(`(${safeQuery})`, 'gi');
+                    displayText = displayText.replace(searchRegex, `<span class="highlight">$1</span>`);
+                    displayLabel = displayLabel.replace(searchRegex, `<span class="highlight">$1</span>`);
                 }
+
+                // 2. Style Premium Placeholders (Applies the glowing pill look)
+                displayText = displayText.replace(/(\[[^\]<>]+\])/g, '<span class="premium-placeholder">$1</span>');
 
                 let categoryColor = categories[response.category]?.color || '#4DABF7';
                 let cardBg, titleColor, bodyTextColor, footerBg, metaTextColor, iconColor;
@@ -11675,8 +11729,13 @@ const renderResponses = (searchQuery = '') => {
                 listContainer.appendChild(itemWrapper);
             });
 
-            responsesList.appendChild(groupSection);
+            // APPEND TO FRAGMENT INSTEAD OF DOM
+            renderFragment.appendChild(groupSection);
         }
+
+        // === DOM APPEND ONCE ===
+        responsesList.appendChild(renderFragment);
+
     } else {
         emptyState.classList.remove('hidden');
     }
@@ -14441,13 +14500,14 @@ document.getElementById('category-list').addEventListener('click', (e) => {
     });
     document.getElementById('delete-cancel-btn').addEventListener('click', () => { document.getElementById('delete-modal').classList.add('hidden'); responseToDeleteId = null; });
 // PERFORMANCE UPGRADE: Search Bar Debounce
+// PERFORMANCE UPGRADE: Search Bar Debounce
     let searchTimeout;
     document.getElementById('search-input').addEventListener('input', (e) => {
-        clearTimeout(searchTimeout); // Cancel the previous timer if they are still typing
+        clearTimeout(searchTimeout); 
         searchTimeout = setTimeout(() => {
-            renderResponses(e.target.value); // Redraw the screen ONLY after they pause typing for 150ms
-        }, 150); 
-    });    
+            renderResponses(e.target.value); 
+        }, 300); // Increased to 300ms to allow smooth rapid typing
+    });   
 	document.getElementById('add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.remove('hidden'); document.getElementById('add-category-input').focus(); });
     document.getElementById('cancel-add-category-btn').addEventListener('click', () => { document.getElementById('add-category-modal').classList.add('hidden'); document.getElementById('add-category-input').value = ''; });
     document.getElementById('confirm-add-category-btn').addEventListener('click', async () => {
