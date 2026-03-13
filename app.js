@@ -2,7 +2,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, query, deleteDoc, updateDoc, setLogLevel, getDocs, serverTimestamp, orderBy, limit, writeBatch, increment, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
+
         // --- Firebase Initialization and Auth ---
         const firebaseConfig = {
           apiKey: "AIzaSyCCsU4YY_Rwqo-F9KJjeOOSD4NpUGLNq8s",
@@ -20,6 +21,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app); 
         setLogLevel('debug');
 
 		const ADMIN_EMAIL = "pabarca@google.com"; // REPLACE THIS with your email
@@ -80,7 +82,8 @@ let lastProcessedClipboard = "";
 let isDataLoaded = false; // NEW: The Vault Door Lock		
 let isReorderingResponses = false;
 let sortableCategoryInstance = null;
-let sortableResponseInstance = null;		
+let sortableResponseInstance = null;	
+	
 
 
 const initSmartClipboard = () => {
@@ -8070,18 +8073,18 @@ if (magicGoBtn) {
 
         let localResponse = null;
 
-        // 2. Local AI Detection & Execution
-        if (window.ai && window.ai.languageModel) {
-            try {
-                const capabilities = await window.ai.languageModel.capabilities();
-                if (capabilities.available !== "no") {
-                    const session = await window.ai.languageModel.create();
-                    localResponse = await session.prompt(prompt);
-                    if (session.destroy) session.destroy();
-                }
-            } catch (err) {
-                console.warn("Local window.ai generation failed, falling back to Gemini web.", err);
-            }
+        // 2. Secure Cloud Function Execution
+        try {
+            // This securely calls the backend script we just deployed!
+            const generateMagicDraft = httpsCallable(functions, 'generateMagicDraft');
+            
+            // Send the prompt to the cloud and wait for the AI text to come back
+            const result = await generateMagicDraft({ prompt: prompt });
+            
+            localResponse = result.data.text;
+            
+        } catch (err) {
+            console.error("Cloud Function failed, falling back to web clipboard.", err);
         }
 
         // 3. Restore original button state
