@@ -8013,7 +8013,7 @@ if (magicGoBtn) {
         prompt += `2. **No Jargon:** Never use terms like "Assigned - Additional", "Hostnames", "P0/P1", or "Ticket SLA".\n`;
         prompt += `3. **Formatting:** Use short paragraphs. NEVER use markdown bolding (**text**). If you need to make a list or outline steps, NEVER use standard markdown bullet points ('*' or '•')—you MUST use a simple dash ('-') with a space instead.\n`;
         prompt += `4. **Data Extraction & Placeholders:** You MUST extract specific data (Location, Asset Tag, Hostname, Device Model, etc.) from the 'ACTUAL USER TICKET' and use it in the email body. ONLY use bracketed placeholders like [Customer Name] or [Date] if the specific information is completely missing from the ticket context.\n`;
-        prompt += `5. **Sign-off:** End the email ONLY with "Best regards,\\n\\n[Name]". Do not add "IT Support" or any other titles below the name placeholder.\n\n`;
+        prompt += `5. **Sign-off:** End the email ONLY with "Best regards,\n\n${userName}". Do not add "IT Support" or any other titles below the name.\n\n`;
 
         prompt += `### TONE: ${tone.toUpperCase()} ###\n`;
         if (tone === 'Firm') {
@@ -8041,7 +8041,7 @@ if (magicGoBtn) {
         }
 
         prompt += `### EXAMPLE OF A GOOD RESPONSE ###\n`;
-        prompt += `Hello [User Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n[Name]\n\n`;
+        prompt += `Hello [Customer Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n${userName}\n\n`;
 
         prompt += `### ACTUAL USER TICKET ###\n`;
         prompt += `"${summaryText}"\n\n`;
