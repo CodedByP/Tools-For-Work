@@ -27,62 +27,64 @@
 		const ADMIN_EMAIL = "pabarca@google.com"; // REPLACE THIS with your email
         
         // --- Global State Variables ---
-let clipboardToastTimeout = null;
-let editingArticleId = null; 
-let currentPolicyId = null;		
-let currentPolicyTimestamp = 0;		
-let globalKnowledgeCache = []; // Stores the "Brain" locally
-let currentAdminUser = null;	
-let categories = {};
-let activeCategory = '';
-let userId = null;
-let isAnonymous = true;
-let responseToDeleteId = null;
-let categoryToEdit = null;
-let currentPage = 'canned-responses';
-let userName = '';
-let currentTextToCopy = '';
-let currentEditingId = null;
-let openCategoryMenu = null;
-let editingLinkDocId = null;
-let openMenuId = null;
-let defaultLinks = [];
-let cannedResponsesUnsubscribe = null;
-let helpfulLinksUnsubscribe = null;
-let userLinks = [];
-let renderedStaticLinks = false;
-let isSubmittingLink = false;
-let isTutorialActive = false;	
-let currentResponseToCopyId = null; 
-let currentResponseToCopyCategory = null; 
-let statsChart = null; 	
-let shownAchievements = new Set();	
-let categoryChartInstance = null;
-let activityChartInstance = null;
-let firstSignIn = null; 		
-let audioUnlocked = false;
-let userLevelData = { level: 0, xp: 0 };
-let masterBlueprintVersion = 1;
-let lastCopyTimestamps = {};
-let activeAchievementFilter = 'all';		
-let profileChartInstance = null;	
-let messageTimeout = null;
-let trackedChallengeId = null;
-let notificationQueue = [];
-let isNotificationActive = false;
-let expandedChartInstance = null; // <--- ADD THIS LINE HERE
-let expandedChartEvents = [];     // <--- AND THIS ONE
-let cachedStatsEvents = null; // Tell the app this hasn't been loaded yet
-let cachedStatsUserData = null;
-let hasLoadedStats = false; // Prevents re-running the heavy logic
-let currentLeaderboardView = 'all';
-let sessionStartTime = null;
-let isSilencingUpdates = false; // New flag to stop flickering
-let lastProcessedClipboard = "";		
-let isDataLoaded = false; // NEW: The Vault Door Lock		
-let isReorderingResponses = false;
-let sortableCategoryInstance = null;
-let sortableResponseInstance = null;	
+        let workshopResponsesCache = [];
+        let workshopUnsubscribe = null;
+        let clipboardToastTimeout = null;
+        let editingArticleId = null; 
+        let currentPolicyId = null;		
+        let currentPolicyTimestamp = 0;		
+        let globalKnowledgeCache = []; // Stores the "Brain" locally
+        let currentAdminUser = null;	
+        let categories = {};
+        let activeCategory = '';
+        let userId = null;
+        let isAnonymous = true;
+        let responseToDeleteId = null;
+        let categoryToEdit = null;
+        let currentPage = 'canned-responses';
+        let userName = '';
+        let currentTextToCopy = '';
+        let currentEditingId = null;
+        let openCategoryMenu = null;
+        let editingLinkDocId = null;
+        let openMenuId = null;
+        let defaultLinks = [];
+        let cannedResponsesUnsubscribe = null;
+        let helpfulLinksUnsubscribe = null;
+        let userLinks = [];
+        let renderedStaticLinks = false;
+        let isSubmittingLink = false;
+        let isTutorialActive = false;	
+        let currentResponseToCopyId = null; 
+        let currentResponseToCopyCategory = null; 
+        let statsChart = null; 	
+        let shownAchievements = new Set();	
+        let categoryChartInstance = null;
+        let activityChartInstance = null;
+        let firstSignIn = null; 		
+        let audioUnlocked = false;
+        let userLevelData = { level: 0, xp: 0 };
+        let masterBlueprintVersion = 1;
+        let lastCopyTimestamps = {};
+        let activeAchievementFilter = 'all';		
+        let profileChartInstance = null;	
+        let messageTimeout = null;
+        let trackedChallengeId = null;
+        let notificationQueue = [];
+        let isNotificationActive = false;
+        let expandedChartInstance = null; // <--- ADD THIS LINE HERE
+        let expandedChartEvents = [];     // <--- AND THIS ONE
+        let cachedStatsEvents = null; // Tell the app this hasn't been loaded yet
+        let cachedStatsUserData = null;
+        let hasLoadedStats = false; // Prevents re-running the heavy logic
+        let currentLeaderboardView = 'all';
+        let sessionStartTime = null;
+        let isSilencingUpdates = false; // New flag to stop flickering
+        let lastProcessedClipboard = "";		
+        let isDataLoaded = false; // NEW: The Vault Door Lock		
+        let isReorderingResponses = false;
+        let sortableCategoryInstance = null;
+        let sortableResponseInstance = null;	
 	
 
 
@@ -3669,7 +3671,6 @@ const findFavoriteCategory = (categoryCounts) => {
     return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
 };
 		
-// REPLACE your old backfillUserStats function with this new one
 const backfillUserStats = async (uid) => {
     console.log(`Checking if full stats backfill is needed for user ${uid}...`);
     try {
@@ -3726,6 +3727,7 @@ const backfillUserStats = async (uid) => {
         if (events.some(e => e.type === 'import_data')) unlockedAchievementIds.add('the_data_hoarder');
         if (events.some(e => e.type === 'add_link')) unlockedAchievementIds.add('the_personalizer');
         if (events.some(e => e.type === 'globetrotter_milestone')) unlockedAchievementIds.add('the_globetrotter');
+        if (events.some(e => e.type === 'publish_to_workshop')) unlockedAchievementIds.add('community_voice');
 
         const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
         if (visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links')) {
@@ -3794,6 +3796,8 @@ const renderProfileAchievements = (unlockedAchievements) => {
         { id: 'clean_slate', name: 'The Clean Slate', icon: "fa-broom", color: "text-amber-600" },
         { id: 'the_purist', name: 'The Purist', icon: "fa-file-alt", color: "text-slate-300" },
         { id: 'the_improviser', name: 'The Improviser', icon: "fa-cogs", color: "text-cyan-500" },
+        { id: 'community_voice', name: 'The Community Voice', icon: "fa-bullhorn", color: "text-indigo-400" },
+        { id: 'crowd_favorite', name: 'Crowd Favorite', icon: "fa-heart", color: "text-pink-400" },
         { id: 'grand_master', name: 'The Grand Master', icon: "fa-trophy", color: "text-yellow-400" }
     ];
 
@@ -5083,7 +5087,7 @@ const getTier = (count, tiers) => {
 
 // REPLACE your old `calculateAllAchievements` function with this one.
 
-const calculateAllAchievements = (events, userData) => {
+const calculateAllAchievements = (events, userData, workshopItems = []) => {
     const userAchievements = userData.achievementsData || {};
     const firstSignIn = userData.firstSignIn ? userData.firstSignIn.toDate() : null;
     const darkModeUsage = userData.darkModeUsage || { streak: 0 };
@@ -5133,6 +5137,10 @@ const calculateAllAchievements = (events, userData) => {
     const hasStreakBreaker = maxStreak >= 90;
     const deletedInLast5Mins = events.filter(e => e.type === 'delete_response_single' && e.timestamp?.toDate() > new Date(Date.now() - 5 * 60 * 1000)).length;
     const hasCleanSlate = deletedInLast5Mins >= 5;
+
+    // --- NEW WORKSHOP CHECKS ---
+    const hasPublished = events.some(e => e.type === 'publish_to_workshop');
+    const has3Upvotes = workshopItems.some(item => (item.upvotes || 0) >= 3);
 
     const dailyProgress = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= new Date(new Date().toISOString().split('T')[0])).length;
     const startOfWeek = new Date();
@@ -5187,8 +5195,10 @@ const calculateAllAchievements = (events, userData) => {
         { id: 'clean_slate', name: "The Clean Slate", desc: "Delete at least 5 responses in a single session.", icon: "fa-broom", color: "text-amber-600", unlocked: hasCleanSlate || !!userAchievements.clean_slate },
         { id: 'the_purist', name: "The Purist", desc: "Copy a response that has no placeholders.", icon: "fa-file-alt", color: "text-slate-300", unlocked: events.some(e => e.type === 'copy_purist') || !!userAchievements.the_purist },
         { id: 'the_improviser', name: "The Improviser", desc: "Add a placeholder to a response that didn't have one.", icon: "fa-cogs", color: "text-cyan-500", unlocked: events.some(e => e.type === 'add_placeholder') || !!userAchievements.the_improviser },
-    ];
-    
+        { id: 'community_voice', name: "The Community Voice", desc: "Publish a canned response to the Workshop.", icon: "fa-bullhorn", color: "text-indigo-400", unlocked: hasPublished || !!userAchievements.community_voice },
+        { id: 'crowd_favorite', name: "Crowd Favorite", desc: "Receive 3 upvotes on a Workshop submission.", icon: "fa-heart", color: "text-pink-400", unlocked: has3Upvotes || !!userAchievements.crowd_favorite },
+    ];    
+
     // Check for Grand Master separately
     const allOtherAchievementsUnlocked = allAchievements.every(ach => ach.unlocked);
     allAchievements.push({ id: 'grand_master', name: "The Grand Master", desc: "Unlock all other achievements.", icon: "fa-trophy", color: "text-yellow-400", unlocked: allOtherAchievementsUnlocked || !!userAchievements.grand_master });
@@ -5215,8 +5225,13 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
     const snapshot = await getDocs(query(eventsCollectionRef));
     const events = snapshot.docs.map(doc => doc.data());
 
-    // Call the new helper function to get the current state of all achievements
-    const achievements = calculateAllAchievements(events, userData);
+    // --- NEW: Fetch the user's Workshop items to check for upvotes ---
+    const workshopQuery = query(collection(db, 'artifacts', safeAppId, 'workshop_responses'), where('authorId', '==', userId));
+    const workshopSnap = await getDocs(workshopQuery);
+    const workshopItems = workshopSnap.docs.map(doc => doc.data());
+
+    // Call the helper function with the new workshop data
+    const achievements = calculateAllAchievements(events, userData, workshopItems);
 
     // --- Special Bonus XP Checks ---
     const challengeChampion = achievements.find(a => a.id === 'challenge_champion');
@@ -5570,9 +5585,11 @@ const renderContent = () => {
     const importExportBtnSettings = document.getElementById('import-export-btn-settings');
     const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
 	const slaDashboardApp = document.getElementById('sla-dashboard-app'); 
+    const workshopBtn = document.getElementById('open-workshop-btn'); 
 
     categoryActionsBtn.classList.add('hidden');
     categoryActionsMenu.classList.add('hidden');
+    if (workshopBtn) workshopBtn.classList.add('hidden'); 
 
 	if (cannedResponsesApp && currentPage !== 'canned-responses') cannedResponsesApp.classList.add('hidden');
     if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
@@ -5585,6 +5602,7 @@ const renderContent = () => {
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
         categoryBar.classList.remove('hidden');
+        if (workshopBtn) workshopBtn.classList.remove('hidden'); 
         mainTitle.textContent = 'Canned Responses';
         renderCategories();
 		updateSmartSuggestions();
@@ -5650,6 +5668,126 @@ const renderContent = () => {
 	updateNavHighlight(currentPage);
 };
 
+const renderWorkshopFeed = (searchQuery = '') => {
+    const feedContainer = document.getElementById('workshop-feed');
+    const emptyState = document.getElementById('workshop-empty-state');
+    if (!feedContainer) return;
+
+    feedContainer.innerHTML = '';
+    
+    // Filter by search (with safety fallbacks)
+    const filtered = workshopResponsesCache.filter(res => {
+        const q = searchQuery.toLowerCase();
+        return (res.label || '').toLowerCase().includes(q) || 
+               (res.text || '').toLowerCase().includes(q) ||
+               (res.authorName || '').toLowerCase().includes(q);
+    });
+
+    if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        feedContainer.classList.add('hidden');
+        return;
+    } else {
+        emptyState.classList.add('hidden');
+        feedContainer.classList.remove('hidden');
+    }
+
+    filtered.forEach(res => {
+        let daysLeft = 21;
+        if (res.createdAt && typeof res.createdAt.toMillis === 'function') {
+            const createdTime = res.createdAt.toMillis();
+            const daysPassed = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
+            daysLeft = Math.max(0, 21 - daysPassed);
+        }
+
+        const isOwnerOrAdmin = (userId === res.authorId) || (currentAdminUser && currentAdminUser.email === "pabarca@google.com");
+
+        let rawText = res.text || ''; 
+        let displayText = rawText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        displayText = displayText.replace(/(\[[^\]<>]+\])/g, '<span class="premium-placeholder">$1</span>');
+
+        const catColor = categories[res.category]?.color || '#6366f1';
+        
+        // --- NEW: Dynamic Light Mode Classes ---
+        const isLightMode = document.body.classList.contains('light-mode');
+        
+        const cardClass = isLightMode 
+            ? "bg-white border-y border-r border-gray-200 border-l-[4px] rounded-xl p-5 flex flex-col relative hover:bg-gray-50 transition-colors shadow-lg group" 
+            : "bg-gray-900/60 border-y border-r border-white/5 border-l-[4px] rounded-xl p-5 flex flex-col relative hover:bg-gray-800/80 transition-colors shadow-xl group";
+        const titleClass = isLightMode 
+            ? "text-gray-900 font-bold text-sm mb-2 group-hover:text-indigo-600 transition-colors" 
+            : "text-white font-bold text-sm mb-2 group-hover:text-indigo-300 transition-colors";
+        const innerBoxClass = isLightMode 
+            ? "bg-gray-100/80 rounded-lg p-3 border border-gray-200 mb-4 flex-grow shadow-inner" 
+            : "bg-black/30 rounded-lg p-3 border border-white/5 mb-4 flex-grow shadow-inner";
+        const textClass = isLightMode 
+            ? "text-xs text-gray-700 line-clamp-4 font-mono leading-relaxed whitespace-pre-wrap" 
+            : "text-xs text-gray-400 line-clamp-4 font-mono leading-relaxed whitespace-pre-wrap";
+        const agentBadgeClass = isLightMode 
+            ? "flex items-center gap-1.5 text-[11px] font-bold text-cyan-700 bg-cyan-100 px-2 py-1 rounded border border-cyan-300" 
+            : "flex items-center gap-1.5 text-[11px] font-bold text-cyan-400 bg-cyan-900/20 px-2 py-1 rounded border border-cyan-500/20";
+        const voteContainerClass = isLightMode 
+            ? "flex items-center bg-gray-100 rounded-lg border border-gray-300 overflow-hidden shadow-inner" 
+            : "flex items-center bg-gray-900/80 rounded-lg border border-white/10 overflow-hidden shadow-inner";
+        const upvoteClass = isLightMode 
+            ? "px-2.5 py-1.5 transition text-xs flex items-center gap-1 text-gray-500 hover:text-green-600 hover:bg-gray-200" 
+            : "px-2.5 py-1.5 transition text-xs flex items-center gap-1 text-gray-400 hover:text-green-400 hover:bg-white/5";
+        const downvoteClass = isLightMode 
+            ? "px-2.5 py-1.5 transition text-xs text-gray-500 hover:text-red-600 hover:bg-gray-200" 
+            : "px-2.5 py-1.5 transition text-xs text-gray-400 hover:text-red-400 hover:bg-white/5";
+        const dividerClass = isLightMode 
+            ? "w-px h-4 bg-gray-300" 
+            : "w-px h-4 bg-gray-700";
+        const deleteBtnClass = isLightMode
+            ? "workshop-delete-btn text-gray-400 hover:text-red-500 transition ml-2"
+            : "workshop-delete-btn text-gray-500 hover:text-red-500 transition ml-2";
+
+        const card = document.createElement('div');
+        card.className = cardClass;
+        card.style.borderLeftColor = catColor;
+        
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+                <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded shadow-sm" style="background-color: ${catColor}; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
+                    ${res.category || 'General'}
+                </span>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[10px] text-gray-500 font-mono flex items-center gap-1"><i class="fas fa-hourglass-half"></i> ${daysLeft}d left</span>
+                    ${isOwnerOrAdmin ? `<button class="${deleteBtnClass}" data-id="${res.id}" title="Delete Submission"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+            </div>
+            
+            <h4 class="${titleClass}">${res.label || 'Untitled'}</h4>
+            <div class="${innerBoxClass}">
+                <p class="${textClass}">${displayText}</p>
+            </div>
+            
+            <div class="mt-auto flex justify-between items-center">
+                <div class="${agentBadgeClass}">
+                    <i class="fas fa-user-astronaut"></i> ${res.authorName || 'Agent'}
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="${voteContainerClass}">
+                        <button class="workshop-upvote-btn ${upvoteClass}" data-id="${res.id}">
+                            <i class="fas fa-arrow-up"></i> <span class="font-mono">${res.upvotes || 0}</span>
+                        </button>
+                        <div class="${dividerClass}"></div>
+                        <button class="workshop-downvote-btn ${downvoteClass}" data-id="${res.id}">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </div>
+                    
+                    <button class="workshop-clone-btn bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition shadow-md flex items-center gap-1.5" data-id="${res.id}">
+                        <i class="fas fa-download"></i> Save
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        feedContainer.appendChild(card);
+    });
+}
 
 
 const renderLeaderboard = async (view = 'all') => {
@@ -6188,6 +6326,9 @@ const renderResponses = (searchQuery = '') => {
                         <div class="flex items-center gap-4">
                             <span class="usage-count-display text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
                             <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
+                                <button class="publish-btn ${iconColor} hover:text-indigo-400 hover:bg-indigo-500/10 p-2 rounded-lg transition-colors" title="Publish to Workshop">
+                                    <i class="fas fa-share-square"></i>
+                                </button>
                                 <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
                                     <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
                                 </button>
@@ -7866,6 +8007,243 @@ if (exportKbBtn) {
     }
 	
 // --- 2. MODAL LOGIC & ANIMATIONS ---
+
+// --- THE WORKSHOP: Open & Close Logic ---
+const workshopBtn = document.getElementById('open-workshop-btn');
+if (workshopBtn) {
+    workshopBtn.addEventListener('click', () => {
+        const modal = document.getElementById('workshop-modal');
+        const inner = document.getElementById('workshop-inner');
+        
+        // Show Modal Container instantly
+        modal.classList.remove('hidden');
+        
+        // Trigger the smooth pop-in animation
+        setTimeout(() => {
+            inner.classList.remove('scale-95', 'opacity-0');
+            inner.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        
+        // Tell it to draw the cards!
+        renderWorkshopFeed();
+
+        // --- NEW: Clear the Notification Badge ---
+        const badge = document.getElementById('workshop-badge');
+        if (badge && !badge.classList.contains('hidden')) {
+            badge.classList.add('hidden');
+            const now = Date.now();
+            
+            // Update local memory so it doesn't pop back up instantly
+            if (cachedStatsUserData) {
+                cachedStatsUserData.lastVisitedWorkshop = now;
+            }
+            
+            // Save the new timestamp to Firebase
+            setDoc(getUserRootDocRef(userId), { lastVisitedWorkshop: now }, { merge: true });
+        }
+    });
+}
+
+// Add the Search Bar Listener right here too!
+document.getElementById('workshop-search-input')?.addEventListener('input', (e) => {
+    renderWorkshopFeed(e.target.value);
+});
+
+// --- THE WORKSHOP: Feed Actions (Upvote, Downvote, Clone, Delete) ---
+document.getElementById('workshop-feed')?.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.workshop-delete-btn');
+    const upvoteBtn = e.target.closest('.workshop-upvote-btn');
+    const downvoteBtn = e.target.closest('.workshop-downvote-btn');
+    const cloneBtn = e.target.closest('.workshop-clone-btn');
+
+    // 1. DELETE ACTION - Opens Custom Modal
+    if (deleteBtn) {
+        const id = deleteBtn.dataset.id;
+        const modal = document.getElementById('workshop-delete-confirm-modal');
+        document.getElementById('confirm-workshop-delete-btn').dataset.id = id;
+        modal.classList.remove('hidden');
+        return;
+    }
+
+    // 2. UPVOTE / DOWNVOTE ACTION
+    if (upvoteBtn || downvoteBtn) {
+        const btn = upvoteBtn || downvoteBtn;
+        const id = btn.dataset.id;
+        const isUpvote = !!upvoteBtn;
+        
+        try {
+            const docRef = doc(db, 'artifacts', safeAppId, 'workshop_responses', id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const voters = data.voters || {};
+                
+                // Prevent double voting in the same direction
+                if (voters[userId] === (isUpvote ? 1 : -1)) {
+                    showMessage("You already voted this way!", "error");
+                    return;
+                }
+                
+                let upChange = 0;
+                let downChange = 0;
+                
+                // Logic to swap votes if they change their mind
+                if (voters[userId] === 1 && !isUpvote) { upChange = -1; downChange = 1; }
+                else if (voters[userId] === -1 && isUpvote) { downChange = -1; upChange = 1; }
+                else if (isUpvote) { upChange = 1; }
+                else { downChange = 1; }
+                
+                voters[userId] = isUpvote ? 1 : -1;
+                
+                await updateDoc(docRef, {
+                    upvotes: increment(upChange),
+                    downvotes: increment(downChange),
+                    voters: voters
+                });
+            }
+        } catch (err) {
+            console.error("Error voting:", err);
+            showMessage("Error registering vote.", "error");
+        }
+        return;
+    }
+
+    // 3. CLONE (SAVE) ACTION - Opens the selection modal
+    if (cloneBtn) {
+        const id = cloneBtn.dataset.id;
+        const responseToClone = workshopResponsesCache.find(r => r.id === id);
+        
+        if (responseToClone) {
+            const modal = document.getElementById('clone-category-modal');
+            const select = document.getElementById('clone-category-select');
+            select.innerHTML = '';
+            
+            // Populate the dropdown with their existing categories
+            Object.keys(categories).forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                if (cat === responseToClone.category) option.selected = true;
+                select.appendChild(option);
+            });
+            
+            // If the author's original category doesn't exist in this user's vault, offer to create it
+            if (!categories[responseToClone.category]) {
+                const option = document.createElement('option');
+                option.value = 'CREATE_NEW';
+                option.textContent = `+ Create new category: "${responseToClone.category}"`;
+                option.selected = true; // Auto-select it
+                select.appendChild(option);
+            }
+
+            // Attach the ID to the confirm button
+            document.getElementById('confirm-clone-btn').dataset.id = id;
+            document.getElementById('confirm-clone-btn').dataset.originalCat = responseToClone.category;
+            
+            modal.classList.remove('hidden');
+        }
+        return;
+    }
+});
+
+// --- Clone Modal Handlers ---
+document.getElementById('cancel-clone-btn')?.addEventListener('click', () => {
+    document.getElementById('clone-category-modal').classList.add('hidden');
+});
+
+document.getElementById('confirm-clone-btn')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    const id = btn.dataset.id;
+    const originalCat = btn.dataset.originalCat;
+    let selectedCategory = document.getElementById('clone-category-select').value;
+    
+    const responseToClone = workshopResponsesCache.find(r => r.id === id);
+    
+    if (responseToClone) {
+        // If they chose to create the author's missing category
+        if (selectedCategory === 'CREATE_NEW') {
+            selectedCategory = originalCat;
+            categories[selectedCategory] = { color: '#60a5fa', responses: [] };
+        }
+        
+        const newId = Date.now().toString();
+        categories[selectedCategory].responses.push({
+            id: newId,
+            text: responseToClone.text,
+            label: responseToClone.label + " (Cloned)",
+            isPinned: false,
+            createdAt: new Date().toISOString()
+        });
+        
+        saveToFirestore(categories);
+        showMessage("Response saved to your vault!", "success");
+        logUserEvent('clone_workshop_response');
+        await awardXP(50, 'Cloned a Response');
+        
+        document.getElementById('clone-category-modal').classList.add('hidden');
+    }
+});
+
+// --- Workshop Custom Delete Modal Handlers ---
+document.getElementById('cancel-workshop-delete-btn')?.addEventListener('click', () => {
+    document.getElementById('workshop-delete-confirm-modal').classList.add('hidden');
+});
+
+document.getElementById('confirm-workshop-delete-btn')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    const id = btn.dataset.id;
+    
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>Deleting...</span>';
+    btn.disabled = true;
+
+    try {
+        await deleteDoc(doc(db, 'artifacts', safeAppId, 'workshop_responses', id));
+        showMessage("Submission deleted.", "success");
+        document.getElementById('workshop-delete-confirm-modal').classList.add('hidden');
+    } catch (err) {
+        console.error("Error deleting:", err);
+        showMessage("Error deleting submission.", "error");
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+});
+
+// --- Workshop Info Toggle Handlers ---
+document.getElementById('workshop-info-btn')?.addEventListener('click', () => {
+    document.getElementById('workshop-instructions-panel').classList.remove('translate-x-full');
+});
+document.getElementById('close-workshop-info-btn')?.addEventListener('click', () => {
+    document.getElementById('workshop-instructions-panel').classList.add('translate-x-full');
+});
+
+
+const closeWorkshopModal = () => {
+    const modal = document.getElementById('workshop-modal');
+    const inner = document.getElementById('workshop-inner');
+    
+    // Trigger the smooth shrink-out animation
+    inner.classList.remove('scale-100', 'opacity-100');
+    inner.classList.add('scale-95', 'opacity-0');
+    
+    // Wait for animation to finish before hiding completely
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+};
+
+document.getElementById('close-workshop-btn')?.addEventListener('click', closeWorkshopModal);
+
+// Close on background click
+document.body.addEventListener('click', (e) => {
+    const workshopModal = document.getElementById('workshop-modal');
+    if (e.target === workshopModal) {
+        closeWorkshopModal();
+    }
+});
+
 let magicTypingTimer;
 
 // Open Logic with Ghost Loading Transition
@@ -8880,11 +9258,25 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
         icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
-		updateDarkModeStreak();
-		if (currentPage === 'my-stats') {
+        updateDarkModeStreak();
+        
+        if (currentPage === 'my-stats') {
             renderAdvancedStats();
         }
+        
+        // Re-render Canned Responses to apply light mode card colors
+        if (currentPage === 'canned-responses') {
+            renderResponses(document.getElementById('search-input').value);
+        }
+        
+        // Re-render Workshop feed if the modal happens to be open
+        const workshopModal = document.getElementById('workshop-modal');
+        if (workshopModal && !workshopModal.classList.contains('hidden')) {
+            const searchInput = document.getElementById('workshop-search-input');
+            renderWorkshopFeed(searchInput ? searchInput.value : '');
+        }
     });
+
 document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
         if (button) {
@@ -8933,6 +9325,7 @@ document.getElementById('category-list').addEventListener('click', (e) => {
         const editBtn = e.target.closest('.edit-btn');
         const deleteBtn = e.target.closest('.delete-btn');
         const pinBtn = e.target.closest('.pin-btn');
+        const publishBtn = e.target.closest('.publish-btn'); 
         if (copyBtn) {
             const responseItem = copyBtn.closest('.response-item');
             const textToCopy = responseItem.querySelector('.response-text-display').textContent;
@@ -8941,6 +9334,25 @@ document.getElementById('category-list').addEventListener('click', (e) => {
 		    processAndCopy(textToCopy, responseId, categoryName);
 		
 		}
+    if (publishBtn) {
+            const responseItem = publishBtn.closest('.response-item');
+            const id = responseItem.dataset.id;
+            const category = responseItem.dataset.category;
+            const responseData = categories[category].responses.find(r => r.id === id);
+
+            if (responseData) {
+                // Update the text in the modal to show the name of what they are publishing
+                document.getElementById('publish-response-name').textContent = `"${responseData.label || 'this response'}"`;
+                
+                // Secretly attach the ID and Category to the Confirm button so it knows WHAT to publish later
+                const confirmBtn = document.getElementById('confirm-publish-btn');
+                confirmBtn.dataset.id = responseData.id;
+                confirmBtn.dataset.category = category;
+                
+                // Show our custom modal
+                document.getElementById('publish-confirm-modal').classList.remove('hidden');
+            }
+        }
         if (editBtn) {
             const responseItem = editBtn.closest('.response-item');
             const id = responseItem.dataset.id;
@@ -9020,6 +9432,68 @@ document.getElementById('category-list').addEventListener('click', (e) => {
         const category = document.getElementById('new-response-category').value;
         if (text.trim() !== '') { addResponse(text, label, category); document.getElementById('new-response-modal').classList.add('hidden');logUserEvent('create_response'); awardXP(XP_VALUES.CREATE_RESPONSE); } else { showMessage("Response text cannot be empty.", 'error'); }
     });
+
+    // Cancel Workshop Publish
+    document.getElementById('cancel-publish-btn').addEventListener('click', () => {
+        document.getElementById('publish-confirm-modal').classList.add('hidden');
+    });
+
+    // Confirm Workshop Publish
+    document.getElementById('confirm-publish-btn').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        const id = btn.dataset.id;
+        const category = btn.dataset.category;
+        const responseData = categories[category].responses.find(r => r.id === id);
+        
+        if (responseData) {
+            // 1. Move these OUTSIDE the try block so the catch block can see them!
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>Publishing...</span>';
+            btn.disabled = true;
+
+            try {
+                // 2. Upload to Firebase
+                const workshopRef = collection(db, 'artifacts', safeAppId, 'workshop_responses');
+                
+                // Calculate exact expiration date (21 days from this exact millisecond)
+                const expireDate = new Date();
+                expireDate.setDate(expireDate.getDate() + 21);
+
+                await addDoc(workshopRef, {
+                    originalId: responseData.id,
+                    authorName: userName,
+                    authorId: userId,
+                    text: responseData.text,
+                    label: responseData.label || 'Untitled',
+                    category: category,
+                    upvotes: 0,
+                    downvotes: 0,
+                    voters: {}, 
+                    createdAt: serverTimestamp(),
+                    expireAt: expireDate // <-- THIS IS THE NEW MAGIC FIELD!
+                });
+                
+                // 3. Success Feedback
+                showMessage("Published to The Workshop!", "success");
+                logUserEvent('publish_to_workshop');
+                await awardXP(100, 'Workshop Contribution');
+                
+                // 4. Reset and Close Modal
+                document.getElementById('publish-confirm-modal').classList.add('hidden');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                
+            } catch (error) {
+                console.error("Error publishing to workshop:", error);
+                showMessage("Failed to publish. Check connection.", "error");
+                
+                // Now this will successfully reset the button if an error happens!
+                btn.innerHTML = originalHtml; 
+                btn.disabled = false;
+            }
+        }
+    });
+
     document.getElementById('cancel-edit-btn').addEventListener('click', () => { document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null; });
     document.getElementById('save-edit-btn').addEventListener('click', () => {
         const id = document.getElementById('edit-response-modal').dataset.originalId;
@@ -9483,6 +9957,56 @@ onAuthStateChanged(auth, async (user) => {
                 showTutorialStep(0);
             }
 			await checkForUpdatesOnLoad();
+
+            // START THE WORKSHOP LISTENER
+            const workshopRef = collection(db, 'artifacts', safeAppId, 'workshop_responses');
+            
+            workshopUnsubscribe = onSnapshot(query(workshopRef, orderBy('createdAt', 'desc')), (snapshot) => {
+                const now = Date.now();
+                const twentyOneDaysAgo = now - (21 * 24 * 60 * 60 * 1000);
+                
+                workshopResponsesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(res => {
+                        // Keep items that don't have a timestamp yet (pending writes)
+                        if (!res.createdAt || typeof res.createdAt.toMillis !== 'function') return true;
+                        return res.createdAt.toMillis() > twentyOneDaysAgo;
+                    });
+                
+                // --- NEW: Calculate the Red Notification Badge ---
+                if (cachedStatsUserData) {
+                    const lastVisited = cachedStatsUserData.lastVisitedWorkshop || 0;
+                    let newCount = 0;
+                    
+                    workshopResponsesCache.forEach(res => {
+                        // Count if it's newer than their last visit, and they aren't the author
+                        if (res.authorId !== userId && res.createdAt && res.createdAt.toMillis() > lastVisited) {
+                            newCount++;
+                        }
+                    });
+                    
+                    const badge = document.getElementById('workshop-badge');
+                    if (badge) {
+                        if (newCount > 0) {
+                            badge.textContent = newCount > 99 ? '99+' : newCount;
+                            badge.classList.remove('hidden');
+                            badge.classList.add('animate-pulse'); // Add a little attention-grabber
+                            setTimeout(() => badge.classList.remove('animate-pulse'), 3000);
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                }
+
+                const workshopModal = document.getElementById('workshop-modal');
+                if (workshopModal && !workshopModal.classList.contains('hidden')) {
+                    const searchInput = document.getElementById('workshop-search-input');
+                    renderWorkshopFeed(searchInput ? searchInput.value : '');
+                }
+            }, (error) => {
+                console.error("🔥 Workshop Listener Error:", error);
+                showMessage("Failed to sync community feed.", "error");
+            });
+
             const userCannedResponsesDocRef = getUserCannedResponsesDocRef(userId);
             cannedResponsesUnsubscribe = onSnapshot(userCannedResponsesDocRef, async (doc) => {
 				if (isSilencingUpdates) {
