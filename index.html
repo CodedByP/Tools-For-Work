@@ -124,11 +124,18 @@
 		
 <header class="w-full mb-6 relative z-[70]">
             <div class="flex items-center justify-between relative">
-                <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300 relative z-1000" aria-label="Open Menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-4">
+                    <button id="hamburger-menu-btn" class="p-2 rounded-full hover:bg-gray-700 transition duration-300 relative z-1000" aria-label="Open Menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    
+                    <button id="open-workshop-btn" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 px-4 py-2 rounded-xl transition-all font-bold flex items-center gap-2 relative shadow-lg">
+                        <i class="fas fa-store"></i> <span class="hidden sm:inline-block">The Workshop</span>
+                        <span id="workshop-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md hidden">0</span>
+                    </button>
+                </div>
                 <div class="flex items-center space-x-4">
                     <h1 id="main-title" class="text-3xl sm:text-5xl font-extrabold text-gray-100 transition-colors duration-300">Canned Responses</h1>
                     <div id="category-menu-container" class="relative">
@@ -1511,6 +1518,55 @@
             </div>
         </div>
     </div>
+
+    <div id="publish-confirm-modal" class="modal hidden z-[5000] fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content w-full max-w-md bg-[#0b0f19]/95 backdrop-blur-2xl border border-indigo-500/30 shadow-[0_0_50px_rgba(99,102,241,0.2)] rounded-2xl p-8 relative overflow-hidden transform transition-all">
+            
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex items-center gap-4 mb-6 relative z-10">
+                <div class="bg-indigo-500/20 p-3 rounded-xl text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.3)] flex-shrink-0">
+                    <i class="fas fa-globe-americas text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-white tracking-tight">Publish to Workshop</h3>
+                    <p class="text-[10px] text-indigo-400 font-mono uppercase tracking-widest mt-1">Community Library</p>
+                </div>
+            </div>
+            
+            <div class="relative z-10 mb-6">
+                <p class="text-gray-300 text-sm leading-relaxed mb-5">
+                    Share <span id="publish-response-name" class="font-bold text-indigo-300 bg-indigo-900/30 px-2 py-0.5 rounded border border-indigo-500/20 break-words">this response</span> with the rest of the support team?
+                </p>
+                
+                <div class="bg-gray-900/60 border border-white/5 rounded-xl p-4 flex flex-col gap-4 shadow-inner">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-users text-blue-400 mt-1"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-200">Global Visibility</span>
+                            <span class="text-xs text-gray-500 mt-0.5">Every agent will be able to view, vote on, and clone this response.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 border-t border-white/5 pt-4">
+                        <i class="fas fa-clock text-amber-400 mt-1"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-200">21-Day Lifecycle</span>
+                            <span class="text-xs text-gray-500 mt-0.5">Automatically expires and deletes to keep the community library fresh and policy-compliant.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 relative z-10 pt-4 mt-2">
+                <button id="cancel-publish-btn" class="px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
+                    Cancel
+                </button>
+                <button id="confirm-publish-btn" class="px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-[0_0_20px_rgba(99,102,241,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-indigo-400/50">
+                    <i class="fas fa-paper-plane text-indigo-200"></i> <span>Publish Now</span>
+                </button>
+            </div>
+        </div>
+    </div>
 		
     <div id="login-popup-modal" class="modal hidden">
         <div class="login-popup flex flex-col space-y-3">
@@ -1558,6 +1614,179 @@
             </div>
         </div>
     </div>
+    <div id="workshop-modal" class="modal hidden z-[4000] fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+    <div class="modal-content w-full max-w-7xl h-[90vh] bg-[#0f172a]/85 backdrop-blur-2xl border border-white/10 rounded-2xl p-0 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden flex flex-col relative transform transition-all scale-95 opacity-0 duration-300" id="workshop-inner">
+        
+    <div class="bg-gradient-to-r from-gray-900/80 via-indigo-900/30 to-gray-900/80 p-6 border-b border-white/10 flex justify-between items-center relative z-20 flex-shrink-0">
+            <div>
+                <h3 class="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                    <div class="bg-indigo-600/20 p-2.5 rounded-xl border border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    The Workshop
+                </h3>
+                <p class="text-gray-400 text-xs font-mono tracking-widest uppercase mt-2 ml-1">Community Response Library</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="workshop-info-btn" class="text-indigo-400 hover:text-white bg-indigo-500/10 hover:bg-indigo-500/20 p-3 rounded-xl transition-all border border-indigo-500/20 hover:border-indigo-500/40 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i> <span class="text-xs font-bold uppercase tracking-widest hidden sm:inline-block">What is this?</span>
+                </button>
+                <button id="close-workshop-btn" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all border border-transparent hover:border-white/10">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="workshop-instructions-panel" class="absolute top-[96px] bottom-0 right-0 w-full sm:w-[350px] bg-gray-900/95 backdrop-blur-xl border-l border-white/10 z-30 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            
+            <div class="p-5 border-b border-white/5 flex justify-between items-center bg-gray-800/50 flex-shrink-0">
+                <h4 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><i class="fas fa-book-open text-indigo-400"></i> How it works</h4>
+                <button id="close-workshop-info-btn" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-5 flex-1 min-h-0 overflow-y-auto overscroll-none custom-scrollbar space-y-6 pb-10">
+                
+                <div class="bg-indigo-500/10 border border-indigo-500/30 p-4 rounded-xl text-indigo-200">
+                    <h5 class="font-bold text-indigo-400 flex items-center gap-2 mb-2">
+                        <i class="fas fa-globe-americas"></i> The Community Vault
+                    </h5>
+                    <p class="text-xs leading-relaxed text-indigo-100/80">
+                        A shared space where techs can publish their best, most effective canned responses for the rest of the team to use.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-700 pb-2">How to Participate</h5>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="bg-gray-800 p-2 rounded-lg border border-gray-600 text-gray-400 flex-shrink-0 mt-0.5 shadow-inner">
+                            <i class="fas fa-share-square"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-200 text-sm">1. Publish a Response</p>
+                            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Go to your main Canned Responses page and click the <strong>Share icon</strong> on any card you want to upload to the Workshop.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="bg-gray-800 p-2 rounded-lg border border-gray-600 text-green-400 flex-shrink-0 mt-0.5 shadow-inner">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-200 text-sm">2. Save to Your Vault</p>
+                            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Find a great response here? Click <strong>Save</strong> to instantly copy it into your own personal library.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="flex items-center bg-gray-800 rounded-lg border border-gray-600 overflow-hidden flex-shrink-0 mt-0.5 shadow-inner">
+                            <div class="px-2 py-1.5 text-green-400 hover:bg-white/5 transition-colors"><i class="fas fa-arrow-up text-[10px]"></i></div>
+                            <div class="w-px h-4 bg-gray-600"></div>
+                            <div class="px-2 py-1.5 text-red-400 hover:bg-white/5 transition-colors"><i class="fas fa-arrow-down text-[10px]"></i></div>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-200 text-sm">3. Vote on Quality</p>
+                            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Upvote the best responses to help them rise to the top of the feed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-amber-200">
+                    <h5 class="font-bold text-amber-400 flex items-center gap-2 mb-1 text-xs uppercase tracking-widest">
+                        <i class="fas fa-clock"></i> 21-Day Lifecycle
+                    </h5>
+                    <p class="text-[11px] leading-relaxed text-amber-200/80">
+                        To keep the library fresh and ensure policies remain accurate, all submissions are automatically deleted 21 days after being published.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="p-4 border-b border-white/5 bg-gray-900/40 flex flex-col sm:flex-row gap-4 items-center flex-shrink-0 z-20">
+            <div class="relative w-full sm:w-1/2">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-500"></i>
+                </div>
+                <input type="text" id="workshop-search-input" class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm outline-none focus:border-indigo-500 shadow-inner transition-all" placeholder="Search community responses...">
+            </div>
+            <div class="flex items-center gap-2 text-[10px] font-mono text-gray-400 uppercase tracking-widest sm:ml-auto bg-gray-800/50 px-3 py-1.5 rounded-lg border border-white/5">
+                <i class="fas fa-clock text-indigo-400"></i> Auto-deletes after 21 days
+            </div>
+        </div>
+
+        <div class="relative flex-grow overflow-y-auto custom-scrollbar bg-transparent p-6">
+            <div id="workshop-feed" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            
+            <div id="workshop-empty-state" class="hidden flex flex-col items-center justify-center h-64 text-gray-500">
+                <i class="fas fa-box-open text-4xl mb-4 opacity-50"></i>
+                <p class="text-sm uppercase tracking-widest font-bold">The Workshop is empty</p>
+                <p class="text-xs mt-2">Be the first to share a response with the team!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="clone-category-modal" class="modal hidden z-[5000] fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content w-full max-w-md bg-[#0b0f19]/95 backdrop-blur-2xl border border-green-500/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] rounded-2xl p-8 relative overflow-hidden transform transition-all">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center gap-4 mb-6 relative z-10">
+            <div class="bg-green-500/20 p-3 rounded-xl text-green-400 border border-green-500/30 flex-shrink-0">
+                <i class="fas fa-download text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-white tracking-tight">Save to Vault</h3>
+                <p class="text-[10px] text-green-400 font-mono uppercase tracking-widest mt-1">Select Destination</p>
+            </div>
+        </div>
+        
+        <div class="relative z-10 mb-6">
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Choose a Category:</label>
+            <div class="relative">
+                <select id="clone-category-select" class="w-full bg-[#111827] border border-gray-700 rounded-xl p-3.5 text-gray-300 text-sm outline-none focus:border-green-500 transition appearance-none cursor-pointer shadow-inner">
+                    </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 relative z-10">
+            <button id="cancel-clone-btn" class="px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
+                Cancel
+            </button>
+            <button id="confirm-clone-btn" class="px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-500 hover:to-teal-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-green-400/50">
+                <i class="fas fa-check"></i> <span>Save Response</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="workshop-delete-confirm-modal" class="modal hidden z-[5000] fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content w-full max-w-md bg-[#0b0f19]/95 backdrop-blur-2xl border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.2)] rounded-2xl p-8 relative overflow-hidden transform transition-all">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-red-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex items-center gap-4 mb-6 relative z-10">
+            <div class="bg-red-500/20 p-3 rounded-xl text-red-400 border border-red-500/30 flex-shrink-0">
+                <i class="fas fa-trash-alt text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-white tracking-tight">Delete Submission</h3>
+                <p class="text-[10px] text-red-400 font-mono uppercase tracking-widest mt-1">Permanent Action</p>
+            </div>
+        </div>
+        <p class="text-gray-300 text-sm leading-relaxed mb-6 relative z-10">
+            Are you sure you want to permanently delete this response from the Community Workshop?
+        </p>
+        <div class="flex justify-end gap-3 relative z-10">
+            <button id="cancel-workshop-delete-btn" class="px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
+                Cancel
+            </button>
+            <button id="confirm-workshop-delete-btn" class="px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 shadow-[0_0_20px_rgba(239,68,68,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-red-400/50">
+                <i class="fas fa-trash"></i> <span>Yes, Delete</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 	<div id="tutorial-spotlight"></div>
 	    <div id="modern-tooltip" class="hidden flex-col">
@@ -1816,13 +2045,13 @@
                 <p><strong>4. Ticket Status:</strong> If you are changing the ticket to "Pending", select the status here. The AI will automatically inform the user of the correct timeline.</p>
                 <p><strong>5. Tone:</strong> Choose how the email should sound.</p>
                 
-                <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-amber-200 mt-4">
-                    <h5 class="font-bold text-amber-400 flex items-center gap-2 mb-2">
+                <div class="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl text-emerald-200 mt-4">
+                    <h5 class="font-bold text-emerald-400 flex items-center gap-2 mb-2">
                         <i class="fas fa-bolt"></i> What happens next?
                     </h5>
                     <p class="text-xs leading-relaxed">
-                        Clicking <strong>"Generate Draft"</strong> automatically copies a highly-optimized prompt to your clipboard and routes you to Gemini.<br><br>
-                        Once Gemini opens, you <strong>MUST click the chat box and Paste (Ctrl+V or Cmd+V)</strong> to send the prompt to the AI!
+                        Clicking <strong>"Generate Draft"</strong> will securely send your request to our backend AI.<br><br>
+                        The Neural Drafter will analyze the policy and write the perfect email for you <strong>directly inside this window</strong> within seconds!
                     </p>
                 </div>
             </div>
@@ -2099,12 +2328,16 @@
             };
             mainTitle.textContent = titles[savedPage];
         }
-		const categoryBar = document.getElementById('category-bar');
+        const categoryBar = document.getElementById('category-bar');
+        const workshopBtn = document.getElementById('open-workshop-btn'); 
+
         if (categoryBar) {
             if (savedPage === 'canned-responses') {
                 categoryBar.classList.remove('hidden');
+                if (workshopBtn) workshopBtn.classList.remove('hidden'); 
             } else {
                 categoryBar.classList.add('hidden');
+                if (workshopBtn) workshopBtn.classList.add('hidden'); 
             }
         }
     });

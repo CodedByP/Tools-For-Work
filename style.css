@@ -14,6 +14,180 @@
         font-family: 'Poppins', sans-serif;
     }
 
+
+        /* ==========================================================================
+        === MAGIC DRAFT LIGHT MODE OVERRIDES ===     
+        ========================================================================== */
+
+        /* Main Container Backgrounds */
+        .light-mode #magic-draft-inner,
+        .light-mode #magic-instructions-panel {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Structural Panels & Footers */
+        .light-mode #magic-draft-inner > div.bg-gradient-to-r,
+        .light-mode #magic-draft-inner > div.bg-gray-900\/90,
+        .light-mode #magic-instructions-panel > div.bg-gray-800\/50,
+        .light-mode #magic-policy-scanning,
+        .light-mode #magic-policy-status {
+            background: rgba(243, 244, 246, 0.9) !important; /* Tailwind gray-100 */
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Inner Box Wrappers (Behind Textareas) */
+        .light-mode #magic-draft-inner .bg-gray-800\/40 {
+            background-color: #ffffff !important;
+            border-color: #e5e7eb !important;
+        }
+
+        /* Text Colors */
+        .light-mode #magic-draft-inner h3,
+        .light-mode #magic-instructions-panel h4,
+        .light-mode #magic-draft-inner label,
+        .light-mode #magic-draft-inner .tone-text,
+        .light-mode #magic-policy-name {
+            color: #111827 !important; /* Dark gray for headers/labels */
+        }
+
+        .light-mode #magic-draft-inner p,
+        .light-mode #magic-instructions-panel p,
+        .light-mode #magic-policy-snippet {
+            color: #4b5563 !important; /* Medium gray for body text */
+        }
+
+        /* Textareas and Select Dropdowns */
+        .light-mode #magic-draft-inner textarea,
+        .light-mode #magic-draft-inner select {
+            background-color: #f9fafb !important; /* Tailwind gray-50 */
+            border-color: #d1d5db !important; /* Tailwind gray-300 */
+            color: #111827 !important;
+        }
+        .light-mode #magic-draft-inner textarea::placeholder {
+            color: #9ca3af !important;
+        }
+
+        /* Tone Selector Cards */
+        .light-mode .tone-card {
+            background-color: #f9fafb !important;
+            border-color: #d1d5db !important;
+        }
+        .light-mode .tone-card:hover {
+            background-color: #f3f4f6 !important;
+        }
+        .light-mode .tone-selector-input:checked + .tone-card {
+            background-color: #eff6ff !important; /* Tailwind blue-50 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+        }
+        .light-mode .tone-selector-input:checked + .tone-card .tone-text,
+        .light-mode .tone-selector-input:checked + .tone-card .tone-icon {
+            color: #2563eb !important; /* Tailwind blue-600 */
+        }
+
+        /* AI Policy Snippet Inner Box */
+        .light-mode #magic-policy-status .bg-\[\#0b0f19\]\/60 {
+            background-color: #ffffff !important;
+            border-color: #e5e7eb !important;
+        }
+
+        /* Secondary Buttons (Cancel, Info, Close) */
+        .light-mode #magic-cancel-btn,
+        .light-mode #magic-back-edit-btn,
+        .light-mode #close-magic-draft-btn,
+        .light-mode #magic-info-btn,
+        .light-mode #close-magic-info-btn {
+            background-color: #f3f4f6 !important;
+            color: #4b5563 !important;
+            border-color: #d1d5db !important;
+        }
+        .light-mode #magic-cancel-btn:hover,
+        .light-mode #magic-back-edit-btn:hover,
+        .light-mode #close-magic-draft-btn:hover,
+        .light-mode #magic-info-btn:hover,
+        .light-mode #close-magic-info-btn:hover {
+            background-color: #e5e7eb !important;
+            color: #111827 !important;
+        }
+
+        /* Fix Ghost Loading Skeleton in Light Mode */
+        .light-mode #magic-draft-skeleton .bg-gray-800\/40 {
+            background-color: #ffffff !important;
+            border-color: #e5e7eb !important;
+        }
+        .light-mode #magic-draft-skeleton .bg-\[\#111827\],
+        .light-mode #magic-draft-skeleton .bg-gray-700 {
+            background-color: #f3f4f6 !important;
+            border-color: #e5e7eb !important;
+        }
+
+        /* ==========================================================================
+        === WORKSHOP LIGHT MODE OVERRIDES ===     
+         ========================================================================== */
+
+        .light-mode #workshop-inner,
+        .light-mode #workshop-instructions-panel,
+        .light-mode #clone-category-modal .modal-content,
+        .light-mode #workshop-delete-confirm-modal .modal-content {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Text Colors */
+        .light-mode #workshop-inner h3,
+        .light-mode #workshop-instructions-panel h4,
+        .light-mode #clone-category-modal h3,
+        .light-mode #workshop-delete-confirm-modal h3 {
+            color: #111827 !important; /* dark gray */
+        }
+
+        .light-mode #workshop-inner p,
+        .light-mode #workshop-instructions-panel p,
+        .light-mode #clone-category-modal p,
+        .light-mode #workshop-delete-confirm-modal p {
+            color: #4b5563 !important; /* medium gray */
+        }
+
+        /* Search Bar & Dropdown */
+        .light-mode #workshop-search-input {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+            color: #111827 !important;
+        }
+        .light-mode #workshop-search-input::placeholder {
+            color: #6b7280 !important;
+        }
+        .light-mode #clone-category-select {
+            background-color: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+            color: #111827 !important;
+        }
+
+        /* Toolbars & Info Panel Elements */
+        .light-mode #workshop-inner > div.bg-gradient-to-r,
+        .light-mode #workshop-inner > div.bg-gray-900\/40,
+        .light-mode #workshop-instructions-panel > div.bg-gray-800\/50 {
+            background: rgba(243, 244, 246, 0.8) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+        .light-mode #workshop-empty-state {
+            color: #6b7280 !important;
+        }
+        .light-mode #workshop-instructions-panel .bg-indigo-500\/10 {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            border-color: rgba(99, 102, 241, 0.3) !important;
+            color: #4338ca !important; 
+        }
+        .light-mode #workshop-instructions-panel .bg-amber-500\/10 {
+            background-color: rgba(245, 158, 11, 0.1) !important;
+            border-color: rgba(245, 158, 11, 0.3) !important;
+            color: #b45309 !important; 
+        }
+        .light-mode #workshop-instructions-panel .bg-gray-800 {
+            background-color: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+        }
+
     /* ==========================================================================
        === Animations & Keyframes ===
        ========================================================================== */
@@ -842,6 +1016,66 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.9) !important;
         border-radius: 0.75rem !important;
         overflow: hidden;
+    }
+
+    /* 1. The Main Sidebar Background */
+    .light-mode #sidebar {
+        background-color: #ffffff !important;
+        border-right-color: #e5e7eb !important; /* Tailwind gray-200 */
+    }
+
+    .light-mode #sidebar h2 {
+        color: #111827 !important; /* Tailwind gray-900 */
+    }
+
+    /* Section headers (Primary Tools, Metrics) */
+    .light-mode #sidebar .text-gray-500.uppercase {
+        color: #6b7280 !important; 
+    }
+
+    /* 2. The Navigation Links */
+    .light-mode .nav-item-btn {
+        color: #4b5563 !important; /* Tailwind gray-600 */
+    }
+
+    .light-mode .nav-item-btn:hover {
+        background-color: #f3f4f6 !important; /* Tailwind gray-100 */
+        color: #111827 !important;
+    }
+
+    /* The Active Page Link Highlight */
+    .light-mode .nav-item-active {
+        background-color: #eff6ff !important; /* Tailwind blue-50 */
+        color: #2563eb !important; /* Tailwind blue-600 */
+    }
+
+    /* 3. The Bottom User Profile Box */
+    .light-mode #sidebar > div.mt-auto {
+        background-color: #f9fafb !important; /* Tailwind gray-50 */
+        border-top-color: #e5e7eb !important;
+    }
+
+    .light-mode #sidebar-user-name {
+        color: #111827 !important;
+    }
+
+    .light-mode #sidebar-greeting {
+        color: #6b7280 !important;
+    }
+
+    .light-mode #sidebar-user-avatar {
+        background-color: rgba(37, 99, 235, 0.1) !important;
+        color: #2563eb !important;
+    }
+
+    /* 4. The Gear (Settings) Button */
+    .light-mode #nav-settings {
+        color: #6b7280 !important;
+    }
+
+    .light-mode #nav-settings:hover {
+        background-color: #e5e7eb !important;
+        color: #111827 !important;
     }
 
 	/* ==========================================================================
