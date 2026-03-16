@@ -5279,7 +5279,6 @@ const runIcloudAutoBackup = async (uid, currentCategories) => {
     if (!uid || isAnonymous) return;
 
     try {
-        // Point to the isolated backup document
         const backupRef = doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_backup', 'latest');
         const backupDoc = await getDoc(backupRef);
         const now = Date.now();
@@ -5305,15 +5304,28 @@ const runIcloudAutoBackup = async (uid, currentCategories) => {
             
             if (currentJson === backupJson) {
                 console.log("☁️ Backup check: No changes detected. Extending timer.");
-                // Update just the timestamp to save Firebase write costs
                 await updateDoc(backupRef, { timestamp: serverTimestamp() });
                 if (dateEl) dateEl.textContent = `Last backup: Today (No changes)`;
                 return;
             }
+
+            // 3. 🛑 CATASTROPHE FAILSAFE: Prevent "Empty Sync Overwrite"
+            let liveResponseCount = 0;
+            for (const key in currentCategories) { liveResponseCount += (currentCategories[key].responses || []).length; }
+            
+            let backupResponseCount = 0;
+            for (const key in data.categories) { backupResponseCount += (data.categories[key].responses || []).length; }
+
+            // If the live vault suddenly dropped by more than 50% compared to the cloud
+            if (backupResponseCount > 5 && liveResponseCount < (backupResponseCount * 0.5)) {
+                console.error(`🛑 BACKUP BLOCKED: Live data (${liveResponseCount}) is drastically smaller than Cloud data (${backupResponseCount}). Protecting backup.`);
+                if (dateEl) dateEl.textContent = `Last backup: Blocked (Data Loss Prevented)`;
+                return; // Abort the save entirely!
+            }
         }
 
-        // 3. Write the new backup to Firebase
-        console.log("☁️ Changes detected! Saving new iCloud-style backup...");
+        // 4. Safe to write the new backup
+        console.log("☁️ Changes detected and safe. Saving new iCloud-style backup...");
         await setDoc(backupRef, {
             categories: currentCategories,
             timestamp: serverTimestamp()
