@@ -5196,7 +5196,6 @@ const calculateAllAchievements = (events, userData) => {
     return allAchievements;
 };
 
-// ▼▼▼ REPLACE THE OLD FUNCTION WITH THIS NEW, SIMPLIFIED VERSION ▼▼▼
 
 const checkAndNotifyAchievements = async (firstSignIn) => {
     if (!userId || isAnonymous) return;
@@ -5259,7 +5258,60 @@ const getHelpfulLinksBlueprint = async () => { return defaultHelpfulLinksBluepri
 const getUserCannedResponsesDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_data', 'app_data'); };
 const getUserHelpfulLinksCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'helpful_links_data'); };
 const getUserRootDocRef = (uid) => { return doc(db, 'artifacts', safeAppId, 'users', uid); }
-const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };		
+const getUserEventsCollectionRef = (uid) => { return collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events'); };	
+
+const runIcloudAutoBackup = async (uid, currentCategories) => {
+    if (!uid || isAnonymous) return;
+
+    try {
+        // Point to the isolated backup document
+        const backupRef = doc(db, 'artifacts', safeAppId, 'users', uid, 'canned_responses_backup', 'latest');
+        const backupDoc = await getDoc(backupRef);
+        const now = Date.now();
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        const dateEl = document.getElementById('cloud-backup-date');
+
+        if (backupDoc.exists()) {
+            const data = backupDoc.data();
+            const lastBackupTime = data.timestamp ? data.timestamp.toMillis() : 0;
+            
+            // 1. Has it been 7 days?
+            if (now - lastBackupTime < SEVEN_DAYS_MS) {
+                if (dateEl) {
+                    const dateStr = new Date(lastBackupTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                    dateEl.textContent = `Last backup: ${dateStr}`;
+                }
+                return; 
+            }
+
+            // 2. Have the responses actually changed?
+            const currentJson = JSON.stringify(currentCategories);
+            const backupJson = JSON.stringify(data.categories);
+            
+            if (currentJson === backupJson) {
+                console.log("☁️ Backup check: No changes detected. Extending timer.");
+                // Update just the timestamp to save Firebase write costs
+                await updateDoc(backupRef, { timestamp: serverTimestamp() });
+                if (dateEl) dateEl.textContent = `Last backup: Today (No changes)`;
+                return;
+            }
+        }
+
+        // 3. Write the new backup to Firebase
+        console.log("☁️ Changes detected! Saving new iCloud-style backup...");
+        await setDoc(backupRef, {
+            categories: currentCategories,
+            timestamp: serverTimestamp()
+        });
+
+        if (dateEl) dateEl.textContent = `Last backup: Just now`;
+
+    } catch (error) {
+        console.error("Failed to run auto-backup:", error);
+        const dateEl = document.getElementById('cloud-backup-date');
+        if (dateEl) dateEl.textContent = `Last backup: Error checking status`;
+    }
+};
 
 const saveToFirestore = async (dataToSave) => {
     if (!userId || isAnonymous) {
@@ -7664,6 +7716,61 @@ const showPlaceholderDemo = () => {
 
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
+
+
+    // 1. Open the Modal from the Settings Page
+    document.getElementById('restore-cloud-backup-btn')?.addEventListener('click', () => {
+        if (isAnonymous || !userId) {
+            showMessage("Please sign in to use cloud recovery.", "error");
+            return;
+        }
+        document.getElementById('restore-backup-modal').classList.remove('hidden');
+    });
+
+    // 2. Cancel Button
+    document.getElementById('cancel-restore-btn')?.addEventListener('click', () => {
+        document.getElementById('restore-backup-modal').classList.add('hidden');
+    });
+
+    // 3. Confirm Button & Execution Logic
+    document.getElementById('confirm-restore-btn')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        
+        // Show loading state
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-amber-200"></i> <span>Restoring...</span>';
+        btn.disabled = true;
+
+        try {
+            // Grab the backup from the hidden folder
+            const backupRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'canned_responses_backup', 'latest');
+            const backupDoc = await getDoc(backupRef);
+            
+            if (backupDoc.exists() && backupDoc.data().categories) {
+                const recoveredCategories = backupDoc.data().categories;
+                
+                // Overwrite the LIVE database with the backup data
+                const appDataRef = getUserCannedResponsesDocRef(userId);
+                await setDoc(appDataRef, { categories: recoveredCategories });
+                
+                // Update the screen instantly
+                categories = recoveredCategories;
+                renderContent();
+                
+                showMessage("Workspace successfully restored from cloud backup!", "success");
+            } else {
+                showMessage("No cloud backup found.", "error");
+            }
+        } catch (error) {
+            console.error("Error restoring backup:", error);
+            showMessage("Failed to restore backup. Check your connection.", "error");
+        } finally {
+            // Reset button and hide modal
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            document.getElementById('restore-backup-modal').classList.add('hidden');
+        }
+    });
 	
 // --- FEATURE 1: Reorder Categories (Multiple Moves) ---
     document.getElementById('reorder-categories-btn')?.addEventListener('click', () => {
@@ -9500,6 +9607,7 @@ onAuthStateChanged(auth, async (user) => {
                 renderContent();
 				updateDarkModeStreak();
 				checkAndNotifyAchievements(firstSignIn); 
+                runIcloudAutoBackup(userId, categories);
             }, (error) => {
                 console.error("Error with onSnapshot listener:", error);
                 showMessage("Error loading your data. Please check your Firebase permissions.", 'error');
