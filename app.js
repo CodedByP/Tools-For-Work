@@ -3201,34 +3201,45 @@ const animateValue = (obj, start, end, duration) => {
 };
 		
 const calculateAndSaveUserRecords = async (uid) => {
-    if (!uid || isAnonymous) return; // Don't run for anonymous users
-    console.log(`Calculating and saving personal records for user ${uid}...`);
+    if (!uid || isAnonymous) return; 
 
-    try {
-        const eventsCollectionRef = getUserEventsCollectionRef(uid);
-        const leaderboardDocRef = doc(db, "leaderboard", uid);
+    try {
+        const userDocRef = getUserRootDocRef(uid);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
 
-        // 1. Fetch all of the user's past events
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => doc.data());
+        // 🔥 THE SMART GATE: If we already calculated records once, NEVER run this on refresh again!
+        if (userData.recordsCalculated) {
+            return;
+        }
 
-        // 2. Calculate user's personal records (using your existing helper)
-        const records = calculateUserRecords(events); 
+        console.log(`Calculating and saving personal records for user ${uid}...`);
 
-        // 3. Prepare the data object to update
-        const recordsToUpdate = {
-            recordDaily: records.daily,
-            recordWeekly: records.weekly,
-            recordMonthly: records.monthly
-        };
+        const eventsCollectionRef = getUserEventsCollectionRef(uid);
+        const leaderboardDocRef = doc(db, "leaderboard", uid);
 
-        // 4. Update the public leaderboard document with the latest records
-        await setDoc(leaderboardDocRef, recordsToUpdate, { merge: true });
-        console.log(`✅ Successfully updated personal records for user ${uid}.`);
+        // 1. Fetch all of the user's past events (Only happens once per user now!)
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
 
-    } catch (error) {
-        console.error(`Error calculating and saving user records for ${uid}:`, error);
-    }
+        // 2. Calculate user's personal records
+        const records = calculateUserRecords(events); 
+
+        // 3. Prepare the data object to update
+        const recordsToUpdate = {
+            recordDaily: records.daily,
+            recordWeekly: records.weekly,
+            recordMonthly: records.monthly
+        };
+
+        // 4. Update the public leaderboard and mark the user as 'calculated'
+        await setDoc(leaderboardDocRef, recordsToUpdate, { merge: true });
+        await setDoc(userDocRef, { recordsCalculated: true }, { merge: true });
+        console.log(`✅ Successfully updated personal records for user ${uid}.`);
+
+    } catch (error) {
+        console.error(`Error calculating and saving user records for ${uid}:`, error);
+    }
 };
 		
 const calculateUserRecords = (events) => {
@@ -5214,23 +5225,16 @@ const checkAndNotifyAchievements = async (firstSignIn) => {
         'copy_tiers', 'librarian_tiers', 'endless_scroll', 'the_historian', 'streak_breaker', 'grand_master'
     ];
 
-    // Get user data and events
-    const userDocRef = getUserRootDocRef(userId);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.exists() ? userDoc.data() : {};
+    // 🔥 THE QUOTA SAVER FIX: Use memory cache instead of downloading all events!
+    if (!cachedStatsUserData || !cachedStatsEvents) return; // Skip if cache isn't ready yet
+
+    const userData = cachedStatsUserData;
     const userAchievements = userData.achievementsData || {};
-    
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => doc.data());
+    const events = cachedStatsEvents;
+    const userDocRef = getUserRootDocRef(userId);
 
-    // --- NEW: Fetch the user's Workshop items to check for upvotes ---
-    const workshopQuery = query(collection(db, 'artifacts', safeAppId, 'workshop_responses'), where('authorId', '==', userId));
-    const workshopSnap = await getDocs(workshopQuery);
-    const workshopItems = workshopSnap.docs.map(doc => doc.data());
-
-    // Call the helper function with the new workshop data
-    const achievements = calculateAllAchievements(events, userData, workshopItems);
+    // Call the helper function to get the current state of all achievements
+    const achievements = calculateAllAchievements(events, userData);
 
     // --- Special Bonus XP Checks ---
     const challengeChampion = achievements.find(a => a.id === 'challenge_champion');
@@ -6501,6 +6505,7 @@ const addResponse = async (text, label, category) => {
     saveToFirestore(updatedCategories);
     showMessage("Response added successfully!");
 };
+
 const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
     if (isAnonymous) {
         showMessage("Please sign in to edit responses.", 'error');
@@ -6515,8 +6520,13 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
         showMessage("Error: The response no longer exists in its original category.", 'error');
         return;
     }
+    
     if (newCategory && newCategory !== oldCategory) {
-		logUserEvent('move_response', {}, firstSignIn);
+        // THE SMART GATE: Only log if they DO NOT have 'The Meticulous Mover'
+        if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['meticulous_mover']) {
+            logUserEvent('move_response', {}, firstSignIn);
+        }
+        
         const index = oldResponsesList.findIndex(r => r.id === id);
         if (index > -1) {
             oldResponsesList.splice(index, 1);
@@ -6539,13 +6549,18 @@ const updateResponse = (id, newText, newLabel, newCategory, oldCategory) => {
     const placeholderRegex = /\[([^\]]+)\]/g;
     const hadPlaceholder = placeholderRegex.test(originalText);
     const hasPlaceholderNow = placeholderRegex.test(newText);
+    
     if (!hadPlaceholder && hasPlaceholderNow) {
-        logUserEvent('add_placeholder', {}, firstSignIn);
+        // THE SMART GATE: Only log if they DO NOT have 'The Improviser'
+        if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_improviser']) {
+            logUserEvent('add_placeholder', {}, firstSignIn);
+        }
     }
 	
     saveToFirestore(updatedCategories);
     showMessage("Response updated successfully!");
 };
+
 const deleteResponse = (id, categoryName) => {
     if (isAnonymous) {
         showMessage("Please sign in to delete responses.", 'error');
@@ -6579,7 +6594,9 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
             
             // --- SUCCESS: Award XP and Stats ---
             await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
-            logUserEvent('copy', { responseId, categoryName, text });
+            
+            // 🔥 FIX 1: Add 'await' here so the cache finishes updating before the UI redraws
+            await logUserEvent('copy', { responseId, categoryName, text });
 
             if (userId && !isAnonymous) {
                 try {
@@ -6589,10 +6606,10 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         const response = category.responses.find(r => r.id === responseId);
                         if (response) {
                             response.timesCopied = (response.timesCopied || 0) + 1;
-							isSilencingUpdates = true; // 1. Turn on Silencer
-                        	saveToFirestore(categories).then(() => {
-                            setTimeout(() => { isSilencingUpdates = false; }, 2000); 
-                        });
+                            isSilencingUpdates = true; 
+                            saveToFirestore(categories).then(() => {
+                                setTimeout(() => { isSilencingUpdates = false; }, 2000); 
+                            });
                         }
                     }
 
@@ -6642,13 +6659,26 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     
                     await batch.commit();
                     
-                    // Refresh Challenges UI
-                    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-                    const snapshot = await getDocs(query(eventsCollectionRef));
-                    const events = snapshot.docs.map(doc => doc.data());
-                
-                    await renderChallenges(events);
-                    await renderChallengeTracker(events);
+                    // --- 🔥 THE QUOTA SAVER FIX + UI REFRESH 🔥 ---
+                    // Refresh Challenges UI using local memory instead of Firebase reads!
+                    if (cachedStatsEvents) {
+                        await renderChallenges(cachedStatsEvents);
+                        await renderChallengeTracker(cachedStatsEvents);
+                        
+                        if (cachedStatsUserData) {
+                            renderLevelingSystem(cachedStatsUserData);
+                        }
+
+                        // 🔥 FIX: Tell the Milestones and Work History to redraw instantly!
+                        calculateAndRenderRecords(cachedStatsEvents);
+                        
+                        // Preserve the user's current 7D/30D/ALL filter when redrawing the chart
+                        const activePeriodBtn = document.querySelector('.activity-filter-btn.active');
+                        const currentPeriod = activePeriodBtn ? activePeriodBtn.dataset.period : 'all';
+                        renderActivityChart(cachedStatsEvents, currentPeriod);
+                    }
+                    // ---------------------------------
+                    
                     renderLeaderboard(currentLeaderboardView); 
                     
                 } catch (error) {
@@ -6683,6 +6713,7 @@ const exportData = () => {
     URL.revokeObjectURL(url);
     showMessage("Data exported successfully!");
 };
+
 const importData = (file) => {
     if (isAnonymous) {
         showMessage("Please sign in to import data.", 'error');
@@ -6703,7 +6734,11 @@ const importData = (file) => {
                 saveToFirestore(categories);
                 showMessage("Data imported successfully!");
                 importExportModal.classList.add('hidden');
-				logUserEvent('import_data', {}, firstSignIn);
+                
+                // THE SMART GATE: Only log if they DO NOT have 'The Data Hoarder'
+                if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_data_hoarder']) {
+                    logUserEvent('import_data', {}, firstSignIn);
+                }
             } else {
                 throw new Error('Invalid JSON format.');
             }
@@ -9123,7 +9158,11 @@ if (activityFilterGroup) {
             localStorage.setItem('lastVisitedPage', currentPage);
             renderContent();
             closeSidebar();
-            logUserEvent('visit_page', { page: currentPage });
+            
+            // THE SMART GATE: Only log if they DO NOT have 'The Explorer'
+            if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_explorer']) {
+                logUserEvent('visit_page', { page: currentPage });
+            }
         });
     });
 
@@ -9516,8 +9555,11 @@ document.getElementById('category-list').addEventListener('click', (e) => {
                     responseData.isPinned = !responseData.isPinned;
                     
                     if (responseData.isPinned) {
+                        // THE SMART GATE: Only log if they DO NOT have 'The Curator'
                         if (typeof firstSignIn !== 'undefined') {
-                            logUserEvent('pin_response', { responseId: id }, firstSignIn); 
+                            if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_curator']) {
+                                logUserEvent('pin_response', { responseId: id }, firstSignIn); 
+                            }
                         }
                         
                         // Physically move to the front of the list
@@ -9620,8 +9662,21 @@ document.getElementById('category-list').addEventListener('click', (e) => {
         const newLabel = document.getElementById('edit-response-label').value;
         const newText = document.getElementById('edit-response-text').value;
         const newCategory = document.getElementById('edit-category-select').value;
-        if (newText.trim() !== '') { updateResponse(id, newText, newLabel, newCategory, oldCategory); document.getElementById('edit-response-modal').classList.add('hidden'); currentEditingId = null;logUserEvent('edit_response', {}, firstSignIn); } else { showMessage("Response text cannot be empty.", 'error'); }
+        
+        if (newText.trim() !== '') { 
+            updateResponse(id, newText, newLabel, newCategory, oldCategory); 
+            document.getElementById('edit-response-modal').classList.add('hidden'); 
+            currentEditingId = null;
+            
+            // THE SMART GATE: Only log if they DO NOT have 'The Editor'
+            if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_editor']) {
+                logUserEvent('edit_response', {}, firstSignIn); 
+            }
+        } else { 
+            showMessage("Response text cannot be empty.", 'error'); 
+        }
     });
+
     document.getElementById('delete-confirm-btn').addEventListener('click', () => {
         const category = document.getElementById('delete-modal').dataset.category;
         deleteResponse(responseToDeleteId, category);
@@ -9716,7 +9771,10 @@ document.getElementById('category-list').addEventListener('click', (e) => {
             saveToFirestore(updatedCategories);
             document.getElementById('color-picker-modal').classList.add('hidden');
             showMessage("Color updated successfully!");
-			logUserEvent('change_color', {}, firstSignIn);
+			// THE SMART GATE: Only log if they DO NOT have 'The Color Coder'
+            if (cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_color_coder']) {
+                logUserEvent('change_color', {}, firstSignIn);
+            }
         }
     });
     document.getElementById('input-text-fedex').addEventListener('input', extractAndDisplayNumbers);
@@ -9725,6 +9783,7 @@ document.getElementById('category-list').addEventListener('click', (e) => {
         extractAndDisplayNumbers();
         showMessage('Input cleared!', 'success');
     });
+
 document.getElementById('copy-button-fedex').addEventListener('click', async () => {
     const text = document.getElementById('input-text-fedex').value;
     const fedexRegex = /(?:78\d{10}|79\d{10}|80\d{10}|81\d{10}|82\d{10}|(?:96\d{20}|96\d{32}|\d{15}|\d{12}))/g;
@@ -9738,26 +9797,38 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         copyToClipboard(numbersToCopy);
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
 
-        // Refresh Challenges UI
-        const eventsCollectionRef = getUserEventsCollectionRef(userId);
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => doc.data());
-        
-        await renderChallenges(events);
-        await renderChallengeTracker(events);
+        // --- 🔥 THE QUOTA SAVER FIX 🔥 ---
+        // Refresh Challenges UI using local memory instead of Firebase reads!
+        if (cachedStatsEvents) {
+            await renderChallenges(cachedStatsEvents);
+            await renderChallengeTracker(cachedStatsEvents);
+            
+            if (cachedStatsUserData) {
+                renderLevelingSystem(cachedStatsUserData);
+            }
+
+            // 🔥 FIX: Tell the Milestones and Work History to redraw instantly!
+            calculateAndRenderRecords(cachedStatsEvents);
+            
+            const activePeriodBtn = document.querySelector('.activity-filter-btn.active');
+            const currentPeriod = activePeriodBtn ? activePeriodBtn.dataset.period : 'all';
+            renderActivityChart(cachedStatsEvents, currentPeriod);
+        }
+        // ---------------------------------
 
         const numbersForUrl = uniqueNumbers.join(',');
         const encodedNumbers = encodeURIComponent(numbersForUrl);
         const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
         window.open(fedexUrl, '_blank');
         
-        // ▼▼▼ TRIGGER THE NEW FEATURE ▼▼▼
+        // TRIGGER THE NEW SUGGESTIONS FEATURE
         showShippingSuggestions(); 
         
     } else {
         showMessage('No tracking numbers to copy.', 'error');
     }
 });
+
     document.getElementById('import-export-btn-settings').addEventListener('click', () => { document.getElementById('import-export-modal').classList.remove('hidden'); });
     document.getElementById('close-import-export-modal-btn').addEventListener('click', () => { document.getElementById('import-export-modal').classList.add('hidden'); });
     document.getElementById('export-btn').addEventListener('click', () => { exportData(); });
