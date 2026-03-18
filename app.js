@@ -447,30 +447,215 @@ if (document.visibilityState === 'visible') sessionStartTime = Date.now();
 
 // --- 1. DEFINE THE FUNCTION HERE (Right after Global Variables) ---
 const applyBackgroundTheme = (themeName) => {
-    // Remove all possible theme classes
-    document.body.classList.remove('theme-deep-space', 'theme-midnight', 'theme-nebula', 'theme-aurora');
+    // 1. Remove ALL possible theme classes
+    document.body.classList.remove(
+        'theme-deep-space', 'theme-midnight', 'theme-nebula', 'theme-aurora',
+        'theme-crimson-forge', 'theme-imperial-gold', 'theme-matcha-mist', 'theme-sakura-dawn'
+    );
     
-    // Add the selected theme
+    // 2. Add the selected theme
     document.body.classList.add(themeName);
     
-    // Save preference
+    // 3. Save preference
     localStorage.setItem('backgroundTheme', themeName);
 
-    // Update UI Buttons (Visual Feedback)
+    // 4. Update UI Buttons (Silver Glow Logic)
     const btns = document.querySelectorAll('.bg-theme-btn');
     if(btns.length > 0) {
         btns.forEach(btn => {
-            btn.classList.remove('border-blue-500', 'border-teal-500', 'ring-2', 'ring-blue-500/50', 'ring-teal-500/50');
-            btn.classList.add('border-gray-600');
+            const previewBox = btn.querySelector('.theme-card-preview');
+            const textSpan = btn.querySelector('span');
 
-            if (btn.dataset.theme === themeName) {
-                const activeColor = themeName === 'theme-aurora' ? 'teal' : 'blue';
-                btn.classList.remove('border-gray-600');
-                btn.classList.add(`border-${activeColor}-500`, 'ring-2', `ring-${activeColor}-500/50`);
+            if (previewBox && textSpan) {
+                // Reset all styling
+                previewBox.classList.remove('silver-glow-active');
+                textSpan.classList.remove('text-gray-200');
+                textSpan.classList.add('text-gray-400');
+
+                // Apply active styling only to the matched theme
+                if (btn.dataset.theme === themeName) {
+                    previewBox.classList.add('silver-glow-active');
+                    textSpan.classList.remove('text-gray-400');
+                    textSpan.classList.add('text-gray-200');
+                }
             }
         });
     }
 };
+
+// ==========================================
+// === Avatar Selection & Economy Logic ===
+// ==========================================
+let tempSelectedAvatar = null;
+let tempSelectedItemId = null;
+let tempSelectedCost = 0;
+
+const applyUserAvatar = (avatarSrc) => {
+    const profileImgs = document.querySelectorAll('.user-avatar-img');
+    profileImgs.forEach(img => img.src = avatarSrc);
+    localStorage.setItem('userAvatar', avatarSrc);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedAvatar = localStorage.getItem('userAvatar') || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E";
+    applyUserAvatar(savedAvatar);
+
+    const avatarModal = document.getElementById('avatar-selection-modal');
+    const openModalBtn = document.getElementById('open-avatar-modal-btn');
+    const closeBtn = document.getElementById('close-avatar-modal-btn');
+    const cancelBtn = document.getElementById('cancel-avatar-btn');
+    const saveBtn = document.getElementById('save-avatar-btn');
+    const avatarBtns = document.querySelectorAll('.avatar-option');
+
+    // Helper: Update the UI to permanently remove locks for items the user owns
+    const refreshUnlockedUI = (unlockedItems = []) => {
+        document.querySelectorAll('.premium-item').forEach(item => {
+            const itemId = item.dataset.itemId;
+            if (unlockedItems.includes(itemId)) {
+                const lock = item.querySelector('.item-lock-overlay');
+                if (lock) lock.remove();
+                item.dataset.cost = "0"; // Mark as free
+            }
+        });
+    };
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', async () => {
+            tempSelectedAvatar = localStorage.getItem('userAvatar') || null;
+            
+            // Reset button to default state initially
+            if (saveBtn) {
+                saveBtn.innerHTML = 'Save Avatar';
+                saveBtn.className = 'flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-lg text-sm border border-blue-500/50';
+            }
+
+            avatarBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.avatar === tempSelectedAvatar) btn.classList.add('active');
+            });
+            
+            avatarModal.classList.remove('hidden');
+
+            // NEW: Fetch fresh data from the database every time the modal opens so locks are 100% accurate
+            if (typeof userId !== 'undefined' && userId && typeof getDoc !== 'undefined') {
+                try {
+                    const userDoc = await getDoc(getUserRootDocRef(userId));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        // Also sync it to our RAM so other things work smoothly
+                        if (typeof cachedStatsUserData !== 'undefined' && cachedStatsUserData) {
+                            cachedStatsUserData.xp = data.xp || 0;
+                            cachedStatsUserData.spentXp = data.spentXp || 0;
+                            cachedStatsUserData.unlockedItems = data.unlockedItems || [];
+                        }
+                        refreshUnlockedUI(data.unlockedItems || []);
+                    }
+                } catch (e) { console.error("Failed to load user unlocks", e); }
+            }
+        });
+    }
+
+    const closeModal = () => avatarModal.classList.add('hidden');
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    // Click an Avatar in the Grid
+    avatarBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tempSelectedAvatar = btn.dataset.avatar;
+            tempSelectedItemId = btn.dataset.itemId;
+            tempSelectedCost = parseInt(btn.dataset.cost || "0");
+
+            avatarBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const unlockedItems = (typeof cachedStatsUserData !== 'undefined' && cachedStatsUserData) ? (cachedStatsUserData.unlockedItems || []) : [];
+            const isUnlocked = tempSelectedCost === 0 || unlockedItems.includes(tempSelectedItemId);
+
+            if (saveBtn) {
+                if (isUnlocked) {
+                    saveBtn.innerHTML = 'Save Avatar';
+                    saveBtn.className = 'flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-lg text-sm border border-blue-500/50';
+                } else {
+                    saveBtn.innerHTML = `<i class="fas fa-unlock"></i> Unlock (${tempSelectedCost.toLocaleString()} XP)`;
+                    saveBtn.className = 'flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-gray-900 bg-yellow-400 hover:bg-yellow-300 transition-all shadow-[0_0_15px_rgba(250,204,21,0.4)] text-sm border border-yellow-300';
+                }
+            }
+        });
+    });
+
+    // The Checkout / Save Button Logic
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            // Check memory first
+            const unlockedItems = (typeof cachedStatsUserData !== 'undefined' && cachedStatsUserData) ? (cachedStatsUserData.unlockedItems || []) : [];
+            const isUnlocked = tempSelectedCost === 0 || unlockedItems.includes(tempSelectedItemId);
+
+            if (isUnlocked) {
+                if (tempSelectedAvatar) applyUserAvatar(tempSelectedAvatar);
+                closeModal();
+                showMessage("Avatar updated successfully!", "success");
+            } else {
+                // THEY ARE BUYING IT. Lock the button.
+                saveBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Unlocking...';
+                saveBtn.disabled = true;
+
+                try {
+                    // 1. ALWAYS query the live database for transactions to prevent UI cache errors
+                    const userRef = getUserRootDocRef(userId);
+                    const userDoc = await getDoc(userRef);
+                    const dbData = userDoc.exists() ? userDoc.data() : {};
+                    
+                    const totalXp = dbData.xp || 0;
+                    const spentXp = dbData.spentXp || 0;
+                    const availableXp = totalXp - spentXp;
+                    const liveUnlockedItems = dbData.unlockedItems || [];
+
+                    if (availableXp >= tempSelectedCost) {
+                        const newSpent = spentXp + tempSelectedCost;
+                        const newUnlocked = [...liveUnlockedItems, tempSelectedItemId];
+
+                        // 2. Charge the account securely
+                        await setDoc(userRef, { 
+                            spentXp: newSpent, 
+                            unlockedItems: newUnlocked 
+                        }, { merge: true });
+
+                        // 3. Update RAM so they don't have to refresh to see the item is unlocked
+                        if (typeof cachedStatsUserData !== 'undefined' && cachedStatsUserData) {
+                            cachedStatsUserData.spentXp = newSpent;
+                            cachedStatsUserData.unlockedItems = newUnlocked;
+                        }
+
+                        // 4. Update UI Wallet
+                        const walletEl = document.getElementById('settings-wallet-balance');
+                        if (walletEl) walletEl.textContent = `${(totalXp - newSpent).toLocaleString()} XP`;
+
+                        // 5. Equip & Celebrate!
+                        if (tempSelectedAvatar) applyUserAvatar(tempSelectedAvatar);
+                        closeModal();
+                        triggerCelebration(); 
+                        showMessage("Avatar Unlocked! Enjoy your new identity.", "success");
+                        
+                    } else {
+                        // Transaction Denied - Not enough XP
+                        const deficit = tempSelectedCost - availableXp;
+                        showMessage(`You need ${deficit.toLocaleString()} more XP!`, "error");
+                        saveBtn.innerHTML = `<i class="fas fa-unlock"></i> Unlock (${tempSelectedCost.toLocaleString()} XP)`;
+                        saveBtn.classList.add('animate-bounce');
+                        setTimeout(() => saveBtn.classList.remove('animate-bounce'), 1000);
+                    }
+                } catch (error) {
+                    console.error("Purchase failed:", error);
+                    showMessage("Transaction failed. Check your connection.", "error");
+                    saveBtn.innerHTML = `<i class="fas fa-unlock"></i> Unlock (${tempSelectedCost.toLocaleString()} XP)`;
+                } finally {
+                    saveBtn.disabled = false;
+                }
+            }
+        });
+    }
+});
 
 // --- 2. INITIALIZE IT IMMEDIATELY ---
 // This code runs right when the page loads
@@ -7170,6 +7355,36 @@ const renderSettingsPage = () => {
             memberSinceBadge.innerHTML = `<i class="fas fa-calendar-alt mr-1"></i> Member Since ${formattedDate}`;
         }
         // -----------------------------
+        // --- NEW: CALCULATE SPENDABLE XP (WALLET) & REMOVE LOCKS ---
+        const walletBalanceEl = document.getElementById('settings-wallet-balance');
+        if (walletBalanceEl && typeof userId !== 'undefined' && userId && !isAnonymous) {
+            // Ask the database directly so it is 100% accurate every time
+            getDoc(getUserRootDocRef(userId)).then(userDoc => {
+                const data = userDoc.exists() ? userDoc.data() : {};
+                const totalXp = data.xp || 0;
+                const spentXp = data.spentXp || 0;
+                const availableXp = totalXp - spentXp;
+                
+                walletBalanceEl.textContent = `${availableXp.toLocaleString()} XP`;
+                
+                if (availableXp >= 20000) {
+                    walletBalanceEl.classList.add('drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]');
+                }
+
+                // NEW: Check what they own and melt the locks away globally
+                const unlockedItems = data.unlockedItems || [];
+                document.querySelectorAll('.premium-item').forEach(item => {
+                    const itemId = item.dataset.itemId;
+                    if (unlockedItems.includes(itemId)) {
+                        const lock = item.querySelector('.item-lock-overlay');
+                        if (lock) lock.remove();
+                        item.dataset.cost = "0"; // Mark as free so they aren't charged again
+                    }
+                });
+
+            }).catch(err => console.log("Wallet fetch error:", err));
+        }
+        // --------------------------------------------
 
         if (isAnonymous) {
             signInBtn.classList.remove('hidden');
@@ -8890,21 +9105,155 @@ document.getElementById('save-ingest-btn')?.addEventListener('click', async () =
     }
 });
 	
-	// Theme Selector Listeners
+// ==========================================
+// === Theme Selector & Economy Logic ===
+// ==========================================
+let pendingThemePurchase = null;
+
 document.querySelectorAll('.bg-theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
         const theme = btn.dataset.theme;
+        const cost = parseInt(btn.dataset.cost || "0");
+        const itemId = btn.dataset.itemId;
+
+        // 1. Check Ownership
+        let isUnlocked = true;
+        let unlockedItems = [];
+        let availableXp = 0;
+        let spentXp = 0;
+        let totalXp = 0;
+
+        if (cost > 0 && typeof userId !== 'undefined' && userId && !isAnonymous) {
+            try {
+                const userDoc = await getDoc(getUserRootDocRef(userId));
+                if (userDoc.exists()) {
+                    const dbData = userDoc.data();
+                    unlockedItems = dbData.unlockedItems || [];
+                    totalXp = dbData.xp || 0;
+                    spentXp = dbData.spentXp || 0;
+                    availableXp = totalXp - spentXp;
+                    isUnlocked = unlockedItems.includes(itemId);
+                }
+            } catch (e) {
+                console.error("Failed to check theme ownership", e);
+                showMessage("Error verifying ownership.", "error");
+                return;
+            }
+        }
+
+        // 2. Action Logic
+        if (isUnlocked) {
+            // Equip owned/free theme
+            applyBackgroundTheme(theme);
+            if (document.body.classList.contains('light-mode')) {
+                document.body.classList.remove('light-mode');
+                localStorage.setItem('theme', 'dark');
+                const icon = document.getElementById('theme-icon-settings');
+                if(icon) icon.className = 'fas fa-moon mr-2';
+                showMessage("Switched to Dark Mode to view theme", "success");
+            } else {
+                showMessage("Theme equipped!", "success");
+            }
+        } else {
+            // 3. Custom HTML Modal Purchase Flow
+            if (availableXp >= cost) {
+                // Store the data so the modal's "Confirm" button knows what to do
+                pendingThemePurchase = { theme, cost, itemId, btn, spentXp, totalXp, unlockedItems };
+                
+                // Format the theme name cleanly for the UI
+                const themeNameClean = theme.replace('theme-', '').replace('-', ' ').toUpperCase();
+                document.getElementById('purchase-theme-name').textContent = themeNameClean;
+                document.getElementById('purchase-theme-cost').textContent = `${cost.toLocaleString()} XP`;
+                
+                // Animate the modal in smoothly
+                const modal = document.getElementById('theme-purchase-modal');
+                const modalContent = modal.querySelector('.modal-content');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            } else {
+                const deficit = cost - availableXp;
+                showMessage(`You need ${deficit.toLocaleString()} more XP!`, "error");
+            }
+        }
+    });
+});
+
+// --- Theme Purchase Modal Button Listeners ---
+const closeThemeModal = () => {
+    const modal = document.getElementById('theme-purchase-modal');
+    const modalContent = modal.querySelector('.modal-content');
+    
+    // Animate out smoothly
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+    
+    pendingThemePurchase = null; // Clear pending data
+};
+
+document.getElementById('cancel-theme-purchase-btn')?.addEventListener('click', closeThemeModal);
+
+document.getElementById('confirm-theme-purchase-btn')?.addEventListener('click', async (e) => {
+    if (!pendingThemePurchase) return;
+    
+    const btnEl = e.target.closest('button');
+    const originalHtml = btnEl.innerHTML;
+    
+    // Loading State
+    btnEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> <span>Unlocking...</span>';
+    btnEl.disabled = true;
+
+    // Pull data from cache
+    const { theme, cost, itemId, btn, spentXp, totalXp, unlockedItems } = pendingThemePurchase;
+    const newSpent = spentXp + cost;
+    const newUnlocked = [...unlockedItems, itemId];
+
+    try {
+        // 1. Charge the account in Firestore
+        const userRef = getUserRootDocRef(userId);
+        await setDoc(userRef, {
+            spentXp: newSpent,
+            unlockedItems: newUnlocked
+        }, { merge: true });
+
+        // 2. Update RAM
+        if (typeof cachedStatsUserData !== 'undefined' && cachedStatsUserData) {
+            cachedStatsUserData.spentXp = newSpent;
+            cachedStatsUserData.unlockedItems = newUnlocked;
+        }
+
+        // 3. Update UI Wallet
+        const walletEl = document.getElementById('settings-wallet-balance');
+        if (walletEl) walletEl.textContent = `${(totalXp - newSpent).toLocaleString()} XP`;
+
+        // 4. Melt the lock visually
+        const lock = btn.querySelector('.item-lock-overlay');
+        if (lock) lock.remove();
+        btn.dataset.cost = "0"; // Mark as free now
+
+        // 5. Equip & Celebrate
         applyBackgroundTheme(theme);
-        
-        // If in Light Mode, switch to Dark Mode automatically to see the change
+        triggerCelebration();
+        showMessage("Theme Unlocked!", "success");
+
         if (document.body.classList.contains('light-mode')) {
             document.body.classList.remove('light-mode');
             localStorage.setItem('theme', 'dark');
             const icon = document.getElementById('theme-icon-settings');
             if(icon) icon.className = 'fas fa-moon mr-2';
-            showMessage("Switched to Dark Mode to view theme", "success");
         }
-    });
+        
+        closeThemeModal();
+    } catch (error) {
+        console.error("Theme purchase failed:", error);
+        showMessage("Transaction failed. Check connection.", "error");
+    } finally {
+        btnEl.innerHTML = originalHtml;
+        btnEl.disabled = false;
+    }
 });
 
 	// --- Leaderboard Filter Listener ---

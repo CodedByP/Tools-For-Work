@@ -92,7 +92,7 @@
 
 		    <div class="mt-auto border-t border-gray-800 p-4 flex justify-between items-center bg-gray-900">
 		        <div class="flex items-center gap-3">
-		             <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs" id="sidebar-user-avatar">U</div>
+		             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" class="user-avatar-img w-12 h-12" id="sidebar-user-avatar">
 		             <div class="flex flex-col">
 		                 <span class="text-xs font-semibold text-gray-200" id="sidebar-user-name">User</span>
 		                 <span class="text-[10px] text-gray-500 font-mono" id="sidebar-greeting">Online</span>
@@ -736,15 +736,24 @@
 		    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Account Details</h3>
 		    <div class="bg-gray-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-2xl">
 		        <div class="flex flex-col sm:flex-row items-center gap-6">
-		            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-black text-white shadow-lg border border-white/10 shrink-0">
-		                <i class="fas fa-user"></i>
-		            </div>
+                    <div id="open-avatar-modal-btn" class="relative w-24 h-24 flex-shrink-0 cursor-pointer group">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" class="user-avatar-img w-full h-full transition-transform group-hover:scale-105">
+                        <div class="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm border-2 border-dashed border-gray-400">
+                            <i class="fas fa-pencil-alt text-2xl text-gray-200"></i>
+                        </div>
+                    </div>
 		            
 		            <div class="flex-1 text-center sm:text-left">
 		                <div id="auth-status-settings" class="text-xl font-bold text-white mb-1">Not signed in.</div>
-		                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2 text-xs">
-		                    <span id="settings-role-badge" class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-md font-mono">Role: Operator</span>
-		                    <span id="settings-member-since" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded-md font-mono"><i class="fas fa-calendar-alt mr-1"></i> Member Since 2024</span>
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3 text-xs">
+		                    <span id="settings-role-badge" class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded-md font-mono font-bold tracking-wide">Role: Operator</span>
+		                    <span id="settings-member-since" class="bg-gray-800 text-gray-400 border border-gray-700 px-2 py-1 rounded-md font-mono"><i class="fas fa-calendar-alt mr-1"></i> Member Since 2024</span>
+                            
+                            <div class="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1 rounded-md shadow-[0_0_10px_rgba(234,179,8,0.1)] ml-2">
+                                <i class="fas fa-coins text-yellow-400 animate-bounce" style="animation-duration: 2s;"></i>
+                                <span class="text-gray-300 font-mono">Available:</span>
+                                <span id="settings-wallet-balance" class="text-yellow-400 font-black font-mono tracking-tight">0 XP</span>
+                            </div>
 		                </div>
 		            </div>
 		
@@ -778,38 +787,85 @@
                         <span class="block text-sm font-bold text-gray-200 mb-1">Canvas Backdrop</span>
                         <span class="block text-xs text-gray-500 mb-5">Select a premium background style (Requires Dark Mode).</span>
                         
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-left" data-theme="theme-deep-space">
-                                <div class="theme-card-preview theme-card-deep-space w-full h-24 rounded-xl border-2 border-gray-700 transition-all group-hover:border-blue-500 relative overflow-hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 gap-y-6">
+                            
+                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-deep-space">
+                                <div class="theme-card-preview theme-card-deep-space w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-blue-500 relative overflow-hidden">
                                     <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-400 group-hover:text-blue-400 transition-colors">Deep Space</span>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-blue-400 transition-colors uppercase tracking-widest">Deep Space</span>
                             </button>
 
-                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-left" data-theme="theme-midnight">
-                                <div class="theme-card-preview theme-card-midnight w-full h-24 rounded-xl border-2 border-gray-700 transition-all group-hover:border-gray-400 relative overflow-hidden">
+                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-midnight">
+                                <div class="theme-card-preview theme-card-midnight w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-gray-400 relative overflow-hidden">
                                     <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors">Midnight Pure</span>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors uppercase tracking-widest">Midnight Pure</span>
                             </button>
 
-                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-left" data-theme="theme-nebula">
-                                <div class="theme-card-preview theme-card-nebula w-full h-24 rounded-xl border-2 border-gray-700 transition-all group-hover:border-purple-400 relative overflow-hidden">
+                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-nebula">
+                                <div class="theme-card-preview theme-card-nebula w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-purple-400 relative overflow-hidden">
                                     <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-400 group-hover:text-purple-400 transition-colors">Nebula Core</span>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-purple-400 transition-colors uppercase tracking-widest">Nebula Core</span>
                             </button>
 
-                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-left" data-theme="theme-aurora">
-                                <div class="theme-card-preview theme-card-aurora w-full h-24 rounded-xl border-2 border-gray-700 transition-all group-hover:border-teal-400 relative overflow-hidden">
+                            <button class="bg-theme-btn group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-aurora">
+                                <div class="theme-card-preview theme-card-aurora w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-teal-400 relative overflow-hidden">
                                     <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-400 group-hover:text-teal-400 transition-colors">Aurora Borealis</span>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-teal-400 transition-colors uppercase tracking-widest">Aurora Borealis</span>
                             </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-crimson-forge" data-item-id="theme-crimson-forge" data-cost="20000">
+                                <div class="theme-card-preview theme-card-crimson-forge w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-red-400 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-red-300 transition-colors uppercase tracking-widest">Crimson Forge</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-imperial-gold" data-item-id="theme-imperial-gold" data-cost="20000">
+                                <div class="theme-card-preview theme-card-imperial-gold w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-yellow-500 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-yellow-400 transition-colors uppercase tracking-widest">Imperial Gold</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-matcha-mist" data-item-id="theme-matcha-mist" data-cost="20000">
+                                <div class="theme-card-preview theme-card-matcha-mist w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-emerald-400 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-emerald-400 transition-colors uppercase tracking-widest">Matcha Mist</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-sakura-dawn" data-item-id="theme-sakura-dawn" data-cost="20000">
+                                <div class="theme-card-preview theme-card-sakura-dawn w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-rose-400 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-rose-400 transition-colors uppercase tracking-widest">Sakura Dawn</span>
+                            </button>
+
                         </div>
                     </div>
                 </div>
             </section>
+
 
             <section id="set-preferences" class="scroll-mt-10">
                 <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Workspace Preferences</h3>
@@ -1567,6 +1623,36 @@
             </div>
         </div>
     </div>
+
+    <div id="theme-purchase-modal" class="modal hidden z-[6000] fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content w-full max-w-md bg-[#0b0f19]/95 backdrop-blur-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.15)] rounded-2xl p-8 relative overflow-hidden transform transition-all scale-95 opacity-0">
+            
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+            <div class="flex items-center gap-4 mb-6 relative z-10">
+                <div class="bg-yellow-500/20 p-3 rounded-xl text-yellow-400 border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex-shrink-0">
+                    <i class="fas fa-paint-brush text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-white tracking-tight">Unlock Theme</h3>
+                    <p class="text-[10px] text-yellow-400 font-mono uppercase tracking-widest mt-1">Premium Interface</p>
+                </div>
+            </div>
+            
+            <p class="text-gray-300 text-sm leading-relaxed mb-6 relative z-10">
+                Are you sure you want to unlock the <span id="purchase-theme-name" class="font-bold text-yellow-300">Theme</span> for <span id="purchase-theme-cost" class="font-bold text-yellow-400">20,000 XP</span>?
+            </p>
+
+            <div class="flex justify-end gap-3 relative z-10 pt-2">
+                <button id="cancel-theme-purchase-btn" class="px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors text-sm border border-transparent hover:border-gray-600">
+                    Cancel
+                </button>
+                <button id="confirm-theme-purchase-btn" class="px-6 py-2.5 rounded-xl font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.4)] transform transition hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-sm border border-yellow-300">
+                    <i class="fas fa-unlock"></i> <span>Unlock Now</span>
+                </button>
+            </div>
+        </div>
+    </div>
 		
     <div id="login-popup-modal" class="modal hidden">
         <div class="login-popup flex flex-col space-y-3">
@@ -1614,6 +1700,81 @@
             </div>
         </div>
     </div>
+
+    <div id="avatar-selection-modal" class="modal hidden z-[6000] fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content w-full max-w-3xl max-h-[90vh] flex flex-col bg-[#0b0f19]/95 backdrop-blur-2xl border border-indigo-500/30 rounded-2xl p-0 relative overflow-hidden transform transition-all shadow-[0_0_50px_rgba(99,102,241,0.15)]">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+            
+            <div class="p-8 pb-4 flex items-center justify-between border-b border-white/5 relative z-10 flex-shrink-0">
+                <div>
+                    <h3 class="text-2xl font-black text-white tracking-tight">Select Identity</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Choose your workspace avatar</p>
+                </div>
+                <button id="close-avatar-modal-btn" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full border border-gray-700 hover:border-gray-500"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-8 overflow-y-auto custom-scrollbar relative z-10">
+                
+                <div class="mb-8">
+                    <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-gray-800 pb-2">Standard Issue</h4>
+                    <div class="flex gap-4">
+                        <button class="avatar-option group aspect-square w-20 rounded-full outline-none relative overflow-hidden" data-avatar="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" data-item-id="default-avatar" data-cost="0">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" class="w-full h-full rounded-full border-2 border-transparent group-hover:border-gray-500 transition-colors">
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-2 mb-4 border-b border-gray-800 pb-2">
+                        <i class="fas fa-lock text-yellow-500/70 text-[10px]"></i>
+                        <h4 class="text-[10px] font-bold text-yellow-500/70 uppercase tracking-[0.2em]">Premium Collection</h4>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 sm:grid-cols-5 gap-6">
+                        <script>
+                            // I am wrapping this in a tiny script just for you to read easily in the prompt, 
+                            // BUT you should paste all 20 lines into your HTML like normal!
+                        </script>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-1.png" data-item-id="avatar-1" data-cost="50000"><img src="assets/avatars/avatar-1.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-2.png" data-item-id="avatar-2" data-cost="50000"><img src="assets/avatars/avatar-2.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-3.png" data-item-id="avatar-3" data-cost="50000"><img src="assets/avatars/avatar-3.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-4.png" data-item-id="avatar-4" data-cost="50000"><img src="assets/avatars/avatar-4.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-5.png" data-item-id="avatar-5" data-cost="50000"><img src="assets/avatars/avatar-5.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-6.png" data-item-id="avatar-6" data-cost="50000"><img src="assets/avatars/avatar-6.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-7.png" data-item-id="avatar-7" data-cost="50000"><img src="assets/avatars/avatar-7.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-8.png" data-item-id="avatar-8" data-cost="50000"><img src="assets/avatars/avatar-8.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-9.png" data-item-id="avatar-9" data-cost="50000"><img src="assets/avatars/avatar-9.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-10.png" data-item-id="avatar-10" data-cost="50000"><img src="assets/avatars/avatar-10.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-11.png" data-item-id="avatar-11" data-cost="50000"><img src="assets/avatars/avatar-11.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-12.png" data-item-id="avatar-12" data-cost="50000"><img src="assets/avatars/avatar-12.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-13.png" data-item-id="avatar-13" data-cost="50000"><img src="assets/avatars/avatar-13.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-14.png" data-item-id="avatar-14" data-cost="50000"><img src="assets/avatars/avatar-14.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-15.png" data-item-id="avatar-15" data-cost="50000"><img src="assets/avatars/avatar-15.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-16.png" data-item-id="avatar-16" data-cost="50000"><img src="assets/avatars/avatar-16.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-17.png" data-item-id="avatar-17" data-cost="50000"><img src="assets/avatars/avatar-17.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-18.png" data-item-id="avatar-18" data-cost="50000"><img src="assets/avatars/avatar-18.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-19.png" data-item-id="avatar-19" data-cost="50000"><img src="assets/avatars/avatar-19.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                        <button class="avatar-option premium-item group aspect-square rounded-full outline-none relative overflow-hidden" data-avatar="assets/avatars/avatar-20.png" data-item-id="avatar-20" data-cost="50000"><img src="assets/avatars/avatar-20.png"><div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10 rounded-full"><i class="fas fa-lock text-gray-400 text-lg mb-1"></i><span class="text-[9px] font-black text-yellow-400 bg-yellow-500/20 px-1.5 py-0.5 rounded border border-yellow-500/30">50k</span></div></button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="p-6 bg-gray-900 border-t border-gray-800 flex justify-between items-center relative z-10 flex-shrink-0">
+                <div class="text-xs text-gray-500 hidden sm:block">
+                    <i class="fas fa-info-circle mr-1"></i> Unlocked items stay in your inventory forever.
+                </div>
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button id="cancel-avatar-btn" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 transition-colors text-sm border border-gray-700">Cancel</button>
+                    <button id="save-avatar-btn" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-lg text-sm border border-blue-500/50">Save Avatar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
     <div id="workshop-modal" class="modal hidden z-[4000] fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
     <div class="modal-content w-full max-w-7xl h-[90vh] bg-[#0f172a]/85 backdrop-blur-2xl border border-white/10 rounded-2xl p-0 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden flex flex-col relative transform transition-all scale-95 opacity-0 duration-300" id="workshop-inner">
         
