@@ -592,7 +592,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const isUnlocked = tempSelectedCost === 0 || unlockedItems.includes(tempSelectedItemId);
 
             if (isUnlocked) {
-                if (tempSelectedAvatar) applyUserAvatar(tempSelectedAvatar);
+                if (tempSelectedAvatar) {
+                    applyUserAvatar(tempSelectedAvatar);
+                    // Push to Firestore Leaderboard
+                    if (typeof userId !== 'undefined' && userId && !isAnonymous) {
+                        await setDoc(doc(db, "leaderboard", userId), { avatar: tempSelectedAvatar }, { merge: true });
+                    }
+                }
                 closeModal();
                 showMessage("Avatar updated successfully!", "success");
             } else {
@@ -632,7 +638,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (walletEl) walletEl.textContent = `${(totalXp - newSpent).toLocaleString()} XP`;
 
                         // 5. Equip & Celebrate!
-                        if (tempSelectedAvatar) applyUserAvatar(tempSelectedAvatar);
+                        if (tempSelectedAvatar) {
+                            applyUserAvatar(tempSelectedAvatar);
+                            // Push to Firestore Leaderboard
+                            await setDoc(doc(db, "leaderboard", userId), { avatar: tempSelectedAvatar }, { merge: true });
+                        }
                         closeModal();
                         triggerCelebration(); 
                         showMessage("Avatar Unlocked! Enjoy your new identity.", "success");
@@ -992,6 +1002,7 @@ const updateLeaderboardData = async (uid, levelInfo) => {
             level: levelInfo.level,
             rankName: levelInfo.rankName,
             rankIcon: levelInfo.rankIcon,
+            avatar: localStorage.getItem('userAvatar') || null, 
             memberSince: user.metadata.creationTime ? new Date(user.metadata.creationTime) : serverTimestamp()
         };
 
@@ -4111,8 +4122,11 @@ const showUserProfile = async (profileUserId) => {
 
         // Populate the HEADER of the modal
         headerContainer.innerHTML = `
-            <div class="${rankClass} level-badge-wrapper beveled-edge" style="width: 100px; height: 100px; margin: 0 auto 1rem auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-                <i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>
+            <div class="relative flex justify-center items-center ${profileData.avatar ? '' : `${rankClass} level-badge-wrapper beveled-edge overflow-hidden`}" style="width: 100px; height: 100px; margin: 0 auto 1rem auto; ${profileData.avatar ? '' : 'box-shadow: 0 5px 15px rgba(0,0,0,0.3);'}">
+                ${profileData.avatar 
+                    ? `<img src="${profileData.avatar}" class="w-full h-full object-contain drop-shadow-2xl scale-125 relative z-20" alt="${profileData.displayName}">` 
+                    : `<i class="fas ${profileData.rankIcon}" style="font-size: 3rem;"></i>`
+                }
             </div>
             <h3 class="text-3xl font-bold text-white" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">${profileData.displayName}</h3>
             <p class="text-lg text-gray-200" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">${profileData.rankName}</p>
@@ -4185,6 +4199,7 @@ const updateUserLeaderboardEntry = async () => {
                 level: levelInfo.level,
                 rankName: levelInfo.rankName,
                 rankIcon: levelInfo.rankIcon,
+                avatar: localStorage.getItem('userAvatar') || null, 
                 memberSince: userData.firstSignIn || serverTimestamp()
             };
 
@@ -6017,7 +6032,11 @@ const renderWorkshopFeed = (searchQuery = '') => {
             
             <div class="mt-auto flex justify-between items-center">
                 <div class="${agentBadgeClass}">
-                    <i class="fas fa-user-astronaut"></i> ${res.authorName || 'Agent'}
+                    ${res.authorAvatar 
+                        ? `<img src="${res.authorAvatar}" class="w-4 h-4 rounded-full object-contain drop-shadow-sm" alt="Avatar">` 
+                        : `<i class="fas fa-user-astronaut"></i>`
+                    }
+                    ${res.authorName || 'Agent'}
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -6118,8 +6137,11 @@ const renderLeaderboard = async (view = 'all') => {
                     <div class="podium-card podium-rank-${rank}" data-userid="${u.id}">
                         ${isFirst ? '<i class="fas fa-crown rank-1-crown"></i>' : ''}
                         
-                        <div class="podium-avatar level-badge-${u.rankName.toLowerCase()}">
-                            <i class="fas ${u.rankIcon}"></i>
+                        <div class="podium-avatar relative ${u.avatar ? '' : `level-badge-${u.rankName.toLowerCase()} overflow-hidden`}" ${u.avatar ? 'style="background: transparent; border: none; box-shadow: none;"' : ''}>
+                            ${u.avatar 
+                                ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-xl scale-125 relative z-20" alt="${u.displayName}">` 
+                                : `<i class="fas ${u.rankIcon}"></i>`
+                            }
                         </div>
                         
                         <div class="text-center z-10">
@@ -6155,8 +6177,11 @@ const renderLeaderboard = async (view = 'all') => {
                 html += `
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
                         <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
-                        <div class="list-avatar level-badge-${u.rankName.toLowerCase()}">
-                            <i class="fas ${u.rankIcon}"></i>
+                        <div class="list-avatar relative ${u.avatar ? '' : `level-badge-${u.rankName.toLowerCase()} overflow-hidden`}" ${u.avatar ? 'style="background: transparent; border: none; box-shadow: none;"' : ''}>
+                            ${u.avatar 
+                                ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-md scale-125 relative z-20" alt="${u.displayName}">` 
+                                : `<i class="fas ${u.rankIcon}"></i>`
+                            }
                         </div>
                         <div class="flex-grow min-w-0">
                             <div class="flex items-center gap-2">
@@ -9973,6 +9998,7 @@ document.getElementById('category-list').addEventListener('click', (e) => {
                     originalId: responseData.id,
                     authorName: userName,
                     authorId: userId,
+                    authorAvatar: localStorage.getItem('userAvatar') || null, // <-- NEW: Attach the avatar to the published card
                     text: responseData.text,
                     label: responseData.label || 'Untitled',
                     category: category,
@@ -9980,7 +10006,7 @@ document.getElementById('category-list').addEventListener('click', (e) => {
                     downvotes: 0,
                     voters: {}, 
                     createdAt: serverTimestamp(),
-                    expireAt: expireDate // <-- THIS IS THE NEW MAGIC FIELD!
+                    expireAt: expireDate
                 });
                 
                 // 3. Success Feedback
