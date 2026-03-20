@@ -85,6 +85,7 @@
         let isReorderingResponses = false;
         let sortableCategoryInstance = null;
         let sortableResponseInstance = null;	
+        let suggestionEventsCache = null; // Tiny cache just for the Smart Brain
 	
 
 
@@ -326,19 +327,19 @@ const updateSmartSuggestions = async () => {
     // Only run on the right page
     if (currentPage !== 'canned-responses' || !userId || isAnonymous) return;
 
-    // Safety check for data
-    if (!cachedStatsEvents || cachedStatsEvents.length === 0) {
+    // --- FIX: Use its own tiny cache, and only pull 50 events! ---
+    if (!suggestionEventsCache || suggestionEventsCache.length === 0) {
          try {
-            const q = query(getUserEventsCollectionRef(userId), orderBy('timestamp', 'desc'), limit(500));
+            const q = query(getUserEventsCollectionRef(userId), orderBy('timestamp', 'desc'), limit(50));
             const snapshot = await getDocs(q);
-            cachedStatsEvents = snapshot.docs.map(doc => doc.data());
+            suggestionEventsCache = snapshot.docs.map(doc => doc.data());
         } catch (e) {
             console.error("Error fetching events for suggestions:", e);
             return;
         }
     }
 
-    const topResponseIds = getContextualSuggestions(cachedStatsEvents);
+    const topResponseIds = getContextualSuggestions(suggestionEventsCache);
     const container = document.getElementById('smart-suggestions-wrapper');
     const list = document.getElementById('smart-suggestions-list');
     const suggestionsCard = list.closest('.floating-card'); // Target the specific box
@@ -4445,78 +4446,115 @@ const checkAndDistributeRewards = async () => {
     }
 };	
 
-// --- NEW: Challenge System Configuration ---
+// --- OPTIMIZED: Challenge System Configuration ---
 const CHALLENGES_CONFIG = {
-    dailyCopies: {
-        id: 'dailyCopies', // Corrected
-        title: 'Daily Clicks',
-        description: 'Copy 10 responses in a single day.',
-        goal: 10,
-        xp: 100,
-        type: 'daily',
-        icon: 'fa-sun',
-        getProgress: async (events) => {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayStart = new Date(todayStr);
-            const todaysCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= todayStart).length;
-            return { current: todaysCopies };
-        }
-    },
-    weeklyCopies: {
-        id: 'weeklyCopies', // Corrected
-        title: 'Weekly Warrior',
-        description: 'Copy 50 responses in a single week.',
-        goal: 50,
-        xp: 500,
-        type: 'weekly',
-        icon: 'fa-calendar-week',
-        getProgress: async (events) => {
-            const now = new Date();
-            const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday...
-            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - daysSinceMonday);
-            startOfWeek.setHours(0, 0, 0, 0);
+    dailyCopies: {
+        id: 'dailyCopies',
+        title: 'Daily Clicks',
+        description: 'Copy 10 responses in a single day.',
+        goal: 10,
+        xp: 100,
+        type: 'daily',
+        icon: 'fa-sun',
+        getProgress: async (userData) => {
+            const todayStr = getCurrentDateString();
+            const prog = userData?.challengeProgress?.dailyCopies || {};
+            return { current: prog.date === todayStr ? (prog.count || 0) : 0 };
+        }
+    },
+    weeklyCopies: {
+        id: 'weeklyCopies',
+        title: 'Weekly Warrior',
+        description: 'Copy 50 responses in a single week.',
+        goal: 50,
+        xp: 500,
+        type: 'weekly',
+        icon: 'fa-calendar-week',
+        getProgress: async (userData) => {
+            const weekId = getCurrentWeekId();
+            const prog = userData?.challengeProgress?.weeklyCopies || {};
+            return { current: prog.week === weekId ? (prog.count || 0) : 0 };
+        }
+    },
+    monthlyMarathon: {
+        id: 'monthlyMarathon',
+        title: 'Monthly Marathon',
+        description: 'Copy 200 responses in a single month.',
+        goal: 200,
+        xp: 1500,
+        type: 'monthly',
+        icon: 'fa-calendar-alt',
+        getProgress: async (userData) => {
+            const monthId = getCurrentMonthId();
+            const prog = userData?.challengeProgress?.monthlyMarathon || {};
+            return { current: prog.month === monthId ? (prog.count || 0) : 0 };
+        }
+    },
+    logisticsExpert: {
+        id: 'logisticsExpert',
+        title: 'Logistics Expert',
+        description: 'Use the FedEx tracker 5 times in one week.',
+        goal: 5,
+        xp: 250,
+        type: 'weekly',
+        icon: 'fa-truck-fast',
+        getProgress: async (userData) => {
+            const weekId = getCurrentWeekId();
+            const prog = userData?.challengeProgress?.logisticsExpert || {};
+            return { current: prog.week === weekId ? (prog.count || 0) : 0 };
+        }
+    }
+};
 
-            const weeklyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
-            return { current: weeklyCopies };
-        }
-    },
-    monthlyMarathon: {
-        id: 'monthlyMarathon', // Corrected
-        title: 'Monthly Marathon',
-        description: 'Copy 200 responses in a single month.',
-        goal: 200,
-        xp: 1500,
-        type: 'monthly',
-        icon: 'fa-calendar-alt',
-        getProgress: async (events) => {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const monthlyCopies = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate() >= startOfMonth).length;
-            return { current: monthlyCopies };
-        }
-    },
-    logisticsExpert: {
-        id: 'logisticsExpert', // Corrected
-        title: 'Logistics Expert',
-        description: 'Use the FedEx tracker 5 times in one week.',
-        goal: 5,
-        xp: 250,
-        type: 'weekly',
-        icon: 'fa-truck-fast',
-        getProgress: async (events) => {
-            const now = new Date();
-            const dayOfWeek = now.getDay();
-            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - daysSinceMonday);
-            startOfWeek.setHours(0, 0, 0, 0);
-
-            const weeklyTrackingEvents = events.filter(e => e.type === 'extract_tracking' && e.timestamp && e.timestamp.toDate() >= startOfWeek).length;
-            return { current: weeklyTrackingEvents };
-        }
-    }
+// --- OPTIMIZED: Update Challenge Counters (Zero Reads!) ---
+const updateChallengeCounters = async (uid, actionType) => {
+    if (!uid || isAnonymous) return;
+    
+    const userDocRef = getUserRootDocRef(uid);
+    const todayStr = getCurrentDateString();
+    const weekId = getCurrentWeekId();
+    const monthId = getCurrentMonthId();
+    
+    // Safely retrieve existing progress from cache
+    let progress = cachedStatsUserData?.challengeProgress || {};
+    let updates = {};
+    
+    if (actionType === 'copy') {
+        // Daily
+        if (progress.dailyCopies?.date === todayStr) { updates['challengeProgress.dailyCopies.count'] = increment(1); } 
+        else { updates['challengeProgress.dailyCopies'] = { date: todayStr, count: 1 }; }
+        
+        // Weekly
+        if (progress.weeklyCopies?.week === weekId) { updates['challengeProgress.weeklyCopies.count'] = increment(1); } 
+        else { updates['challengeProgress.weeklyCopies'] = { week: weekId, count: 1 }; }
+        
+        // Monthly
+        if (progress.monthlyMarathon?.month === monthId) { updates['challengeProgress.monthlyMarathon.count'] = increment(1); } 
+        else { updates['challengeProgress.monthlyMarathon'] = { month: monthId, count: 1 }; }
+    }
+    
+    if (actionType === 'extract_tracking') {
+        // Logistics Expert
+        if (progress.logisticsExpert?.week === weekId) { updates['challengeProgress.logisticsExpert.count'] = increment(1); } 
+        else { updates['challengeProgress.logisticsExpert'] = { week: weekId, count: 1 }; }
+    }
+    
+    if (Object.keys(updates).length > 0) {
+        await updateDoc(userDocRef, updates);
+        
+        // Instantly update local cache so UI doesn't lag
+        if (cachedStatsUserData) {
+            if (!cachedStatsUserData.challengeProgress) cachedStatsUserData.challengeProgress = {};
+            
+            if (actionType === 'copy') {
+                cachedStatsUserData.challengeProgress.dailyCopies = { date: todayStr, count: (progress.dailyCopies?.date === todayStr ? (progress.dailyCopies.count || 0) + 1 : 1) };
+                cachedStatsUserData.challengeProgress.weeklyCopies = { week: weekId, count: (progress.weeklyCopies?.week === weekId ? (progress.weeklyCopies.count || 0) + 1 : 1) };
+                cachedStatsUserData.challengeProgress.monthlyMarathon = { month: monthId, count: (progress.monthlyMarathon?.month === monthId ? (progress.monthlyMarathon.count || 0) + 1 : 1) };
+            } else if (actionType === 'extract_tracking') {
+                cachedStatsUserData.challengeProgress.logisticsExpert = { week: weekId, count: (progress.logisticsExpert?.week === weekId ? (progress.logisticsExpert.count || 0) + 1 : 1) };
+            }
+        }
+    }
 };
 		
 // --- UPDATED DATE HELPERS (Safe for Feb & 31st) ---
@@ -4559,32 +4597,27 @@ const getPreviousMonthId = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-// In your <script> tag, find and UPDATE the checkAndAwardChallengeXP function...
 
-const checkAndAwardChallengeXP = async (userId) => {
-    if (!userId || isAnonymous) return;
+// --- OPTIMIZED: Award XP (Zero Firestore Event Reads) ---
+const checkAndAwardChallengeXP = async (uid) => {
+    if (!uid || isAnonymous) return;
 
-try {
-    // BULLETPROOF CHECK: Make sure BOTH parts of the cache exist before checking challenges
-    if (!cachedStatsUserData || !cachedStatsEvents || cachedStatsEvents.length === 0) {
-        const userDocRef = getUserRootDocRef(userId);
-	        const userDoc = await getDoc(userDocRef);
-	        cachedStatsUserData = userDoc.exists() ? userDoc.data() : {};
-	
-	        const eventsCollectionRef = getUserEventsCollectionRef(userId);
-	        const snapshot = await getDocs(query(eventsCollectionRef));
-	        cachedStatsEvents = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-	    }
-	
-	    const userData = cachedStatsUserData;
-	    const events = cachedStatsEvents;
-	    const userDocRef = getUserRootDocRef(userId);
+    try {
+        const userDocRef = getUserRootDocRef(uid);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        
+        // Keep cache fresh
+        cachedStatsUserData = userData;
+
+        const todayStr = getCurrentDateString();
+        const weekId = getCurrentWeekId();
+        const monthId = getCurrentMonthId();
         
         // --- Daily Challenge Check ---
-        const todayStr = getCurrentDateString();
         const lastDailyCompletion = userData.lastDailyChallengeDate || '';
         if (lastDailyCompletion !== todayStr) {
-            const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(events);
+            const { current } = await CHALLENGES_CONFIG.dailyCopies.getProgress(userData);
             if (current >= CHALLENGES_CONFIG.dailyCopies.goal) {
                 await awardXP(CHALLENGES_CONFIG.dailyCopies.xp, 'Daily Challenge');
                 await updateDoc(userDocRef, { lastDailyChallengeDate: todayStr });
@@ -4593,12 +4626,9 @@ try {
         }
 
         // --- Weekly Challenges Check ---
-        const weekId = getCurrentWeekId();
-        
-        // Check for Weekly Copies Challenge
         const lastWeeklyCompletion = userData.lastWeeklyChallengeWeek || '';
         if (lastWeeklyCompletion !== weekId) {
-            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(events);
+            const { current } = await CHALLENGES_CONFIG.weeklyCopies.getProgress(userData);
             if (current >= CHALLENGES_CONFIG.weeklyCopies.goal) {
                 await awardXP(CHALLENGES_CONFIG.weeklyCopies.xp, 'Weekly Challenge');
                 await updateDoc(userDocRef, { lastWeeklyChallengeWeek: weekId });
@@ -4607,10 +4637,9 @@ try {
             }
         }
 
-        // Check for Logistics Expert Challenge
         const lastLogisticsCompletion = userData.lastLogisticsChallengeWeek || '';
         if (lastLogisticsCompletion !== weekId) {
-            const { current } = await CHALLENGES_CONFIG.logisticsExpert.getProgress(events);
+            const { current } = await CHALLENGES_CONFIG.logisticsExpert.getProgress(userData);
             if (current >= CHALLENGES_CONFIG.logisticsExpert.goal) {
                 await awardXP(CHALLENGES_CONFIG.logisticsExpert.xp, 'Logistics Expert');
                 await updateDoc(userDocRef, { lastLogisticsChallengeWeek: weekId });
@@ -4619,10 +4648,9 @@ try {
         }
 
         // --- Monthly Challenge Check ---
-        const monthId = getCurrentMonthId();
         const lastMonthlyCompletion = userData.lastMonthlyChallengeMonth || '';
         if (lastMonthlyCompletion !== monthId) {
-            const { current } = await CHALLENGES_CONFIG.monthlyMarathon.getProgress(events);
+            const { current } = await CHALLENGES_CONFIG.monthlyMarathon.getProgress(userData);
             if (current >= CHALLENGES_CONFIG.monthlyMarathon.goal) {
                 await updateDoc(userDocRef, { lastMonthlyChallengeMonth: monthId });
                 showMessage("Monthly Challenge Complete! 3x XP is active for the rest of the month!", "success");
@@ -4640,7 +4668,6 @@ try {
                         color: 'text-yellow-400'
                     });
                 }
-    
                 showChallengeCompletionAnimation('monthlyMarathon');
             }
         }
@@ -5218,6 +5245,13 @@ const logUserEvent = async (eventType, eventData = {}) => {
 		        ...cleanedEventData
 		    });
 		}
+        if (suggestionEventsCache !== null) {
+            suggestionEventsCache.unshift({
+                type: eventType,
+                timestamp: { toDate: () => new Date() }, 
+                ...cleanedEventData
+            });
+        }    
 
         // (Keep your existing Globetrotter logic here...)
         if (eventType === 'copy' && eventData.categoryName) {
@@ -6903,6 +6937,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     console.error("Error updating copy count:", error);
                 }
             }
+            await updateChallengeCounters(userId, 'copy'); 
             await checkAndAwardChallengeXP(userId);
         } else {
              // Cooldown active - feedback only
@@ -7919,7 +7954,13 @@ const renderAdvancedStats = async () => {
 		    userData = userDoc.exists() ? userDoc.data() : {};
 		
 		    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-		    const snapshot = await getDocs(query(eventsCollectionRef));
+            
+            const q = query(
+                eventsCollectionRef, 
+                orderBy("timestamp", "desc")
+            );
+            
+		    const snapshot = await getDocs(q);
 		    events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
 		
 		    // Save to memory so we don't have to fetch again
@@ -9469,30 +9510,25 @@ if (activityWrapper) {
         }
     });
 
-const activityFilterGroup = document.getElementById('activity-filter-group');
-if (activityFilterGroup) {
-    activityFilterGroup.addEventListener('click', async (e) => {
-        const button = e.target.closest('.activity-filter-btn');
-        if (button && !button.classList.contains('active')) {
-            // 1. Update active class
-            activityFilterGroup.querySelectorAll('.activity-filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            button.classList.add('active');
-            
-            // 2. Get data and re-render
-            const period = button.dataset.period;
-            
-            // We need to re-fetch the events data to pass to the render function
-            // (This is necessary in case new events happened since the page loaded)
-            const eventsCollectionRef = getUserEventsCollectionRef(userId);
-            const snapshot = await getDocs(query(eventsCollectionRef));
-            const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-            
-            renderActivityChart(events, period);
-        }
-    });
-}
+    const activityFilterGroup = document.getElementById('activity-filter-group');
+    if (activityFilterGroup) {
+        activityFilterGroup.addEventListener('click', (e) => {
+            const button = e.target.closest('.activity-filter-btn');
+            if (button && !button.classList.contains('active')) {
+                // 1. Update active class
+                activityFilterGroup.querySelectorAll('.activity-filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+                
+                // 2. Get data and re-render using the RAM cache! (Zero Firebase Reads)
+                const period = button.dataset.period;
+                if (cachedStatsEvents) {
+                    renderActivityChart(cachedStatsEvents, period);
+                }
+            }
+        });
+    }
 	
     const unlockAudio = () => {
         if (!audioUnlocked) {
@@ -10176,6 +10212,7 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         const uniqueNumbers = [...new Set(matches)];
 
         await logUserEvent('extract_tracking', { count: uniqueNumbers.length });
+        await updateChallengeCounters(userId, 'extract_tracking'); 
         const numbersToCopy = uniqueNumbers.join('\t');
         copyToClipboard(numbersToCopy);
         await awardXP(XP_VALUES.FEDEX_TRACKING, 'FedEx Tracked');
