@@ -927,13 +927,13 @@
                         </div>
                     </div>
 
-                    <div class="p-4 px-6 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-not-allowed opacity-60">
+                    <div id="compact-view-toggle-container" class="p-4 px-6 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer group">
                         <div>
                             <span class="block text-sm font-bold text-gray-200">Compact List View</span>
-                            <span class="block text-xs text-gray-500 mt-0.5">Decrease padding in the Canned Responses list.</span>
+                            <span class="block text-xs text-gray-500 mt-0.5">Use a collapsible accordion layout for responses.</span>
                         </div>
-                        <div class="w-11 h-6 bg-gray-700 rounded-full relative shadow-inner">
-                            <div class="w-4 h-4 bg-gray-500 rounded-full absolute left-1 top-1"></div>
+                        <div id="compact-view-track" class="w-11 h-6 bg-gray-700 rounded-full relative shadow-inner transition-colors duration-300">
+                            <div id="compact-view-knob" class="w-4 h-4 bg-gray-500 rounded-full absolute left-1 top-1 transition-transform duration-300"></div>
                         </div>
                     </div>
 

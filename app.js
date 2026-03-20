@@ -86,6 +86,7 @@
         let sortableCategoryInstance = null;
         let sortableResponseInstance = null;	
         let suggestionEventsCache = null; // Tiny cache just for the Smart Brain
+        let isCompactMode = localStorage.getItem('compactMode') === 'true';
 	
 
 
@@ -6635,49 +6636,121 @@ const renderResponses = (searchQuery = '') => {
                     }
                 }
 
-                const titleHTML = `
-                    <div class="flex items-center gap-3 mb-2 ml-1 cursor-pointer copy-trigger w-fit">
-                        <h4 class="text-lg font-bold ${titleColor} tracking-tight transition-colors select-none">${displayLabel}</h4>
-                        ${response.isPinned ? '<i class="fas fa-thumbtack text-blue-400 text-xs transform rotate-45"></i>' : ''}
-                    </div>`;
-
                 const cardEl = document.createElement('div');
-                cardEl.className = 'response-item w-full rounded-xl border relative shadow-md hover:shadow-lg transition-all flex flex-col overflow-hidden';
-                cardEl.style.cssText = `background-color: ${cardBg}; border-color: ${isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.05)'};`;
                 cardEl.dataset.id = response.id;
                 cardEl.dataset.category = response.category;
 
-                cardEl.innerHTML = `
-                    <div class="p-6 flex-grow display-mode w-full">
-                        <p class="response-text-display ${bodyTextColor} whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
-                    </div>
-                    <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center relative z-20">
-                        <div class="flex items-center gap-3">
-                            <button class="copy-btn anim-bounce text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:brightness-110" 
-                                    style="background-color: ${copyBtnBg};">
-                                <i class="fas fa-copy"></i> <span>Copy</span>
-                            </button>
-                            ${pillHTML} 
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="usage-count-display text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
-                            <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
-                                <button class="publish-btn ${iconColor} hover:text-indigo-400 hover:bg-indigo-500/10 p-2 rounded-lg transition-colors" title="Publish to Workshop">
-                                    <i class="fas fa-share-square"></i>
-                                </button>
-                                <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
-                                    <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''}"></i>
-                                </button>
-                                <button class="edit-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="delete-btn ${iconColor} hover:text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors" title="Delete">
-                                    <i class="fas fa-trash"></i>
+                let titleHTML = '';
+
+                if (isCompactMode) {
+                    // --- ACCORDION VIEW ---
+                    cardEl.className = 'response-item w-full rounded-xl border relative shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden';
+                    cardEl.style.backgroundColor = isLightMode ? '#f9fafb' : 'rgba(31, 41, 55, 0.3)';
+                    cardEl.style.borderColor = isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.05)';
+                    cardEl.style.borderLeftWidth = '4px';
+                    cardEl.style.borderLeftColor = categoryColor;  
+
+                    cardEl.innerHTML = `
+                        <div class="accordion-header flex items-center justify-between p-3 cursor-pointer hover:bg-gray-700/20 transition-colors z-20">
+                            <div class="flex items-center gap-3 overflow-hidden pr-2 w-full sm:w-auto">
+                                <i class="accordion-icon fas fa-chevron-right text-gray-500 text-xs transition-transform duration-200 shrink-0"></i>
+                                <h4 class="text-sm font-bold ${titleColor} truncate tracking-tight transition-colors select-none">${displayLabel}</h4>
+                                ${response.isPinned ? '<i class="fas fa-thumbtack text-blue-400 text-xs transform rotate-45 shrink-0"></i>' : ''}
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0 ml-auto">
+                                <span class="usage-count-display text-[10px] ${metaTextColor} font-mono hidden sm:inline-block">${timesCopied} uses</span>
+                                <button class="copy-btn copy-trigger anim-bounce text-white font-bold py-1.5 px-3 rounded shadow-sm active:scale-95 transition-all flex items-center gap-1.5 text-[10px] hover:brightness-110" style="background-color: ${copyBtnBg};">
+                                    <i class="fas fa-copy pointer-events-none"></i> <span class="pointer-events-none">Copy</span>
                                 </button>
                             </div>
                         </div>
-                    </div>
-                `;
+
+                        <div class="accordion-body hidden border-t ${isLightMode ? 'border-gray-200 bg-white/50' : 'border-gray-700/50 bg-black/20'}">
+                            <div class="p-4 display-mode">
+                                <p class="response-text-display ${bodyTextColor} text-[13px] leading-relaxed font-mono whitespace-pre-wrap break-words">${displayText}</p>
+                            </div>
+                            <div class="p-2 px-4 flex justify-between items-center ${isLightMode ? 'bg-gray-100 border-t border-gray-200' : 'bg-black/40 border-t border-white/5'}">
+                                <div class="flex gap-2">
+                                    ${pillHTML}
+                                </div>
+                                <div class="flex items-center gap-2 ${isAnonymous ? 'hidden' : ''}">
+                                    <button class="publish-btn ${iconColor} hover:text-indigo-400 hover:bg-indigo-500/10 px-2 py-1 rounded transition-colors text-[11px] flex items-center gap-1" title="Publish">
+                                        <i class="fas fa-share-square pointer-events-none"></i> <span class="hidden sm:inline-block pointer-events-none">Publish</span>
+                                    </button>
+                                    <button class="pin-btn ${iconColor} hover:bg-black/10 px-2 py-1 rounded transition-colors text-[11px] flex items-center gap-1" title="${response.isPinned ? 'Unpin' : 'Pin'}">
+                                        <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''} pointer-events-none"></i> <span class="hidden sm:inline-block pointer-events-none">Pin</span>
+                                    </button>
+                                    <button class="edit-btn ${iconColor} hover:bg-black/10 px-2 py-1 rounded transition-colors text-[11px] flex items-center gap-1" title="Edit" data-id="${response.id}">
+                                        <i class="fas fa-pencil-alt pointer-events-none"></i> <span class="hidden sm:inline-block pointer-events-none">Edit</span>
+                                    </button>
+                                    <button class="delete-btn ${iconColor} hover:text-red-500 hover:bg-red-500/10 px-2 py-1 rounded transition-colors text-[11px] flex items-center gap-1" title="Delete">
+                                        <i class="fas fa-trash pointer-events-none"></i> <span class="hidden sm:inline-block pointer-events-none">Delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Wire up the Accordion Click Listener
+                    const header = cardEl.querySelector('.accordion-header');
+                    const body = cardEl.querySelector('.accordion-body');
+                    const icon = cardEl.querySelector('.accordion-icon');
+                    
+                    header.addEventListener('click', (e) => {
+                        if (e.target.closest('.copy-trigger')) return; // Don't expand if clicking copy
+                        
+                        if (body.classList.contains('hidden')) {
+                            body.classList.remove('hidden');
+                            icon.style.transform = 'rotate(90deg)';
+                        } else {
+                            body.classList.add('hidden');
+                            icon.style.transform = 'rotate(0deg)';
+                        }
+                    });
+
+                } else {
+                    // --- FULL SIZED VIEW (Existing) ---
+                    titleHTML = `
+                        <div class="flex items-center gap-3 mb-2 ml-1 cursor-pointer copy-trigger w-fit">
+                            <h4 class="text-lg font-bold ${titleColor} tracking-tight transition-colors select-none">${displayLabel}</h4>
+                            ${response.isPinned ? '<i class="fas fa-thumbtack text-blue-400 text-xs transform rotate-45"></i>' : ''}
+                        </div>`;
+
+                    cardEl.className = 'response-item w-full rounded-xl border relative shadow-md hover:shadow-lg transition-all flex flex-col overflow-hidden';
+                    cardEl.style.cssText = `background-color: ${cardBg}; border-color: ${isLightMode ? '#e5e7eb' : 'rgba(255,255,255,0.05)'};`;
+                    
+                    cardEl.innerHTML = `
+                        <div class="p-6 flex-grow display-mode w-full">
+                            <p class="response-text-display ${bodyTextColor} whitespace-pre-wrap leading-relaxed break-words text-sm sm:text-base">${displayText}</p>
+                        </div>
+                        <div class="${footerBg} border-t p-3 px-5 flex justify-between items-center relative z-20">
+                            <div class="flex items-center gap-3">
+                                <button class="copy-btn copy-trigger anim-bounce text-white font-bold py-2 px-6 rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-2 text-sm hover:brightness-110" 
+                                        style="background-color: ${copyBtnBg};">
+                                    <i class="fas fa-copy pointer-events-none"></i> <span class="pointer-events-none">Copy</span>
+                                </button>
+                                ${pillHTML} 
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="usage-count-display text-xs ${metaTextColor} font-mono opacity-80 hidden sm:inline-block" title="Times copied">${timesCopied} uses</span>
+                                <div class="flex gap-1 ${isAnonymous ? 'hidden' : ''}">
+                                    <button class="publish-btn ${iconColor} hover:text-indigo-400 hover:bg-indigo-500/10 p-2 rounded-lg transition-colors" title="Publish to Workshop">
+                                        <i class="fas fa-share-square pointer-events-none"></i>
+                                    </button>
+                                    <button class="pin-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="${response.isPinned ? 'Unpin' : 'Pin'}">
+                                        <i class="fas fa-thumbtack ${response.isPinned ? 'text-blue-400' : ''} pointer-events-none"></i>
+                                    </button>
+                                    <button class="edit-btn ${iconColor} hover:bg-black/10 p-2 rounded-lg transition-colors" title="Edit" data-id="${response.id}">
+                                        <i class="fas fa-pencil-alt pointer-events-none"></i>
+                                    </button>
+                                    <button class="delete-btn ${iconColor} hover:text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors" title="Delete">
+                                        <i class="fas fa-trash pointer-events-none"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
 
 				const insightBtn = cardEl.querySelector('.insight-trigger');
 				if (insightBtn) {
@@ -9866,6 +9939,60 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
             renderWorkshopFeed(searchInput ? searchInput.value : '');
         }
     });
+
+    // --- COMPACT VIEW TOGGLE LOGIC ---
+    const compactContainer = document.getElementById('compact-view-toggle-container');
+
+    const updateCompactToggleUI = (track, knob) => {
+        if (!track || !knob) return;
+        if (isCompactMode) {
+            // Colors
+            track.classList.add('bg-blue-600');
+            track.classList.remove('bg-gray-700');
+            knob.classList.add('bg-white');
+            knob.classList.remove('bg-gray-500');
+            
+            // Bulletproof Slide (Equivalent to translate-x-5)
+            knob.style.transform = 'translateX(20px)'; 
+        } else {
+            // Colors
+            track.classList.add('bg-gray-700');
+            track.classList.remove('bg-blue-600');
+            knob.classList.add('bg-gray-500'); 
+            knob.classList.remove('bg-white');
+            
+            // Reset Slide
+            knob.style.transform = 'translateX(0px)';
+        }
+    };
+
+    if (compactContainer) {
+        // Find the track and knob directly inside the container
+        const track = document.getElementById('compact-view-track');
+        const knob = document.getElementById('compact-view-knob');
+        
+        // Initial setup
+        updateCompactToggleUI(track, knob);
+        
+        // Remove old listeners by cloning, then re-attach correctly
+        const newCompactContainer = compactContainer.cloneNode(true);
+        compactContainer.parentNode.replaceChild(newCompactContainer, compactContainer);
+        
+        const newTrack = newCompactContainer.querySelector('#compact-view-track');
+        const newKnob = newCompactContainer.querySelector('#compact-view-knob');
+        
+        newCompactContainer.addEventListener('click', () => {
+            isCompactMode = !isCompactMode;
+            localStorage.setItem('compactMode', isCompactMode);
+            
+            updateCompactToggleUI(newTrack, newKnob); // Pass the fresh elements
+            showMessage(isCompactMode ? "Compact View Enabled" : "Standard View Enabled", "success");
+            
+            if (currentPage === 'canned-responses') {
+                renderResponses(document.getElementById('search-input').value);
+            }
+        });
+    }
 
 document.getElementById('category-list').addEventListener('click', (e) => {
         const button = e.target.closest('.category-item');
