@@ -225,8 +225,22 @@ const showClipboardToast = (numbers) => {
         }
     });
 };
+
 // 1. Store the exact date the page was initially loaded
 const sessionLoadedDate = new Date().toISOString().split('T')[0];
+
+// --- NATIVE PRESENCE SYSTEM ---
+const updatePresence = (isOnline) => {
+    if (!userId || isAnonymous) return;
+    try {
+        const leaderboardDocRef = doc(db, "leaderboard", userId);
+        // If coming back, set to now. If leaving/closing, backdate it 10 minutes to force "Offline"
+        const targetTime = isOnline ? serverTimestamp() : new Date(Date.now() - 10 * 60000);
+        updateDoc(leaderboardDocRef, { lastActive: targetTime });
+    } catch (e) {
+        console.warn("Presence update failed:", e);
+    }
+};
 
 // 2. The Sensor: Tracks when you are actually looking at the tab
 const handleVisibilityChange = () => {
@@ -235,18 +249,18 @@ const handleVisibilityChange = () => {
         // --- NEW: The "New Day" Check ---
         const todayStr = new Date().toISOString().split('T')[0];
         
-        // If today's date doesn't match the date the page was loaded...
         if (todayStr !== sessionLoadedDate) {
-            // The user just clicked on the tab, and it's a new day! 
-            // Refresh immediately and silently.
             window.location.reload(true);
-            return; // Stop the rest of the function from running
+            return; 
         }
         // ---------------------------------
 
         sessionStartTime = Date.now();
-        // Trigger the Smart Brain immediately when user returns
         updateSmartSuggestions();
+        
+        // Bump them to Online when they switch back to this tab!
+        updatePresence(true);
+        
     } else {
         if (sessionStartTime) {
             const durationMinutes = ((Date.now() - sessionStartTime) / 60000).toFixed(1);
@@ -255,6 +269,11 @@ const handleVisibilityChange = () => {
         }
     }
 };
+
+// 3. The "Laptop Slam" Sensor (Instantly marks them offline when tab closes)
+window.addEventListener('pagehide', () => {
+    updatePresence(false);
+});
 
 // 2. The Brain: Calculates specific suggestions based on hour/day
 const getContextualSuggestions = (events) => {
@@ -6104,44 +6123,44 @@ const renderWorkshopFeed = (searchQuery = '') => {
 }
 
 
-const renderLeaderboard = async (view = 'all') => {
-    currentLeaderboardView = view; // Update global state
+// --- REAL-TIME LEADERBOARD LOGIC ---
+let leaderboardUnsubscribe = null;
+let liveLeaderboardData = [];
+
+const renderLeaderboard = (view = 'all') => {
+    currentLeaderboardView = view; 
     const container = document.getElementById('leaderboard-container');
     if (!container) return;
 
-    // Show loading state briefly
-    container.innerHTML = '<div class="flex justify-center p-8"><svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+    // 1. Only show loading spinner if we have NO data yet
+    if (liveLeaderboardData.length === 0) {
+        container.innerHTML = '<div class="flex justify-center p-8"><svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+    }
 
-    try {
-		// 1. Fetch ALL users
-        const leaderboardColRef = collection(db, "leaderboard");
-        const querySnapshot = await getDocs(leaderboardColRef);
-        let users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        // 2. Sort & Filter in Memory based on View
+    // 2. Build the UI drawing function
+    const drawUI = () => {
+        if (!document.getElementById('leaderboard-container')) return; // Safety check
+        
+        let users = [...liveLeaderboardData];
         const currentWeekId = getCurrentWeekId();
         const currentMonthId = getCurrentMonthId();
 
-        if (view === 'weekly') {
-            // Sort by weeklyXp, but treat as 0 if the week ID is old
+        if (currentLeaderboardView === 'weekly') {
             users.sort((a, b) => {
                 const scoreA = (a.lastWeeklyXpId === currentWeekId) ? (a.weeklyXp || 0) : 0;
                 const scoreB = (b.lastWeeklyXpId === currentWeekId) ? (b.weeklyXp || 0) : 0;
                 return scoreB - scoreA;
             });
-        } else if (view === 'monthly') {
-            // Sort by monthlyXp, but treat as 0 if the month ID is old
+        } else if (currentLeaderboardView === 'monthly') {
             users.sort((a, b) => {
                 const scoreA = (a.lastMonthlyXpId === currentMonthId) ? (a.monthlyXp || 0) : 0;
                 const scoreB = (b.lastMonthlyXpId === currentMonthId) ? (b.monthlyXp || 0) : 0;
                 return scoreB - scoreA;
             });
         } else {
-            // Default: All Time XP
             users.sort((a, b) => (b.xp || 0) - (a.xp || 0));
         }
 
-        // Take Top 10 after sorting
         users = users.slice(0, 10);
 
         if (users.length === 0) {
@@ -6149,7 +6168,7 @@ const renderLeaderboard = async (view = 'all') => {
             return;
         }
 
-// --- 3. Render Podium (Top 3) ---
+        // --- 3. Render Podium (Top 3) ---
         let html = '<div class="podium-container">';
         const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd
         
@@ -6158,19 +6177,16 @@ const renderLeaderboard = async (view = 'all') => {
                 const u = users[idx];
                 const rank = idx + 1;
                 const isFirst = rank === 1;
-                
-                // Calculate Status
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
                 
-                // Determine which score to display
                 let displayScore = u.xp;
                 let scoreLabel = "Total XP";
                 
-                if (view === 'weekly') {
+                if (currentLeaderboardView === 'weekly') {
                     displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
                     scoreLabel = "This Week";
-                } else if (view === 'monthly') {
+                } else if (currentLeaderboardView === 'monthly') {
                     displayScore = (u.lastMonthlyXpId === currentMonthId) ? (u.monthlyXp || 0) : 0;
                     scoreLabel = "This Month";
                 }
@@ -6178,19 +6194,13 @@ const renderLeaderboard = async (view = 'all') => {
                 html += `
                     <div class="podium-card podium-rank-${rank}" data-userid="${u.id}">
                         ${isFirst ? '<i class="fas fa-crown rank-1-crown"></i>' : ''}
-                        
                         <div class="podium-avatar relative ${u.avatar ? '' : `level-badge-${u.rankName.toLowerCase()} overflow-hidden`}" ${u.avatar ? 'style="background: transparent; border: none; box-shadow: none;"' : ''}>
-                            ${u.avatar 
-                                ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-xl scale-125 relative z-20" alt="${u.displayName}">` 
-                                : `<i class="fas ${u.rankIcon}"></i>`
-                            }
+                            ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-xl scale-125 relative z-20" alt="${u.displayName}">` : `<i class="fas ${u.rankIcon}"></i>`}
                         </div>
-                        
                         <div class="text-center z-10">
                             <p class="font-bold text-white text-xs truncate w-20">${u.displayName}</p>
                             <p class="text-xs text-blue-300 font-mono font-bold">${displayScore.toLocaleString()}</p>
                             <p class="text-[9px] text-gray-400 uppercase mb-1">${scoreLabel}</p>
-                            
                             <div class="mt-1 text-[9px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'} flex items-center justify-center">
                                 <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
                                 ${status}
@@ -6204,26 +6214,23 @@ const renderLeaderboard = async (view = 'all') => {
         });
         html += '</div>';
 
-		// --- 4. Render List (Rank 4+) ---
+        // --- 4. Render List (Rank 4+) ---
         html += '<div class="space-y-2 mt-2">';
         if (users.length > 3) {
             users.slice(3).forEach((u, index) => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
-                
                 let displayScore = u.xp;
-                if (view === 'weekly') displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
-                else if (view === 'monthly') displayScore = (u.lastMonthlyXpId === currentMonthId) ? (u.monthlyXp || 0) : 0;
+                
+                if (currentLeaderboardView === 'weekly') displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
+                else if (currentLeaderboardView === 'monthly') displayScore = (u.lastMonthlyXpId === currentMonthId) ? (u.monthlyXp || 0) : 0;
 
                 html += `
                     <div class="leaderboard-entry cursor-pointer flex items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition" data-userid="${u.id}">
                         <span class="font-mono text-gray-500 w-6 text-center font-bold">${rank}</span>
                         <div class="list-avatar relative ${u.avatar ? '' : `level-badge-${u.rankName.toLowerCase()} overflow-hidden`}" ${u.avatar ? 'style="background: transparent; border: none; box-shadow: none;"' : ''}>
-                            ${u.avatar 
-                                ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-md scale-125 relative z-20" alt="${u.displayName}">` 
-                                : `<i class="fas ${u.rankIcon}"></i>`
-                            }
+                            ${u.avatar ? `<img src="${u.avatar}" class="w-full h-full object-contain drop-shadow-md scale-125 relative z-20" alt="${u.displayName}">` : `<i class="fas ${u.rankIcon}"></i>`}
                         </div>
                         <div class="flex-grow min-w-0">
                             <div class="flex items-center gap-2">
@@ -6238,12 +6245,21 @@ const renderLeaderboard = async (view = 'all') => {
             });
         }
         html += '</div>';
-
         container.innerHTML = html;
+    };
 
-    } catch (error) {
-        console.error("Error rendering leaderboard:", error);
-        container.innerHTML = '<p class="text-red-400">Error loading data.</p>';
+    // 5. Set up the Real-Time Listener (Only runs ONCE)
+    if (!leaderboardUnsubscribe) {
+        const leaderboardColRef = collection(db, "leaderboard");
+        leaderboardUnsubscribe = onSnapshot(leaderboardColRef, (snapshot) => {
+            liveLeaderboardData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            drawUI(); // Automatically redraws whenever anyone's score/status changes!
+        }, (error) => {
+            console.error("Leaderboard live sync error:", error);
+        });
+    } else {
+        // If already listening (e.g. they clicked the "Weekly" filter tab), redraw instantly
+        drawUI();
     }
 };
 
@@ -6930,9 +6946,7 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         renderActivityChart(cachedStatsEvents, currentPeriod);
                     }
                     // ---------------------------------
-                    
-                    renderLeaderboard(currentLeaderboardView); 
-                    
+                                        
                 } catch (error) {
                     console.error("Error updating copy count:", error);
                 }
