@@ -91,10 +91,10 @@
 			</nav>
 
 		    <div class="mt-auto border-t border-gray-800 p-4 flex justify-between items-center bg-gray-900">
-		        <div class="flex items-center gap-3">
-		             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" class="user-avatar-img w-12 h-12" id="sidebar-user-avatar">
+		        <div class="flex items-center gap-3 cursor-pointer group" onclick="document.getElementById('open-avatar-modal-btn').click()" title="Change Avatar">
+		             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E" class="user-avatar-img w-12 h-12 transition-transform group-hover:scale-105" id="sidebar-user-avatar">
 		             <div class="flex flex-col">
-		                 <span class="text-xs font-semibold text-gray-200" id="sidebar-user-name">User</span>
+		                 <span class="text-xs font-semibold text-gray-200 group-hover:text-white transition-colors" id="sidebar-user-name">User</span>
 		                 <span class="text-[10px] text-gray-500 font-mono" id="sidebar-greeting">Online</span>
 		             </div>
 		        </div>
@@ -716,7 +716,7 @@
                     <i class="fas fa-user-circle w-4 text-center"></i> Account & Profile
                 </a>
                 <a href="#set-appearance" class="settings-nav-link text-sm text-gray-400 hover:text-gray-200 py-2 px-3 rounded-lg transition-colors flex items-center gap-3">
-                    <i class="fas fa-paint-brush w-4 text-center"></i> Appearance
+                    <i class="fas fa-store w-4 text-center text-yellow-500"></i> The XP Store
                 </a>
                 <a href="#set-preferences" class="settings-nav-link text-sm text-gray-400 hover:text-gray-200 py-2 px-3 rounded-lg transition-colors flex items-center gap-3">
                     <i class="fas fa-sliders-h w-4 text-center"></i> Preferences
@@ -770,7 +770,9 @@
 		</section>
 
             <section id="set-appearance" class="scroll-mt-10">
-                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Appearance & Theming</h3>
+                <h3 class="text-[10px] font-bold text-yellow-500/80 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2 flex items-center gap-2">
+                    <i class="fas fa-shopping-bag"></i> The XP Store: Themes & Appearance
+                </h3>
                 <div class="bg-gray-900/60 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden">
                     
                     <div class="p-6 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.02] transition-colors">
@@ -859,6 +861,50 @@
                                     </div>
                                 </div>
                                 <span class="text-xs font-bold text-gray-400 group-hover:text-rose-400 transition-colors uppercase tracking-widest">Sakura Dawn</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-venomous-orchid" data-item-id="theme-venomous-orchid" data-cost="25000">
+                                <div class="theme-card-preview theme-card-venomous-orchid w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-fuchsia-500 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-fuchsia-400 transition-colors uppercase tracking-widest">Venomous Orchid</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-miami-overdrive" data-item-id="theme-miami-overdrive" data-cost="30000">
+                                <div class="theme-card-preview theme-card-miami-overdrive w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-orange-500 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-orange-500 transition-colors uppercase tracking-widest">Miami Overdrive</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-terminal-velocity" data-item-id="theme-terminal-velocity" data-cost="40000">
+                                <div class="theme-card-preview theme-card-terminal-velocity w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-green-400 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-green-400 transition-colors uppercase tracking-widest">Terminal Velocity</span>
+                            </button>
+
+                            <button class="bg-theme-btn premium-item group flex flex-col items-center gap-3 cursor-pointer text-center outline-none" data-theme="theme-prismatic-mirage" data-item-id="theme-prismatic-mirage" data-cost="50000">
+                                <div class="theme-card-preview theme-card-prismatic-mirage w-full h-24 rounded-xl border-2 border-gray-700 transition-all duration-300 group-hover:border-cyan-500 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div class="item-lock-overlay absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity z-10">
+                                        <i class="fas fa-lock text-gray-400 text-xl mb-1"></i>
+                                        <span class="text-[10px] font-black text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded">20,000 XP</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-gray-400 group-hover:text-cyan-500 transition-colors uppercase tracking-widest">Prismatic Mirage</span>
                             </button>
 
                         </div>
@@ -1036,12 +1082,15 @@
                         <div class="flex flex-col">
                             <span class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.3em] mb-1">Current Authorization</span>
                             <h3 id="rank-name-redesigned" class="text-4xl font-black text-white tracking-wider uppercase leading-none drop-shadow-lg"></h3>
-                            <div class="flex items-center gap-3 mt-2">
+                            <div class="flex items-center gap-3 mt-2 flex-wrap">
                                 <p id="level-display-redesigned" class="text-sm font-bold bg-white/10 px-3 py-1 rounded-full text-slate-200 border border-white/5"></p>
                                 <div id="level-prediction" class="prediction-text hidden text-xs font-medium text-slate-400 bg-black/30 px-3 py-1 rounded-full flex items-center gap-1.5">
                                     <i class="fas fa-satellite-dish text-cyan-400"></i>
                                     <span>ETA: <span id="level-prediction-days" class="text-cyan-300">--</span></span>
                                 </div>
+                                <button id="stats-open-store-btn" onclick="document.getElementById('open-avatar-modal-btn').click()" class="text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-3 py-1.5 rounded-full hover:bg-yellow-500/40 hover:scale-105 transition-all shadow-[0_0_10px_rgba(234,179,8,0.2)] flex items-center gap-1.5 cursor-pointer ml-2">
+                                    <i class="fas fa-shopping-cart"></i> Spend XP
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1710,7 +1759,13 @@
                     <h3 class="text-2xl font-black text-white tracking-tight">Select Identity</h3>
                     <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Choose your workspace avatar</p>
                 </div>
-                <button id="close-avatar-modal-btn" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full border border-gray-700 hover:border-gray-500"><i class="fas fa-times"></i></button>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.15)]">
+                        <i class="fas fa-coins text-yellow-400"></i>
+                        <span id="modal-wallet-balance" class="text-yellow-400 font-black font-mono tracking-tight text-sm">-- XP</span>
+                    </div>
+                    <button id="close-avatar-modal-btn" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full border border-gray-700 hover:border-gray-500"><i class="fas fa-times"></i></button>
+                </div>
             </div>
 
             <div class="p-8 overflow-y-auto custom-scrollbar relative z-10">
