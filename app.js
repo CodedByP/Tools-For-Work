@@ -10522,15 +10522,9 @@ onAuthStateChanged(auth, async (user) => {
 			const userData = userDoc.exists() ? userDoc.data() : {};
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
 
-            // We removed the "await" commands so the website doesn't freeze while loading!
-			if (!userData.statsBackfilled) backfillUserStats(userId);
-			if (!userData.activeDaysBackfilled) backfillActiveDays(userId);
-			
-			checkAndDistributeRewards(); 
-			checkForGlobalAlerts(userId);
-			
-			if (!userData.statsRecalculated) recalculateCurrentPeriodStats(userId);
-			calculateAndSaveUserRecords(userId);
+            // Cleaned up login flow - Zero History Reads!
+            checkAndDistributeRewards(); 
+            checkForGlobalAlerts(userId);
 			
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
