@@ -450,7 +450,8 @@ const applyBackgroundTheme = (themeName) => {
     // 1. Remove ALL possible theme classes
     document.body.classList.remove(
         'theme-deep-space', 'theme-midnight', 'theme-nebula', 'theme-aurora',
-        'theme-crimson-forge', 'theme-imperial-gold', 'theme-matcha-mist', 'theme-sakura-dawn'
+        'theme-crimson-forge', 'theme-imperial-gold', 'theme-matcha-mist', 'theme-sakura-dawn',
+        'theme-venomous-orchid', 'theme-miami-overdrive', 'theme-terminal-velocity', 'theme-prismatic-mirage'
     );
     
     // 2. Add the selected theme
@@ -549,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             cachedStatsUserData.unlockedItems = data.unlockedItems || [];
                         }
                         refreshUnlockedUI(data.unlockedItems || []);
+                        
+                        // NEW: Update the Modal Wallet Balance
+                        const availableXp = (data.xp || 0) - (data.spentXp || 0);
+                        const modalWalletEl = document.getElementById('modal-wallet-balance');
+                        if (modalWalletEl) modalWalletEl.textContent = `${availableXp.toLocaleString()} XP`;
                     }
                 } catch (e) { console.error("Failed to load user unlocks", e); }
             }
@@ -635,6 +641,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         // 4. Update UI Wallet
                         const walletEl = document.getElementById('settings-wallet-balance');
+                        const modalWalletEl = document.getElementById('modal-wallet-balance');
+                        if (modalWalletEl) modalWalletEl.textContent = `${(totalXp - newSpent).toLocaleString()} XP`;
                         if (walletEl) walletEl.textContent = `${(totalXp - newSpent).toLocaleString()} XP`;
 
                         // 5. Equip & Celebrate!

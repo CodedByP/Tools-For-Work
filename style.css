@@ -2687,6 +2687,50 @@
         background-color: #fff1f2;
         background-image: radial-gradient(at 100% 0%, rgba(251, 146, 60, 0.2) 0, transparent 50%), radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.2) 0, transparent 50%);
     }
+    body.theme-venomous-orchid {
+        background-color: #2e0249;
+        background-image: 
+            radial-gradient(circle at 20% 80%, rgba(132, 204, 22, 0.45) 0%, transparent 60%),
+            radial-gradient(circle at 80% 20%, rgba(217, 70, 239, 0.45) 0%, transparent 60%);
+    }
+    .theme-card-venomous-orchid { 
+        background: radial-gradient(circle at 20% 80%, rgba(132, 204, 22, 0.6) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(217, 70, 239, 0.6) 0%, transparent 60%), #2e0249; 
+    }
+
+    /* Theme 2: Miami Overdrive */
+    body.theme-miami-overdrive {
+        background-color: #1e1b4b;
+        background-image: 
+            radial-gradient(circle at 50% 100%, rgba(249, 115, 22, 0.55) 0%, transparent 70%),
+            radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.45) 0%, transparent 50%);
+    }
+    .theme-card-miami-overdrive { 
+        background: radial-gradient(circle at 50% 100%, rgba(249, 115, 22, 0.7) 0%, transparent 70%), radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.6) 0%, transparent 50%), #1e1b4b; 
+    }
+
+    /* Theme 3: Terminal Velocity */
+    body.theme-terminal-velocity {
+        background-color: #050505;
+        background-image: 
+            radial-gradient(circle at 10% 10%, rgba(74, 222, 128, 0.3) 0%, transparent 40%),
+            radial-gradient(circle at 90% 90%, rgba(34, 197, 94, 0.3) 0%, transparent 40%),
+            repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(34, 197, 94, 0.05) 4px, rgba(34, 197, 94, 0.05) 8px);
+    }
+    .theme-card-terminal-velocity { 
+        background: radial-gradient(circle at 10% 10%, rgba(74, 222, 128, 0.5) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(34, 197, 94, 0.5) 0%, transparent 40%), repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(34, 197, 94, 0.1) 4px, rgba(34, 197, 94, 0.1) 8px), #050505; 
+    }
+
+    /* Theme 4: Prismatic Mirage */
+    body.theme-prismatic-mirage {
+        background-color: #ffffff;
+        background-image: 
+            radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.4) 0%, transparent 50%),
+            radial-gradient(circle at 100% 0%, rgba(244, 63, 94, 0.4) 0%, transparent 50%),
+            radial-gradient(circle at 50% 100%, rgba(234, 179, 8, 0.4) 0%, transparent 70%);
+    }
+    .theme-card-prismatic-mirage { 
+        background: radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.5) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(244, 63, 94, 0.5) 0%, transparent 50%), radial-gradient(circle at 50% 100%, rgba(234, 179, 8, 0.5) 0%, transparent 70%), #ffffff; 
+    }
 
     /* Preview Card Mini-Backgrounds */
     .theme-card-crimson-forge { background: radial-gradient(at 0% 100%, rgba(220, 38, 38, 0.3) 0, transparent 50%), radial-gradient(at 100% 0%, rgba(153, 27, 27, 0.3) 0, transparent 50%), #1a0505; }
@@ -2739,6 +2783,28 @@
     body.theme-matcha-mist #settings-page h2 + p,
     body.theme-sakura-dawn #settings-page h2 + p {
         color: #4b5563 !important; /* Medium Slate Gray */
+    }
+    /* Prismatic Mirage Text Overrides */
+    body.theme-prismatic-mirage #main-title,
+    body.theme-prismatic-mirage #responses-heading,
+    body.theme-prismatic-mirage #hamburger-menu-btn svg {
+        color: #111827 !important;
+    }
+
+    body.theme-prismatic-mirage #fedex-tracker-app h2,
+    body.theme-prismatic-mirage #sla-dashboard-app h2,
+    body.theme-prismatic-mirage #my-stats-page h2,
+    body.theme-prismatic-mirage #settings-page h2 {
+        color: #111827 !important;
+        -webkit-text-fill-color: #111827 !important; 
+        text-shadow: none !important;
+    }
+
+    body.theme-prismatic-mirage #fedex-tracker-app h2 + p,
+    body.theme-prismatic-mirage #sla-dashboard-app h2 + p,
+    body.theme-prismatic-mirage #my-stats-page h2 + p,
+    body.theme-prismatic-mirage #settings-page h2 + p {
+        color: #4b5563 !important; 
     }
 
     /* =========================================
