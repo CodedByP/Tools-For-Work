@@ -1089,10 +1089,33 @@
 	.sortable-drag { 
 	    cursor: grabbing !important; 
 	}
+	
+    /* --- NEW: iOS Style Jiggle Animation --- */
+    @keyframes ios-jiggle {
+        0% { transform: rotate(-1.5deg); }
+        50% { transform: rotate(1.5deg); }
+        100% { transform: rotate(-1.5deg); }
+    }
+
 	.reorder-mode-active { 
 	    cursor: grab !important; 
-	    animation: pulse-border 2s infinite; 
 	}
+    
+    /* Make the individual category buttons shake when reorder mode is active */
+    .reorder-mode-active .category-item {
+        animation: ios-jiggle 0.25s infinite ease-in-out;
+        cursor: grab !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        pointer-events: auto; /* Ensures they can be dragged */
+    }
+
+    /* Make it look like you are physically grabbing it when clicked */
+    .reorder-mode-active .category-item:active {
+        cursor: grabbing !important;
+        transform: scale(1.05) rotate(0deg) !important;
+        animation: none; /* Stop jiggling while actively dragging */
+    }
+
 	.compact-response-card { 
 	    background: rgba(31, 41, 55, 0.8); 
 	    border: 1px solid rgba(255,255,255,0.1); 
@@ -2743,6 +2766,45 @@
         border-color: #d1d5db !important; 
         box-shadow: 0 0 20px rgba(209, 213, 219, 0.6), inset 0 0 10px rgba(255,255,255,0.2) !important;
         transform: scale(1.05);
+    }
+
+    /* =========================================================
+       Light Mode Overrides: Global Winner Modals & Toasts
+       ========================================================= */
+    body.light-mode .weekly-winner-bg {
+        background: radial-gradient(circle at top, #e0e7ff, #ffffff);
+        border-color: #a5b4fc;
+        box-shadow: 0 0 50px rgba(99, 102, 241, 0.15);
+    }
+    body.light-mode .weekly-winner-bg h3 { color: #312e81; }
+    body.light-mode .weekly-winner-bg p { color: #4338ca; }
+    body.light-mode .weekly-winner-bg i.fa-award { color: #818cf8; }
+
+    body.light-mode .monthly-winner-bg {
+        background: radial-gradient(circle at top, #fef3c7, #ffffff);
+        border-color: #fcd34d;
+        box-shadow: 0 0 60px rgba(245, 158, 11, 0.15);
+    }
+    body.light-mode .monthly-winner-bg h3 { color: #78350f; }
+    body.light-mode .monthly-winner-bg p { color: #92400e; }
+
+    /* Invert the dark badge that holds the XP amount */
+    body.light-mode .weekly-winner-bg span.bg-black\/40,
+    body.light-mode .monthly-winner-bg span.bg-black\/40 {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(0, 0, 0, 0.1) !important;
+        color: #16a34a !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    /* Fix the pop-down toast when someone else wins */
+    body.light-mode .winner-toast-inner {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+    body.light-mode #toast-name {
+        color: #111827 !important;
     }
 
     /* =========================================

@@ -162,18 +162,25 @@
             </div>
 		</header>
 
-        <div id="category-bar-placeholder" class="w-full mb-8">
-            <div id="category-bar" class="hidden w-full transition-all duration-300">
-                <div id="category-bar-inner" class="w-full p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out border border-transparent">
+        <div id="category-bar-placeholder" class="w-full mb-8 relative z-20">
+            <div id="category-bar" class="hidden w-full transition-all duration-300 relative">
+                
+                <div id="category-reorder-actions" class="absolute top-1 flex gap-2 transition-all duration-300 z-0 pointer-events-none" style="right: 32px; transform: translateY(1rem); opacity: 0;">
+                    <button id="cancel-category-order-btn" class="bg-gray-600 text-white font-bold py-2 px-5 pt-3 rounded-t-xl shadow-lg hover:bg-gray-500 transition duration-300 text-xs uppercase tracking-widest border border-gray-500/50 border-b-0">
+                        Cancel
+                    </button>
+                    <button id="save-category-order-btn" class="bg-green-600 text-white font-bold py-2 px-5 pt-3 rounded-t-xl shadow-lg hover:bg-green-500 transition duration-300 text-xs uppercase tracking-widest border border-green-500/50 border-b-0">
+                        <i class="fas fa-save mr-1"></i> Save
+                    </button>
+                </div>
+
+                <div id="category-bar-inner" class="w-full p-4 bg-gray-800 shadow-2xl flex items-center justify-between rounded-2xl transition-all duration-300 ease-in-out border border-transparent relative z-10">
                     <div class="flex-grow overflow-x-auto whitespace-nowrap scrollbar-hide">
                         <div id="category-list" class="flex gap-4">
                             </div>
                     </div>
 					<button id="add-category-btn" class="flex-shrink-0 ml-4 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300">
                         <i class="fas fa-plus"></i>
-                    </button>
-                    <button id="save-category-order-btn" class="hidden flex-shrink-0 ml-2 bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-500 transition duration-300">
-                        <i class="fas fa-save mr-2"></i> Save Order
                     </button>
                 </div>
             </div>
@@ -210,6 +217,9 @@
                                 </div>
 						        <button id="save-responses-order-btn" class="hidden ml-auto h-full bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-green-500 transition duration-300 whitespace-nowrap flex items-center justify-center">
 						            <i class="fas fa-save mr-2"></i> Save Order
+						        </button>
+                                <button id="cancel-responses-order-btn" class="hidden ml-2 h-full bg-gray-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 whitespace-nowrap flex items-center justify-center">
+						            Cancel
 						        </button>
 						    </div>
 						</div>

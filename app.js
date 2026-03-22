@@ -8336,37 +8336,42 @@ function attachEventListeners() {
         }
     });
 	
-// --- FEATURE 1: Reorder Categories (Multiple Moves) ---
+    // --- FEATURE 1: Reorder Categories (Sliding Drawer Animation) ---
     document.getElementById('reorder-categories-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
+        const actionsDrawer = document.getElementById('category-reorder-actions');
+        
         document.getElementById('category-actions-menu').classList.add('hidden');
         document.getElementById('category-actions-btn').classList.remove('active');
         
-        // UI Toggle
+        // Hide Plus Button
         document.getElementById('add-category-btn').classList.add('hidden');
-        document.getElementById('save-category-order-btn').classList.remove('hidden');
-        list.classList.add('reorder-mode-active');
         
-        showMessage("Drag categories horizontally. Click Save when done.", "success");
+        // Bulletproof Slide Up! (100% of its own height)
+        actionsDrawer.style.transform = 'translateY(-100%)';
+        actionsDrawer.style.opacity = '1';
+        actionsDrawer.style.pointerEvents = 'auto';
+        
+        list.classList.add('reorder-mode-active');
         
         if (!sortableCategoryInstance) {
             sortableCategoryInstance = new Sortable(list, {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
-                // Removed onEnd auto-save so user can make multiple moves
             });
         }
     });
 
-    // NEW: Save Category Order Button
+    // Save Category Order Button
     document.getElementById('save-category-order-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
+        const actionsDrawer = document.getElementById('category-reorder-actions');
         const itemEls = list.querySelectorAll('.category-item');
         
         itemEls.forEach((el, index) => {
             const catName = el.dataset.category;
             if (categories[catName]) {
-                categories[catName].order = index; // Save new index
+                categories[catName].order = index; 
             }
         });
         saveToFirestore(categories);
@@ -8377,12 +8382,39 @@ function attachEventListeners() {
         }
         list.classList.remove('reorder-mode-active');
         
-        // UI Revert
+        // Bulletproof Slide Down!
+        actionsDrawer.style.transform = 'translateY(1rem)';
+        actionsDrawer.style.opacity = '0';
+        actionsDrawer.style.pointerEvents = 'none';
+        
+        // Show Plus Button
         document.getElementById('add-category-btn').classList.remove('hidden');
-        document.getElementById('save-category-order-btn').classList.add('hidden');
         
         showMessage("Category order saved!", "success");
         renderCategories();
+    });
+
+    // Cancel Category Order Button
+    document.getElementById('cancel-category-order-btn')?.addEventListener('click', () => {
+        const list = document.getElementById('category-list');
+        const actionsDrawer = document.getElementById('category-reorder-actions');
+        
+        if (sortableCategoryInstance) {
+            sortableCategoryInstance.destroy();
+            sortableCategoryInstance = null;
+        }
+        list.classList.remove('reorder-mode-active');
+        
+        // Bulletproof Slide Down!
+        actionsDrawer.style.transform = 'translateY(1rem)';
+        actionsDrawer.style.opacity = '0';
+        actionsDrawer.style.pointerEvents = 'none';
+        
+        // Show Plus Button
+        document.getElementById('add-category-btn').classList.remove('hidden');
+        
+        // Instantly revert any unsaved drags
+        renderCategories(); 
     });
 
 
@@ -8399,6 +8431,7 @@ function attachEventListeners() {
         reorderRespBtn.classList.add('hidden');
         addRespBtn.classList.add('hidden');
         saveRespOrderBtn.classList.remove('hidden');
+        document.getElementById('cancel-responses-order-btn').classList.remove('hidden'); // ADDED
         
         // Hide Search Bar & stretch container to push Save to the right
         document.getElementById('search-bar-container').classList.add('hidden'); 
@@ -8429,6 +8462,7 @@ function attachEventListeners() {
         // Reset UI
         isReorderingResponses = false;
         saveRespOrderBtn.classList.add('hidden');
+        document.getElementById('cancel-responses-order-btn').classList.add('hidden'); // ADDED
         reorderRespBtn.classList.remove('hidden');
         addRespBtn.classList.remove('hidden');
         
@@ -8444,6 +8478,30 @@ function attachEventListeners() {
         
         renderResponses();
         showMessage("Response order saved!", "success");
+    });
+
+    // --- NEW: Cancel Responses Order Button ---
+    document.getElementById('cancel-responses-order-btn')?.addEventListener('click', () => {
+        isReorderingResponses = false;
+        
+        // Reset UI
+        saveRespOrderBtn.classList.add('hidden');
+        document.getElementById('cancel-responses-order-btn').classList.add('hidden');
+        reorderRespBtn.classList.remove('hidden');
+        addRespBtn.classList.remove('hidden');
+        
+        // Show Search Bar & shrink container
+        document.getElementById('search-bar-container').classList.remove('hidden');
+        addRespSection.classList.remove('w-full');
+        addRespSection.classList.add('md:w-auto');
+        
+        if (sortableResponseInstance) {
+            sortableResponseInstance.destroy();
+            sortableResponseInstance = null;
+        }
+        
+        // Redraw responses from memory to erase any unsaved drag-and-drop moves
+        renderResponses();
     });
 
 	const exportKbBtn = document.getElementById('export-kb-btn');
