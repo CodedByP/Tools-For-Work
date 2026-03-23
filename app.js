@@ -5915,10 +5915,12 @@ const renderContent = () => {
     const importExportBtnSettings = document.getElementById('import-export-btn-settings');
     const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
 	const slaDashboardApp = document.getElementById('sla-dashboard-app'); 
-    const workshopBtn = document.getElementById('open-workshop-btn'); 
+    const workshopBtn = document.getElementById('open-workshop-btn');
+    const chromeExtBtnContainer = document.getElementById('chrome-ext-btn-container'); 
 
     categoryActionsBtn.classList.add('hidden');
     categoryActionsMenu.classList.add('hidden');
+    if (chromeExtBtnContainer) chromeExtBtnContainer.classList.add('hidden');
     if (workshopBtn) workshopBtn.classList.add('hidden'); 
 
 	if (cannedResponsesApp && currentPage !== 'canned-responses') cannedResponsesApp.classList.add('hidden');
@@ -5932,6 +5934,7 @@ const renderContent = () => {
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
         categoryBar.classList.remove('hidden');
+        if (chromeExtBtnContainer) chromeExtBtnContainer.classList.remove('hidden');
         if (workshopBtn) workshopBtn.classList.remove('hidden'); 
         mainTitle.textContent = 'Canned Responses';
         renderCategories();
@@ -8281,6 +8284,21 @@ const showPlaceholderDemo = () => {
 // --- All Event Listeners (Correctly placed to be attached only once) ---
 function attachEventListeners() {
 
+    // Chrome Extension Tooltip Click Logic
+    document.addEventListener('click', (e) => {
+        const extInfoBtn = e.target.closest('#chrome-ext-info-btn');
+        const extTooltip = document.getElementById('chrome-ext-tooltip');
+        
+        // If the user clicks the 'i' button, toggle the tooltip
+        if (extInfoBtn && extTooltip) {
+            e.preventDefault();
+            extTooltip.classList.toggle('show-tooltip');
+        } 
+        // If the user clicks anywhere else on the page, hide the tooltip
+        else if (extTooltip && !e.target.closest('#chrome-ext-info-wrapper')) {
+            extTooltip.classList.remove('show-tooltip');
+        }
+    });
 
     // 1. Open the Modal from the Settings Page
     document.getElementById('restore-cloud-backup-btn')?.addEventListener('click', () => {
