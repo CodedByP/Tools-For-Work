@@ -147,10 +147,13 @@ const showClipboardToast = (numbers) => {
         const numbersToCopy = numbers.join('\t');
         await copyToClipboard(numbersToCopy);
 
-        const numbersForUrl = numbers.join(',');
-        const encodedNumbers = encodeURIComponent(numbersForUrl);
-        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-        window.open(fedexUrl, '_blank');
+        // --- NEW: FedEx 30-limit logic & Summary URL ---
+        for (let i = 0; i < numbers.length; i += 30) {
+            const chunk = numbers.slice(i, i + 30);
+            const numbersForUrl = chunk.join(',');
+            const fedexUrl = `https://www.fedex.com/fedextrack/summary?trknbr=${numbersForUrl}`;
+            window.open(fedexUrl, '_blank');
+        }
 
         // --- 2. LOG CHALLENGE PROGRESS ---
         logUserEvent('extract_tracking', { count: numbers.length });
@@ -10453,10 +10456,13 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         }
         // ---------------------------------
 
-        const numbersForUrl = uniqueNumbers.join(',');
-        const encodedNumbers = encodeURIComponent(numbersForUrl);
-        const fedexUrl = `https://www.fedex.com/en-us/tracking.html?tracknumbers=${encodedNumbers}`;
-        window.open(fedexUrl, '_blank');
+        // --- NEW: FedEx 30-limit logic & Summary URL ---
+        for (let i = 0; i < uniqueNumbers.length; i += 30) {
+            const chunk = uniqueNumbers.slice(i, i + 30);
+            const numbersForUrl = chunk.join(',');
+            const fedexUrl = `https://www.fedex.com/fedextrack/summary?trknbr=${numbersForUrl}`;
+            window.open(fedexUrl, '_blank');
+        }
         
         // TRIGGER THE NEW SUGGESTIONS FEATURE
         showShippingSuggestions(); 
