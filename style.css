@@ -3234,6 +3234,55 @@
         box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.15);
     }
 
+    /* ==========================================================================
+       === Chrome Extension Button Theme Overrides ===
+       ========================================================================== */
+    /* Main Download Button */
+    body.light-mode #chrome-ext-btn-container a {
+        background: linear-gradient(to right, #2563eb, #0891b2);
+        border-color: rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+        color: #ffffff;
+    }
+    body.light-mode #chrome-ext-btn-container a:hover {
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+    }
+    
+    /* "i" Info Button */
+    body.light-mode #chrome-ext-btn-container button {
+        background-color: #f3f4f6;
+        border-color: #d1d5db;
+        color: #6b7280;
+    }
+    body.light-mode #chrome-ext-btn-container button:hover,
+    body.light-mode #chrome-ext-btn-container button:focus {
+        background-color: #e5e7eb;
+        color: #2563eb;
+    }
+
+    /* Tooltip Styling */
+    body.light-mode #chrome-ext-btn-container .tooltip-box { 
+        background-color: rgba(255, 255, 255, 0.98);
+        border-color: rgba(0, 0, 0, 0.1);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    body.light-mode #chrome-ext-btn-container .tooltip-box p {
+        color: #4b5563;
+    }
+    body.light-mode #chrome-ext-btn-container .tooltip-box p span.text-yellow-400 {
+        color: #d97706; /* Darker gold for legibility on white */
+    }
+    body.light-mode #chrome-ext-btn-container .tooltip-arrow { 
+        background-color: rgba(255, 255, 255, 0.98);
+        border-color: rgba(0, 0, 0, 0.1) transparent transparent rgba(0, 0, 0, 0.1);
+    }
+    /* Force show tooltip on click */
+    #chrome-ext-tooltip.show-tooltip {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(0) !important;
+    }
+
 	/* ==========================================================================
 	   === Settings Hub - Light Mode Overrides ===
 	   ========================================================================== */
