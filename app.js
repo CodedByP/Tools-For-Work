@@ -4994,15 +4994,13 @@ const renderLinks = (searchQuery = '') => {
     const userLinksSection = document.getElementById('user-links-section');
 
     const query = searchQuery.toLowerCase();
-    const regex = new RegExp(`(${query})`, 'gi'); // Create a case-insensitive regex for highlighting
+    const regex = new RegExp(`(${query})`, 'gi'); 
 
-    // Filter static links based on the search query
     const filteredStaticLinks = defaultLinks.filter(link => 
         link.title.toLowerCase().includes(query) ||
         (link.description && link.description.toLowerCase().includes(query))
     );
     
-    // Filter user links if they exist
     let filteredUserLinks = [];
     if (userLinks && userLinks.length > 0) {
         filteredUserLinks = userLinks.filter(link =>
@@ -5011,56 +5009,54 @@ const renderLinks = (searchQuery = '') => {
         );
     }
     
-    // Render static links
+    // --- 1. RENDER STATIC LINKS (WIDGETS) ---
     staticLinksList.innerHTML = '';
     if (filteredStaticLinks.length > 0) {
         filteredStaticLinks.forEach(link => {
             const card = document.createElement('div');
-            card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect';
+            card.className = 'apple-widget-card group';
             
-            // Apply highlighting to title and description
             const highlightedTitle = query ? link.title.replace(regex, `<span class="highlight">$&</span>`) : link.title;
             const highlightedDescription = query && link.description ? link.description.replace(regex, `<span class="highlight">$&</span>`) : (link.description || 'No description available.');
 
             card.innerHTML = `
-                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block">
-                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${highlightedTitle}</h3>
-                    <p class="text-sm text-gray-400">${highlightedDescription}</p>
+                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex flex-col h-full w-full outline-none">
+                    <div class="apple-widget-icon mb-3"></div>
+                    <h3 class="apple-widget-title">${highlightedTitle}</h3>
+                    <p class="apple-widget-desc">${highlightedDescription}</p>
                 </a>
             `;
             staticLinksList.appendChild(card);
         });
     } else {
-        staticLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No static links found.</p>';
+        staticLinksList.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No static links found.</p>';
     }
     
-    // Render user links
+    // --- 2. RENDER USER LINKS (WIDGETS WITH MENU) ---
     userLinksList.innerHTML = '';
     if (!isAnonymous && filteredUserLinks.length > 0) {
-        userLinksSection.classList.remove('hidden'); // Ensure the section is visible if there are links
+        userLinksSection.classList.remove('hidden'); 
         filteredUserLinks.forEach(link => {
             const card = document.createElement('div');
-            card.className = 'link-card rounded-xl p-6 shadow-2xl pulse-effect flex items-center justify-between relative';
+            card.className = 'apple-widget-card group relative';
             
-            // Apply highlighting to title and description
             const highlightedTitle = query ? link.title.replace(regex, `<span class="highlight">$&</span>`) : link.title;
             const highlightedDescription = query && link.description ? link.description.replace(regex, `<span class="highlight">$&</span>`) : (link.description || 'No description available.');
             
             card.innerHTML = `
-                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex-grow">
-                    <h3 class="font-bold text-xl text-white hover:text-sky-300 transition-colors mb-2">${highlightedTitle}</h3>
-                    <p class="text-sm text-gray-400">${highlightedDescription}</p>
+                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex flex-col h-full w-full outline-none pr-8">
+                    <div class="apple-widget-icon mb-3"></div>
+                    <h3 class="apple-widget-title">${highlightedTitle}</h3>
+                    <p class="apple-widget-desc">${highlightedDescription}</p>
                 </a>
-                <div class="relative inline-block text-left" data-doc-id="${link.id}" data-title="${link.title}" data-url="${link.url}" data-description="${link.description || ''}">
-                    <button type="button" class="meatballs-button p-2 text-gray-400 hover:text-white transition-colors" aria-expanded="true" aria-haspopup="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 pointer-events-none">
-                            <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-                        </svg>
+                <div class="absolute top-4 right-4 inline-block text-left" data-doc-id="${link.id}" data-title="${link.title}" data-url="${link.url}" data-description="${link.description || ''}">
+                    <button type="button" class="meatballs-button w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/80 text-gray-400 flex items-center justify-center transition-colors shadow-sm backdrop-blur-md border border-white/10" aria-expanded="true" aria-haspopup="true">
+                        <i class="fas fa-ellipsis-h text-xs pointer-events-none"></i>
                     </button>
-                    <div class="meatballs-menu hidden absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                    <div class="meatballs-menu hidden absolute right-0 mt-2 w-36 origin-top-right rounded-xl bg-gray-800/95 backdrop-blur-xl shadow-2xl border border-white/10 focus:outline-none z-20 overflow-hidden">
                         <div class="py-1">
-                            <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Edit</button>
-                            <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2 text-sm hover:bg-gray-600">Delete</button>
+                            <button class="edit-link-btn text-gray-200 block w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-white/10 transition-colors"><i class="fas fa-pencil-alt mr-2 opacity-70"></i>Edit</button>
+                            <button class="delete-link-btn text-red-400 block w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-red-500/10 transition-colors"><i class="fas fa-trash-alt mr-2 opacity-70"></i>Delete</button>
                         </div>
                     </div>
                 </div>
@@ -5068,10 +5064,9 @@ const renderLinks = (searchQuery = '') => {
             userLinksList.appendChild(card);
         });
     } else if (!isAnonymous) {
-        userLinksList.innerHTML = '<p class="text-center text-gray-400 col-span-full">No user links found.</p>';
+        userLinksList.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No user links found.</p>';
     }
     
-    // Hide or show the user links section based on the filtered results
     if (isAnonymous) {
       userLinksSection.classList.add('hidden');
     } else {
@@ -5942,6 +5937,8 @@ const renderContent = () => {
     if (settingsPage) settingsPage.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
     if (slaDashboardApp) slaDashboardApp.classList.add('hidden');
+    if (userLinksSection && currentPage !== 'helpful-links') userLinksSection.classList.add('hidden');
+    if (addLinkSection && currentPage !== 'helpful-links') addLinkSection.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
@@ -7439,6 +7436,31 @@ const resetLinksForm = () => {
     linksCancelButton.classList.add('hidden');
     editingLinkDocId = null;
 };
+// --- NEW: Apple Modal Logic ---
+const closeLinkModal = () => {
+    const modal = document.getElementById('add-link-modal');
+    const content = modal.querySelector('.modal-content');
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+};
+
+document.getElementById('open-add-link-modal-btn')?.addEventListener('click', () => {
+    resetLinksForm();
+    const modal = document.getElementById('add-link-modal');
+    const content = modal.querySelector('.modal-content');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+});
+
+document.getElementById('close-add-link-x-btn')?.addEventListener('click', closeLinkModal);
+document.getElementById('add-link-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'add-link-modal') closeLinkModal(); // Close on background click
+});
+
 const editLink = (docId, title, url, description) => {
     const linksFormTitle = document.getElementById('form-title');
     const linkTitleInput = document.getElementById('link-title');
@@ -7446,7 +7468,7 @@ const editLink = (docId, title, url, description) => {
     const linkDescriptionInput = document.getElementById('link-description');
     const linksSubmitButton = document.getElementById('submit-button');
     const linksCancelButton = document.getElementById('cancel-button');
-    const addLinkSection = document.getElementById('add-link-section');
+    
     linksFormTitle.textContent = "Edit Link";
     linkTitleInput.value = title;
     linkUrlInput.value = url;
@@ -7454,7 +7476,15 @@ const editLink = (docId, title, url, description) => {
     linksSubmitButton.textContent = 'Save Changes';
     linksCancelButton.classList.remove('hidden');
     editingLinkDocId = docId;
-    addLinkSection.scrollIntoView({ behavior: 'smooth' });
+    
+    // Open the Modal
+    const modal = document.getElementById('add-link-modal');
+    const content = modal.querySelector('.modal-content');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
 };
 const deleteLink = async (docId) => {
     if (!db || !userId || isAnonymous) {
@@ -9865,6 +9895,7 @@ if (activityWrapper) {
 				logUserEvent('add_link');
             }
             resetLinksForm();
+            closeLinkModal(); // <--- ADD THIS LINE
         } catch (error) {
             console.error("Error during link operation:", error);
             showLinksStatus(`Failed to save link: ${error.message}`, 'text-red-400');
@@ -9878,7 +9909,10 @@ if (activityWrapper) {
         renderLinks(query);
     });
 
-    document.getElementById('cancel-button').addEventListener('click', () => { resetLinksForm(); });
+        document.getElementById('cancel-button').addEventListener('click', () => { 
+        resetLinksForm(); 
+        closeLinkModal(); 
+    });
     
     document.getElementById('user-links-list').addEventListener('click', (event) => {
         if (isAnonymous) return;
