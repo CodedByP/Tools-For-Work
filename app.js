@@ -5905,7 +5905,7 @@ const renderContent = () => {
     const cannedResponsesApp = document.getElementById('canned-responses-app');
     const fedexTrackerApp = document.getElementById('fedex-tracker-app');
     const helpfulLinksApp = document.getElementById('helpful-links-app');
-	const myStatsPage = document.getElementById('my-stats-page');
+    const myStatsPage = document.getElementById('my-stats-page');
     const settingsPage = document.getElementById('settings-page');
     const categoryBar = document.getElementById('category-bar');
     const mainTitle = document.getElementById('main-title');
@@ -5917,35 +5917,43 @@ const renderContent = () => {
     const addLinkSection = document.getElementById('add-link-section');
     const importExportBtnSettings = document.getElementById('import-export-btn-settings');
     const checkUpdatesBtnSettings = document.getElementById('check-updates-btn-settings');
-	const slaDashboardApp = document.getElementById('sla-dashboard-app'); 
+    const slaDashboardApp = document.getElementById('sla-dashboard-app'); 
     const workshopBtn = document.getElementById('open-workshop-btn');
     const chromeExtBtnContainer = document.getElementById('chrome-ext-btn-container'); 
 
+    // Reset default UI states
     categoryActionsBtn.classList.add('hidden');
     categoryActionsMenu.classList.add('hidden');
-    if (chromeExtBtnContainer) chromeExtBtnContainer.classList.add('hidden');
     if (workshopBtn) workshopBtn.classList.add('hidden'); 
 
-	if (cannedResponsesApp && currentPage !== 'canned-responses') cannedResponsesApp.classList.add('hidden');
+    // --- BUG 1 FIX: Centralized strict logic for Extension Button ---
+    if (chromeExtBtnContainer) {
+        if (currentPage === 'canned-responses' && !isAnonymous) {
+            chromeExtBtnContainer.style.display = 'flex'; // Force show only here
+        } else {
+            chromeExtBtnContainer.style.display = 'none'; // Force hide everywhere else
+        }
+    }
+
+    if (cannedResponsesApp && currentPage !== 'canned-responses') cannedResponsesApp.classList.add('hidden');
     if (fedexTrackerApp) fedexTrackerApp.classList.add('hidden');
     if (helpfulLinksApp) helpfulLinksApp.classList.add('hidden');
-	if (myStatsPage) myStatsPage.classList.add('hidden');
+    if (myStatsPage) myStatsPage.classList.add('hidden');
     if (settingsPage) settingsPage.classList.add('hidden');
     if (categoryBar) categoryBar.classList.add('hidden');
-	if (slaDashboardApp) slaDashboardApp.classList.add('hidden');
+    if (slaDashboardApp) slaDashboardApp.classList.add('hidden');
 
     if (currentPage === 'canned-responses') {
         cannedResponsesApp.classList.remove('hidden');
         categoryBar.classList.remove('hidden');
-        if (chromeExtBtnContainer) chromeExtBtnContainer.classList.remove('hidden');
-        if (workshopBtn) workshopBtn.classList.remove('hidden'); 
         mainTitle.textContent = 'Canned Responses';
         renderCategories();
-		updateSmartSuggestions();
+        updateSmartSuggestions();
 
         if (!isAnonymous) {
             addCategoryBtn.classList.remove('hidden');
             addResponseSection.classList.remove('hidden');
+            if (workshopBtn) workshopBtn.classList.remove('hidden'); 
             if (Object.keys(categories).length > 0) {
                 categoryActionsBtn.classList.remove('hidden');
             }
@@ -5953,6 +5961,7 @@ const renderContent = () => {
             addCategoryBtn.classList.add('hidden');
             addResponseSection.classList.add('hidden');
             categoryActionsBtn.classList.add('hidden');
+            if (workshopBtn) workshopBtn.classList.add('hidden'); 
         }
     } else if (currentPage === 'fedex-tracker') {
         fedexTrackerApp.classList.remove('hidden');
@@ -8357,7 +8366,7 @@ function attachEventListeners() {
         }
     });
 	
-    // --- FEATURE 1: Reorder Categories (Sliding Drawer Animation) ---
+   // --- FEATURE 1: Reorder Categories (Sliding Drawer Animation) ---
     document.getElementById('reorder-categories-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
         const actionsDrawer = document.getElementById('category-reorder-actions');
@@ -8367,6 +8376,10 @@ function attachEventListeners() {
         
         // Hide Plus Button
         document.getElementById('add-category-btn').classList.add('hidden');
+        
+        // --- NEW: Hide Extension Button for clean workspace ---
+        const extBtn = document.getElementById('chrome-ext-btn-container');
+        if (extBtn) extBtn.style.display = 'none';
         
         // Bulletproof Slide Up! (100% of its own height)
         actionsDrawer.style.transform = 'translateY(-100%)';
@@ -8383,7 +8396,7 @@ function attachEventListeners() {
         }
     });
 
-    // Save Category Order Button
+      // Save Category Order Button
     document.getElementById('save-category-order-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
         const actionsDrawer = document.getElementById('category-reorder-actions');
@@ -8411,11 +8424,15 @@ function attachEventListeners() {
         // Show Plus Button
         document.getElementById('add-category-btn').classList.remove('hidden');
         
+        // --- NEW: Bring Extension Button back ---
+        const extBtn = document.getElementById('chrome-ext-btn-container');
+        if (extBtn) extBtn.style.display = 'flex';
+        
         showMessage("Category order saved!", "success");
         renderCategories();
     });
 
-    // Cancel Category Order Button
+     // Cancel Category Order Button
     document.getElementById('cancel-category-order-btn')?.addEventListener('click', () => {
         const list = document.getElementById('category-list');
         const actionsDrawer = document.getElementById('category-reorder-actions');
@@ -8433,6 +8450,10 @@ function attachEventListeners() {
         
         // Show Plus Button
         document.getElementById('add-category-btn').classList.remove('hidden');
+        
+        // --- NEW: Bring Extension Button back ---
+        const extBtn = document.getElementById('chrome-ext-btn-container');
+        if (extBtn) extBtn.style.display = 'flex';
         
         // Instantly revert any unsaved drags
         renderCategories(); 
@@ -10542,9 +10563,26 @@ document.getElementById('cancel-placeholder-btn').addEventListener('click', () =
     document.getElementById('sign-in-btn-settings').addEventListener('click', async () => {
         try { const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); showMessage("Signed in with Google!"); } catch (error) { console.error("Google sign-in failed", error); showMessage("Google sign-in failed. Please try again.", 'error'); }
     });
+    
     document.getElementById('sign-out-btn-settings').addEventListener('click', async () => {
-        try { await signOut(auth); showMessage("Signed out successfully!"); await signInAnonymously(auth); } catch (error) { console.error("Sign out failed", error); showMessage("Sign out failed. Please try again.", 'error'); }
+        try { 
+            await signOut(auth); 
+            
+            // --- BUG 3 FIX: Wipe local avatar and restore default ---
+            localStorage.removeItem('userAvatar');
+            const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231f2937'/%3E%3Cpath d='M12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z' fill='%234b5563'/%3E%3C/svg%3E";
+            if (typeof applyUserAvatar === 'function') {
+                applyUserAvatar(defaultAvatar);
+            }
+            
+            showMessage("Signed out successfully!"); 
+            await signInAnonymously(auth); 
+        } catch (error) { 
+            console.error("Sign out failed", error); 
+            showMessage("Sign out failed. Please try again.", 'error'); 
+        }
     });
+
 document.getElementById('check-updates-btn-settings').addEventListener('click', async () => {
     if (isAnonymous) {
         showMessage("Please sign in to check for updates.", "error");
