@@ -2593,15 +2593,19 @@
         }
         const categoryBar = document.getElementById('category-bar');
         const workshopBtn = document.getElementById('open-workshop-btn'); 
+        const chromeExtBtn = document.getElementById('chrome-ext-btn-container');
 
         if (categoryBar) {
             if (savedPage === 'canned-responses') {
                 categoryBar.classList.remove('hidden');
-                if (workshopBtn) workshopBtn.classList.remove('hidden'); 
             } else {
                 categoryBar.classList.add('hidden');
-                if (workshopBtn) workshopBtn.classList.add('hidden'); 
             }
+            // Keep them hidden on initial load; Firebase Auth will unhide them later if the user is logged in.
+            if (workshopBtn) workshopBtn.classList.add('hidden'); 
+            
+            // --- THE FOOLPROOF FIX FOR INITIAL LOAD ---
+            if (chromeExtBtn) chromeExtBtn.style.display = 'none'; 
         }
     });
 </script>
