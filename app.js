@@ -3779,8 +3779,8 @@ const startTrackingChallenge = async (challengeId) => {
     const events = snapshot.docs.map(doc => doc.data());
 
     // Now re-render only the two components that need to change
-    await renderChallenges(events);
-    await renderChallengeTracker(events);
+    await renderChallenges(cachedStatsUserData);
+	await renderChallengeTracker(cachedStatsUserData);
 };
 
 const stopTrackingChallenge = async () => {
@@ -3805,7 +3805,7 @@ const stopTrackingChallenge = async () => {
 
 // In your <script> tag...
 
-const renderChallengeTracker = async (events) => {
+const renderChallengeTracker = async (userData) => {
     const hud = document.getElementById('challenge-tracker-hud');
     if (!trackedChallengeId || !hud) {
         if (hud) {
@@ -3821,7 +3821,7 @@ const renderChallengeTracker = async (events) => {
         return;
     }
 
-    const progressData = await challenge.getProgress(events);
+    const progressData = await challenge.getProgress(userData);
     const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
 
     hud.innerHTML = `
@@ -6348,7 +6348,7 @@ const renderCategories = () => {
 };
 
 
-const renderChallenges = async (events) => {
+const renderChallenges = async (userData) => {
     const container = document.getElementById('challenges-container');
     if (!container) return;
     container.innerHTML = '';
@@ -6356,7 +6356,7 @@ const renderChallenges = async (events) => {
     let completedCount = 0;
 
     for (const challenge of Object.values(CHALLENGES_CONFIG)) {
-        const progressData = await challenge.getProgress(events);
+        const progressData = await challenge.getProgress(userData);
         const progressPercent = Math.min((progressData.current / challenge.goal) * 100, 100);
         const isComplete = progressData.current >= challenge.goal;
         const isTracked = challenge.id === trackedChallengeId;
@@ -7015,8 +7015,8 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     // --- 🔥 THE QUOTA SAVER FIX + UI REFRESH 🔥 ---
                     // Refresh Challenges UI using local memory instead of Firebase reads!
                     if (cachedStatsEvents) {
-                        await renderChallenges(cachedStatsEvents);
-                        await renderChallengeTracker(cachedStatsEvents);
+                        await renderChallenges(cachedStatsUserData);
+						await renderChallengeTracker(cachedStatsUserData);
                         
                         if (cachedStatsUserData) {
                             renderLevelingSystem(cachedStatsUserData);
@@ -8295,8 +8295,8 @@ const renderAdvancedStats = async () => {
         }
 		
 		// --- Final step: Render challenges and tracker AFTER all other data is ready ---
-        await renderChallenges(events);
-        await renderChallengeTracker(events);
+		await renderChallenges(userData);
+		await renderChallengeTracker(userData);
 
     } catch (error) {
         console.error("Error rendering stats:", error);
@@ -10495,8 +10495,8 @@ document.getElementById('copy-button-fedex').addEventListener('click', async () 
         // --- 🔥 THE QUOTA SAVER FIX 🔥 ---
         // Refresh Challenges UI using local memory instead of Firebase reads!
         if (cachedStatsEvents) {
-            await renderChallenges(cachedStatsEvents);
-            await renderChallengeTracker(cachedStatsEvents);
+			await renderChallenges(cachedStatsUserData);
+			await renderChallengeTracker(cachedStatsUserData);
             
             if (cachedStatsUserData) {
                 renderLevelingSystem(cachedStatsUserData);
