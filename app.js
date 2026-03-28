@@ -72,8 +72,6 @@
         let trackedChallengeId = null;
         let notificationQueue = [];
         let isNotificationActive = false;
-        let expandedChartInstance = null; // <--- ADD THIS LINE HERE
-        let expandedChartEvents = [];     // <--- AND THIS ONE
         let cachedStatsEvents = null; // Tell the app this hasn't been loaded yet
         let cachedStatsUserData = null;
         let hasLoadedStats = false; // Prevents re-running the heavy logic
@@ -87,6 +85,8 @@
         let sortableResponseInstance = null;	
         let suggestionEventsCache = null; // Tiny cache just for the Smart Brain
         let isCompactMode = localStorage.getItem('compactMode') === 'true';
+        let cachedThirtyDayHistory = [];
+
 	
 
 
@@ -752,211 +752,6 @@ const updateModalAchFilterUI = (filter) => {
         allBtn.className = "px-4 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all";
     }
 };		
-
-const openExpandedChart = (sourceChartInstance, title, eventsData = null, chartType = 'generic') => {
-    if (!sourceChartInstance) return;
-
-    const modal = document.getElementById('expanded-chart-modal');
-    const modalTitle = document.getElementById('expanded-chart-title');
-    const ctx = document.getElementById('expanded-chart-canvas').getContext('2d');
-    
-    // 1. SHOW MODAL FIRST (Critical Fix: Canvas needs dimensions to render)
-    modal.classList.remove('hidden');
-    
-    // 2. Reset UI State
-    document.getElementById('expanded-chart-canvas').classList.remove('hidden');
-    document.getElementById('expanded-achievements-controls').classList.add('hidden');
-    document.getElementById('expanded-achievements-controls').classList.remove('flex');
-    document.getElementById('expanded-achievements-grid').classList.add('hidden');
-
-    // 3. Setup Controls
-    const controlsDiv = document.getElementById('expanded-activity-controls');
-    const statsDiv = document.getElementById('expanded-activity-stats');
-
-    modalTitle.textContent = title;
-
-    if (expandedChartInstance) expandedChartInstance.destroy();
-
-    // --- CASE A: ACTIVITY CHART ---
-    if (chartType === 'activity' && eventsData) {
-        controlsDiv.classList.remove('hidden');
-        controlsDiv.classList.add('flex');
-        statsDiv.classList.remove('hidden');
-        statsDiv.classList.add('grid');
-        
-        expandedChartEvents = eventsData;
-        
-        // RENDER NOW (Since modal is visible, this will work immediately)
-        renderExpandedActivityChart('all');
-
-        // Setup Filter Click Listeners
-        const filterGroup = document.getElementById('modal-activity-filter-group');
-        // cloneNode removal logic to prevent duplicate listeners
-        const newFilterGroup = filterGroup.cloneNode(true);
-        filterGroup.parentNode.replaceChild(newFilterGroup, filterGroup);
-        
-        newFilterGroup.addEventListener('click', (e) => {
-            const btn = e.target.closest('.activity-filter-btn');
-            if (btn) {
-                newFilterGroup.querySelectorAll('.activity-filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderExpandedActivityChart(btn.dataset.period);
-            }
-        });
-
-    } 
-    // --- CASE B: GENERIC CHARTS ---
-    else {
-        controlsDiv.classList.add('hidden');
-        controlsDiv.classList.remove('flex');
-        statsDiv.classList.add('hidden');
-        statsDiv.classList.remove('grid');
-
-        // Logic for other charts...
-        const config = sourceChartInstance.config;
-        const newOptions = {
-            ...config.options,
-            maintainAspectRatio: false,
-            responsive: true,
-            plugins: {
-                legend: { display: true, labels: { color: '#e5e7eb', font: { size: 14 } } }
-            },
-            scales: config.options.scales
-        };
-
-        expandedChartInstance = new Chart(ctx, {
-            type: config.type,
-            data: config.data,
-            options: newOptions
-        });
-    }
-
-    // 4. Trigger Animation (Fade In)
-    // Small delay ensures the browser registers the display:block before fading opacity
-    requestAnimationFrame(() => {
-        modal.classList.add('modal-visible');
-    });
-};
-
-// Internal function to handle rendering inside the modal
-const renderExpandedActivityChart = (period) => {
-    const ctxElement = document.getElementById('expanded-chart-canvas');
-    if (!ctxElement) return;
-    
-    const ctx = ctxElement.getContext('2d');
-    
-    // 1. Process Data
-    const processed = processActivityData(expandedChartEvents, period);
-
-    // 2. Update Modal Stats text
-    document.getElementById('modal-stats-total').textContent = processed.total.toLocaleString();
-    document.getElementById('modal-stats-avg').textContent = processed.avg;
-    document.getElementById('modal-stats-peak-date').textContent = processed.peakDate;
-    document.getElementById('modal-stats-peak-count').textContent = processed.peakCount > 0 ? `${processed.peakCount} copies` : '--';
-
-    // 3. Destroy old instance if it exists
-    if (expandedChartInstance) expandedChartInstance.destroy();
-
-    // 4. Create the Green Stock Market Gradient (Same as dashboard)
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400); // Taller gradient for the modal
-    gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); // Green-500
-    gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
-
-    const isLightMode = document.body.classList.contains('light-mode');
-    const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-    const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-
-    // 5. Render as LINE Chart
-    expandedChartInstance = new Chart(ctx, {
-        type: 'line', // <--- CHANGED FROM 'bar' TO 'line'
-        data: {
-            labels: processed.labels,
-            datasets: [{
-                label: 'Copies',
-                data: processed.data,
-                // --- GREEN STYLING MATCH ---
-                borderColor: '#22c55e',       
-                backgroundColor: gradient,    
-                borderWidth: 3,
-                pointBackgroundColor: '#111827', // Dark background for points
-                pointBorderColor: '#22c55e',
-                pointBorderWidth: 2,
-                pointHoverBackgroundColor: '#22c55e',
-                pointHoverBorderColor: '#fff',
-                pointRadius: 4, // Slightly larger points for the expanded view
-                pointHoverRadius: 8,
-                fill: true,                   
-                tension: 0.4 // Smooth curves
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                x: { 
-                    ticks: { color: textColor, maxRotation: 45, minRotation: 0 }, 
-                    grid: { color: gridColor, display: false } // Hide X grid for cleaner look
-                },
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { color: textColor }, 
-                    grid: { color: gridColor, borderDash: [5, 5] } // Dashed grid lines
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    titleColor: '#22c55e', // Green title
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(34, 197, 94, 0.3)',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: false,
-                    callbacks: {
-                        title: function(context) {
-                            // Show full date in tooltip
-                            const dateIndex = context[0].dataIndex;
-                            const originalDateStr = processed.rawSortedDates[dateIndex]; 
-                            if(originalDateStr) {
-                               const d = new Date(originalDateStr + 'T00:00:00');
-                               return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                            }
-                            return context[0].label;
-                        },
-                        label: function(context) {
-                            return `${context.parsed.y} Copies`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-};
-
-const closeExpandedChart = () => {
-    const modal = document.getElementById('expanded-chart-modal');
-    
-    if (modal) {
-        // 1. Remove the visible class to trigger the fade-out/zoom-down animation
-        modal.classList.remove('modal-visible');
-
-        // 2. Wait for the CSS transition (0.3s) to finish before adding display:none
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            
-            // Clean up chart after animation is done
-            if (expandedChartInstance) {
-                expandedChartInstance.destroy();
-                expandedChartInstance = null;
-            }
-        }, 300); // This must match the CSS transition time (0.3s)
-    }
-};
 
 
 // --- CONFIG: Smart Synonym Dictionary ---
@@ -3428,47 +3223,122 @@ const animateValue = (obj, start, end, duration) => {
     window.requestAnimationFrame(step);
 };
 		
-const calculateAndSaveUserRecords = async (uid) => {
-    if (!uid || isAnonymous) return; 
+
+const runMasterStatsMigration = async (uid) => {
+    if (!uid || isAnonymous) return;
+
+    const userDocRef = getUserRootDocRef(uid);
+    const leaderboardDocRef = doc(db, "leaderboard", uid);
 
     try {
-        const userDocRef = getUserRootDocRef(uid);
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() : {};
 
-        // 🔥 THE SMART GATE: If we already calculated records once, NEVER run this on refresh again!
-        if (userData.recordsCalculated) {
-            return;
+        // 1. The Gatekeeper: Stop immediately if already migrated
+        if (userData.statsMigrated) {
+            return; 
         }
 
-        console.log(`Calculating and saving personal records for user ${uid}...`);
+        console.log("🚀 Starting One-Time Master Stats Migration...");
 
+        // 2. The Heavy Read (One Last Time)
         const eventsCollectionRef = getUserEventsCollectionRef(uid);
-        const leaderboardDocRef = doc(db, "leaderboard", uid);
-
-        // 1. Fetch all of the user's past events (Only happens once per user now!)
         const snapshot = await getDocs(query(eventsCollectionRef));
         const events = snapshot.docs.map(doc => doc.data());
+        
+        const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
 
-        // 2. Calculate user's personal records
-        const records = calculateUserRecords(events); 
+                // 3. The Number Crunching
+        let totalCopies = 0;
+        const categoryCounts = {};
+        const uniqueDays = new Set();
+        const dailyStatsToCreate = {};
 
-        // 3. Prepare the data object to update
-        const recordsToUpdate = {
-            recordDaily: records.daily,
-            recordWeekly: records.weekly,
-            recordMonthly: records.monthly
+        const currentWeekId = getCurrentWeekId();
+        const currentMonthId = getCurrentMonthId();
+        let currentWeeklyCopies = 0;
+        let currentMonthlyCopies = 0;
+
+        const dailyData = {};
+        const weeklyData = {};
+        const monthlyData = {};
+
+        const getHistoricalWeekKey = (d) => {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+            return `${date.getUTCFullYear()}-${weekNo}`;
         };
 
-        // 4. Update the public leaderboard and mark the user as 'calculated'
-        await setDoc(leaderboardDocRef, recordsToUpdate, { merge: true });
-        await setDoc(userDocRef, { recordsCalculated: true }, { merge: true });
-        console.log(`✅ Successfully updated personal records for user ${uid}.`);
+        copyEvents.forEach(event => {
+            totalCopies++;
+            if (event.categoryName) categoryCounts[event.categoryName] = (categoryCounts[event.categoryName] || 0) + 1;
+
+            const dateObj = event.timestamp.toDate();
+            const dayKey = dateObj.toISOString().split('T')[0];
+            const weekKey = getHistoricalWeekKey(dateObj);
+            const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+
+            uniqueDays.add(dayKey);
+            dailyStatsToCreate[dayKey] = (dailyStatsToCreate[dayKey] || 0) + 1;
+            
+            dailyData[dayKey] = (dailyData[dayKey] || 0) + 1;
+            weeklyData[weekKey] = (weeklyData[weekKey] || 0) + 1;
+            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+
+            if (weekKey === currentWeekId) currentWeeklyCopies++;
+            if (monthKey === currentMonthId) currentMonthlyCopies++;
+        });
+
+        // Find the absolute highest values AND their dates
+        const getBest = (obj) => {
+            let maxVal = 0; let maxKey = null;
+            for(const [k,v] of Object.entries(obj)) {
+                if(v > maxVal) { maxVal = v; maxKey = k; }
+            }
+            return { count: maxVal, date: maxKey };
+        };
+
+        // 4. The Save & Lock
+        const batch = writeBatch(db);
+        batch.set(leaderboardDocRef, {
+            totalCopies: totalCopies,
+            categoryCounts: categoryCounts,
+            totalActiveDays: uniqueDays.size,
+            
+            // Saving the full objects now!
+            recordDaily: getBest(dailyData),
+            recordWeekly: getBest(weeklyData),
+            recordMonthly: getBest(monthlyData),
+            
+            weeklyXp: currentWeeklyCopies, 
+            lastWeeklyXpId: currentWeekId,
+            monthlyXp: currentMonthlyCopies,
+            lastMonthlyXpId: currentMonthId
+            
+        }, { merge: true });
+
+        batch.set(userDocRef, { statsMigrated: true }, { merge: true });
+
+        // Backfill the Activity Chart (Top 30 Days)
+        const sortedDays = Object.keys(dailyStatsToCreate).sort((a, b) => b.localeCompare(a)).slice(0, 30);
+        sortedDays.forEach(day => {
+            const dailyRef = doc(db, 'artifacts', safeAppId, 'users', uid, 'daily_stats', day);
+            batch.set(dailyRef, { copies: dailyStatsToCreate[day] }, { merge: true });
+        });
+
+        await batch.commit();
+        console.log("✅ Master Migration Complete. Trophies and Dates successfully saved!");
+
+        // Update local memory so the UI knows immediately
+        if (cachedStatsUserData) cachedStatsUserData.statsMigrated = true;
 
     } catch (error) {
-        console.error(`Error calculating and saving user records for ${uid}:`, error);
+        console.error("Migration failed:", error);
     }
 };
+
 		
 const calculateUserRecords = (events) => {
     // 1. Filter for only 'copy' events that have a valid timestamp
@@ -3546,183 +3416,7 @@ const showChallengeCompletionAnimation = (challengeId) => {
     }, 3000); // 3-second delay
 };		
 
-const calculateAndRenderRecords = (events) => {
-    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp && e.timestamp.toDate);
 
-    // --- Helper: Format Week Range ---
-    const getWeekKey = (d) => {
-        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-        return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-    };
-
-    const getDateRangeFromWeek = (weekKey) => {
-        const [yearStr, weekStr] = weekKey.split('-W');
-        const year = parseInt(yearStr);
-        const week = parseInt(weekStr);
-        const simple = new Date(year, 0, 1 + (week - 1) * 7);
-        const dow = simple.getDay();
-        const ISOweekStart = simple;
-        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-        const startMonth = ISOweekStart.toLocaleDateString('en-US', { month: 'short' });
-        const startDay = ISOweekStart.getDate();
-        const ISOweekEnd = new Date(ISOweekStart);
-        ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
-        const endMonth = ISOweekEnd.toLocaleDateString('en-US', { month: 'short' });
-        const endDay = ISOweekEnd.getDate();
-        return (startMonth === endMonth) 
-            ? `${startMonth} ${startDay}-${endDay}, ${year}` 
-            : `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-    };
-
-    // --- 1. Fill Data Buckets ---
-    const dailyData = {};
-    const weeklyData = {};
-    const monthlyData = {};
-
-    copyEvents.forEach(event => {
-        const date = event.timestamp.toDate();
-        const dayKey = date.toISOString().split('T')[0];
-        const weekKey = getWeekKey(date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-        dailyData[dayKey] = (dailyData[dayKey] || 0) + 1;
-        weeklyData[weekKey] = (weeklyData[weekKey] || 0) + 1;
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-    });
-
-    // --- 2. Find Records (Max Values) ---
-    const findRecord = (dataObj) => {
-        let maxVal = 0;
-        let maxKey = null;
-        for (const [key, val] of Object.entries(dataObj)) {
-            if (val > maxVal) { maxVal = val; maxKey = key; }
-            else if (val === maxVal && key > maxKey) { maxKey = key; }
-        }
-        return { val: maxVal, key: maxKey };
-    };
-
-    const bestDay = findRecord(dailyData);
-    const bestWeek = findRecord(weeklyData);
-    const bestMonth = findRecord(monthlyData);
-
-    // --- 3. Determine "Current" Values ---
-    const now = new Date();
-    const currentDayKey = now.toISOString().split('T')[0];
-    const currentWeekKey = getWeekKey(now);
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-    const currentDayVal = dailyData[currentDayKey] || 0;
-    const currentWeekVal = weeklyData[currentWeekKey] || 0;
-    const currentMonthVal = monthlyData[currentMonthKey] || 0;
-
-    // --- 4. Render Logic (Reusable Function) ---
-    const updateUI = (type, best, current, dateFormatter) => {
-        const countEl = document.getElementById(`record-${type}`);
-        const dateEl = document.getElementById(`record-${type}-date`);
-        const statusEl = document.getElementById(`record-${type}-status`);
-        const percentEl = document.getElementById(`record-${type}-percent`);
-        const barEl = document.getElementById(`record-${type}-bar`);
-        const paceEl = document.getElementById(`record-${type}-pace`);
-
-        // Update Record Number
-        animateValue(countEl, 0, best.val, 1500);
-
-        // Update Record Date
-        if (best.key) {
-            dateEl.textContent = dateFormatter(best.key);
-        } else {
-            dateEl.textContent = '--';
-        }
-
-        // --- PACING CALCULATOR LOGIC ---
-        if (paceEl) {
-            let pace = 0;
-            let isPaceValid = true;
-
-            if (type === 'daily') {
-                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const hoursElapsed = Math.max((now - startOfDay) / (1000 * 60 * 60), 0.1); 
-                pace = Math.round((current / hoursElapsed) * 24);
-            } else if (type === 'weekly') {
-                const dayOfWeek = now.getDay();
-                const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 for Monday, 6 for Sunday
-                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
-                const daysElapsed = Math.max((now - startOfWeek) / (1000 * 60 * 60 * 24), 0.1);
-                pace = Math.round((current / daysElapsed) * 7);
-            } else if (type === 'monthly') {
-                const daysElapsed = Math.max(now.getDate(), 0.1);
-                const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                pace = Math.round((current / daysElapsed) * totalDaysInMonth);
-            }
-
-            if (current > 0 && isPaceValid) {
-                if (pace > best.val && best.val > 0) {
-                    paceEl.className = "mt-1.5 text-[9px] font-mono text-emerald-400 font-bold text-right h-3 tracking-wider";
-                    paceEl.innerHTML = `<i class="fas fa-arrow-trend-up mr-0.5"></i> On pace to break record: ~${pace}`;
-                } else {
-                    paceEl.className = "mt-1.5 text-[9px] font-mono text-gray-500 text-right h-3 tracking-wider";
-                    paceEl.innerHTML = `On pace for: ~${pace}`;
-                }
-            } else {
-                paceEl.innerHTML = "";
-            }
-        }
-
-        // --- THE HYPE LOGIC ---
-        let percentage = best.val > 0 ? (current / best.val) * 100 : 0;
-        const displayPercent = Math.min(percentage, 100);
-        
-        barEl.style.width = `${displayPercent}%`;
-        percentEl.textContent = `${Math.floor(percentage)}%`;
-
-        const distance = best.val - current;
-
-        // Reset Styles
-        statusEl.className = "font-semibold";
-        statusEl.innerHTML = ""; 
-        barEl.className = `h-full rounded-full transition-all duration-1000 ${type === 'daily' ? 'bg-blue-400' : type === 'weekly' ? 'bg-purple-400' : 'bg-yellow-400'}`;
-        countEl.classList.remove('new-record-glow', 'text-green-400');
-
-        if (current >= best.val && best.val > 0) {
-            statusEl.innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> <span class="text-green-400">Current Record!</span>`;
-            barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
-            barEl.classList.add('bg-green-400');
-            countEl.classList.add('new-record-glow', 'text-green-400'); 
-            percentEl.textContent = "100%";
-            if(paceEl) paceEl.innerHTML = ""; // Clear pace text if record is already broken
-        } 
-        else if (percentage >= 80) {
-            statusEl.innerHTML = `<i class="fas fa-fire text-orange-500 mr-1 animate-pulse"></i> <span class="text-orange-300">${distance} away!</span>`;
-            barEl.classList.remove('bg-blue-400', 'bg-purple-400', 'bg-yellow-400');
-            barEl.classList.add('bg-orange-500'); 
-        } 
-        else {
-            let label = type === 'daily' ? "Today" : type === 'weekly' ? "This Week" : "This Month";
-            let colorClass = type === 'daily' ? "text-blue-100" : type === 'weekly' ? "text-purple-100" : "text-yellow-100";
-
-            statusEl.className = `font-semibold ${colorClass}`;
-            statusEl.textContent = `${label}: ${current}`;
-        }
-    };
-
-    const formatDay = (key) => {
-        const [y, m, d] = key.split('-');
-        return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    };
-    const formatWeek = (key) => getDateRangeFromWeek(key);
-    const formatMonth = (key) => {
-        const [y, m] = key.split('-');
-        return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    };
-
-    updateUI('daily', bestDay, currentDayVal, formatDay);
-    updateUI('weekly', bestWeek, currentWeekVal, formatWeek);
-    updateUI('monthly', bestMonth, currentMonthVal, formatMonth);
-};
 
 const displayToast = (notification) => {
     isNotificationActive = true; // Set the flag
@@ -3773,14 +3467,9 @@ const startTrackingChallenge = async (challengeId) => {
     trackedChallengeId = challengeId;
     localStorage.setItem('trackedChallengeId', challengeId);
 
-    // Re-fetch events to ensure we have the latest data
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => doc.data());
-
-    // Now re-render only the two components that need to change
+    // No more Firebase reads! Just re-render instantly using RAM.
     await renderChallenges(cachedStatsUserData);
-	await renderChallengeTracker(cachedStatsUserData);
+    await renderChallengeTracker(cachedStatsUserData);
 };
 
 const stopTrackingChallenge = async () => {
@@ -3790,17 +3479,11 @@ const stopTrackingChallenge = async () => {
     const hud = document.getElementById('challenge-tracker-hud');
     if (hud) {
         hud.classList.remove('visible');
-        // A short delay to allow the fade-out animation
         setTimeout(() => hud.classList.add('hidden'), 500); 
     }
 
-    // Re-fetch events to update the UI
-    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-    const snapshot = await getDocs(query(eventsCollectionRef));
-    const events = snapshot.docs.map(doc => doc.data());
-    
-    // Just re-render the challenges list to update the icon
-    await renderChallenges(events);
+    // No more Firebase reads! Just re-render instantly using RAM.
+    await renderChallenges(cachedStatsUserData);
 };
 
 // In your <script> tag...
@@ -3847,50 +3530,7 @@ const renderChallengeTracker = async (userData) => {
 };
 				
 
-const backfillActiveDays = async (uid) => {
-    console.log(`Checking if active days backfill is needed for user ${uid}...`);
-    try {
-        const userDocRef = getUserRootDocRef(uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists() && userDoc.data().activeDaysBackfilled) {
-            console.log('Active days already backfilled. Skipping.');
-            return;
-        }
 
-        const eventsCollectionRef = getUserEventsCollectionRef(uid);
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const copyEvents = snapshot.docs
-            .map(doc => doc.data())
-            .filter(e => e.type === 'copy' && e.timestamp);
-
-        if (copyEvents.length === 0) {
-             await updateDoc(userDocRef, { activeDaysBackfilled: true });
-             console.log('No copy events to backfill.');
-             return;
-        }
-
-        // Use a Set to get all unique dates
-        const uniqueDays = new Set(
-            copyEvents.map(e => e.timestamp.toDate().toISOString().split('T')[0])
-        );
-
-        // Use a batch to write all documents efficiently
-        const batch = writeBatch(db);
-        uniqueDays.forEach(dateStr => {
-            const activeDayDocRef = doc(db, "leaderboard", uid, "activeDays", dateStr);
-            batch.set(activeDayDocRef, { backfilled: true });
-        });
-        await batch.commit();
-
-        // CRITICAL: Set a flag so this function never runs for this user again
-        await updateDoc(userDocRef, { activeDaysBackfilled: true });
-
-        console.log(`✅ Successfully backfilled ${uniqueDays.size} active days for user ${uid}.`);
-
-    } catch (error) {
-        console.error("Error during active days backfill:", error);
-    }
-};
 		
 const calculateAverageOnActiveDays = (totalCopies, activeDaysCount) => {
     // If there are no copies or no active days, the average is 0.
@@ -3910,93 +3550,7 @@ const findFavoriteCategory = (categoryCounts) => {
     return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
 };
 		
-const backfillUserStats = async (uid) => {
-    console.log(`Checking if full stats backfill is needed for user ${uid}...`);
-    try {
-        const userDocRef = getUserRootDocRef(uid);
-        const userDoc = await getDoc(userDocRef); // Get the user doc
-        const userData = userDoc.exists() ? userDoc.data() : {}; // Get data
 
-        // IMPORTANT: We change this check so it can re-run on old users
-        if (userData.recordsBackfilled) {
-             console.log('Records already backfilled. Skipping.');
-             return;
-        }
-
-        const eventsCollectionRef = getUserEventsCollectionRef(uid);
-        const leaderboardDocRef = doc(db, "leaderboard", uid);
-
-        // 1. Fetch all of the user's past events
-        const snapshot = await getDocs(query(eventsCollectionRef));
-        const events = snapshot.docs.map(doc => doc.data());
-
-        // 2. Calculate basic stats from events
-        const totalCopies = events.filter(e => e.type === 'copy').length;
-        const categoryCounts = events
-            .filter(e => e.type === 'copy' && e.categoryName)
-            .reduce((acc, event) => {
-                acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
-                return acc;
-            }, {});
-
-        // --- NEW ---
-        // 3. Calculate user's personal records
-        const records = calculateUserRecords(events); 
-        // --- END NEW ---
-
-        // 3. NEW: Calculate achievements based purely on the user's event history
-        // ... (your existing achievement calculation logic is unchanged) ...
-        const unlockedAchievementIds = new Set();
-        const totalCategoriesCreated = events.filter(e => e.type === 'create_category').length;
-        const responsesPerCategory = events
-            .filter(e => e.type === 'create_response' && e.category)
-            .reduce((acc, e) => {
-                acc[e.category] = (acc[e.category] || 0) + 1;
-                return acc;
-            }, {});
-
-        if (totalCopies > 0) unlockedAchievementIds.add('first_responder');
-        if (totalCopies >= 10) unlockedAchievementIds.add('copy_tiers');
-        if (events.some(e => e.type === 'create_response')) unlockedAchievementIds.add('the_creator');
-        if (totalCategoriesCreated >= 5) unlockedAchievementIds.add('librarian_tiers');
-        if (Object.values(responsesPerCategory).some(count => count >= 5)) unlockedAchievementIds.add('the_architect');
-        if (events.some(e => e.type === 'edit_response')) unlockedAchievementIds.add('the_editor');
-        if (events.some(e => e.type === 'pin_response')) unlockedAchievementIds.add('the_curator');
-        if (events.some(e => e.type === 'change_color')) unlockedAchievementIds.add('the_color_coder');
-        if (events.some(e => e.type === 'import_data')) unlockedAchievementIds.add('the_data_hoarder');
-        if (events.some(e => e.type === 'add_link')) unlockedAchievementIds.add('the_personalizer');
-        if (events.some(e => e.type === 'globetrotter_milestone')) unlockedAchievementIds.add('the_globetrotter');
-        if (events.some(e => e.type === 'publish_to_workshop')) unlockedAchievementIds.add('community_voice');
-
-        const visitedPages = new Set(events.filter(e => e.type === 'visit_page').map(e => e.page));
-        if (visitedPages.has('canned-responses') && visitedPages.has('fedex-tracker') && visitedPages.has('helpful-links')) {
-            unlockedAchievementIds.add('the_explorer');
-        }
-        
-        // 4. Prepare the complete data object for the public leaderboard document
-        const statsToUpdate = {
-            totalCopies: totalCopies,
-            categoryCounts: categoryCounts,
-            unlockedAchievements: Array.from(unlockedAchievementIds),
-            // --- NEW ---
-            recordDaily: records.daily,
-            recordWeekly: records.weekly,
-            recordMonthly: records.monthly
-            // --- END NEW ---
-        };
-
-        // 5. Update the public leaderboard document with all the data
-        await setDoc(leaderboardDocRef, statsToUpdate, { merge: true });
-
-        // 6. Set the flag so this never runs again for this user
-        await setDoc(userDocRef, { statsBackfilled: true, recordsBackfilled: true }, { merge: true });
-
-        console.log(`✅ Successfully backfilled stats, records, and ${unlockedAchievementIds.size} achievements for user ${uid}.`);
-
-    } catch (error) {
-        console.error(`Error during stats backfill for user ${uid}:`, error);
-    }
-};
 		
 // Renders the achievement icons inside the profile modal
 const renderProfileAchievements = (unlockedAchievements) => {
@@ -4190,10 +3744,13 @@ const showUserProfile = async (profileUserId) => {
         document.getElementById('profile-cpd').textContent = copiesPerDay;
 
         // 4. --- NEW --- Populate the "Personal Records"
-        document.getElementById('profile-record-daily').textContent = (profileData.recordDaily || 0).toLocaleString();
-        document.getElementById('profile-record-weekly').textContent = (profileData.recordWeekly || 0).toLocaleString();
-        document.getElementById('profile-record-monthly').textContent = (profileData.recordMonthly || 0).toLocaleString();
-        // --- END NEW ---
+        // Helper to safely grab the count whether it's the new object format or old legacy number format
+        const getRecordCount = (rec) => (rec && typeof rec === 'object') ? (rec.count || 0) : (rec || 0);
+
+        document.getElementById('profile-record-daily').textContent = getRecordCount(profileData.recordDaily).toLocaleString();
+        document.getElementById('profile-record-weekly').textContent = getRecordCount(profileData.recordWeekly).toLocaleString();
+        document.getElementById('profile-record-monthly').textContent = getRecordCount(profileData.recordMonthly).toLocaleString();
+
         
         // RENDER THE CHARTS AND ACHIEVEMENTS
         renderProfileCategoryChart(profileData.categoryCounts || {});
@@ -4480,9 +4037,8 @@ const CHALLENGES_CONFIG = {
         type: 'daily',
         icon: 'fa-sun',
         getProgress: async (userData) => {
-            const todayStr = getCurrentDateString();
-            const prog = userData?.challengeProgress?.dailyCopies || {};
-            return { current: prog.date === todayStr ? (prog.count || 0) : 0 };
+            // Point directly to our RAM daily total
+            return { current: userData?.currentDailyCopies || 0 };
         }
     },
     weeklyCopies: {
@@ -4494,9 +4050,10 @@ const CHALLENGES_CONFIG = {
         type: 'weekly',
         icon: 'fa-calendar-week',
         getProgress: async (userData) => {
+            // Point directly to our Lazy Reset weekly total
             const weekId = getCurrentWeekId();
-            const prog = userData?.challengeProgress?.weeklyCopies || {};
-            return { current: prog.week === weekId ? (prog.count || 0) : 0 };
+            const count = userData?.lastWeeklyXpId === weekId ? (userData?.weeklyXp || 0) : 0;
+            return { current: count };
         }
     },
     monthlyMarathon: {
@@ -4508,9 +4065,10 @@ const CHALLENGES_CONFIG = {
         type: 'monthly',
         icon: 'fa-calendar-alt',
         getProgress: async (userData) => {
+            // Point directly to our Lazy Reset monthly total
             const monthId = getCurrentMonthId();
-            const prog = userData?.challengeProgress?.monthlyMarathon || {};
-            return { current: prog.month === monthId ? (prog.count || 0) : 0 };
+            const count = userData?.lastMonthlyXpId === monthId ? (userData?.monthlyXp || 0) : 0;
+            return { current: count };
         }
     },
     logisticsExpert: {
@@ -4522,12 +4080,14 @@ const CHALLENGES_CONFIG = {
         type: 'weekly',
         icon: 'fa-truck-fast',
         getProgress: async (userData) => {
+            // This one stays the same because FedEx extractions have their own unique tracker!
             const weekId = getCurrentWeekId();
             const prog = userData?.challengeProgress?.logisticsExpert || {};
             return { current: prog.week === weekId ? (prog.count || 0) : 0 };
         }
     }
 };
+
 
 // --- OPTIMIZED: Update Challenge Counters (Zero Reads!) ---
 const updateChallengeCounters = async (uid, actionType) => {
@@ -6928,7 +6488,7 @@ const deleteResponse = (id, categoryName) => {
 };
 
 const copyToClipboard = async (text, responseId = null, categoryName = null) => {
-    // This part always runs, so the user can always copy the text
+    // 1. Standard copy to clipboard logic
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
@@ -6945,15 +6505,28 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
         if (now - lastCopyTime > COOLDOWN_PERIOD) {
             
-            // --- SUCCESS: Award XP and Stats ---
+            // --- 2. Sequence Memory (Smart Suggestions) ---
+            sessionStorage.setItem('last_copied_id', responseId);
+            setTimeout(updateSmartSuggestions, 500);
+
+            // --- 3. Globetrotter Achievement Check (Moved here from old logUserEvent) ---
+            let categoriesUsed = JSON.parse(sessionStorage.getItem('categoriesUsedInSession') || '[]');
+            if (!categoriesUsed.includes(categoryName)) {
+                categoriesUsed.push(categoryName);
+                sessionStorage.setItem('categoriesUsedInSession', JSON.stringify(categoriesUsed));
+                
+                // If they hit 2 categories and don't have the achievement yet
+                if (categoriesUsed.length >= 2 && cachedStatsUserData && cachedStatsUserData.achievementsData && !cachedStatsUserData.achievementsData['the_globetrotter']) {
+                     await logUserEvent('globetrotter_milestone');
+                }
+            }
+
+            // --- 4. Award Base XP ---
             await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
-            
-            // 🔥 FIX 1: Add 'await' here so the cache finishes updating before the UI redraws
-            await logUserEvent('copy', { responseId, categoryName, text });
 
             if (userId && !isAnonymous) {
                 try {
-                    // ... (Local category count logic stays the same) ...
+                    // Update Local Category usage count (For UI rendering)
                     const category = categories[categoryName];
                     if (category && category.responses) {
                         const response = category.responses.find(r => r.id === responseId);
@@ -6966,84 +6539,118 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         }
                     }
 
-                    // Setup References
+                    // ==========================================
+                    // 🔥 THE MASTER BATCH UPDATE (Zero History Reads!) 🔥
+                    // ==========================================
+                    const batch = writeBatch(db);
                     const leaderboardDocRef = doc(db, "leaderboard", userId);
-                    const categoryCountField = `categoryCounts.${categoryName}`;
-                    const todayStr = new Date().toISOString().split('T')[0];
-                    const activeDayDocRef = doc(db, "leaderboard", userId, "activeDays", todayStr);
-                    
-                    // Fetch doc for logic
-                    const lbDocSnap = await getDoc(leaderboardDocRef);
-                    const lbData = lbDocSnap.exists() ? lbDocSnap.data() : {};
+                    const userDocRef = getUserRootDocRef(userId);
 
-                    // Track Weekly/Monthly
+                    // Setup Dates & IDs
+                    const todayStr = getCurrentDateString(); 
                     const currentWeekId = getCurrentWeekId(); 
                     const currentMonthId = getCurrentMonthId();
-                    
-                    let updates = {};
-                    
-                    // Weekly Logic
-                    if (lbData.lastWeeklyXpId === currentWeekId) {
-                        updates.weeklyXp = increment(1);
-                    } else {
-                        updates.weeklyXp = 1;
-                        updates.lastWeeklyXpId = currentWeekId;
-                    }
-                    
-                    // Monthly Logic
-                    if (lbData.lastMonthlyXpId === currentMonthId) {
-                        updates.monthlyXp = increment(1);
-                    } else {
-                        updates.monthlyXp = 1;
-                        updates.lastMonthlyXpId = currentMonthId;
-                    }
-                    
-                    const batch = writeBatch(db);
-                    
-                    // This updates the 'lastActive' timestamp in the DB
-                    batch.update(leaderboardDocRef, {
+                    const dailyStatsRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'daily_stats', todayStr);
+
+                    // Setup RAM Variables
+                    if (!cachedStatsUserData) cachedStatsUserData = {};
+                    let userData = cachedStatsUserData;
+
+                    // Calculate the new local totals
+                    let newTotalCopies = (userData.totalCopies || 0) + 1;
+                    let newDailyCopies = (userData.currentDailyCopies || 0) + 1; 
+                    let newWeeklyCopies = (userData.lastWeeklyXpId === currentWeekId) ? (userData.weeklyXp || 0) + 1 : 1;
+                    let newMonthlyCopies = (userData.lastMonthlyXpId === currentMonthId) ? (userData.monthlyXp || 0) + 1 : 1;
+
+                    let updatesToLeaderboard = {
                         totalCopies: increment(1),
                         [`categoryCounts.${categoryName}`]: increment(1),
-                        lastActive: serverTimestamp(), 
-                        ...updates 
-                    });
-                    
-                    batch.set(activeDayDocRef, { lastCopy: serverTimestamp() });
-                    
-                    await batch.commit();
-                    
-                    // --- 🔥 THE QUOTA SAVER FIX + UI REFRESH 🔥 ---
-                    // Refresh Challenges UI using local memory instead of Firebase reads!
-                    if (cachedStatsEvents) {
-                        await renderChallenges(cachedStatsUserData);
-						await renderChallengeTracker(cachedStatsUserData);
-                        
-                        if (cachedStatsUserData) {
-                            renderLevelingSystem(cachedStatsUserData);
-                        }
+                        lastActive: serverTimestamp()
+                    };
+                    let updatesToUserDoc = {};
 
-                        // 🔥 FIX: Tell the Milestones and Work History to redraw instantly!
-                        calculateAndRenderRecords(cachedStatsEvents);
-                        
-                        // Preserve the user's current 7D/30D/ALL filter when redrawing the chart
-                        const activePeriodBtn = document.querySelector('.activity-filter-btn.active');
-                        const currentPeriod = activePeriodBtn ? activePeriodBtn.dataset.period : 'all';
-                        renderActivityChart(cachedStatsEvents, currentPeriod);
+                    // --- NEW DAY CHECK (Total Active Days) ---
+                    if (userData.lastActiveDate !== todayStr) {
+                        updatesToLeaderboard.totalActiveDays = increment(1);
+                        updatesToUserDoc.lastActiveDate = todayStr;
+                        userData.totalActiveDays = (userData.totalActiveDays || 0) + 1;
+                        userData.lastActiveDate = todayStr;
                     }
-                    // ---------------------------------
-                                        
+
+                    // --- HIGH-WATER MARKS (Personal Records) ---
+                    const oldRecordDaily = userData.recordDaily ? (userData.recordDaily.count || 0) : 0;
+                    if (newDailyCopies > oldRecordDaily) {
+                        const newRecord = { count: newDailyCopies, date: todayStr };
+                        updatesToLeaderboard.recordDaily = newRecord;
+                        userData.recordDaily = newRecord;
+                    }
+
+                    const oldRecordWeekly = userData.recordWeekly ? (userData.recordWeekly.count || 0) : 0;
+                    if (newWeeklyCopies > oldRecordWeekly) {
+                        const newRecord = { count: newWeeklyCopies, date: currentWeekId };
+                        updatesToLeaderboard.recordWeekly = newRecord;
+                        userData.recordWeekly = newRecord;
+                    }
+
+                    const oldRecordMonthly = userData.recordMonthly ? (userData.recordMonthly.count || 0) : 0;
+                    if (newMonthlyCopies > oldRecordMonthly) {
+                        const newRecord = { count: newMonthlyCopies, date: currentMonthId };
+                        updatesToLeaderboard.recordMonthly = newRecord;
+                        userData.recordMonthly = newRecord;
+                    }
+
+                    // --- LAZY RESETS (Weekly & Monthly Tracking) ---
+                    if (userData.lastWeeklyXpId === currentWeekId) {
+                        updatesToLeaderboard.weeklyXp = increment(1);
+                    } else {
+                        updatesToLeaderboard.weeklyXp = 1;
+                        updatesToLeaderboard.lastWeeklyXpId = currentWeekId;
+                        userData.lastWeeklyXpId = currentWeekId;
+                    }
+
+                    if (userData.lastMonthlyXpId === currentMonthId) {
+                        updatesToLeaderboard.monthlyXp = increment(1);
+                    } else {
+                        updatesToLeaderboard.monthlyXp = 1;
+                        updatesToLeaderboard.lastMonthlyXpId = currentMonthId;
+                        userData.lastMonthlyXpId = currentMonthId;
+                    }
+
+                    // --- UPDATE LOCAL RAM (For Optimistic UI) ---
+                    userData.totalCopies = newTotalCopies;
+                    userData.currentDailyCopies = newDailyCopies;
+                    userData.weeklyXp = newWeeklyCopies;
+                    userData.monthlyXp = newMonthlyCopies;
+                    if (!userData.categoryCounts) userData.categoryCounts = {};
+                    userData.categoryCounts[categoryName] = (userData.categoryCounts[categoryName] || 0) + 1;
+
+                    // --- QUEUE BATCH SAVES ---
+                    batch.set(leaderboardDocRef, updatesToLeaderboard, { merge: true });
+                    batch.set(dailyStatsRef, { copies: increment(1) }, { merge: true });
+                    if (Object.keys(updatesToUserDoc).length > 0) {
+                        batch.set(userDocRef, updatesToUserDoc, { merge: true });
+                    }
+
+                    // Send it all to Firebase at once!
+                    await batch.commit();
+
+                    // --- 5. Update Challenges & Check for Trophies ---
+                    await updateChallengeCounters(userId, 'copy'); 
+                    await checkAndAwardChallengeXP(userId);
+
+                    // --- 6. Redraw UI (Instantly with RAM data!) ---
+                    if (currentPage === 'my-stats') {
+                        renderAdvancedStats();
+                    }
+
                 } catch (error) {
-                    console.error("Error updating copy count:", error);
+                    console.error("Error updating copy metrics:", error);
                 }
             }
-            await updateChallengeCounters(userId, 'copy'); 
-            await checkAndAwardChallengeXP(userId);
         } else {
-             // Cooldown active - feedback only
              showMessage("Copied! (Cooldown active)", 'success');
         }
     } else {
-        // Fallback for untracked text
         showMessage("Copied to clipboard!");
     }
 };
@@ -7654,101 +7261,26 @@ const renderSettingsPage = () => {
     }
 };
 
-// --- UPDATED CALCULATION LOGIC ---
-const processActivityData = (events, period) => {
-    const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
-    const now = new Date();
-    let startDate = new Date();
-    let filteredEvents = [];
-
-    // 1. Filter Logic (Keep this as is)
-    if (period === '7') {
-        startDate.setDate(now.getDate() - 6);
-        startDate.setHours(0, 0, 0, 0);
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else if (period === '30') {
-        startDate.setDate(now.getDate() - 29);
-        startDate.setHours(0, 0, 0, 0);
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else if (period === 'month') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        filteredEvents = copyEvents.filter(e => e.timestamp.toDate() >= startDate);
-    } else { 
-        filteredEvents = copyEvents;
-    }
-
-    // 2. Group by Date
-    const activityByDay = filteredEvents.reduce((acc, event) => {
-        const date = event.timestamp.toDate().toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-    }, {});
-
-    // 3. NEW CALCULATION: Divisor is now the number of active days found
-    const sortedDates = Object.keys(activityByDay).sort();
-    const totalCopies = filteredEvents.length;
-    
-    // This is the core fix: Count unique days that actually have data
-    const activeDaysCount = sortedDates.length;
-    const avgCopies = activeDaysCount > 0 ? (totalCopies / activeDaysCount).toFixed(1) : '0.0';
-
-    // 4. Peak Calculation (Keep this as is)
-    let peakCount = 0;
-    let peakDate = '--';
-    for (const date in activityByDay) {
-        if (activityByDay[date] > peakCount) {
-            peakCount = activityByDay[date];
-            const d = new Date(date + 'T00:00:00');
-            peakDate = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        }
-    }
-
-    return {
-        labels: sortedDates.map(date => {
-            const d = new Date(date + 'T00:00:00');
-            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        }),
-        data: sortedDates.map(date => activityByDay[date]),
-        total: totalCopies,
-        avg: avgCopies, // Now based on active days!
-        peakDate: peakDate,
-        peakCount: peakCount,
-        rawSortedDates: sortedDates
-    };
-};
-
-const renderCategoryChart = (events) => {
+// 1. NEW CATEGORY CHART (Reads directly from the dictionary)
+const renderCategoryChart = (categoryCounts) => {
     const container = document.getElementById('category-chart-container');
     if (!container) return;
 
-    // --- FIX 1: Correct ID is 'categoryChart', NOT 'activityChart' ---
-    // --- FIX 2: Removed 'pointer-events-none' so you can hover over the doughnut slices ---
     container.innerHTML = '<canvas id="categoryChart"></canvas>';
-    
     const ctxElement = document.getElementById('categoryChart');
-    if (!ctxElement) return; // Safety check
+    if (!ctxElement) return; 
     const ctx = ctxElement.getContext('2d');
 
-    if (categoryChartInstance) {
-        categoryChartInstance.destroy();
-    }
+    if (categoryChartInstance) categoryChartInstance.destroy();
 
-    const copyEvents = events.filter(e => e.type === 'copy' && e.categoryName);
-    if (copyEvents.length === 0) {
+    if (!categoryCounts || Object.keys(categoryCounts).length === 0) {
         container.innerHTML = '<p class="text-center text-gray-400 mt-12">Copy some responses to see your category breakdown!</p>';
         return;
     }
 
-    const categoryCounts = copyEvents.reduce((acc, event) => {
-        acc[event.categoryName] = (acc[event.categoryName] || 0) + 1;
-        return acc;
-    }, {});
-
     const labels = Object.keys(categoryCounts);
     const data = Object.values(categoryCounts);
-    
     const backgroundColors = labels.map(label => categories[label]?.color || '#888888');
-
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#000000' : '#ffffff';
 
@@ -7765,61 +7297,152 @@ const renderCategoryChart = (events) => {
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: textColor,
-                        padding: 20,
-                        font: { size: 14, weight: 'bold' }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = context.raw;
-                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1) + '%';
-                            return `${context.label}: ${value} (${percentage})`;
-                        }
-                    }
-                }
+                legend: { position: 'bottom', labels: { color: textColor, padding: 20, font: { size: 14, weight: 'bold' } } },
+                tooltip: { callbacks: { label: function(c) { const total = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return `${c.label}: ${c.raw} (${((c.raw / total) * 100).toFixed(1)}%)`; } } }
             }
         }
     });
 };
 
-const renderActivityChart = (events, period = 'all') => {
+// 2. NEW RECORDS RENDERER (Reads High-Water Marks from RAM)
+const calculateAndRenderRecords = (userData) => {
+    const currentDayVal = userData.currentDailyCopies || 0;
+    const currentWeekVal = (userData.lastWeeklyXpId === getCurrentWeekId()) ? (userData.weeklyXp || 0) : 0;
+    const currentMonthVal = (userData.lastMonthlyXpId === getCurrentMonthId()) ? (userData.monthlyXp || 0) : 0;
+
+    const updateUI = (type, recordObj, currentVal, dateFormatter) => {
+        const countEl = document.getElementById(`record-${type}`);
+        const dateEl = document.getElementById(`record-${type}-date`);
+        const statusEl = document.getElementById(`record-${type}-status`);
+        const percentEl = document.getElementById(`record-${type}-percent`);
+        const barEl = document.getElementById(`record-${type}-bar`);
+
+        if (!countEl) return;
+
+        // Safely extract the count and date from the new object structure
+        const bestVal = recordObj ? (recordObj.count || 0) : 0;
+        const bestDate = recordObj ? recordObj.date : null;
+
+        animateValue(countEl, 0, bestVal, 1500);
+
+        if (bestDate) {
+            dateEl.textContent = dateFormatter(bestDate);
+        } else {
+            dateEl.textContent = '--';
+        }
+
+        let percentage = bestVal > 0 ? (currentVal / bestVal) * 100 : 0;
+        const displayPercent = Math.min(percentage, 100);
+        barEl.style.width = `${displayPercent}%`;
+        percentEl.textContent = `${Math.floor(percentage)}%`;
+
+        const distance = bestVal - currentVal;
+        statusEl.className = "font-semibold";
+        barEl.className = `h-full rounded-full transition-all duration-1000 ${type === 'daily' ? 'bg-blue-400' : type === 'weekly' ? 'bg-purple-400' : 'bg-yellow-400'}`;
+        countEl.classList.remove('new-record-glow', 'text-green-400');
+
+        if (currentVal >= bestVal && bestVal > 0) {
+            statusEl.innerHTML = `<i class="fas fa-crown text-yellow-400 mr-1"></i> <span class="text-green-400">Current Record!</span>`;
+            barEl.classList.replace(/bg-\w+-400/, 'bg-green-400');
+            countEl.classList.add('new-record-glow', 'text-green-400'); 
+            percentEl.textContent = "100%";
+        } else if (percentage >= 80) {
+            statusEl.innerHTML = `<i class="fas fa-fire text-orange-500 mr-1 animate-pulse"></i> <span class="text-orange-300">${distance} away!</span>`;
+            barEl.classList.replace(/bg-\w+-400/, 'bg-orange-500'); 
+        } else {
+            let label = type === 'daily' ? "Today" : type === 'weekly' ? "This Week" : "This Month";
+            let colorClass = type === 'daily' ? "text-blue-100" : type === 'weekly' ? "text-purple-100" : "text-yellow-100";
+            statusEl.className = `font-semibold ${colorClass}`;
+            statusEl.textContent = `${label}: ${currentVal}`;
+        }
+    };
+
+    // Date Formatters
+    const formatDay = (key) => {
+        const [y, m, d] = key.split('-');
+        return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    const formatMonth = (key) => {
+        const [y, m] = key.split('-');
+        return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+        const formatWeek = (key) => {
+        if (!key || !key.includes('-')) return key;
+        
+        // Parse the "2026-7" string
+        const parts = key.split('-');
+        const year = parseInt(parts[0]);
+        const week = parseInt(parts[1].replace('W', '')); // Strip 'W' just in case
+        
+        // Calculate the Monday of that specific week
+        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const dow = simple.getDay();
+        const ISOweekStart = simple;
+        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        
+        // Calculate the Sunday of that week
+        const ISOweekEnd = new Date(ISOweekStart);
+        ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
+        
+        const startMonth = ISOweekStart.toLocaleDateString('en-US', { month: 'short' });
+        const startDay = ISOweekStart.getDate();
+        const endMonth = ISOweekEnd.toLocaleDateString('en-US', { month: 'short' });
+        const endDay = ISOweekEnd.getDate();
+        
+        // Format it beautifully
+        return (startMonth === endMonth) 
+            ? `${startMonth} ${startDay}-${endDay}, ${year}` 
+            : `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    };
+
+    updateUI('daily', userData.recordDaily, currentDayVal, formatDay);
+    updateUI('weekly', userData.recordWeekly, currentWeekVal, formatWeek);
+    updateUI('monthly', userData.recordMonthly, currentMonthVal, formatMonth);
+};
+
+// 3. NEW ACTIVITY CHART (Takes the 30-Day array directly)
+const renderActivityChart = (dailyStats, totalCopies, avgCopies) => {
     const container = document.getElementById('activity-chart-container');
     if (!container) return;
 
-    // Reset Canvas
     container.innerHTML = '<canvas id="activityChart"></canvas>';
     const ctx = document.getElementById('activityChart').getContext('2d');
 
-    const processed = processActivityData(events, period);
+    // Update Bottom Stats
+    document.getElementById('stats-total-copies').textContent = totalCopies.toLocaleString();
+    document.getElementById('stats-avg-copies').textContent = avgCopies;
 
-    // Update Bottom Stats...
-    const totalEl = document.getElementById('stats-total-copies');
-    const avgEl = document.getElementById('stats-avg-copies');
-    const peakCountEl = document.getElementById('stats-busiest-day-count');
+    // Find Peak Day from the array
+    let peakCount = 0;
+    let peakDate = '--';
+    dailyStats.forEach(d => {
+        if (d.copies > peakCount) {
+            peakCount = d.copies;
+            const dateObj = new Date(d.date + 'T00:00:00');
+            peakDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+    });
+
+    document.getElementById('stats-busiest-day-count').textContent = peakCount > 0 ? peakCount : '0';
     const peakLabelEl = document.getElementById('stats-busiest-day');
-
-    if (totalEl) totalEl.textContent = processed.total.toLocaleString();
-    if (avgEl) avgEl.textContent = processed.avg;
-    if (peakCountEl) peakCountEl.textContent = processed.peakCount > 0 ? processed.peakCount : '0';
     if (peakLabelEl) {
-        if (processed.peakDate && processed.peakDate !== '--') {
-            peakLabelEl.textContent = processed.peakDate;
+        if (peakCount > 0) {
+            peakLabelEl.textContent = peakDate;
             peakLabelEl.classList.remove('hidden');
         } else {
             peakLabelEl.classList.add('hidden');
         }
     }
 
-    // Gradient Style
+    const labels = dailyStats.map(d => {
+        const dateObj = new Date(d.date + 'T00:00:00');
+        return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const data = dailyStats.map(d => d.copies);
+
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); 
     gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)'); 
@@ -7829,79 +7452,190 @@ const renderActivityChart = (events, period = 'all') => {
     window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: processed.labels, 
+            labels: labels, 
             datasets: [{
-                label: 'Copies',
-                data: processed.data,
-                borderColor: '#22c55e',       
-                backgroundColor: gradient,    
-                borderWidth: 3,
-                pointBackgroundColor: '#1f2937', 
-                pointBorderColor: '#22c55e',
-                pointBorderWidth: 2,
-                pointHoverBackgroundColor: '#22c55e',
-                pointHoverBorderColor: '#fff',
-                pointHoverRadius: 6,
-                fill: true,                   
-                tension: 0.4                  
+                label: 'Copies', data: data, borderColor: '#22c55e', backgroundColor: gradient,    
+                borderWidth: 3, pointBackgroundColor: '#1f2937', pointBorderColor: '#22c55e',
+                pointBorderWidth: 2, pointHoverBackgroundColor: '#22c55e', pointHoverBorderColor: '#fff',
+                pointHoverRadius: 6, fill: true, tension: 0.4                  
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false, 
-            
-            // --- FIX FOR CLICKING THE CHART ITSELF ---
-            onClick: (e) => {
-                // If the user clicks the GRAPH, we manually run the open function
-                if (typeof openExpandedChart === 'function') {
-                    openExpandedChart(window.activityChartInstance, 'Activity Analysis', events, 'activity');
-                }
-            },
-
-            onHover: (event, chartElement) => {
-                // Force pointer cursor so user knows it's clickable
-                const target = event.native ? event.native.target : event.target;
-                if(target) target.style.cursor = 'pointer'; 
-            },
-
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    titleColor: '#22c55e',
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(34, 197, 94, 0.3)',
-                    borderWidth: 1,
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.y + ' Copies';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#6b7280', font: { size: 10 } }
-                },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { display: false },
-                    beginAtZero: true
-                }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            }
+            responsive: true, maintainAspectRatio: false, 
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(17, 24, 39, 0.95)', titleColor: '#22c55e', bodyColor: '#fff', borderColor: 'rgba(34, 197, 94, 0.3)', borderWidth: 1, padding: 10, displayColors: false } },
+            scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 10 } } }, y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { display: false }, beginAtZero: true } },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false }
         }
     });
 };
+
+const renderAdvancedStats = async () => {
+    const statsContent = document.getElementById('stats-content');
+    const statsLoader = document.getElementById('stats-loader');
+    const metricBadgesContainer = document.getElementById('metric-badges-container');
+    const chartContainer = document.getElementById('stats-container');
+
+    if (statsLoader) statsLoader.classList.remove('hidden');
+    if (statsContent) statsContent.classList.add('hidden');
+
+    if (!statsContent || isAnonymous || !userId) {
+        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400 text-center py-16">Sign in to track your achievements and usage stats.</p>';
+        if (statsLoader) statsLoader.classList.add('hidden');
+        if (statsContent) statsContent.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        let userData = cachedStatsUserData;
+        if (!userData) {
+            const userDoc = await getDoc(getUserRootDocRef(userId));
+            userData = userDoc.exists() ? userDoc.data() : {};
+            cachedStatsUserData = userData;
+        }
+
+        // ========================================================
+        // 🚀 THE NEW O(30) QUERY (Replaces the massive history read)
+        // ========================================================
+        const dailyStatsRef = collection(db, 'artifacts', safeAppId, 'users', userId, 'daily_stats');
+        // Get the 30 most recent days, ordered by document ID (YYYY-MM-DD) descending
+        const qDaily = query(dailyStatsRef, orderBy('__name__', 'desc'), limit(30));
+        const dailySnap = await getDocs(qDaily);
+        
+        // Reverse them so the oldest of the 30 is on the left of the chart
+        const thirtyDayHistory = dailySnap.docs.map(doc => ({
+            date: doc.id,
+            copies: doc.data().copies || 0
+        })).reverse();
+
+        cachedThirtyDayHistory = thirtyDayHistory; 
+
+
+        // 1. Render primary UI blocks
+        renderLevelingSystem(userData);
+        renderCategoryChart(userData.categoryCounts || {});
+        calculateAndRenderRecords(userData);
+        renderLeaderboard();
+
+        // Calculate Daily Avg
+        const totalCopies = userData.totalCopies || 0;
+        const activeDays = userData.totalActiveDays || 1;
+        const avgCopies = (totalCopies / activeDays).toFixed(1);
+
+        renderActivityChart(thirtyDayHistory, totalCopies, avgCopies);
+
+        // 2. Mini-Badges (Simplified to use Running Totals)
+        const todayCopies = userData.currentDailyCopies || 0;
+        
+        let statusTitle = "Quiet Day";
+        let statusSub = "Ready to start?";
+        let statusColorClass = "text-gray-400";
+        let statusBorder = "border-gray-500/20";
+        let statusIconClass = "fa-bed";
+        let statusBg = "bg-gradient-to-br from-gray-800/20 to-slate-900/40";
+        
+        if (todayCopies > (avgCopies * 1.5) && todayCopies >= 5) {
+            statusTitle = "On Fire! 🔥"; statusSub = "High Traffic"; statusColorClass = "text-orange-400";
+            statusBorder = "border-orange-500/20"; statusIconClass = "fa-fire"; statusBg = "bg-gradient-to-br from-orange-900/20 to-slate-900/40";
+        } else if (todayCopies >= avgCopies && todayCopies > 0) {
+            statusTitle = "Active"; statusSub = "Above Average"; statusColorClass = "text-emerald-400";
+            statusBorder = "border-emerald-500/20"; statusIconClass = "fa-bolt"; statusBg = "bg-gradient-to-br from-emerald-900/20 to-slate-900/40";
+        }
+
+        const totalResponsesCreated = Object.values(categories).reduce((acc, cat) => acc + (cat.responses?.length || 0), 0);
+        const totalCategoriesCount = Object.keys(categories).length;
+
+        metricBadgesContainer.innerHTML = `
+            <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-slate-900/40 border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-opacity-50 transition-all duration-300">
+                <div class="flex justify-between items-start z-10">
+                    <div class="p-2 bg-slate-800/50 rounded-lg text-blue-400"><i class="fas fa-calendar-check text-lg"></i></div>
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider bg-slate-800/50 px-2 py-1 rounded-full">Longevity</span>
+                </div>
+                <div class="mt-3 z-10">
+                    <span class="block text-3xl font-bold text-white tracking-tight">${userData.totalActiveDays || 1}</span>
+                    <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Active Days</span>
+                </div>
+            </div>
+
+            <div class="mini-stat-box group relative overflow-hidden ${statusBg} border ${statusBorder} rounded-2xl p-4 flex flex-col justify-between h-full hover:border-opacity-50 transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-20 h-20 bg-current opacity-10 rounded-full blur-2xl ${statusColorClass}"></div>
+                <div class="flex justify-between items-start z-10">
+                    <div class="p-2 bg-slate-800/50 rounded-lg ${statusColorClass}"><i class="fas ${statusIconClass} text-lg ${statusTitle.includes('Fire') ? 'animate-pulse' : ''}"></i></div>
+                </div>
+                <div class="mt-3 z-10">
+                    <span class="block text-2xl font-bold text-white tracking-tight truncate">${statusTitle}</span>
+                    <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">${statusSub}</span>
+                </div>
+            </div>
+
+            <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-slate-900/40 border border-purple-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-purple-400/50 transition-colors">
+                <div class="flex justify-between items-start z-10">
+                    <div class="p-2 bg-purple-500/20 rounded-lg text-purple-400"><i class="fas fa-database text-lg"></i></div>
+                </div>
+                <div class="mt-3 z-10">
+                    <span class="block text-3xl font-bold text-white tracking-tight">${totalResponsesCreated}</span>
+                    <span class="text-xs text-purple-200/60 font-medium uppercase tracking-wider">Total Library</span>
+                </div>
+            </div>
+
+            <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-amber-900/40 to-slate-900/40 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-amber-400/50 transition-colors">
+                <div class="flex justify-between items-start z-10">
+                    <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400"><i class="fas fa-folder-open text-lg"></i></div>
+                </div>
+                <div class="mt-3 z-10">
+                    <span class="block text-3xl font-bold text-white tracking-tight">${totalCategoriesCount}</span>
+                    <span class="text-xs text-amber-200/60 font-medium uppercase tracking-wider">Categories</span>
+                </div>
+            </div>
+        `;
+
+        // 3. Top 5 Categories Chart
+        let allResponses = [];
+        for (const cat in categories) {
+            if (categories[cat].responses) {
+                const mapped = categories[cat].responses.map(r => ({ ...r, categoryName: cat }));
+                allResponses.push(...mapped);
+            }
+        }
+        const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
+
+        if (sortedResponses.length > 0) {
+            chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
+            const topResponses = sortedResponses.slice(0, 5);
+            const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
+            const chartData = topResponses.map(r => r.timesCopied);
+            const borderColors = topResponses.map(r => categories[r.categoryName]?.color || '#60a5fa');
+            const backgroundColors = borderColors.map(color => color + '80');
+
+            if (statsChart) statsChart.destroy();
+            const ctx = document.getElementById('stats-chart').getContext('2d');
+            const isLightMode = document.body.classList.contains('light-mode');
+            const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
+            const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            
+            statsChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: backgroundColors, borderColor: borderColors, borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+        } else {
+            chartContainer.innerHTML = '<p class="text-gray-400 text-center flex items-center justify-center h-full">Copy responses to see your top 5 here!</p>';
+        }
+        
+        // Pass empty array for events to achievements (since we don't fetch them anymore)
+        await renderChallenges(userData);
+        await renderChallengeTracker(userData);
+        renderFilteredAchievements([], userData); // Trophies just use the achievementsData block now
+
+    } catch (error) {
+        console.error("Error rendering stats:", error);
+        if (statsContent) statsContent.innerHTML = `<p class="text-red-400 text-center py-16">Error loading stats: ${error.message}</p>`;
+    } finally {
+        if (statsLoader) statsLoader.classList.add('hidden');
+        if (statsContent) statsContent.classList.remove('hidden');
+    }
+};
+
+
 
 const renderLevelingSystem = (userData) => {
     const totalXp = userData.xp || 0;
@@ -8055,257 +7789,7 @@ const renderLevelingSystem = (userData) => {
 };
 
 
-const renderAdvancedStats = async () => {
-    const statsContent = document.getElementById('stats-content');
-    const statsLoader = document.getElementById('stats-loader');
-    const metricBadgesContainer = document.getElementById('metric-badges-container');
-    const achievementsContainer = document.getElementById('achievements-container');
-    const chartContainer = document.getElementById('stats-container');
 
-    if (statsLoader) statsLoader.classList.remove('hidden');
-    if (statsContent) statsContent.classList.add('hidden');
-
-    if (!statsContent || isAnonymous) {
-        if (statsContent) statsContent.innerHTML = '<p class="text-gray-400 text-center py-16">Sign in to track your achievements and usage stats.</p>';
-        if (statsLoader) statsLoader.classList.add('hidden');
-        if (statsContent) statsContent.classList.remove('hidden');
-        return;
-    }
-
-    try {
-		// 1. Set up our variables
-		let userData = cachedStatsUserData;
-		let events = cachedStatsEvents;
-		
-		// 2. BULLETPROOF CHECK: Only fetch if our cache is missing ANY data
-		if (!userData || !events || events.length === 0) {
-		    console.log("Fetching stats from Firebase (First time only!)");
-		    
-		    const userDocRef = getUserRootDocRef(userId);
-		    const userDoc = await getDoc(userDocRef);
-		    userData = userDoc.exists() ? userDoc.data() : {};
-		
-		    const eventsCollectionRef = getUserEventsCollectionRef(userId);
-            
-            const q = query(
-                eventsCollectionRef, 
-                orderBy("timestamp", "desc")
-            );
-            
-		    const snapshot = await getDocs(q);
-		    events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-		
-		    // Save to memory so we don't have to fetch again
-		    cachedStatsUserData = userData; 
-		    cachedStatsEvents = events;
-		} else {
-		    console.log("Using memory cache. Saved you Firebase reads! 💸");
-		}
-
-		renderLevelingSystem(userData);
-
-        // Render main components first
-        await renderCategoryChart(events);
-		calculateAndRenderRecords(events);
-        renderActivityChart(events);
-        renderLeaderboard();
-        renderFilteredAchievements(events, userData);
-
-        // --- Metric Badges ---
-		// --- 1. Date Setup ---
-		const now = new Date();
-		const todayStr = now.toISOString().split('T')[0];
-		
-		// Get start of Current Week (Sunday)
-		const currentWeekStart = new Date(now);
-		currentWeekStart.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1)); // Adjust if you prefer Monday start
-		currentWeekStart.setHours(0, 0, 0, 0);
-		
-		// Get start of Previous Week
-		const lastWeekStart = new Date(currentWeekStart);
-		lastWeekStart.setDate(currentWeekStart.getDate() - 7);
-		
-		// --- 2. Calculate Growth Trend (Option 1) ---
-		const thisWeekCopies = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= currentWeekStart).length;
-		const lastWeekCopies = events.filter(e => e.type === 'copy' && e.timestamp?.toDate() >= lastWeekStart && e.timestamp?.toDate() < currentWeekStart).length;
-		
-		let growthPercent = 0;
-		let growthLabel = 'Stable';
-		let growthColor = 'text-gray-400';
-		let growthIcon = 'fa-minus';
-		let growthBorder = 'border-slate-500/20';
-		let growthBg = 'from-slate-900/40 to-slate-900/40';
-		
-		if (lastWeekCopies > 0) {
-		    growthPercent = Math.round(((thisWeekCopies - lastWeekCopies) / lastWeekCopies) * 100);
-		} else if (thisWeekCopies > 0) {
-		    growthPercent = 100; // First week of activity
-		}
-		
-		if (growthPercent > 0) {
-		    growthLabel = 'Growth';
-		    growthColor = 'text-green-400';
-		    growthIcon = 'fa-arrow-trend-up';
-		    growthBorder = 'border-green-500/20';
-		    growthBg = 'bg-gradient-to-br from-green-900/20 to-slate-900/40';
-		} else if (growthPercent < 0) {
-		    growthLabel = 'Decline';
-		    growthColor = 'text-red-400';
-		    growthIcon = 'fa-arrow-trend-down';
-		    growthBorder = 'border-red-500/20';
-		    growthBg = 'bg-gradient-to-br from-red-900/20 to-slate-900/40';
-		}
-		
-		// --- 3. Calculate "On Fire" Status (Option 2) ---
-		// Calculate daily average (excluding today to make the comparison fair, or just use all-time avg)
-		const uniqueDays = new Set(events.filter(e => e.type === 'copy' && e.timestamp).map(e => e.timestamp.toDate().toISOString().split('T')[0])).size || 1;
-		const allTimeCopies = events.filter(e => e.type === 'copy').length;
-		const dailyAvg = allTimeCopies / uniqueDays;
-		const todayCopies = events.filter(e => e.type === 'copy' && e.timestamp?.toDate().toISOString().split('T')[0] === todayStr).length;
-		
-		let statusTitle = "Normal";
-		let statusSub = "Steady Pace";
-		let statusColorClass = "text-blue-400";
-		let statusBorder = "border-blue-500/20";
-		let statusIconClass = "fa-stopwatch";
-		let statusBg = "bg-gradient-to-br from-blue-900/20 to-slate-900/40";
-		
-		if (todayCopies === 0) {
-		    statusTitle = "Quiet Day";
-		    statusSub = "Ready to start?";
-		    statusColorClass = "text-gray-400";
-		    statusBorder = "border-gray-500/20";
-		    statusIconClass = "fa-bed";
-		    statusBg = "bg-gradient-to-br from-gray-800/20 to-slate-900/40";
-		} else if (todayCopies > (dailyAvg * 1.5) && todayCopies >= 5) {
-		    statusTitle = "On Fire! 🔥";
-		    statusSub = "High Traffic";
-		    statusColorClass = "text-orange-400";
-		    statusBorder = "border-orange-500/20";
-		    statusIconClass = "fa-fire";
-		    statusBg = "bg-gradient-to-br from-orange-900/20 to-slate-900/40";
-		} else if (todayCopies >= dailyAvg) {
-		    statusTitle = "Active";
-		    statusSub = "Above Average";
-		    statusColorClass = "text-emerald-400";
-		    statusBorder = "border-emerald-500/20";
-		    statusIconClass = "fa-bolt";
-		    statusBg = "bg-gradient-to-br from-emerald-900/20 to-slate-900/40";
-		}
-		
-		// --- 4. Get other stats ---
-		const totalResponsesCreated = events.filter(e => e.type === 'create_response').length;
-		const totalCategoriesCount = Object.keys(categories).length;
-// --- Metric Badges (UPDATED FOR BENTO) ---
-		// --- Metric Badges Injection ---
-		metricBadgesContainer.innerHTML = `
-		    <div class="mini-stat-box group relative overflow-hidden ${growthBg} border ${growthBorder} rounded-2xl p-4 flex flex-col justify-between h-full hover:border-opacity-50 transition-all duration-300">
-		        <div class="flex justify-between items-start z-10">
-		            <div class="p-2 bg-slate-800/50 rounded-lg ${growthColor}">
-		                <i class="fas ${growthIcon} text-lg"></i>
-		            </div>
-		            <span class="text-[10px] font-bold ${growthColor} uppercase tracking-wider bg-slate-800/50 px-2 py-1 rounded-full">${growthLabel}</span>
-		        </div>
-		        <div class="mt-3 z-10">
-		            <span class="block text-3xl font-bold text-white tracking-tight">${growthPercent > 0 ? '+' : ''}${growthPercent}%</span>
-		            <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Vs Last Week</span>
-		        </div>
-		    </div>
-		
-		    <div class="mini-stat-box group relative overflow-hidden ${statusBg} border ${statusBorder} rounded-2xl p-4 flex flex-col justify-between h-full hover:border-opacity-50 transition-all duration-300">
-		        <div class="absolute -right-4 -top-4 w-20 h-20 bg-current opacity-10 rounded-full blur-2xl ${statusColorClass}"></div>
-		        <div class="flex justify-between items-start z-10">
-		            <div class="p-2 bg-slate-800/50 rounded-lg ${statusColorClass}">
-		                <i class="fas ${statusIconClass} text-lg ${statusTitle.includes('Fire') ? 'animate-pulse' : ''}"></i>
-		            </div>
-		        </div>
-		        <div class="mt-3 z-10">
-		            <span class="block text-2xl font-bold text-white tracking-tight truncate">${statusTitle}</span>
-		            <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">${statusSub}</span>
-		        </div>
-		    </div>
-		
-		    <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-slate-900/40 border border-purple-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-purple-400/50 transition-colors">
-		        <div class="flex justify-between items-start z-10">
-		            <div class="p-2 bg-purple-500/20 rounded-lg text-purple-400">
-		                <i class="fas fa-database text-lg"></i>
-		            </div>
-		        </div>
-		        <div class="mt-3 z-10">
-		            <span class="block text-3xl font-bold text-white tracking-tight">${totalResponsesCreated}</span>
-		            <span class="text-xs text-purple-200/60 font-medium uppercase tracking-wider">Total Library</span>
-		        </div>
-		    </div>
-		
-		    <div class="mini-stat-box group relative overflow-hidden bg-gradient-to-br from-amber-900/40 to-slate-900/40 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between h-full hover:border-amber-400/50 transition-colors">
-		        <div class="flex justify-between items-start z-10">
-		            <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
-		                <i class="fas fa-folder-open text-lg"></i>
-		            </div>
-		        </div>
-		        <div class="mt-3 z-10">
-		            <span class="block text-3xl font-bold text-white tracking-tight">${totalCategoriesCount}</span>
-		            <span class="text-xs text-amber-200/60 font-medium uppercase tracking-wider">Categories</span>
-		        </div>
-		    </div>
-		`;
-
-// --- Top 5 Chart ---
-        let allResponses = [];
-        for (const categoryName in categories) {
-            if (categories[categoryName].responses) {
-                // By mapping, we add the categoryName to each response object
-                const categoryResponses = categories[categoryName].responses.map(r => ({
-                    ...r,
-                    categoryName: categoryName 
-                }));
-                allResponses.push(...categoryResponses);
-            }
-        }
-        const sortedResponses = allResponses.filter(r => r.timesCopied > 0).sort((a, b) => b.timesCopied - a.timesCopied);
-
-        if (sortedResponses.length > 0) {
-            chartContainer.innerHTML = '<canvas id="stats-chart"></canvas>';
-            const topResponses = sortedResponses.slice(0, 5);
-            const chartLabels = topResponses.map(r => r.label || 'Unlabeled');
-            const chartData = topResponses.map(r => r.timesCopied);
-            const borderColors = topResponses.map(r => 
-                categories[r.categoryName]?.color || '#60a5fa' // Use category color or a default blue
-            );
-            const backgroundColors = borderColors.map(color => color + '80');
-
-            if (statsChart) statsChart.destroy();
-            const ctx = document.getElementById('stats-chart').getContext('2d');
-            const isLightMode = document.body.classList.contains('light-mode');
-            const textColor = isLightMode ? '#1f2937' : '#e5e7eb';
-            const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
-            statsChart = new Chart(ctx, {
-                type: 'bar',
-				data: { labels: chartLabels, datasets: [{ 
-                label: 'Times Copied', 
-                data: chartData, 
-                backgroundColor: backgroundColors, // Use our new array
-                borderColor: borderColors,       // Use our new array
-                borderWidth: 1 
-            }] },
-				options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false }, title: { display: false } } }
-            });
-        } else {
-            chartContainer.innerHTML = '<p class="text-gray-400 text-center flex items-center justify-center h-full">Copy responses to see your top 5 here!</p>';
-        }
-		
-		// --- Final step: Render challenges and tracker AFTER all other data is ready ---
-		await renderChallenges(userData);
-		await renderChallengeTracker(userData);
-
-    } catch (error) {
-        console.error("Error rendering stats:", error);
-        if (statsContent) statsContent.innerHTML = `<p class="text-red-400 text-center py-16">Error loading stats: ${error.message}</p>`;
-    } finally {
-        if (statsLoader) statsLoader.classList.add('hidden');
-        if (statsContent) statsContent.classList.remove('hidden');
-    }
-};
 
 const showPlaceholderDemo = () => {
     isTutorialActive = true; 
@@ -9669,79 +9153,42 @@ if (filterAllBtn && filterUnlockedBtn) {
 }
     
 
-// This handles clicks on the TEXT or BACKGROUND of the card
-const activityWrapper = document.getElementById('activity-card-wrapper');
-if (activityWrapper) {
-    activityWrapper.addEventListener('click', async (e) => {
-        // Don't trigger if they clicked a filter button
-        if (e.target.closest('.activity-filter-btn')) return;
-        
-        // This handles the background click
-        if (userId && window.activityChartInstance) {
-             // Retrieve events safely
-             const eventsCollectionRef = getUserEventsCollectionRef(userId);
-             const snapshot = await getDocs(query(eventsCollectionRef));
-             const currentEvents = snapshot.docs.map(doc => doc.data());
-             
-             openExpandedChart(window.activityChartInstance, 'Activity Analysis', currentEvents, 'activity');
-        }
-    });
-}
 
-    // 2. Category Chart Click
-    const categoryWrapper = document.getElementById('category-card-wrapper');
-    if (categoryWrapper) {
-        categoryWrapper.addEventListener('click', () => {
-            openExpandedChart(categoryChartInstance, 'Category Breakdown');
-        });
-    }
-
-    // 3. Top Responses Chart Click
-    const statsWrapper = document.getElementById('stats-card-wrapper');
-    if (statsWrapper) {
-        statsWrapper.addEventListener('click', () => {
-            openExpandedChart(statsChart, 'Top 5 Responses');
-        });
-    }
-
-    // 4. Close Modal Listener
-    const closeExpandedBtn = document.getElementById('close-expanded-chart-btn');
-    if(closeExpandedBtn) {
-        closeExpandedBtn.addEventListener('click', closeExpandedChart);
-    }
-
-    // 5. Close on background click
-    const expandedModal = document.getElementById('expanded-chart-modal');
-    if(expandedModal) {
-        expandedModal.addEventListener('click', (e) => {
-            if (e.target === expandedModal) {
-                closeExpandedChart();
-            }
-        });
-    }
-    
-    // 6. Close on Escape Key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && expandedModal && !expandedModal.classList.contains('hidden')) {
-            closeExpandedChart();
-        }
-    });
-
-    const activityFilterGroup = document.getElementById('activity-filter-group');
+        const activityFilterGroup = document.getElementById('activity-filter-group');
     if (activityFilterGroup) {
         activityFilterGroup.addEventListener('click', (e) => {
             const button = e.target.closest('.activity-filter-btn');
             if (button && !button.classList.contains('active')) {
-                // 1. Update active class
+                // 1. Update active button styling
                 activityFilterGroup.querySelectorAll('.activity-filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
+                    btn.classList.remove('active', 'bg-slate-700', 'text-white', 'shadow-md');
+                    btn.classList.add('text-slate-400');
                 });
-                button.classList.add('active');
+                button.classList.add('active', 'bg-slate-700', 'text-white', 'shadow-md');
+                button.classList.remove('text-slate-400');
                 
-                // 2. Get data and re-render using the RAM cache! (Zero Firebase Reads)
                 const period = button.dataset.period;
-                if (cachedStatsEvents) {
-                    renderActivityChart(cachedStatsEvents, period);
+                
+                // 2. Handle "ALL" (Revert to Normal)
+                if (period === 'all') {
+                    // Grab the All-Time numbers directly from RAM
+                    const totalCopies = cachedStatsUserData.totalCopies || 0;
+                    const activeDays = cachedStatsUserData.totalActiveDays || 1;
+                    const avgCopies = (totalCopies / activeDays).toFixed(1);
+                    
+                    // Render the full 30-day array with All-Time stats
+                    renderActivityChart(cachedThirtyDayHistory, totalCopies, avgCopies);
+                } 
+                // 3. Handle 7D and 30D (Calculate strict local stats)
+                else {
+                    const days = parseInt(period);
+                    const slicedData = cachedThirtyDayHistory.slice(-days);
+                    
+                    const periodTotal = slicedData.reduce((sum, day) => sum + day.copies, 0);
+                    const periodAvg = slicedData.length > 0 ? (periodTotal / slicedData.length).toFixed(1) : '0.0';
+
+                    // Render the sliced array with strict timeframe stats
+                    renderActivityChart(slicedData, periodTotal, periodAvg);
                 }
             }
         });
@@ -10812,9 +10259,18 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             document.getElementById('login-popup-modal').classList.add('hidden');
             const userDocRef = getUserRootDocRef(userId);
-			await updateUserLeaderboardEntry();
+            const leaderboardDocRef = doc(db, "leaderboard", userId); // Tell it where the totals are
+            
+            await updateUserLeaderboardEntry();
+            
             const userDoc = await getDoc(userDocRef);
-			const userData = userDoc.exists() ? userDoc.data() : {};
+            const lbDoc = await getDoc(leaderboardDocRef); // Fetch the totals
+            
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const lbData = lbDoc.exists() ? lbDoc.data() : {};
+            
+            // Merge both folders together in RAM so the Stats page sees everything!
+            cachedStatsUserData = { ...userData, ...lbData }; 
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
 
             // Cleaned up login flow - Zero History Reads!
@@ -10850,6 +10306,15 @@ onAuthStateChanged(auth, async (user) => {
                 }
             }
             // --- END of New Script ---
+
+            await runMasterStatsMigration(userId);
+
+            const todayStr = getCurrentDateString();
+            const dailyStatsRef = doc(db, 'artifacts', safeAppId, 'users', userId, 'daily_stats', todayStr);
+            const dailySnap = await getDoc(dailyStatsRef);
+            
+            // Store today's current copies in RAM so our High-Water Mark math works!
+            cachedStatsUserData.currentDailyCopies = dailySnap.exists() ? dailySnap.data().copies : 0;
 
 			const tutorialSeen = userDoc.exists() && userDoc.data().tutorialSeen;
             if (!tutorialSeen) {
