@@ -492,12 +492,10 @@ const applyBackgroundTheme = (themeName) => {
             const textSpan = btn.querySelector('span');
 
             if (previewBox && textSpan) {
-                // Reset all styling
                 previewBox.classList.remove('silver-glow-active');
                 textSpan.classList.remove('text-gray-200');
                 textSpan.classList.add('text-gray-400');
 
-                // Apply active styling only to the matched theme
                 if (btn.dataset.theme === themeName) {
                     previewBox.classList.add('silver-glow-active');
                     textSpan.classList.remove('text-gray-400');
@@ -506,6 +504,18 @@ const applyBackgroundTheme = (themeName) => {
             }
         });
     }
+
+    // --- NEW: THE FIREBASE BRIDGE & SPY SCRIPT SIGNAL ---
+    if (typeof userId !== 'undefined' && userId && !isAnonymous) {
+        setDoc(getUserRootDocRef(userId), { equippedTheme: themeName }, { merge: true }).catch(e => console.error(e));
+    }
+    
+    // Shout to the Chrome Extension!
+    window.postMessage({ 
+        type: "THEME_CHANGED", 
+        theme: themeName, 
+        isLightMode: document.body.classList.contains('light-mode') 
+    }, "*");
 };
 
 // ==========================================
@@ -9497,23 +9507,33 @@ document.getElementById('achievements-tab-btn').addEventListener('click', (e) =>
         }
     });
 
-    document.getElementById('theme-toggle-btn-settings').addEventListener('click', () => {
-        document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        document.getElementById('theme-toggle-btn-settings').addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
         const icon = document.getElementById('theme-toggle-btn-settings').querySelector('i');
-        icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
+        icon.className = isLight ? 'fas fa-sun mr-2' : 'fas fa-moon mr-2';
         updateDarkModeStreak();
+        
+        // --- NEW: THE FIREBASE BRIDGE & SPY SCRIPT SIGNAL ---
+        if (typeof userId !== 'undefined' && userId && !isAnonymous) {
+            setDoc(getUserRootDocRef(userId), { isLightMode: isLight }, { merge: true }).catch(e => console.error(e));
+        }
+
+        const currentTheme = localStorage.getItem('backgroundTheme') || 'theme-deep-space';
+        window.postMessage({ 
+            type: "THEME_CHANGED", 
+            theme: currentTheme, 
+            isLightMode: isLight 
+        }, "*");
         
         if (currentPage === 'my-stats') {
             renderAdvancedStats();
         }
         
-        // Re-render Canned Responses to apply light mode card colors
         if (currentPage === 'canned-responses') {
             renderResponses(document.getElementById('search-input').value);
         }
         
-        // Re-render Workshop feed if the modal happens to be open
         const workshopModal = document.getElementById('workshop-modal');
         if (workshopModal && !workshopModal.classList.contains('hidden')) {
             const searchInput = document.getElementById('workshop-search-input');
