@@ -3341,8 +3341,27 @@ const runMasterStatsMigration = async (uid) => {
         await batch.commit();
         console.log("✅ Master Migration Complete. Trophies and Dates successfully saved!");
 
-        // Update local memory so the UI knows immediately
-        if (cachedStatsUserData) cachedStatsUserData.statsMigrated = true;
+        // ==========================================
+        // 🩹 THE RAM PATCH: Update local memory so the UI knows immediately
+        // and the very next "Copy" click doesn't overwrite with 1s!
+        // ==========================================
+        if (cachedStatsUserData) {
+            cachedStatsUserData.statsMigrated = true;
+            
+            // Inject all the newly calculated totals into RAM
+            cachedStatsUserData.totalCopies = totalCopies;
+            cachedStatsUserData.categoryCounts = categoryCounts;
+            cachedStatsUserData.totalActiveDays = uniqueDays.size;
+            
+            cachedStatsUserData.recordDaily = getBest(dailyData);
+            cachedStatsUserData.recordWeekly = getBest(weeklyData);
+            cachedStatsUserData.recordMonthly = getBest(monthlyData);
+            
+            cachedStatsUserData.weeklyXp = currentWeeklyCopies;
+            cachedStatsUserData.lastWeeklyXpId = currentWeekId;
+            cachedStatsUserData.monthlyXp = currentMonthlyCopies;
+            cachedStatsUserData.lastMonthlyXpId = currentMonthId;
+        }
 
     } catch (error) {
         console.error("Migration failed:", error);
@@ -10424,3 +10443,102 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 attachEventListeners();
+
+// ==========================================
+// 🚨 EMERGENCY STATS RECOVERY SCRIPT
+// ==========================================
+window.recoverBrokenUserStats = async (uidToFix) => {
+    console.log(`Starting Emergency Recovery for UID: ${uidToFix}...`);
+    
+    try {
+        const leaderboardDocRef = doc(db, "leaderboard", uidToFix);
+
+        // 1. Fetch the absolute truth from their raw event history
+        const eventsCollectionRef = collection(db, 'artifacts', safeAppId, 'users', uidToFix, 'user_events');
+        const snapshot = await getDocs(query(eventsCollectionRef));
+        const events = snapshot.docs.map(doc => doc.data());
+        
+        const copyEvents = events.filter(e => e.type === 'copy' && e.timestamp);
+
+        if (copyEvents.length === 0) {
+            console.warn(`User ${uidToFix} has no copy history. Aborting.`);
+            return;
+        }
+
+        // 2. Set up the math counters
+        let totalCopies = 0;
+        const categoryCounts = {};
+        const uniqueDays = new Set();
+        const dailyData = {};
+        const weeklyData = {};
+        const monthlyData = {};
+
+        const currentWeekId = getCurrentWeekId();
+        const currentMonthId = getCurrentMonthId();
+        let currentWeeklyCopies = 0;
+        let currentMonthlyCopies = 0;
+
+        const getHistoricalWeekKey = (d) => {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+            return `${date.getUTCFullYear()}-${weekNo}`;
+        };
+
+        // 3. Crunch the raw data
+        copyEvents.forEach(event => {
+            totalCopies++;
+            if (event.categoryName) categoryCounts[event.categoryName] = (categoryCounts[event.categoryName] || 0) + 1;
+
+            const dateObj = event.timestamp.toDate();
+            const dayKey = dateObj.toISOString().split('T')[0];
+            const weekKey = getHistoricalWeekKey(dateObj);
+            const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+
+            uniqueDays.add(dayKey);
+            
+            dailyData[dayKey] = (dailyData[dayKey] || 0) + 1;
+            weeklyData[weekKey] = (weeklyData[weekKey] || 0) + 1;
+            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+
+            if (weekKey === currentWeekId) currentWeeklyCopies++;
+            if (monthKey === currentMonthId) currentMonthlyCopies++;
+        });
+
+        // 4. Find the High-Water Marks
+        const getBest = (obj) => {
+            let maxVal = 0; let maxKey = null;
+            for(const [k,v] of Object.entries(obj)) {
+                if(v > maxVal) { maxVal = v; maxKey = k; }
+            }
+            return { count: maxVal, date: maxKey };
+        };
+
+        // 5. Force Overwrite the Leaderboard Document
+        const batch = writeBatch(db);
+        
+        batch.set(leaderboardDocRef, {
+            totalCopies: totalCopies,
+            categoryCounts: categoryCounts,
+            totalActiveDays: uniqueDays.size,
+            
+            recordDaily: getBest(dailyData),
+            recordWeekly: getBest(weeklyData),
+            recordMonthly: getBest(monthlyData),
+            
+            weeklyXp: currentWeeklyCopies, 
+            lastWeeklyXpId: currentWeekId,
+            monthlyXp: currentMonthlyCopies,
+            lastMonthlyXpId: currentMonthId
+            
+        }, { merge: true });
+
+        await batch.commit();
+        console.log(`✅ SUCCESS: User ${uidToFix} has been fully restored! Refresh your leaderboard to see the fixed stats.`);
+
+    } catch (error) {
+        console.error(`❌ FAILED to recover user ${uidToFix}:`, error);
+        console.log("Note: Your Firestore Security Rules might be blocking you from reading other users' 'user_events' subcollections.");
+    }
+};
