@@ -3173,6 +3173,7 @@ document.getElementById('close-suggestion-bar-btn')?.addEventListener('click', (
         console.error("Error recalculating stats:", error);
     }
 };
+window.fixUserStats = recalculateCurrentPeriodStats;
 
 const getTimeAgo = (timestamp) => {
     if (!timestamp) return 'Offline';
