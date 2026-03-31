@@ -6608,21 +6608,24 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                     }
 
                     // --- HIGH-WATER MARKS (Personal Records) ---
-                    const oldRecordDaily = userData.recordDaily ? (userData.recordDaily.count || 0) : 0;
+                    // Safely handle both legacy numbers and new object formats
+                    const getRecordCount = (rec) => (rec && typeof rec === 'object') ? (rec.count || 0) : (rec || 0);
+
+                    const oldRecordDaily = getRecordCount(userData.recordDaily);
                     if (newDailyCopies > oldRecordDaily) {
                         const newRecord = { count: newDailyCopies, date: todayStr };
                         updatesToLeaderboard.recordDaily = newRecord;
                         userData.recordDaily = newRecord;
                     }
 
-                    const oldRecordWeekly = userData.recordWeekly ? (userData.recordWeekly.count || 0) : 0;
+                    const oldRecordWeekly = getRecordCount(userData.recordWeekly);
                     if (newWeeklyCopies > oldRecordWeekly) {
                         const newRecord = { count: newWeeklyCopies, date: currentWeekId };
                         updatesToLeaderboard.recordWeekly = newRecord;
                         userData.recordWeekly = newRecord;
                     }
 
-                    const oldRecordMonthly = userData.recordMonthly ? (userData.recordMonthly.count || 0) : 0;
+                    const oldRecordMonthly = getRecordCount(userData.recordMonthly);
                     if (newMonthlyCopies > oldRecordMonthly) {
                         const newRecord = { count: newMonthlyCopies, date: currentMonthId };
                         updatesToLeaderboard.recordMonthly = newRecord;
@@ -10542,4 +10545,70 @@ window.recoverBrokenUserStats = async (uidToFix) => {
         console.error(`❌ FAILED to recover user ${uidToFix}:`, error);
         console.log("Note: Your Firestore Security Rules might be blocking you from reading other users' 'user_events' subcollections.");
     }
+};
+
+window.repairUserStats = async (uid) => {
+    console.log("Starting repair for user: " + uid);
+    
+    // 1. Fetch their uncorrupted history
+    const eventsCollectionRef = collection(db, 'artifacts', safeAppId, 'users', uid, 'user_events');
+    const snapshot = await getDocs(query(eventsCollectionRef));
+    
+    const dailyCounts = {};
+    const weeklyCounts = {};
+    const monthlyCounts = {};
+
+    let currentWeeklyCopies = 0;
+    let currentMonthlyCopies = 0;
+    
+    const currentWeekId = getCurrentWeekId();
+    const currentMonthId = getCurrentMonthId();
+
+    const getHistoricalWeekKey = (d) => {
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        date.setUTCDate(date.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        return `${date.getUTCFullYear()}-${weekNo}`;
+    };
+
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.type === 'copy' && data.timestamp) {
+            const dateObj = data.timestamp.toDate();
+            const dayKey = dateObj.toISOString().split('T')[0];
+            const weekKey = getHistoricalWeekKey(dateObj);
+            const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+
+            dailyCounts[dayKey] = (dailyCounts[dayKey] || 0) + 1;
+            weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
+            monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+
+            if (weekKey === currentWeekId) currentWeeklyCopies++;
+            if (monthKey === currentMonthId) currentMonthlyCopies++;
+        }
+    });
+
+    const getBest = (obj) => {
+        let maxVal = 0; let maxKey = null;
+        for(const [k,v] of Object.entries(obj)) {
+            if(v > maxVal) { maxVal = v; maxKey = k; }
+        }
+        return { count: maxVal, date: maxKey };
+    };
+
+    // 2. Overwrite Leaderboard Doc with absolute truth
+    const leaderboardDocRef = doc(db, "leaderboard", uid);
+    await setDoc(leaderboardDocRef, {
+        recordDaily: getBest(dailyCounts),
+        recordWeekly: getBest(weeklyCounts),
+        recordMonthly: getBest(monthlyCounts),
+        weeklyXp: currentWeeklyCopies,
+        lastWeeklyXpId: currentWeekId,
+        monthlyXp: currentMonthlyCopies,
+        lastMonthlyXpId: currentMonthId
+    }, { merge: true });
+
+    console.log(`✅ Repair Complete! Restored Weekly: ${currentWeeklyCopies}, Monthly: ${currentMonthlyCopies}`);
+    console.log("Records have been successfully rebuilt from history.");
 };
