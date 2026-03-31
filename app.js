@@ -4861,22 +4861,6 @@ const logUserEvent = async (eventType, eventData = {}) => {
             });
         }    
 
-        // (Keep your existing Globetrotter logic here...)
-        if (eventType === 'copy' && eventData.categoryName) {
-            let categoriesUsed = JSON.parse(sessionStorage.getItem('categoriesUsedInSession') || '[]');
-            if (!categoriesUsed.includes(eventData.categoryName)) {
-                categoriesUsed.push(eventData.categoryName);
-                sessionStorage.setItem('categoriesUsedInSession', JSON.stringify(categoriesUsed));
-                if (categoriesUsed.length >= 2) {
-                    const events = await getDocs(query(eventsCollectionRef));
-                    const hasMilestone = events.docs.some(doc => doc.data().type === 'globetrotter_milestone');
-                    if (!hasMilestone) {
-                         await addDoc(eventsCollectionRef, { type: 'globetrotter_milestone', timestamp: serverTimestamp() });
-                    }
-                }
-            }
-        }
-
     } catch (error) {
         console.error("Error logging user event:", error);
     }
@@ -6553,6 +6537,8 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
 
             // --- 4. Award Base XP ---
             await awardXP(XP_VALUES.COPY_RESPONSE, 'Response Copied');
+
+            logUserEvent('copy', { responseId: responseId, categoryName: categoryName });
 
             if (userId && !isAnonymous) {
                 try {
