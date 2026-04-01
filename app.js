@@ -4220,8 +4220,7 @@ const checkAndAwardChallengeXP = async (uid) => {
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() : {};
         
-        // Keep cache fresh
-        cachedStatsUserData = userData;
+        cachedStatsUserData = { ...cachedStatsUserData, ...userData };
 
         const todayStr = getCurrentDateString();
         const weekId = getCurrentWeekId();
