@@ -231,7 +231,7 @@ const showClipboardToast = (numbers) => {
 };
 
 // 1. Store the exact date the page was initially loaded
-const sessionLoadedDate = new Date().toISOString().split('T')[0];
+const sessionLoadedDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
 // --- NATIVE PRESENCE SYSTEM ---
 const updatePresence = (isOnline) => {
@@ -251,7 +251,7 @@ const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
         
         // --- NEW: The "New Day" Check ---
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
         
         if (todayStr !== sessionLoadedDate) {
             window.location.reload(true);
@@ -4170,43 +4170,40 @@ const updateChallengeCounters = async (uid, actionType) => {
     }
 };
 		
-// --- UPDATED DATE HELPERS (Safe for Feb & 31st) ---
-
+// --- BULLETPROOF LOCAL DATE HELPERS ---
 const getCurrentDateString = () => {
-    return new Date().toISOString().split('T')[0];
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 const getCurrentWeekId = () => {
     const d = new Date();
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday's day number 7
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    // Use local getDate() and getDay() to respect local midnight
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return `${d.getUTCFullYear()}-${weekNo}`;
+    return `${d.getFullYear()}-${weekNo}`;
 };
 
 const getCurrentMonthId = () => {
     const d = new Date();
-    // Returns "2025-12" today, "2026-01" tomorrow
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
 const getPreviousWeekId = () => {
     const d = new Date();
-    d.setDate(d.getDate() - 7); // Go back 7 days
-    
-    // Calculate week ID for that past date
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    d.setDate(d.getDate() - 7); 
+    // Local math for the previous week
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return `${d.getUTCFullYear()}-${weekNo}`;
+    return `${d.getFullYear()}-${weekNo}`;
 };
 
 const getPreviousMonthId = () => {
     const d = new Date();
-    d.setDate(15); // SAFETY: Move to the 15th to avoid "31st" overflow issues
-    d.setMonth(d.getMonth() - 1); // Go back 1 month
+    d.setDate(15); 
+    d.setMonth(d.getMonth() - 1); 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
@@ -4873,7 +4870,7 @@ const updateDarkModeStreak = async () => {
     const userDocRef = getUserRootDocRef(userId);
     const userDoc = await getDoc(userDocRef);
     
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
     
     const data = userDoc.exists() ? userDoc.data() : {};
     const darkModeUsage = data.darkModeUsage || { lastUsed: null, streak: 0 };
@@ -6590,6 +6587,9 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         updatesToUserDoc.lastActiveDate = todayStr;
                         userData.totalActiveDays = (userData.totalActiveDays || 0) + 1;
                         userData.lastActiveDate = todayStr;
+                        
+                        // THE FIX: Reset the daily snowball back to 1!
+                        newDailyCopies = 1;
                     }
 
                     // --- HIGH-WATER MARKS (Personal Records) ---
