@@ -234,13 +234,17 @@ const showClipboardToast = (numbers) => {
 const sessionLoadedDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
 // --- NATIVE PRESENCE SYSTEM ---
-const updatePresence = (isOnline) => {
+const updatePresence = (isOnline, clientType = 'web') => {
     if (!userId || isAnonymous) return;
     try {
         const leaderboardDocRef = doc(db, "leaderboard", userId);
-        // If coming back, set to now. If leaving/closing, backdate it 10 minutes to force "Offline"
         const targetTime = isOnline ? serverTimestamp() : new Date(Date.now() - 10 * 60000);
-        updateDoc(leaderboardDocRef, { lastActive: targetTime });
+        
+        // Save both the time AND the device they are using
+        updateDoc(leaderboardDocRef, { 
+            lastActive: targetTime,
+            activeDevice: isOnline ? clientType : null 
+        });
     } catch (e) {
         console.warn("Presence update failed:", e);
     }
@@ -5762,6 +5766,7 @@ const renderLeaderboard = (view = 'all') => {
                 const isFirst = rank === 1;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
+                const deviceIcon = (isOnline && u.activeDevice === 'extension') ? '<i class="fas fa-puzzle-piece text-purple-400 ml-1" title="Via Extension"></i>' : '';
                 
                 let displayScore = u.xp;
                 let scoreLabel = "Total XP";
@@ -5786,7 +5791,7 @@ const renderLeaderboard = (view = 'all') => {
                             <p class="text-[9px] text-gray-400 uppercase mb-1">${scoreLabel}</p>
                             <div class="mt-1 text-[9px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'} flex items-center justify-center">
                                 <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
-                                ${status}
+                                ${status} ${deviceIcon}
                             </div>
                         </div>
                     </div>
@@ -5804,6 +5809,7 @@ const renderLeaderboard = (view = 'all') => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
+                const deviceIconList = (isOnline && u.activeDevice === 'extension') ? '<i class="fas fa-puzzle-piece text-purple-400 ml-1.5" title="Via Extension"></i>' : '';
                 let displayScore = u.xp;
                 
                 if (currentLeaderboardView === 'weekly') displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
@@ -5819,6 +5825,7 @@ const renderLeaderboard = (view = 'all') => {
                             <div class="flex items-center gap-2">
                                 <p class="font-semibold text-gray-200 text-sm truncate">${u.displayName}</p>
                                 ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse"></i>' : ''}
+                                ${deviceIconList}
                             </div>
                             <p class="text-[10px] text-gray-500">${status}</p>
                         </div>
