@@ -34,6 +34,12 @@ exports.generateMagicDraft = onCall(async (request) => {
         });
 
         const json = await response.json();
+
+        // If the API returns a direct HTTP error, throw it immediately!
+        if (json.error) {
+            console.error("Direct API Error:", json.error);
+            throw new HttpsError('internal', `Gemini rejected the request: ${json.error.message}`);
+        }
         
         // --- THE FIX: SMARTER ERROR HANDLING ---
         
