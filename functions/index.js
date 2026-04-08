@@ -10,11 +10,10 @@ exports.generateMagicDraft = onCall(async (request) => {
         throw new HttpsError('invalid-argument', 'The prompt is missing.');
     }
     
-    // PASTE YOUR API KEY HERE
+    // Fetch your API Key from the environment
     const API_KEY = process.env.GEMINI_API_KEY;
 
     try {
-        // Rolled back to the highly-stable, production-ready model
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -23,21 +22,53 @@ exports.generateMagicDraft = onCall(async (request) => {
                 generationConfig: { 
                     temperature: 0.7,         
                     maxOutputTokens: 2048     
-                } 
+                },
+                // --- THE FIX: TURN OFF SAFETY FILTERS ---
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ]
             })
         });
 
         const json = await response.json();
         
-        if (json.candidates && json.candidates[0]) {
-            // Send the text back to the frontend
-            return { text: json.candidates[0].content.parts[0].text };
-        } else {
-            console.error("Gemini API Error:", json);
-            throw new HttpsError('internal', 'No text returned from Gemini');
+        // --- THE FIX: SMARTER ERROR HANDLING ---
+        
+        // 1. Check if the initial prompt was blocked immediately
+        if (json.promptFeedback && json.promptFeedback.blockReason) {
+            console.error("Prompt Blocked:", json.promptFeedback);
+            throw new HttpsError('failed-precondition', `Prompt blocked: ${json.promptFeedback.blockReason}`);
         }
+
+        // 2. Safely parse the candidates
+        if (json.candidates && json.candidates[0]) {
+            const candidate = json.candidates[0];
+            
+            // Check if the response was cut off mid-generation due to a safety flag
+            if (candidate.finishReason === 'SAFETY') {
+                console.error("Response Blocked by Safety:", candidate);
+                throw new HttpsError('failed-precondition', 'Response blocked by safety filters.');
+            }
+
+            // Extract and return the text safely
+            if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                return { text: candidate.content.parts[0].text };
+            }
+        } 
+        
+        // If we reach here, the API returned an empty or malformed payload
+        console.error("Gemini API Error Payload:", json);
+        throw new HttpsError('internal', 'No text returned from Gemini. Check Firebase logs for raw payload.');
+        
     } catch (err) {
-        console.error("Fetch Error:", err);
+        console.error("Execution Error:", err);
+        // Re-throw our custom HttpsErrors so the frontend can read them
+        if (err instanceof HttpsError) {
+            throw err;
+        }
         throw new HttpsError('internal', 'Failed to connect to Gemini API');
     }
 });
