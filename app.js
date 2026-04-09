@@ -8614,22 +8614,25 @@ if (magicGoBtn) {
         const originalHTML = magicGoBtn.innerHTML;
         const originalClasses = magicGoBtn.className;
         
-        // 1. Set Button to Loading State
+       // 1. Set Button to Loading State
         magicGoBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Generating locally...</span>`;
         magicGoBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
 
         let localResponse = null;
 
+        // --- NEW: Pre-emptive Clipboard Copy ---
+        // Copy immediately upon click while we still have "Transient User Activation"
+        try {
+            await navigator.clipboard.writeText(prompt);
+        } catch (clipboardErr) {
+            console.warn("Pre-emptive clipboard copy failed:", clipboardErr);
+        }
+
         // 2. Secure Cloud Function Execution
         try {
-            // This securely calls the backend script we just deployed!
             const generateMagicDraft = httpsCallable(functions, 'generateMagicDraft');
-            
-            // Send the prompt to the cloud and wait for the AI text to come back
             const result = await generateMagicDraft({ prompt: prompt });
-            
             localResponse = result.data.text;
-            
         } catch (err) {
             console.error("Cloud Function failed, falling back to web clipboard.", err);
         }
@@ -8650,9 +8653,7 @@ if (magicGoBtn) {
             document.getElementById('magic-generated-output').value = cleanResponse.trim();
         } else {
             // FALLBACK: Execute exact existing logic
-            try {
-                await navigator.clipboard.writeText(prompt);
-                
+            try {                
                 magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Prompt Copied!</span>`;
                 magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-green-500 shadow-lg transform transition flex items-center justify-center gap-2 text-sm";
 
@@ -8673,8 +8674,7 @@ if (magicGoBtn) {
                         magicGoBtn.className = originalClasses;
                     }, 500);
                 }, 1000);
-
-            } catch (err) {
+            }catch (err) {
                 console.error("Clipboard failed:", err);
                 showMessage("Could not copy prompt. Please manually copy.", "error");
             }

@@ -1,14 +1,14 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 
-exports.generateMagicDraft = onCall(async (request) => {
-    // In Gen 2, the data from your website lives inside 'request.data'
-    const prompt = request.data.prompt;
+exports.generateMagicDraft = onCall(
+    { cors: true }, 
+    async (request) => {
+        const prompt = request.data.prompt;
 
-    // Safety check: If the prompt is missing, log it and stop
-    if (!prompt) {
-        console.error("Error: Missing prompt. Received payload:", request.data);
-        throw new HttpsError('invalid-argument', 'The prompt is missing.');
-    }
+        if (!prompt) {
+            console.error("Error: Missing prompt. Received payload:", request.data);
+            throw new HttpsError('invalid-argument', 'The prompt is missing.');
+        }
     
     // Fetch your API Key from the environment
     const API_KEY = process.env.GEMINI_API_KEY;
