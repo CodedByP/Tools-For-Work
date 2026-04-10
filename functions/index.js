@@ -18,16 +18,16 @@ exports.generateMagicDraft = onCall(
     const API_KEY = process.env.GEMINI_API_KEY;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`, {
+        // Point to gemini-1.5-pro for complex, multi-rule reasoning
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: String(prompt) }] }],
                 generationConfig: { 
-                    temperature: 0.7,         
+                    temperature: 0.2, // Lowered from 0.7 to force strict rule compliance
                     maxOutputTokens: 2048     
                 },
-                // --- THE FIX: TURN OFF SAFETY FILTERS ---
                 safetySettings: [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },

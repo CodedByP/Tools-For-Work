@@ -8623,6 +8623,7 @@ if (magicGoBtn) {
         prompt += `### FINAL OUTPUT INSTRUCTION ###\n`;
         prompt += `Review your generated email draft. IF your email contains a list of items or steps, you MUST wrap the ENTIRE email inside a plain text code block (using \`\`\`text ... \`\`\`) to prevent rich-text rendering issues in our ticketing system. IF your email does NOT contain any lists, simply output the email normally as standard text without any code blocks. Do NOT output any conversational filler text outside of your draft in either case.\n`;
         prompt += `--- OUTPUT ONLY THE EMAIL BODY BELOW THIS LINE ---\n`;
+        prompt += `(CRITICAL REMINDER: Extract the device details from the ticket into a dashed list if applicable, and ensure you sign off exactly with "Kind regards, \n\n${userName}")\n`;
 
         // --- NEW: EXECUTION & FALLBACK LOGIC ---
         const originalHTML = magicGoBtn.innerHTML;
