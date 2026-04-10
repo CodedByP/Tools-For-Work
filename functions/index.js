@@ -18,14 +18,14 @@ exports.generateMagicDraft = onCall(
     const API_KEY = process.env.GEMINI_API_KEY;
 
     try {
-        // Point to gemini-1.5-pro for complex, multi-rule reasoning
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`, {
+        // Point to gemini-2.5-pro, the current stable model for complex, multi-rule reasoning
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: String(prompt) }] }],
                 generationConfig: { 
-                    temperature: 0.2, // Lowered from 0.7 to force strict rule compliance
+                    temperature: 0.2, // Lowered to force strict rule compliance
                     maxOutputTokens: 2048     
                 },
                 safetySettings: [
