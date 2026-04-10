@@ -8552,6 +8552,20 @@ if (magicGoBtn) {
 
         const policy = findPolicyForTicket(summaryText, category);
 
+        // Cap the user's ticket to prevent massive email thread dumps
+        const safeSummary = summaryText.length > 2500 
+            ? summaryText.substring(0, 2500) + "... [Ticket truncated for length]" 
+            : summaryText;
+
+        // Cap the policy text if it falls back to the full article
+        let safePolicyText = "";
+        if (policy) {
+            safePolicyText = policy.focusedSnippet || policy.content;
+            if (safePolicyText.length > 3000) {
+                safePolicyText = safePolicyText.substring(0, 3000) + "... [Policy truncated for length]";
+            }
+        }
+
         // --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
         
@@ -8591,7 +8605,7 @@ if (magicGoBtn) {
         prompt += `Hello [Customer Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n${userName}\n\n`;
 
         prompt += `### ACTUAL USER TICKET ###\n`;
-        prompt += `"${summaryText}"\n\n`;
+        prompt += `"${safeSummary}"\n\n`; // Use the safe version here
         
         if (instructionText) {
             prompt += `### OPERATOR INSTRUCTIONS ###\n`;
@@ -8603,7 +8617,7 @@ if (magicGoBtn) {
             prompt += `### APPLICABLE COMPANY POLICY RULES ###\n`;
             prompt += `(Ensure your draft complies with these rules. Do not explicitly say "According to policy")\n`;
             prompt += `Rule Source: ${policy.title}\n`;
-            prompt += `Rule Details: ${policy.focusedSnippet || policy.content}\n\n`;
+            prompt += `Rule Details: ${safePolicyText}\n\n`; // Use the safe version here
         }
         
         prompt += `### FINAL OUTPUT INSTRUCTION ###\n`;

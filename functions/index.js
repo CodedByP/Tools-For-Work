@@ -1,10 +1,14 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 
 exports.generateMagicDraft = onCall(
-    { cors: true }, 
+    { 
+        cors: true, 
+        timeoutSeconds: 120, // Gives the function 2 full minutes to work
+        memory: "512MiB"     // Gives the function more RAM to handle heavy payloads
+    }, 
     async (request) => {
         const prompt = request.data.prompt;
-
+        
         if (!prompt) {
             console.error("Error: Missing prompt. Received payload:", request.data);
             throw new HttpsError('invalid-argument', 'The prompt is missing.');
