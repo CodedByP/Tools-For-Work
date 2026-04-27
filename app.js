@@ -6617,6 +6617,12 @@ const copyToClipboard = async (text, responseId = null, categoryName = null) => 
                         userData.recordMonthly = newRecord;
                     }
 
+                    // If the period has rolled over, evaluate global rewards BEFORE wiping this user's high score.
+                    if ((userData.lastWeeklyXpId && userData.lastWeeklyXpId !== currentWeekId) || 
+                        (userData.lastMonthlyXpId && userData.lastMonthlyXpId !== currentMonthId)) {
+                        await checkAndDistributeRewards();
+                    }
+
                     // --- LAZY RESETS (Weekly & Monthly Tracking) ---
                     if (userData.lastWeeklyXpId === currentWeekId) {
                         updatesToLeaderboard.weeklyXp = increment(1);
@@ -10302,8 +10308,8 @@ onAuthStateChanged(auth, async (user) => {
             firstSignIn = userDoc.exists() && userDoc.data().firstSignIn ? userDoc.data().firstSignIn.toDate() : null;
 
             // Cleaned up login flow - Zero History Reads!
-            checkAndDistributeRewards(); 
-            checkForGlobalAlerts(userId);
+            await checkAndDistributeRewards(); 
+            await checkForGlobalAlerts(userId);
 			
             if (!userData.firstSignIn) {
                 const creationTime = user.metadata.creationTime; 
