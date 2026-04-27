@@ -234,13 +234,17 @@ const showClipboardToast = (numbers) => {
 const sessionLoadedDate = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
 // --- NATIVE PRESENCE SYSTEM ---
-const updatePresence = (isOnline) => {
+const updatePresence = (isOnline, clientType = 'web') => {
     if (!userId || isAnonymous) return;
     try {
         const leaderboardDocRef = doc(db, "leaderboard", userId);
-        // If coming back, set to now. If leaving/closing, backdate it 10 minutes to force "Offline"
         const targetTime = isOnline ? serverTimestamp() : new Date(Date.now() - 10 * 60000);
-        updateDoc(leaderboardDocRef, { lastActive: targetTime });
+        
+        // Save both the time AND the device they are using
+        updateDoc(leaderboardDocRef, { 
+            lastActive: targetTime,
+            activeDevice: isOnline ? clientType : null 
+        });
     } catch (e) {
         console.warn("Presence update failed:", e);
     }
@@ -5762,6 +5766,7 @@ const renderLeaderboard = (view = 'all') => {
                 const isFirst = rank === 1;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
+                const deviceIcon = (isOnline && u.activeDevice === 'extension') ? '<i class="fas fa-puzzle-piece text-purple-400 ml-1" title="Via Extension"></i>' : '';
                 
                 let displayScore = u.xp;
                 let scoreLabel = "Total XP";
@@ -5786,7 +5791,7 @@ const renderLeaderboard = (view = 'all') => {
                             <p class="text-[9px] text-gray-400 uppercase mb-1">${scoreLabel}</p>
                             <div class="mt-1 text-[9px] ${isOnline ? 'text-green-400 font-bold' : 'text-gray-500'} flex items-center justify-center">
                                 <span class="status-dot ${isOnline ? 'status-online' : 'status-offline'} w-1.5 h-1.5 mr-1"></span>
-                                ${status}
+                                ${status} ${deviceIcon}
                             </div>
                         </div>
                     </div>
@@ -5804,6 +5809,7 @@ const renderLeaderboard = (view = 'all') => {
                 const rank = index + 4;
                 const status = getTimeAgo(u.lastActive);
                 const isOnline = status === 'Online';
+                const deviceIconList = (isOnline && u.activeDevice === 'extension') ? '<i class="fas fa-puzzle-piece text-purple-400 ml-1.5" title="Via Extension"></i>' : '';
                 let displayScore = u.xp;
                 
                 if (currentLeaderboardView === 'weekly') displayScore = (u.lastWeeklyXpId === currentWeekId) ? (u.weeklyXp || 0) : 0;
@@ -5819,6 +5825,7 @@ const renderLeaderboard = (view = 'all') => {
                             <div class="flex items-center gap-2">
                                 <p class="font-semibold text-gray-200 text-sm truncate">${u.displayName}</p>
                                 ${isOnline ? '<i class="fas fa-fire text-orange-500 text-xs animate-pulse"></i>' : ''}
+                                ${deviceIconList}
                             </div>
                             <p class="text-[10px] text-gray-500">${status}</p>
                         </div>
@@ -8551,6 +8558,20 @@ if (magicGoBtn) {
 
         const policy = findPolicyForTicket(summaryText, category);
 
+        // Cap the user's ticket to prevent massive email thread dumps
+        const safeSummary = summaryText.length > 2500 
+            ? summaryText.substring(0, 2500) + "... [Ticket truncated for length]" 
+            : summaryText;
+
+        // Cap the policy text if it falls back to the full article
+        let safePolicyText = "";
+        if (policy) {
+            safePolicyText = policy.focusedSnippet || policy.content;
+            if (safePolicyText.length > 3000) {
+                safePolicyText = safePolicyText.substring(0, 3000) + "... [Policy truncated for length]";
+            }
+        }
+
         // --- OPTIMIZED FEW-SHOT PROMPT ---
         let prompt = `You are a Senior Customer Support Agent for Google IT. Your objective is to write an email responding to an employee's hardware/software request.\n\n`;
         
@@ -8590,7 +8611,7 @@ if (magicGoBtn) {
         prompt += `Hello [Customer Name],\n\nI have processed your request for the [Hardware Model]. Your item will be shipped shortly.\n\nYou can track the delivery here: [FedEx Tracking Number].\n\nPlease note that you must return your old device within 10 business days to avoid chargebacks.\n\nBest regards,\n\n${userName}\n\n`;
 
         prompt += `### ACTUAL USER TICKET ###\n`;
-        prompt += `"${summaryText}"\n\n`;
+        prompt += `"${safeSummary}"\n\n`; // Use the safe version here
         
         if (instructionText) {
             prompt += `### OPERATOR INSTRUCTIONS ###\n`;
@@ -8602,33 +8623,37 @@ if (magicGoBtn) {
             prompt += `### APPLICABLE COMPANY POLICY RULES ###\n`;
             prompt += `(Ensure your draft complies with these rules. Do not explicitly say "According to policy")\n`;
             prompt += `Rule Source: ${policy.title}\n`;
-            prompt += `Rule Details: ${policy.focusedSnippet || policy.content}\n\n`;
+            prompt += `Rule Details: ${safePolicyText}\n\n`; // Use the safe version here
         }
         
         prompt += `### FINAL OUTPUT INSTRUCTION ###\n`;
         prompt += `Review your generated email draft. IF your email contains a list of items or steps, you MUST wrap the ENTIRE email inside a plain text code block (using \`\`\`text ... \`\`\`) to prevent rich-text rendering issues in our ticketing system. IF your email does NOT contain any lists, simply output the email normally as standard text without any code blocks. Do NOT output any conversational filler text outside of your draft in either case.\n`;
         prompt += `--- OUTPUT ONLY THE EMAIL BODY BELOW THIS LINE ---\n`;
+        prompt += `(CRITICAL REMINDER: Extract the device details from the ticket into a dashed list if applicable, and ensure you sign off exactly with "Kind regards, \n\n${userName}")\n`;
 
         // --- NEW: EXECUTION & FALLBACK LOGIC ---
         const originalHTML = magicGoBtn.innerHTML;
         const originalClasses = magicGoBtn.className;
         
-        // 1. Set Button to Loading State
+       // 1. Set Button to Loading State
         magicGoBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Generating locally...</span>`;
         magicGoBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
 
         let localResponse = null;
 
+        // --- NEW: Pre-emptive Clipboard Copy ---
+        // Copy immediately upon click while we still have "Transient User Activation"
+        try {
+            await navigator.clipboard.writeText(prompt);
+        } catch (clipboardErr) {
+            console.warn("Pre-emptive clipboard copy failed:", clipboardErr);
+        }
+
         // 2. Secure Cloud Function Execution
         try {
-            // This securely calls the backend script we just deployed!
             const generateMagicDraft = httpsCallable(functions, 'generateMagicDraft');
-            
-            // Send the prompt to the cloud and wait for the AI text to come back
             const result = await generateMagicDraft({ prompt: prompt });
-            
             localResponse = result.data.text;
-            
         } catch (err) {
             console.error("Cloud Function failed, falling back to web clipboard.", err);
         }
@@ -8649,9 +8674,7 @@ if (magicGoBtn) {
             document.getElementById('magic-generated-output').value = cleanResponse.trim();
         } else {
             // FALLBACK: Execute exact existing logic
-            try {
-                await navigator.clipboard.writeText(prompt);
-                
+            try {                
                 magicGoBtn.innerHTML = `<i class="fas fa-check"></i> <span>Prompt Copied!</span>`;
                 magicGoBtn.className = "flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-green-500 shadow-lg transform transition flex items-center justify-center gap-2 text-sm";
 
@@ -8672,8 +8695,7 @@ if (magicGoBtn) {
                         magicGoBtn.className = originalClasses;
                     }, 500);
                 }, 1000);
-
-            } catch (err) {
+            }catch (err) {
                 console.error("Clipboard failed:", err);
                 showMessage("Could not copy prompt. Please manually copy.", "error");
             }
